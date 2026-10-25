@@ -1,0 +1,16 @@
+/build/
+/.cache/
+/CMakeUserPresets.json
+*.user
+*.suo
+imgui.ini
+/build-*/
+/dist/
+/.vs/
+.env
+.env.*
+!.env.example
+*.pfx
+*.p12
+*.pem
+*.key
