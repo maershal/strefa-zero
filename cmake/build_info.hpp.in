@@ -1,0 +1,8 @@
+#pragma once
+#include <string_view>
+namespace strefa::build {
+inline constexpr std::string_view version = "@PROJECT_VERSION@";
+inline constexpr std::string_view compiler = "@CMAKE_CXX_COMPILER_ID@ @CMAKE_CXX_COMPILER_VERSION@";
+inline constexpr std::string_view sdl = "3.4.18";
+inline constexpr std::string_view imgui = "1.93.0";
+}

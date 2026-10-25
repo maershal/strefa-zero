@@ -1,0 +1,9 @@
+
+Algorithm : SHA256
+Hash      : BA40BF541EA41B01D6198E535C599CAFA04912DE85E8E7A4F7B34918693ABC41
+Path      : C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\StrefaZero-Windows-x64-v0.4.1\StrefaPhysics.exe
+
+Algorithm : SHA256
+Hash      : 8D86A968D5319C309FEB7D89510E259123373CFA3584D48337FDD1651139C246
+Path      : C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\build-strefa-zero-release\StrefaPhysics.exe
+

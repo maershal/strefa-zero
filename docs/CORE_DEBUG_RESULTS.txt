@@ -1,0 +1,35 @@
+[0/1] Re-running CMake...
+-- Configuring done (2.9s)
+-- Generating done (0.2s)
+-- Build files have been written to: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-core
+[1/36] Generating CXX dyndep file CMakeFiles\strefa_core.dir\CXX.dd
+[2/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\world.cpp for CXX dependencies
+[3/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\thermal.cpp for CXX dependencies
+[4/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\liquids.cpp for CXX dependencies
+[5/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\air.cpp for CXX dependencies
+[6/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\reactions.cpp for CXX dependencies
+[7/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\motion.cpp for CXX dependencies
+[8/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\scenes.cpp for CXX dependencies
+[9/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\recording.cpp for CXX dependencies
+[10/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\laboratory.cpp for CXX dependencies
+[11/34] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\sim\pressure.cpp for CXX dependencies
+[12/34] Generating CXX dyndep file CMakeFiles\strefa_storage.dir\CXX.dd
+[13/32] Generating CXX dyndep file CMakeFiles\strefa_sim.dir\CXX.dd
+[14/32] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\laboratory_tests.cpp for CXX dependencies
+[15/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\world.cpp.obj
+[16/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\thermal.cpp.obj
+[17/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\air.cpp.obj
+[18/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\liquids.cpp.obj
+[19/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\motion.cpp.obj
+[20/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\reactions.cpp.obj
+[21/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\scenes.cpp.obj
+[22/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\recording.cpp.obj
+[23/32] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\pressure.cpp.obj
+[24/32] Generating CXX dyndep file CMakeFiles\strefa_core_tests.dir\CXX.dd
+[25/30] Generating CXX dyndep file CMakeFiles\strefa_laboratory_tests.dir\CXX.dd
+[26/30] Building CXX object CMakeFiles\strefa_sim.dir\src\sim\laboratory.cpp.obj
+[27/30] Linking CXX static library strefa_sim.lib
+[28/30] Building CXX object CMakeFiles\strefa_laboratory_tests.dir\tests\laboratory_tests.cpp.obj
+[29/30] Linking CXX executable strefa_laboratory_tests.exe
+PASS: round-trip, invalid inputs, atomic replacement and corruption handling
+PASS: worker, immutable snapshots, inspector, pause, steps, commands and shutdown

@@ -1,0 +1,598 @@
+{
+  "comparison": [
+    {
+      "scene": "dam-break",
+      "old_median_ms": 79.68790000000001,
+      "new_median_ms": 58.10625,
+      "speedup": 1.3714170162417987,
+      "old_p95_ms": 111.30199999999999,
+      "new_p95_ms": 81.52885,
+      "old_runs": [
+        {
+          "scene": "dam-break",
+          "ticks": "180",
+          "median_ms": "75.4745",
+          "p95_ms": "104.11",
+          "p99_ms": "113.674",
+          "max_ms": "120.954",
+          "max_mass_error": "9.95351e-09",
+          "max_energy_error": "2.97092e-06",
+          "max_pcg_residual": "9.99457e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.0598111",
+          "finite": "1"
+        },
+        {
+          "scene": "dam-break",
+          "ticks": "180",
+          "median_ms": "83.9013",
+          "p95_ms": "118.494",
+          "p99_ms": "131.254",
+          "max_ms": "133.371",
+          "max_mass_error": "9.95351e-09",
+          "max_energy_error": "2.97092e-06",
+          "max_pcg_residual": "9.99457e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.0598111",
+          "finite": "1"
+        }
+      ],
+      "new_runs": [
+        {
+          "scene": "dam-break",
+          "ticks": "180",
+          "median_ms": "54.4564",
+          "p95_ms": "72.988",
+          "p99_ms": "86.2501",
+          "max_ms": "93.2971",
+          "max_mass_error": "3.48882e-09",
+          "max_energy_error": "2.76603e-07",
+          "max_pcg_residual": "9.99445e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "9.71158e-06",
+          "finite": "1"
+        },
+        {
+          "scene": "dam-break",
+          "ticks": "180",
+          "median_ms": "61.7561",
+          "p95_ms": "90.0697",
+          "p99_ms": "131.4",
+          "max_ms": "159.045",
+          "max_mass_error": "3.48882e-09",
+          "max_energy_error": "2.76603e-07",
+          "max_pcg_residual": "9.99445e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "9.71158e-06",
+          "finite": "1"
+        }
+      ]
+    },
+    {
+      "scene": "sand-water",
+      "old_median_ms": 75.43520000000001,
+      "new_median_ms": 55.3652,
+      "speedup": 1.362502077117034,
+      "old_p95_ms": 103.162,
+      "new_p95_ms": 89.0205,
+      "old_runs": [
+        {
+          "scene": "sand-water",
+          "ticks": "180",
+          "median_ms": "73.831",
+          "p95_ms": "105.888",
+          "p99_ms": "158.497",
+          "max_ms": "194.667",
+          "max_mass_error": "6.8103e-09",
+          "max_energy_error": "1.17719e-06",
+          "max_pcg_residual": "9.99983e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.00116857",
+          "finite": "1"
+        },
+        {
+          "scene": "sand-water",
+          "ticks": "180",
+          "median_ms": "77.0394",
+          "p95_ms": "100.436",
+          "p99_ms": "115.132",
+          "max_ms": "117.273",
+          "max_mass_error": "6.8103e-09",
+          "max_energy_error": "1.17719e-06",
+          "max_pcg_residual": "9.99983e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.00116857",
+          "finite": "1"
+        }
+      ],
+      "new_runs": [
+        {
+          "scene": "sand-water",
+          "ticks": "180",
+          "median_ms": "53.6362",
+          "p95_ms": "88.9205",
+          "p99_ms": "100.588",
+          "max_ms": "107.803",
+          "max_mass_error": "3.28146e-09",
+          "max_energy_error": "1.6205e-07",
+          "max_pcg_residual": "9.99083e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "4.96929e-05",
+          "finite": "1"
+        },
+        {
+          "scene": "sand-water",
+          "ticks": "180",
+          "median_ms": "57.0942",
+          "p95_ms": "89.1205",
+          "p99_ms": "95.3591",
+          "max_ms": "100.328",
+          "max_mass_error": "3.28146e-09",
+          "max_energy_error": "1.6205e-07",
+          "max_pcg_residual": "9.99083e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "4.96929e-05",
+          "finite": "1"
+        }
+      ]
+    },
+    {
+      "scene": "smoke-vent",
+      "old_median_ms": 24.1216,
+      "new_median_ms": 13.608899999999998,
+      "speedup": 1.772487122397843,
+      "old_p95_ms": 34.459450000000004,
+      "new_p95_ms": 25.06595,
+      "old_runs": [
+        {
+          "scene": "smoke-vent",
+          "ticks": "180",
+          "median_ms": "19.5179",
+          "p95_ms": "29.698",
+          "p99_ms": "36.8197",
+          "max_ms": "37.9459",
+          "max_mass_error": "1.14378e-08",
+          "max_energy_error": "4.35393e-07",
+          "max_pcg_residual": "0",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0",
+          "finite": "1"
+        },
+        {
+          "scene": "smoke-vent",
+          "ticks": "180",
+          "median_ms": "28.7253",
+          "p95_ms": "39.2209",
+          "p99_ms": "42.0808",
+          "max_ms": "42.567",
+          "max_mass_error": "1.14378e-08",
+          "max_energy_error": "4.35393e-07",
+          "max_pcg_residual": "0",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0",
+          "finite": "1"
+        }
+      ],
+      "new_runs": [
+        {
+          "scene": "smoke-vent",
+          "ticks": "180",
+          "median_ms": "12.7732",
+          "p95_ms": "18.9138",
+          "p99_ms": "23.7537",
+          "max_ms": "25.1205",
+          "max_mass_error": "4.91127e-10",
+          "max_energy_error": "5.17815e-07",
+          "max_pcg_residual": "0",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0",
+          "finite": "1"
+        },
+        {
+          "scene": "smoke-vent",
+          "ticks": "180",
+          "median_ms": "14.4446",
+          "p95_ms": "31.2181",
+          "p99_ms": "76.781",
+          "max_ms": "125.778",
+          "max_mass_error": "4.91127e-10",
+          "max_energy_error": "5.17815e-07",
+          "max_pcg_residual": "0",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0",
+          "finite": "1"
+        }
+      ]
+    },
+    {
+      "scene": "quench-metal",
+      "old_median_ms": 62.21455,
+      "new_median_ms": 38.189099999999996,
+      "speedup": 1.6291179944015441,
+      "old_p95_ms": 96.7544,
+      "new_p95_ms": 50.04615,
+      "old_runs": [
+        {
+          "scene": "quench-metal",
+          "ticks": "180",
+          "median_ms": "59.7381",
+          "p95_ms": "89.1688",
+          "p99_ms": "126.851",
+          "max_ms": "194.481",
+          "max_mass_error": "1.02045e-08",
+          "max_energy_error": "1.1865e-06",
+          "max_pcg_residual": "9.99289e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.00108976",
+          "finite": "1"
+        },
+        {
+          "scene": "quench-metal",
+          "ticks": "180",
+          "median_ms": "64.691",
+          "p95_ms": "104.34",
+          "p99_ms": "132.701",
+          "max_ms": "135.132",
+          "max_mass_error": "1.02045e-08",
+          "max_energy_error": "1.1865e-06",
+          "max_pcg_residual": "9.99289e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.00108976",
+          "finite": "1"
+        }
+      ],
+      "new_runs": [
+        {
+          "scene": "quench-metal",
+          "ticks": "180",
+          "median_ms": "39.4653",
+          "p95_ms": "53.5647",
+          "p99_ms": "89.6984",
+          "max_ms": "97.1934",
+          "max_mass_error": "2.93221e-09",
+          "max_energy_error": "2.17929e-07",
+          "max_pcg_residual": "9.97566e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.13611",
+          "finite": "1"
+        },
+        {
+          "scene": "quench-metal",
+          "ticks": "180",
+          "median_ms": "36.9129",
+          "p95_ms": "46.5276",
+          "p99_ms": "54.2918",
+          "max_ms": "56.5",
+          "max_mass_error": "2.93221e-09",
+          "max_energy_error": "2.17929e-07",
+          "max_pcg_residual": "9.97566e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "0.13611",
+          "finite": "1"
+        }
+      ]
+    },
+    {
+      "scene": "arena",
+      "old_median_ms": 11.08745,
+      "new_median_ms": 6.57255,
+      "speedup": 1.6869327734288824,
+      "old_p95_ms": 37.70255,
+      "new_p95_ms": 24.2128,
+      "old_runs": [
+        {
+          "scene": "arena",
+          "ticks": "180",
+          "median_ms": "10.859",
+          "p95_ms": "41.6458",
+          "p99_ms": "47.2833",
+          "max_ms": "48.2231",
+          "max_mass_error": "1.13832e-08",
+          "max_energy_error": "1.34949e-06",
+          "max_pcg_residual": "9.99729e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "4.26409e-05",
+          "finite": "1"
+        },
+        {
+          "scene": "arena",
+          "ticks": "180",
+          "median_ms": "11.3159",
+          "p95_ms": "33.7593",
+          "p99_ms": "52.664",
+          "max_ms": "53.5579",
+          "max_mass_error": "1.13832e-08",
+          "max_energy_error": "1.34949e-06",
+          "max_pcg_residual": "9.99729e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "4.26409e-05",
+          "finite": "1"
+        }
+      ],
+      "new_runs": [
+        {
+          "scene": "arena",
+          "ticks": "180",
+          "median_ms": "6.4676",
+          "p95_ms": "26.8883",
+          "p99_ms": "30.945",
+          "max_ms": "34.2098",
+          "max_mass_error": "8.58563e-10",
+          "max_energy_error": "2.83122e-07",
+          "max_pcg_residual": "9.96699e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "1.01789e-05",
+          "finite": "1"
+        },
+        {
+          "scene": "arena",
+          "ticks": "180",
+          "median_ms": "6.6775",
+          "p95_ms": "21.5373",
+          "p99_ms": "24.8868",
+          "max_ms": "32.8511",
+          "max_mass_error": "8.58563e-10",
+          "max_energy_error": "2.83122e-07",
+          "max_pcg_residual": "9.96699e-05",
+          "nonconverged_ticks": "0",
+          "max_overfill": "1.01789e-05",
+          "finite": "1"
+        }
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "scene": "falling-water",
+      "ticks": "180",
+      "median_ms": "23.4347",
+      "p95_ms": "55.4869",
+      "p99_ms": "71.8953",
+      "max_ms": "86.3689",
+      "max_mass_error": "1.71713e-09",
+      "max_energy_error": "3.93484e-07",
+      "max_pcg_residual": "9.98971e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "7.43075e-06",
+      "finite": "1"
+    },
+    {
+      "scene": "dam-break",
+      "ticks": "180",
+      "median_ms": "57.4996",
+      "p95_ms": "83.986",
+      "p99_ms": "96.8993",
+      "max_ms": "105.523",
+      "max_mass_error": "3.48882e-09",
+      "max_energy_error": "2.76603e-07",
+      "max_pcg_residual": "9.99445e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "9.71158e-06",
+      "finite": "1"
+    },
+    {
+      "scene": "connected-vessels",
+      "ticks": "180",
+      "median_ms": "28.8788",
+      "p95_ms": "33.4808",
+      "p99_ms": "41.5313",
+      "max_ms": "41.7307",
+      "max_mass_error": "8.29459e-10",
+      "max_energy_error": "1.66707e-06",
+      "max_pcg_residual": "9.99432e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "1.66924e-05",
+      "finite": "1"
+    },
+    {
+      "scene": "oil-water",
+      "ticks": "180",
+      "median_ms": "17.8798",
+      "p95_ms": "22.0808",
+      "p99_ms": "25.4443",
+      "max_ms": "25.4599",
+      "max_mass_error": "3.15049e-09",
+      "max_energy_error": "6.57514e-07",
+      "max_pcg_residual": "9.96365e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "1.65361e-05",
+      "finite": "1"
+    },
+    {
+      "scene": "sand-pile",
+      "ticks": "180",
+      "median_ms": "6.8012",
+      "p95_ms": "9.2578",
+      "p99_ms": "14.0494",
+      "max_ms": "14.5547",
+      "max_mass_error": "1.18962e-09",
+      "max_energy_error": "3.61353e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "sand-water",
+      "ticks": "180",
+      "median_ms": "67.4198",
+      "p95_ms": "92.9647",
+      "p99_ms": "107.896",
+      "max_ms": "127.312",
+      "max_mass_error": "3.28146e-09",
+      "max_energy_error": "1.6205e-07",
+      "max_pcg_residual": "9.99083e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "4.96929e-05",
+      "finite": "1"
+    },
+    {
+      "scene": "smoke-ceiling",
+      "ticks": "180",
+      "median_ms": "27.5005",
+      "p95_ms": "31.123",
+      "p99_ms": "35.7831",
+      "max_ms": "35.8232",
+      "max_mass_error": "4.91127e-10",
+      "max_energy_error": "5.17815e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "smoke-vent",
+      "ticks": "180",
+      "median_ms": "27.2555",
+      "p95_ms": "31.6172",
+      "p99_ms": "33.9857",
+      "max_ms": "34.6761",
+      "max_mass_error": "4.91127e-10",
+      "max_energy_error": "5.17815e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "wood-fire",
+      "ticks": "180",
+      "median_ms": "36.4996",
+      "p95_ms": "49.2816",
+      "p99_ms": "89.5165",
+      "max_ms": "109.15",
+      "max_mass_error": "1.12595e-09",
+      "max_energy_error": "3.2736e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "extinguish",
+      "ticks": "180",
+      "median_ms": "99.0623",
+      "p95_ms": "120.803",
+      "p99_ms": "144.291",
+      "max_ms": "214.285",
+      "max_mass_error": "1.86265e-09",
+      "max_energy_error": "2.69152e-07",
+      "max_pcg_residual": "9.99405e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "1.91231e-06",
+      "finite": "1"
+    },
+    {
+      "scene": "melting-metal",
+      "ticks": "180",
+      "median_ms": "38.8185",
+      "p95_ms": "46.3581",
+      "p99_ms": "48.6258",
+      "max_ms": "50.676",
+      "max_mass_error": "1.10413e-09",
+      "max_energy_error": "5.29923e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "quench-metal",
+      "ticks": "180",
+      "median_ms": "42.4355",
+      "p95_ms": "54.3081",
+      "p99_ms": "59.4012",
+      "max_ms": "60.178",
+      "max_mass_error": "2.93221e-09",
+      "max_energy_error": "2.17929e-07",
+      "max_pcg_residual": "9.97566e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0.13611",
+      "finite": "1"
+    },
+    {
+      "scene": "ice-fire",
+      "ticks": "180",
+      "median_ms": "31.6376",
+      "p95_ms": "36.2553",
+      "p99_ms": "40.2082",
+      "max_ms": "43.1191",
+      "max_mass_error": "1.13687e-09",
+      "max_energy_error": "4.73112e-07",
+      "max_pcg_residual": "9.12878e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "shielded-explosion",
+      "ticks": "180",
+      "median_ms": "29.1462",
+      "p95_ms": "37.1872",
+      "p99_ms": "46.796",
+      "max_ms": "60.7487",
+      "max_mass_error": "1.09321e-09",
+      "max_energy_error": "4.2282e-07",
+      "max_pcg_residual": "0",
+      "nonconverged_ticks": "0",
+      "max_overfill": "0",
+      "finite": "1"
+    },
+    {
+      "scene": "arena",
+      "ticks": "180",
+      "median_ms": "8.745",
+      "p95_ms": "30.4083",
+      "p99_ms": "35.4013",
+      "max_ms": "36.7648",
+      "max_mass_error": "8.58563e-10",
+      "max_energy_error": "2.83122e-07",
+      "max_pcg_residual": "9.96699e-05",
+      "nonconverged_ticks": "0",
+      "max_overfill": "1.01789e-05",
+      "finite": "1"
+    }
+  ],
+  "scaling": [
+    {
+      "scene": "dam-break",
+      "threads": 1,
+      "median_ms": 66.1981,
+      "range": "65.11\u201367.29"
+    },
+    {
+      "scene": "dam-break",
+      "threads": 2,
+      "median_ms": 56.92175,
+      "range": "55.35\u201358.49"
+    },
+    {
+      "scene": "dam-break",
+      "threads": 4,
+      "median_ms": 55.58265,
+      "range": "54.82\u201356.34"
+    },
+    {
+      "scene": "smoke-vent",
+      "threads": 1,
+      "median_ms": 30.393050000000002,
+      "range": "30.30\u201330.49"
+    },
+    {
+      "scene": "smoke-vent",
+      "threads": 2,
+      "median_ms": 24.67945,
+      "range": "23.68\u201325.68"
+    },
+    {
+      "scene": "smoke-vent",
+      "threads": 4,
+      "median_ms": 19.1164,
+      "range": "18.57\u201319.66"
+    }
+  ],
+  "scaling_checksums": {
+    "dam-break": "3580016247180707000",
+    "smoke-vent": "14564507882978821438"
+  }
+}

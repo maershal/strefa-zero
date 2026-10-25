@@ -1,0 +1,2 @@
+scene,ticks,median_ms,p95_ms,p99_ms,max_ms,max_mass_error,max_energy_error,max_pcg_residual,nonconverged_ticks,max_overfill,finite
+smoke-vent,120,30.4896,37.7278,41.0865,41.2998,4.91127e-10,5.17815e-07,0,0,0,1

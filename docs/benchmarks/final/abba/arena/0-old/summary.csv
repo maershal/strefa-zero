@@ -1,0 +1,2 @@
+scene,ticks,median_ms,p95_ms,p99_ms,max_ms,max_mass_error,max_energy_error,max_pcg_residual,nonconverged_ticks,max_overfill,finite
+arena,180,10.859,41.6458,47.2833,48.2231,1.13832e-08,1.34949e-06,9.99729e-05,0,4.26409e-05,1

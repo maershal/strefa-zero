@@ -1,0 +1,2 @@
+scene,ticks,median_ms,p95_ms,p99_ms,max_ms,max_mass_error,max_energy_error,max_pcg_residual,nonconverged_ticks,max_overfill,finite
+quench-metal,180,39.4653,53.5647,89.6984,97.1934,2.93221e-09,2.17929e-07,9.97566e-05,0,0.13611,1
