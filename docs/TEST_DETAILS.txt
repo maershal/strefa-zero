@@ -1,150 +1,85 @@
-Start testing: Oct 25 11:08 Œrodkowoeuropejski czas stand.
+Start testing: Oct 26 16:16 Œrodkowoeuropejski czas stand.
 ----------------------------------------------------------
-1/8 Testing: core.settings
-1/8 Test: core.settings
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/strefa_core_tests.exe"
+12/16 Testing: gpu.granular_physics
+12/16 Test: gpu.granular_physics
+Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe" "--gpu-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-test-profile"
 Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"core.settings" start time: Oct 25 11:08 Œrodkowoeuropejski czas stand.
-Output:
-----------------------------------------------------------
-PASS: round-trip, invalid inputs, atomic replacement and corruption handling
-<end of output>
-Test time =   0.03 sec
-----------------------------------------------------------
-Test Passed.
-"core.settings" end time: Oct 25 11:08 Œrodkowoeuropejski czas stand.
-"core.settings" time elapsed: 00:00:00
-----------------------------------------------------------
-
-2/8 Testing: sim.materials
-2/8 Test: sim.materials
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/strefa_sim_tests.exe"
-Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"sim.materials" start time: Oct 25 11:08 Œrodkowoeuropejski czas stand.
-Output:
-----------------------------------------------------------
-PASS thermal and latent heat
-Hydrostatic p(top/bottom)=1335.68/4196.68 residual=5.57099e-05
-Connected vessels transfer=1424.44
-PASS liquid mass, walls, density and hydrostatics
-PASS reactions, oxygen, acid, acoustics and shielding
-PASS reference, compact PCG and fixed clock
-<end of output>
-Test time =  20.00 sec
-----------------------------------------------------------
-Test Passed.
-"sim.materials" end time: Oct 25 11:08 Œrodkowoeuropejski czas stand.
-"sim.materials" time elapsed: 00:00:19
-----------------------------------------------------------
-
-3/8 Testing: sim.numerics_parallel
-3/8 Test: sim.numerics_parallel
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/strefa_numerics_tests.exe"
-Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"sim.numerics_parallel" start time: Oct 25 11:08 Œrodkowoeuropejski czas stand.
-Output:
-----------------------------------------------------------
-IC iterations=88 error=3.31626e-11 true residual=9.17701e-11
-MIC iterations=43 error=1.03861e-11 true residual=5.85012e-11
-MIC+coarse iterations=39 error=7.00351e-12 true residual=5.15173e-11
-PASS manufactured pressure and MIC
-PASS bitwise 1/2/4-thread equivalence
-PASS aggregate heat-flux stability
-PASS sealed Neumann compatibility/gauges
-PASS species-based fuel activation
-Centers 77.6434 / 77.4593
-CFL .9/.45 falling-water center difference=0.184133 cells
-PASS timestep refinement/configuration
-<end of output>
-Test time =  12.82 sec
-----------------------------------------------------------
-Test Passed.
-"sim.numerics_parallel" end time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-"sim.numerics_parallel" time elapsed: 00:00:12
-----------------------------------------------------------
-
-4/8 Testing: game.training
-4/8 Test: game.training
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/strefa_game_tests.exe"
-Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"game.training" start time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-Output:
-----------------------------------------------------------
-PASS: input edges, movement/collision, jump, jet fuel, weapons/occlusion, targets, reload, grenade, reset, 30/60/144 FPS determinism
-<end of output>
-Test time =  31.39 sec
-----------------------------------------------------------
-Test Passed.
-"game.training" end time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-"game.training" time elapsed: 00:00:31
-----------------------------------------------------------
-
-5/8 Testing: sim.laboratory_worker
-5/8 Test: sim.laboratory_worker
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/strefa_laboratory_tests.exe"
-Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"sim.laboratory_worker" start time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-Output:
-----------------------------------------------------------
-PASS: worker, immutable snapshots, inspector, pause, steps, commands and shutdown
-<end of output>
-Test time =   0.07 sec
-----------------------------------------------------------
-Test Passed.
-"sim.laboratory_worker" end time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-"sim.laboratory_worker" time elapsed: 00:00:00
-----------------------------------------------------------
-
-6/8 Testing: app.opengl_smoke
-6/8 Test: app.opengl_smoke
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/StrefaZero.exe" "--smoke-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/smoke-profile"
-Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"app.opengl_smoke" start time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
+"gpu.granular_physics" start time: Oct 26 16:16 Œrodkowoeuropejski czas stand.
 Output:
 ----------------------------------------------------------
 <end of output>
-Test time =   8.43 sec
+Test time =   3.87 sec
 ----------------------------------------------------------
 Test Passed.
-"app.opengl_smoke" end time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-"app.opengl_smoke" time elapsed: 00:00:08
+"gpu.granular_physics" end time: Oct 26 16:16 Œrodkowoeuropejski czas stand.
+"gpu.granular_physics" time elapsed: 00:00:03
 ----------------------------------------------------------
 
-7/8 Testing: app.laboratory_responsiveness
-7/8 Test: app.laboratory_responsiveness
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/StrefaZero.exe" "--lab-smoke-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/laboratory-smoke-profile"
+13/16 Testing: gpu.liquid_physics
+13/16 Test: gpu.liquid_physics
+Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe" "--gpu-liquid-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-liquid-profile"
 Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"app.laboratory_responsiveness" start time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
+"gpu.liquid_physics" start time: Oct 26 16:16 Œrodkowoeuropejski czas stand.
 Output:
 ----------------------------------------------------------
 <end of output>
-Test time =   5.71 sec
+Test time =  12.66 sec
 ----------------------------------------------------------
 Test Passed.
-"app.laboratory_responsiveness" end time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
-"app.laboratory_responsiveness" time elapsed: 00:00:05
+"gpu.liquid_physics" end time: Oct 26 16:16 Œrodkowoeuropejski czas stand.
+"gpu.liquid_physics" time elapsed: 00:00:12
 ----------------------------------------------------------
 
-8/8 Testing: app.laboratory_four_threads
-8/8 Test: app.laboratory_four_threads
-Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/StrefaZero.exe" "--lab-smoke-test" "--physics-threads" "4" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/laboratory-four-thread-profile"
+14/16 Testing: gpu.flow_behaviour
+14/16 Test: gpu.flow_behaviour
+Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe" "--gpu-flow-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-flow-profile"
 Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
-"app.laboratory_four_threads" start time: Oct 25 11:09 Œrodkowoeuropejski czas stand.
+"gpu.flow_behaviour" start time: Oct 26 16:16 Œrodkowoeuropejski czas stand.
 Output:
 ----------------------------------------------------------
 <end of output>
-Test time =   5.96 sec
+Test time =  14.06 sec
 ----------------------------------------------------------
 Test Passed.
-"app.laboratory_four_threads" end time: Oct 25 11:10 Œrodkowoeuropejski czas stand.
-"app.laboratory_four_threads" time elapsed: 00:00:05
+"gpu.flow_behaviour" end time: Oct 26 16:17 Œrodkowoeuropejski czas stand.
+"gpu.flow_behaviour" time elapsed: 00:00:14
 ----------------------------------------------------------
 
-End testing: Oct 25 11:10 Œrodkowoeuropejski czas stand.
+15/16 Testing: gpu.laboratory_ui
+15/16 Test: gpu.laboratory_ui
+Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe" "--gpu-smoke-test" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-ui-profile"
+Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+"gpu.laboratory_ui" start time: Oct 26 16:17 Œrodkowoeuropejski czas stand.
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   4.72 sec
+----------------------------------------------------------
+Test Passed.
+"gpu.laboratory_ui" end time: Oct 26 16:17 Œrodkowoeuropejski czas stand.
+"gpu.laboratory_ui" time elapsed: 00:00:04
+----------------------------------------------------------
 
-graphics =  20.11 sec*proc
+16/16 Testing: app.opengl33_smoke
+16/16 Test: app.opengl33_smoke
+Command: "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe" "--smoke-test" "--opengl33" "--profile" "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/legacy-smoke-profile"
+Directory: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+"app.opengl33_smoke" start time: Oct 26 16:17 Œrodkowoeuropejski czas stand.
+Output:
+----------------------------------------------------------
+<end of output>
+Test time =   7.91 sec
+----------------------------------------------------------
+Test Passed.
+"app.opengl33_smoke" end time: Oct 26 16:17 Œrodkowoeuropejski czas stand.
+"app.opengl33_smoke" time elapsed: 00:00:07
+----------------------------------------------------------
 
-integration =  20.11 sec*proc
+End testing: Oct 26 16:17 Œrodkowoeuropejski czas stand.
 
-performance =  11.67 sec*proc
+gpu =  35.31 sec*proc
+
+graphics =  43.22 sec*proc
+
+integration =  43.22 sec*proc
 

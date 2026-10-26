@@ -6,6 +6,7 @@
 #include "ui/view.hpp"
 #include "ui/laboratory.hpp"
 #include "ui/arena.hpp"
+#include "ui/gpu_laboratory.hpp"
 #include "sim/fixed_clock.hpp"
 #include "sim/recording.hpp"
 #include "build_info.hpp"
@@ -42,7 +43,7 @@ public:
 
     }
 
-    std::expected<int, std::string> run(bool smoke_test, bool start_in_laboratory, bool start_in_arena, bool lab_smoke) {
+    std::expected<int, std::string> run(bool smoke_test, bool start_in_laboratory, bool start_in_arena, bool lab_smoke,bool start_gpu,bool gpu_smoke,bool start_mission,bool mission_smoke) {
         if(smoke_test) {
             world_=std::make_unique<sim::World>(0x57EF'A023U,physics_);world_->load_demo();
             lab_snapshot_=sim::present_world(*world_,sim::RenderMode::materials);
@@ -54,11 +55,16 @@ public:
         if (start_in_laboratory && !smoke_test) perform(ui::Action::open_laboratory);
         if (start_in_arena && !smoke_test) perform(ui::Action::open_arena);
         if(lab_smoke) {lab_controls_.scene=sim::Scene::dam_break;perform(ui::Action::open_laboratory);}
+        if(start_gpu||gpu_smoke){if(!perform(ui::Action::open_gpu))return std::unexpected{message_};}
+        if(gpu_smoke){gpu_world_->reset(gpu::Scene::sand_water);gpu_controls_.scene=static_cast<int>(gpu::Scene::sand_water);}
+        if(start_mission||mission_smoke){if(!perform(ui::Action::open_mission))return std::unexpected{message_};}
         std::array<bool, 6> visited_screens{};
         std::array<bool, 3> visited_themes{};
         bool smoke_ok = true;
         unsigned frames{};
         std::vector<double> ui_frame_times;
+        std::vector<std::array<double,5>> mission_frames;
+        std::uint64_t gpu_paused_step{};bool gpu_pause_ok=true;
         auto previous = SDL_GetTicksNS();
         while (running_) {
             const auto frame_start = SDL_GetTicksNS();
@@ -72,7 +78,7 @@ public:
                         && event.window.windowID == SDL_GetWindowID(window_.native()))) running_ = false;
             }
             if (!running_) break;
-            if (window_.minimized()) { if(lab_worker_) lab_worker_->set_active(false); clock_.reset(); game_clock_.reset(); game_input_.clear(); SDL_Delay(30); continue; }
+            if (window_.minimized()) { if(lab_worker_) lab_worker_->set_active(false); clock_.reset(); game_clock_.reset(); gpu_clock_.reset();game_input_.clear();mission_clock_.reset();mission_input_.clear(); SDL_Delay(30); continue; }
 
             if (smoke_test) smoke_ok = smoke_step(frames) && smoke_ok;
             if(lab_smoke) {
@@ -82,9 +88,17 @@ public:
                 if(frames==200) perform(ui::Action::back);
                 if(frames==220) perform(ui::Action::open_laboratory);
             }
+            if(mission_smoke&&frames>=30)ui_frame_times.push_back(frame_ms);
+            if(gpu_smoke){
+                if(frames>=30)ui_frame_times.push_back(frame_ms);
+                if(frames==80){gpu_controls_.paused=true;gpu_paused_step=gpu_world_->metrics().steps;}
+                if(frames==100){gpu_pause_ok=gpu_world_->metrics().steps==gpu_paused_step;gpu_controls_.paused=false;}
+                if(frames==140)perform(ui::Action::back);
+                if(frames==155)perform(ui::Action::open_gpu);
+            }
             gui_.set_scale(window_.display_scale(), state_.applied.ui_scale);
             gui_.new_frame();
-            visited_screens[static_cast<std::size_t>(state_.screen)] = true;
+            if(static_cast<std::size_t>(state_.screen)<visited_screens.size())visited_screens[static_cast<std::size_t>(state_.screen)] = true;
             visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
             const ui::FrameInfo info{gui_.scale(), frame_ms, renderer_, gl_version_, message_};
             // Render one coherent snapshot of actors and terrain. Input collected by
@@ -111,23 +125,49 @@ public:
             const bool focused = (SDL_GetWindowFlags(window_.native()) & SDL_WINDOW_INPUT_FOCUS) != 0;
             ui::ArenaFrame arena{{canvas_.id(), canvas_.width(), canvas_.height()}, soldier_,
                 images_[static_cast<std::size_t>(state_.applied.map_theme)], parts_, weapons_, game_, arena_input, focused};
-            const auto action = ui::draw(state_, info, images_, gui_.fonts(), &lab, &arena);
+            if(state_.screen==ui::Screen::gpu_mission&&mission_world_){
+                mission_world_->poll();arena.world={mission_world_->texture(),gpu::width*3,gpu::height*3};arena.game=ui::ArenaView{mission_world_->mission()};
+            }
+            ui::GpuInput gpu_input;std::optional<ui::GpuLaboratoryFrame> gpu_frame;
+            if(state_.screen==ui::Screen::gpu_laboratory&&gpu_world_){
+                gpu_world_->poll();
+                gpu_frame.emplace(ui::GpuLaboratoryFrame{{gpu_world_->texture(),gpu::width*3,gpu::height*3},gpu_world_->metrics(),gpu_controls_,gpu_input});
+            }
+            const auto action = ui::draw(state_, info, images_, gui_.fonts(), &lab, &arena,gpu_frame?&*gpu_frame:nullptr);
+            if(gpu_frame){
+                update_gpu(gpu_input,static_cast<double>(frame_ms)/1000.0,focused||gpu_smoke);
+                if(gpu_smoke&&frames==230)gpu_world_->save_image(store_.path().parent_path()/"gpu-preview.bmp");
+            }else gpu_clock_.reset();
             if (state_.screen == ui::Screen::laboratory) {
                 const auto updated = update_lab(input, static_cast<double>(frame_ms) / 1000.0);
                 if (!updated) return std::unexpected{updated.error()};
             } else { if(lab_worker_) lab_worker_->set_active(false); clock_.reset(); lab_controls_.previous.reset(); }
+            if(state_.screen==ui::Screen::gpu_mission&&action!=ui::Action::back){
+                update_mission(arena_input,static_cast<double>(frame_ms)/1000,focused||mission_smoke,mission_smoke);
+                if(mission_smoke)mission_frames.push_back({static_cast<double>(frames),frame_ms,mission_world_->metrics().gpu_ms,mission_world_->metrics().cpu_submit_ms,mission_clock_.dropped_seconds()});
+                if(mission_smoke&&frames==899)mission_world_->save_image(store_.path().parent_path()/"mission-preview.bmp");
+            }else{mission_clock_.reset();mission_input_.clear();}
             if (state_.screen == ui::Screen::arena && action != ui::Action::back)
                 update_game(arena_input, static_cast<double>(frame_ms) / 1000.0, focused, smoke_test);
             else { game_clock_.reset(); game_input_.clear(); }
             window_.clear();
             gui_.render();
-            if (smoke_test && glGetError() != GL_NO_ERROR)
+            if(mission_smoke&&frames==899){
+                int w{},h{};SDL_GetWindowSizeInPixels(window_.native(),&w,&h);std::vector<std::uint32_t> capture(static_cast<std::size_t>(w)*h);
+                glReadPixels(0,0,w,h,GL_RGBA,GL_UNSIGNED_BYTE,capture.data());
+                for(int y=0;y<h/2;++y)for(int x=0;x<w;++x)std::swap(capture[y*w+x],capture[(h-1-y)*w+x]);
+                auto* surface=SDL_CreateSurfaceFrom(w,h,SDL_PIXELFORMAT_RGBA32,capture.data(),w*4);
+                if(surface){const auto path=(store_.path().parent_path()/"mission-window.bmp").u8string();SDL_SaveBMP(surface,reinterpret_cast<const char*>(path.c_str()));SDL_DestroySurface(surface);}
+            }
+            if ((smoke_test||gpu_smoke||mission_smoke) && glGetError() != GL_NO_ERROR)
                 return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
             window_.present();
             if (action != ui::Action::none) perform(action);
             ++frames;
             if (smoke_test && frames >= 238) running_ = false;
             if(lab_smoke&&frames>=300) running_=false;
+            if(gpu_smoke&&frames>=240)running_=false;
+            if(mission_smoke&&frames>=900)running_=false;
 
             if (!window_.vsync_enabled()) {
                 const auto budget = static_cast<Uint64>(1'000'000'000 / state_.applied.frame_limit);
@@ -155,6 +195,22 @@ public:
                 return std::unexpected{"Test reaktywności laboratorium nie przeszedł."};
         }
         if (recording_) { recording_->finish(); recording_.reset(); }
+        if(gpu_smoke||mission_smoke){
+            std::ranges::sort(ui_frame_times);
+            auto percentile=[&](double q){return ui_frame_times[std::min(ui_frame_times.size()-1,static_cast<std::size_t>(ui_frame_times.size()*q))];};
+            std::ofstream report{store_.path().parent_path()/(mission_smoke?"mission-ui.txt":"gpu-ui.txt")};
+            const auto& measured=mission_smoke?*mission_world_:*gpu_world_;
+            if(mission_smoke){std::ofstream frames_out{store_.path().parent_path()/"mission-frames.csv"};frames_out<<"frame,frame_ms,gpu_physics_ms,cpu_submit_ms,dropped_seconds\n";
+                for(const auto& row:mission_frames)frames_out<<row[0]<<','<<row[1]<<','<<row[2]<<','<<row[3]<<','<<row[4]<<'\n';}
+            report<<"scene="<<(mission_smoke?"mission":"sand_water")<<"\nframes="<<frames<<"\nmedian_ms="<<percentile(.5)<<"\np95_ms="<<percentile(.95)<<"\np99_ms="<<percentile(.99)
+                <<"\nmax_ms="<<ui_frame_times.back()<<"\nsteps="<<measured.metrics().steps<<"\ngpu_step_ms="<<measured.metrics().gpu_ms<<"\ngpu_render_ms="<<measured.metrics().render_ms<<"\ncpu_submit_ms="<<measured.metrics().cpu_submit_ms
+                <<"\npaused_ok="<<gpu_pause_ok<<"\ndropped_seconds="<<(mission_smoke?mission_clock_.dropped_seconds():gpu_controls_.lost_seconds)<<"\nrenderer="<<renderer_<<'\n';
+            if(mission_smoke)report<<"hud_epoch="<<measured.mission().status[1]<<"\nhud_tick="<<measured.mission().status[2]
+                <<"\nshots="<<measured.mission().inventory[3]<<"\nexplosions="<<measured.mission().counts[0]<<"\nmission_complete="<<measured.mission().status[3]<<"\nscore="<<measured.mission().inventory[2]<<'\n';
+            if(mission_smoke&&(measured.mission().status[3]!=1||measured.mission().inventory[2]!=3||mission_clock_.dropped_seconds()!=0))
+                return std::unexpected{"Misja GPU: niepełny przebieg lub pominięte kroki czasu."};
+            if(!gpu_pause_ok||measured.metrics().steps<100||percentile(.95)>100)return std::unexpected{"Nieudany test okna GPU."};
+        }
         if (smoke_test) {
             const bool all_screens = std::ranges::all_of(visited_screens, [](bool value) { return value; });
             const bool all_themes = std::ranges::all_of(visited_themes, [](bool value) { return value; });
@@ -179,6 +235,23 @@ public:
     }
 
 private:
+    void update_mission(const ui::ArenaInput& input,double elapsed,bool focused,bool scripted){
+        if(input.reset){mission_world_->reset_mission();mission_clock_.reset();mission_input_.clear();elapsed=0;}
+        if(!focused){mission_clock_.reset();mission_input_.clear();return;}
+        mission_input_.submit(input.controls);const int steps=mission_clock_.advance(elapsed,false,1);
+        for(int i=0;i<steps;++i){const auto c=mission_input_.consume();
+            const unsigned buttons=(c.jump?gpu::jump:0U)|(c.jet?gpu::jet:0U)|(c.fire?gpu::fire:0U)|(c.reload?gpu::reload:0U)|(c.grenade?gpu::grenade:0U);
+            mission_world_->step(scripted?gpu::scripted_mission_input(static_cast<unsigned>(mission_world_->metrics().steps)):gpu::MissionInput{c.move,c.aim.x,c.aim.y,buttons});}
+        mission_world_->render(static_cast<float>(mission_clock_.fraction()));
+    }
+    void update_gpu(const ui::GpuInput& input,double elapsed,bool focused){
+        if(input.reset){gpu_world_->reset(static_cast<gpu::Scene>(gpu_controls_.scene));gpu_clock_.reset();gpu_controls_.lost_seconds=0;}
+        if(input.stroke)gpu_world_->paint(*input.stroke);
+        const int steps=gpu_clock_.advance(elapsed,gpu_controls_.paused||!focused,1,input.step&&gpu_controls_.paused);
+        for(int i=0;i<steps;++i)gpu_world_->step();
+        gpu_controls_.lost_seconds=gpu_clock_.dropped_seconds();
+        gpu_world_->render(gpu_controls_.paused||!focused?1.F:static_cast<float>(gpu_clock_.fraction()));
+    }
     std::expected<void, std::string> upload_world(const sim::World& world, bool transparent = false) {
         last_lab_pixels_.reset();
         world.render(std::span<sim::Color, sim::World::cell_count>{pixels_.data(), pixels_.size()}, transparent,
@@ -254,6 +327,21 @@ private:
     bool perform(ui::Action action) {
         switch (action) {
             case ui::Action::none: break;
+            case ui::Action::open_mission:
+                if(!mission_world_){
+                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders");
+                    if(!created){message_=created.error();return false;}mission_world_=std::move(*created);
+                    mission_world_->set_actor_textures(static_cast<unsigned>(parts_.handle),static_cast<unsigned>(weapons_.handle),weapons_.width,weapons_.height);mission_world_->reset_mission();
+                }
+                state_.screen=ui::Screen::gpu_mission;mission_clock_.reset();mission_input_.clear();message_.clear();break;
+            case ui::Action::open_gpu:
+                if(!gpu_world_){
+                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders");
+                    if(!created){message_=created.error();return false;}
+                    // Move the successfully initialized owner only after capability/shader checks.
+                    gpu_world_=std::move(*created);
+                }
+                state_.screen=ui::Screen::gpu_laboratory;gpu_clock_.reset();message_.clear();break;
             case ui::Action::open_arena:
                 state_.screen = ui::Screen::arena; game_clock_.reset(); game_input_.clear(); message_.clear(); break;
             case ui::Action::open_laboratory:
@@ -344,6 +432,10 @@ private:
     game::InputBuffer game_input_;
     sim::FixedClock game_clock_;
     unsigned game_uploads_{}, smoke_game_frame_{};
+    std::unique_ptr<gpu::ParticleWorld> gpu_world_,mission_world_;
+    sim::FixedStepClock<120,4,24> mission_clock_;game::InputBuffer mission_input_;
+    ui::GpuControls gpu_controls_;
+    sim::FixedStepClock<120,4> gpu_clock_;
 };
 
 } // namespace
@@ -356,6 +448,15 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
         else if(argument=="--lab-smoke-test") result.laboratory_smoke_test=true;
         else if (argument == "--laboratory") result.start_in_laboratory = true;
         else if (argument == "--arena") result.start_in_arena = true;
+        else if(argument=="--gpu-laboratory")result.start_in_gpu=true;
+        else if(argument=="--mission")result.start_in_mission=true;
+        else if(argument=="--mission-test")result.mission_test=true;
+        else if(argument=="--mission-smoke-test")result.mission_smoke=true;
+        else if(argument=="--gpu-test")result.gpu_test=true;
+        else if(argument=="--gpu-liquid-test")result.gpu_liquid_test=true;
+        else if(argument=="--gpu-flow-test")result.gpu_flow_test=true;
+        else if(argument=="--gpu-smoke-test")result.gpu_smoke_test=true;
+        else if(argument=="--opengl33")result.legacy_graphics=true;
         else if(argument=="--physics-threads"&&i+1<argc) {
             const std::string_view value{argv[++i]};
             if(value.size()!=1||value.front()<'1'||value.front()>'4')
@@ -365,11 +466,11 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
         else if (argument == "--profile" && i + 1 < argc) result.profile = utf8_path(argv[++i]);
         else return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
     }
-    if ((result.smoke_test||result.laboratory_smoke_test) && result.profile.empty())
+    if ((result.smoke_test||result.laboratory_smoke_test||result.gpu_test||result.gpu_liquid_test||result.gpu_flow_test||result.gpu_smoke_test||result.mission_test||result.mission_smoke) && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
-    if (result.start_in_arena && result.start_in_laboratory)
-        return std::unexpected{"Wybierz jeden tryb startowy: --arena albo --laboratory."};
-    if(result.smoke_test&&result.laboratory_smoke_test) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if (static_cast<int>(result.start_in_arena)+result.start_in_laboratory+result.start_in_gpu+result.start_in_mission>1)
+        return std::unexpected{"Wybierz jeden tryb startowy."};
+    if(static_cast<int>(result.smoke_test)+result.laboratory_smoke_test+result.gpu_test+result.gpu_liquid_test+result.gpu_flow_test+result.gpu_smoke_test+result.mission_test+result.mission_smoke>1) return std::unexpected{"Wybierz jeden rodzaj testu."};
     return result;
 }
 
@@ -385,19 +486,28 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
         profile = utf8_path(path.get());
     }
     platform::SettingsStore store{profile / "settings.ini"};
-    if(options.smoke_test||options.laboratory_smoke_test) std::filesystem::create_directories(profile);
+    const bool testing=options.smoke_test||options.laboratory_smoke_test||options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke;
+    if(testing) std::filesystem::create_directories(profile);
     auto loaded = store.load();
     std::string message = loaded ? std::string{} : loaded.error() + " Użyto ustawień domyślnych.";
     // A smoke run starts from known defaults and only writes its dedicated profile.
-    auto settings = options.smoke_test||options.laboratory_smoke_test ? core::Settings{} : loaded.value_or(core::Settings{});
-    if(options.laboratory_smoke_test) {settings.vsync=false;settings.frame_limit=60;}
-    auto window = platform::Window::create(settings);
+    auto settings = testing ? core::Settings{} : loaded.value_or(core::Settings{});
+    if(options.laboratory_smoke_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke) {settings.vsync=false;settings.frame_limit=60;}
+    auto window = platform::Window::create(settings,!options.legacy_graphics);
     if (!window) return std::unexpected{window.error()};
     settings.vsync = window->vsync_enabled();
     if (!window->warning().empty()) message = window->warning();
     const char* base = SDL_GetBasePath();
     if (!base) return std::unexpected{"Nie można ustalić katalogu aplikacji."};
     const auto assets = utf8_path(base) / "assets";
+    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke){
+        GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
+        if(major<4||(major==4&&minor<3)){std::ofstream{profile/"gpu-skipped.txt"}<<"OpenGL 4.3 unavailable; GPU tests skipped, CPU mode remains supported.\n";return 77;}
+    }
+    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.mission_test){
+        auto world=gpu::ParticleWorld::create(assets/"shaders");if(!world)return std::unexpected{world.error()};
+        const auto validated=options.mission_test?gpu::validate_mission(**world,profile):options.gpu_flow_test?gpu::validate_flow(**world,profile):options.gpu_liquid_test?gpu::validate_liquids(**world,profile):gpu::validate_granular(**world,profile);if(!validated)return std::unexpected{validated.error()};return 0;
+    }
     auto gui = ui::Session::create(*window, assets);
     if (!gui) return std::unexpected{gui.error()};
     std::array<std::optional<platform::Texture>, 3> textures;
@@ -421,12 +531,12 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     auto parts = platform::Texture::load_bmp(assets/"actors"/"parts.bmp");
     auto weapons = platform::Texture::load_bmp(assets/"weapons"/"weapons.bmp");
     if (!parts || !weapons) return std::unexpected{"Brak atlasu części postaci lub broni."};
-    if (!options.smoke_test&&!options.laboratory_smoke_test) window->show();
+    if (!testing) window->show();
     sim::PhysicsConfig physics;physics.worker_threads=options.physics_threads;
     Application application{*window, *gui, store, settings, images, *canvas,
         {soldier->id(), soldier->width(), soldier->height()}, {parts->id(),parts->width(),parts->height()},
         {weapons->id(),weapons->width(),weapons->height()}, std::move(message),physics};
-    return application.run(options.smoke_test, options.start_in_laboratory, options.start_in_arena,options.laboratory_smoke_test);
+    return application.run(options.smoke_test, options.start_in_laboratory, options.start_in_arena,options.laboratory_smoke_test,options.start_in_gpu,options.gpu_smoke_test,options.start_in_mission,options.mission_smoke);
 }
 
 } // namespace strefa::app

@@ -1,6 +1,7 @@
 #include "ui/view.hpp"
 #include "ui/laboratory.hpp"
 #include "ui/arena.hpp"
+#include "ui/gpu_laboratory.hpp"
 #include "build_info.hpp"
 #include <imgui.h>
 #include <algorithm>
@@ -99,7 +100,7 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     ImGui::SetNextWindowSize({width, viewport->Size.y - margin * 2.0F});
     ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, {0.0F, 0.0F});
     ImGui::Begin("MainMenu", nullptr, plain_window | ImGuiWindowFlags_NoBackground);
-    ImGui::TextColored(accent, "PROTOTYP 04   /   OFFLINE");
+    ImGui::TextColored(accent, "PROTOTYP 07   /   OFFLINE");
     ImGui::Dummy({0.0F, (tight ? 4.0F : compact ? 12.0F : 22.0F) * s});
     {
         const FontScope font{fonts.heading, tight ? 42.0F : compact ? 58.0F : 76.0F};
@@ -114,12 +115,14 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     ImGui::Dummy({0.0F, (tight ? 8.0F : compact ? 16.0F : 28.0F) * s});
     Action action = Action::none;
     const float button_height = (tight ? 29.0F : compact ? 34.0F : 40.0F) * s;
-    if (menu_button("01    Poligon — rozpocznij grę", button_height, true)) action = Action::open_arena;
+    if (menu_button("Misja GPU — rozpocznij grę", button_height, true)) action = Action::open_mission;
+    if (menu_button("Poligon CPU — tryb referencyjny", button_height)) action = Action::open_arena;
     if (menu_button("02    Laboratorium materiałów", button_height)) action = Action::open_laboratory;
-    if (menu_button("03    Podgląd areny", button_height)) action = Action::open_preview;
-    if (menu_button("04    Ustawienia", button_height)) action = Action::open_settings;
-    if (menu_button("05    O projekcie", button_height)) action = Action::open_about;
-    if (menu_button("06    Zakończ", button_height)) action = Action::quit;
+    if (menu_button("03    Laboratorium GPU — ciecze i ziarna", button_height)) action = Action::open_gpu;
+    if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
+    if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
+    if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
+    if (menu_button("07    Zakończ", button_height)) action = Action::quit;
     ImGui::Dummy({0.0F, 14.0F * s});
     notice(frame.message);
     ImGui::TextDisabled("v%s  /  F1 — diagnostyka", build::version.data());
@@ -212,7 +215,7 @@ Action settings(ViewState& state, const FrameInfo& frame, const Fonts& fonts) {
 
 Action about(const FrameInfo& frame, const Fonts& fonts) {
     begin_card("About", 640.0F, 470.0F, frame.scale);
-    ImGui::TextColored(accent, "STREFA ZERO   /   0.4");
+    ImGui::TextColored(accent, "STREFA ZERO   /   0.7");
     heading(fonts, "Początek operacji", 34.0F);
     ImGui::Spacing();
     ImGui::PushTextWrapPos(0.0F);
@@ -224,6 +227,7 @@ Action about(const FrameInfo& frame, const Fonts& fonts) {
     ImGui::BulletText("Poligon: ruch, plecak odrzutowy, karabin i granaty");
     ImGui::BulletText("Laboratorium: 19 materiałów oraz gumka");
     ImGui::BulletText("Temperatura, ciśnienie, reakcje i sceny testowe");
+    ImGui::BulletText("Laboratorium GPU: ciecze PBF, ziarna i kontakty");
     ImGui::Spacing();
     ImGui::TextDisabled("C++23  /  SDL3  /  Dear ImGui  /  OpenGL");
     ImGui::TextDisabled("Czcionki: Barlow — SIL Open Font License.");
@@ -269,7 +273,7 @@ void diagnostics(ViewState& state, const FrameInfo& frame) {
 } // namespace
 
 Action draw(ViewState& state, const FrameInfo& frame,
-    const std::array<Image, 3>& backgrounds, const Fonts& fonts, LaboratoryFrame* laboratory, ArenaFrame* arena) {
+    const std::array<Image, 3>& backgrounds, const Fonts& fonts, LaboratoryFrame* laboratory, ArenaFrame* arena, GpuLaboratoryFrame* gpu) {
     const auto theme = static_cast<std::size_t>(state.applied.map_theme);
     background(backgrounds[theme], state.screen == Screen::preview, frame.scale);
     Action result = Action::none;
@@ -281,8 +285,12 @@ Action draw(ViewState& state, const FrameInfo& frame,
         case Screen::laboratory:
             if (laboratory) result = draw_laboratory(*laboratory, frame, fonts);
             break;
+        case Screen::gpu_mission:
         case Screen::arena:
             if (arena) result = draw_arena(*arena, frame, fonts);
+            break;
+        case Screen::gpu_laboratory:
+            if(gpu)result=draw_gpu_laboratory(*gpu,frame);
             break;
     }
     if (ImGui::IsKeyPressed(ImGuiKey_F1, false)) state.diagnostics = !state.diagnostics;

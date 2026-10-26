@@ -1,0 +1,11 @@
+scene=sand_water
+frames=240
+median_ms=16.6681
+p95_ms=16.6686
+p99_ms=16.6858
+max_ms=18.5006
+steps=408
+gpu_step_ms=3.86253
+paused_ok=1
+dropped_seconds=0
+renderer=NVIDIA GeForce GTX 1650/PCIe/SSE2

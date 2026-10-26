@@ -10,6 +10,9 @@ struct LaunchOptions {
     bool laboratory_smoke_test{false};
     bool start_in_laboratory{false};
     bool start_in_arena{false};
+    bool start_in_gpu{},gpu_test{},gpu_liquid_test{},gpu_flow_test{},gpu_smoke_test{};
+    bool start_in_mission{},mission_test{},mission_smoke{};
+    bool legacy_graphics{};
     unsigned physics_threads{};
     std::filesystem::path profile;
 };

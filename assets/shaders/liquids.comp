@@ -1,0 +1,107 @@
+#version 430 core
+layout(local_size_x=256) in;
+#include "particle_common.glsl"
+const float support=2.0,referenceDensity=1.014612762210833;
+// Density and cohesive potential use 2D Poly6. Pressure uses a 2D Spiky
+// gradient, the standard PBF approximate Jacobian; it resists short-range
+// clustering without the near-zero Poly6 derivative near coincident carriers.
+float kernel(vec2 d){float q=max(0,4-dot(d,d));return q*q*q/(64*3.141592653589793);}
+vec2 gradient(vec2 d){float q=max(0,4-dot(d,d));return -6*q*q*d/(64*3.141592653589793);}
+vec2 pressureGradient(vec2 d){
+    float r=length(d);
+    return r>.000001&&r<2?-30*(2-r)*(2-r)*d/(32*3.141592653589793*r):vec2(0);
+}
+void main(){
+    uint id=gl_GlobalInvocationID.x;
+    if(operation==3){if(id==0)maxCompression=0u;return;}
+    if(id>=aliveCount)return;id=slots[N+id];Grain p=src[id];
+    if(p.motion.w<.5){if(operation==1||operation==4)dst[id]=p;else terms[id]=vec4(0);return;}
+    ivec2 c=ivec2(floor(p.position.xy));
+    if(operation==0||operation==2){
+        if(!liquid(p)){terms[id]=vec4(0);return;}
+        float density=kernel(vec2(0)),denominator=0;vec2 grad_i=vec2(0),bodyGrad=vec2(0);
+        if(game.status.x!=0u){
+            ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
+            for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+                vec2 b=bodySamplePosition(local+ivec2(x,y));if(!bodySample(b))continue;
+                vec2 d=p.position.xy-b;density+=kernel(d);bodyGrad+=pressureGradient(d)/referenceDensity;
+            }
+            grad_i+=bodyGrad;denominator+=game.body.x*dot(bodyGrad,bodyGrad);
+        }
+        for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+            ivec2 b=c+ivec2(x,y);
+            if(solid(b)){
+                // Unit-volume stationary boundary samples. Inverse mass is zero.
+                vec2 d=(p.position.xy-(vec2(b)+.5))+p.residual.xy;density+=kernel(d);grad_i+=pressureGradient(d)/referenceDensity;continue;
+            }
+            int j=head[b.y*W+b.x];
+            while(j>=0){if(j!=int(id)){
+                vec2 d=separation(p,src[j]);
+                if(dot(d,d)<4&&visible(p.position.xy,src[j].position.xy)){
+                    density+=kernel(d);vec2 grad_j=pressureGradient(d)/referenceDensity;
+                    grad_i+=grad_j;denominator+=src[j].motion.z*dot(grad_j,grad_j);
+                }
+            }j=link[j];}
+        }
+        float compression=max(0,density/referenceDensity-1);
+        float lambda=-compression/(denominator+p.motion.z*dot(grad_i,grad_i)+.0001);
+        terms[id]=vec4(lambda,density/referenceDensity,grad_i);
+        if(operation==2)atomicMax(maxCompression,floatBitsToUint(compression));return;
+    }
+    if(operation==1){
+        vec2 correction=vec2(0),bodyCorrection=vec2(0);float own=liquid(p)?terms[id].x:0;
+        if(game.status.x!=0u&&liquid(p)){
+            ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
+            for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+                vec2 b=bodySamplePosition(local+ivec2(x,y));if(bodySample(b))bodyCorrection+=own*pressureGradient(p.position.xy-b);
+            }
+            correction+=bodyCorrection;
+        }
+        for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+            ivec2 b=c+ivec2(x,y);
+            if(solid(b)){
+                if(liquid(p))correction+=own*pressureGradient((p.position.xy-(vec2(b)+.5))+p.residual.xy);continue;
+            }
+            int j=head[b.y*W+b.x];
+            while(j>=0){if(j!=int(id)){
+                Grain q=src[j];vec2 d=separation(p,q);
+                if(dot(d,d)<4&&(liquid(p)||liquid(q))&&visible(p.position.xy,q.position.xy)){
+                    float other=liquid(q)?terms[j].x:0;
+                    // Small short-range anti-clustering term, symmetric in each
+                    // pair. Negative density constraints are not enforced.
+                    float repel=0;
+                    if(liquid(p)&&liquid(q)){
+                        float ratio=kernel(d)/kernel(vec2(.6,0));repel=-.0001*ratio*ratio*ratio*ratio;
+                    }
+                    correction+=(own+other+repel)*pressureGradient(d);
+                }
+            }j=link[j];}
+        }
+        correction*=p.motion.z/referenceDensity;
+        float len=length(correction);float scale=min(.8,.2/max(.00001,len));correction*=scale;
+        terms[N+id]=vec4(-bodyCorrection*(game.body.x/referenceDensity)*scale,0,0);
+        // A projection cannot teleport a carrier through a one-pixel barrier.
+        for(int i=0;i<2;++i){move(p,correction*.5);terrain(p);}
+        dst[id]=p;return;
+    }
+    if(operation==4){ // XSPH velocity smoothing, time-scaled and pairwise symmetric
+        if(!liquid(p)){dst[id]=p;return;}vec2 change=vec2(0);
+        for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+            ivec2 b=c+ivec2(x,y);if(solid(b))continue;int j=head[b.y*W+b.x];
+            while(j>=0){if(j!=int(id)&&liquid(src[j])){
+                Grain q=src[j];vec2 d=separation(p,q);
+                if(dot(d,d)<4&&visible(p.position.xy,q.position.xy)){
+                    float va=p.motion.w==6?18:1.5,vb=q.motion.w==6?18:1.5;
+                    float viscosity=2*va*vb/(va+vb);
+                    float weight=1-exp(-viscosity*dt);
+                    change+=(q.motion.xy-p.motion.xy)*weight*kernel(d)/referenceDensity*2*p.motion.z/(p.motion.z+q.motion.z);
+                    // Pair potential U=-k W(r), only inside each phase. The
+                    // equal/opposite central forces conserve pair momentum;
+                    // density projection supplies the short-range pressure.
+                    if(p.motion.w==q.motion.w)change+=p.motion.z*60*gradient(d)*dt;
+                }
+            }j=link[j];}
+        }
+        p.motion.xy+=change;dst[id]=p;return;
+    }
+}

@@ -1,4 +1,20 @@
-# Architektura 0.4.2
+# Architektura 0.7.0
+
+## Misja i granica prezentacji
+
+Sesja misji należy do `gpu::ParticleWorld`; `MissionInput` opisuje intencje jednego kroku, `MissionSnapshot` jest niewładczym podsumowaniem HUD. `MissionConfig` ładuje postać i cele do sceny, a `queue_explosion` przyjmuje ograniczoną kolejkę zdarzeń z identyfikatorami. Autorytatywna fizyka postaci, pociski, trafienia i wynik pozostają na GPU. `ui::ArenaView` zastępuje bezpośrednią zależność widoku od właściciela świata CPU. GPU rysuje postać z istniejących atlasów; ekran CPU nadal korzysta ze swojej funkcji pozy.
+
+Lista aktywnych ID i komendy indirect powstają po zmianie przynależności cząstek. Bufor wolnych miejsc zawiera również listę ID i komendy; bufor liczników rozszerza się o sesję, pociski i granaty. Mieszczymy się w ośmiu wiązaniach compute SSBO. Podsumowanie ma generację świata i numer kroku; odczyt z fence nigdy nie zastępuje aktualnego stanu fizyki. Pełny opis: [misja GPU 0.7](GPU_MISSION_070.md).
+
+## Backend GPU
+
+`gpu::ParticleWorld` (`gpu/world.hpp`) zarządza rezydentnymi buforami cząstek, edycjami, kontaktami PBD, cieczami PBF i teksturą wyniku. Mnożniki/gęstości PBF są w osobnym SSBO. Cząstka ma 64-bajtowe ABI z kompensowaną pozycją. Pole kolizji ziaren używa kubicznie interpolowanej odległości ze znakiem, a ciecz zachowuje dokładne granice AABB. Szczegóły korekty ciśnienia Spiky i parowej kohezji: [przegląd 0.6.1](PHYSICS_REVIEW_061.md). SDL/OpenGL pozostają na wątku okna. CPU przekazuje komendy, a pomiary oraz małe podsumowanie liczników i sesji odbiera asynchronicznie; pełne odczyty stanu należą do walidacji. Oddzielny ekran `gpu_laboratory` używa wspólnego zegara `FixedStepClock<120,4>` oraz interpolacji. CPU zachowuje alias `FixedClock` o dotychczasowych parametrach 60 Hz / 8 kroków.
+
+Ziarna i ciecze GPU mają wspólny stan; pełny model termochemiczny CPU zachowuje odrębny świat. CPU/MAC i GPU/PBF są różnymi solverami. Dane nie przechodzą w każdym kroku między RAM i VRAM. Kontrakty, modele, wyniki i plan kolejnych etapów: [GPU_LIQUIDS.md](GPU_LIQUIDS.md); historia etapu 0.5: [GPU_MIGRATION.md](GPU_MIGRATION.md).
+
+Podkrok GPU: predykcja → odbudowa list sąsiadów → gęstość/λ → korekta PBF → kontakty ziaren → odtworzenie prędkości → lepkość. Listy sąsiadów są odbudowywane po zmianach pozycji. Przebiegi położenia używają ping-pong, a bariery SSBO oddzielają producenta i konsumenta. Osiem iteracji cieczy i dwanaście kontaktów ma osobne budżety. Okresowa redukcja maksymalnego ściśnięcia jest wykonywana na końcowym stanie. Renderowanie powierzchni używa RG16F i instancjonowania; nie uruchamia reakcji ani nie poprawia pozycji.
+
+## Model CPU
 
 `World` posiada stałą pulę z `executor.hpp`: domyślnie do dwóch wątków fizyki, z opcją 1–4. Podział dotyczy rozłącznych wierszy i kanałów, a redukcje mają stały porządek. Zespół synchronizuje się pomiędzy etapami; `World::step` pozostaje synchroniczny dla wywołującego. Laboratorium nadal uruchamia ten krok poza wątkiem SDL. Reakcje i ruch proszków nie są uruchamiane równolegle z cieczami, ponieważ zapisują wspólny stan. Szczegóły testów i kosztów: [audyt 0.4.2](PERFORMANCE_AUDIT.md).
 

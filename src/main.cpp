@@ -11,7 +11,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     const auto report_error = [&](const std::string& error) {
-        if (options->smoke_test||options->laboratory_smoke_test) {
+        if (options->smoke_test||options->laboratory_smoke_test||options->gpu_test||options->gpu_liquid_test||options->gpu_flow_test||options->gpu_smoke_test||options->mission_test||options->mission_smoke) {
             std::error_code ignored;
             std::filesystem::create_directories(options->profile, ignored);
             std::ofstream{options->profile / "smoke-error.txt"} << error;

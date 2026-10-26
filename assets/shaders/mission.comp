@@ -1,0 +1,183 @@
+#version 430 core
+layout(local_size_x=256) in;
+#include "particle_common.glsl"
+uniform vec4 inputControl;
+shared vec4 reactions[256];
+const float tickDt=1.0/120.0;
+void terrainBody(){
+    ivec2 base=ivec2(floor(game.actor.xy));
+    for(int y=-19;y<=1;++y)for(int x=-5;x<=5;++x){
+        ivec2 b=base+ivec2(x,y);if(!solid(b))continue;
+        vec2 axis=vec2(game.actor.x,clamp(float(b.y)+.5,game.actor.y-14,game.actor.y-4));
+        vec2 low=vec2(b),d=axis-clamp(axis,low,low+1);float len=length(d);
+        if(len>=4)continue;
+        vec2 n;float depth;
+        if(len>1e-5){n=d/len;depth=4-len;}
+        else{vec4 e=vec4(axis-low,low+1-axis);float k=min(min(e.x,e.y),min(e.z,e.w));
+            n=k==e.x?vec2(-1,0):(k==e.z?vec2(1,0):(k==e.y?vec2(0,-1):vec2(0,1)));depth=4+k;}
+        game.actor.xy+=n*depth;if(n.y<-.55)game.locomotion.z=1;
+    }
+    game.actor.xy=clamp(game.actor.xy,vec2(4,18),vec2(W-4,H));
+}
+// Supercover DDA: corner ties inspect both crossed cells, including one-cell walls.
+int trace(vec2 a,vec2 b,out vec2 hit){
+    vec2 d=b-a;ivec2 c=ivec2(floor(a)),end=ivec2(floor(b)),s=ivec2(sign(d));
+    vec2 delta=vec2(abs(d.x)>1e-8?abs(1/d.x):1e20,abs(d.y)>1e-8?abs(1/d.y):1e20);
+    vec2 next=vec2(s.x>0?float(c.x+1)-a.x:a.x-float(c.x),s.y>0?float(c.y+1)-a.y:a.y-float(c.y))*delta;
+    float t=0;hit=a;
+    for(int k=0;k<700;++k){
+        if(solid(c)){hit=a+d*clamp(t,0,1);return c.x<0||c.x>=W||c.y<0||c.y>=H?-2:c.y*W+c.x;}
+        if(all(equal(c,end))){hit=b;return -1;}
+        if(abs(next.x-next.y)<1e-6){
+            t=next.x;ivec2 side=c+ivec2(s.x,0);if(solid(side)){hit=a+d*t;return side.x<0||side.x>=W||side.y<0||side.y>=H?-2:side.y*W+side.x;}
+            side=c+ivec2(0,s.y);if(solid(side)){hit=a+d*t;return side.x<0||side.x>=W||side.y<0||side.y>=H?-2:side.y*W+side.x;}
+            c+=s;next+=delta;
+        }else if(next.x<next.y){t=next.x;c.x+=s.x;next.x+=delta.x;}else{t=next.y;c.y+=s.y;next.y+=delta.y;}
+        if(t>1){hit=b;return -1;}
+    }
+    hit=b;return -2;
+}
+bool blastVisible(vec2 a,vec2 b){vec2 hit;return trace(a,b,hit)==-1;}
+void damageCell(int id,uint damage){
+    if(id<0||wall[id]<2u)return;uint hp=wall[3*W*H+id];if(hp==0u)return;
+    // Pending debris retains its cell until conversion has reserved a particle.
+    wall[3*W*H+id]=hp>damage?hp-damage:0u;
+    if(hp<=damage){atomicAdd(game.counts.y,1u);atomicAdd(game.counts.z,1u);}
+}
+void rifleImpact(int id){
+    if(id<0||wall[id]<2u)return;
+    ivec2 center=ivec2(id%W,id/W);
+    // A three-cell chip is wide enough to release carriers instead of
+    // generating a one-cell plug made from the conserved debris itself.
+    for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){ivec2 c=center+ivec2(x,y);
+        if(c.x>=0&&c.x<W&&c.y>=0&&c.y<H)damageCell(c.y*W+c.x,1u);}
+}
+bool targetHit(vec2 a,vec2 b,int target){
+    vec2 d=b-a;float t=clamp(dot(game.targets[target].xy-a,d)/max(dot(d,d),1e-6),0,1);
+    return game.targets[target].z>0&&distance(a+d*t,game.targets[target].xy)<4;
+}
+void beginTick(){
+    game.control=inputControl;
+    game.status.z++;game.previous.xy=game.actor.xy;game.blast=vec4(0);
+    if(requestedBlastId.x>game.events.z){
+        game.events.z=requestedBlastId.x;game.blast=requestedBlast;game.flash=vec4(game.blast.xyz,.3);
+        game.events.x++;game.events.y=game.events.x;game.counts.x++;
+    }
+    game.flash.w=max(0,game.flash.w-tickDt);game.aim.w=max(0,game.aim.w-8*tickDt);
+    game.locomotion.y=max(0,game.locomotion.y-5*tickDt);
+    vec2 d=game.control.yz-shoulder();if(length(d)>1e-4)game.aim.xy=normalize(d);
+    uint buttons=uint(game.control.w);if(game.status.w!=0u)buttons=0u;
+    if((buttons&1u)!=0u&&game.locomotion.z>.5){game.actor.w=-85;game.locomotion.z=0;}
+    game.timers.x=max(0,game.timers.x-tickDt);
+    if(game.timers.y>0){game.timers.y=max(0,game.timers.y-tickDt);if(game.timers.y==0)game.inventory.x=30u;}
+    if((buttons&8u)!=0u&&game.inventory.x<30u&&game.timers.y==0)game.timers.y=1.5;
+    if((buttons&4u)!=0u&&game.inventory.x>0u&&game.timers.x==0&&game.timers.y==0){
+        for(int i=0;i<128;++i)if(bullets[i].info.x<=0){
+            vec2 hit;int cell=trace(shoulder(),muzzlePosition(),hit);
+            if(cell==-1){bullets[i].motion=vec4(muzzlePosition(),game.aim.xy*600);bullets[i].info=vec4(1.2,0,0,0);}
+            else rifleImpact(cell);
+            game.inventory.x--;game.inventory.w++;game.timers.x=.1;game.aim.w=1;break;
+        }
+    }
+    if((buttons&16u)!=0u&&game.inventory.y>0u){
+        for(int i=0;i<8;++i)if(grenades[i].info.x<=0){
+            grenades[i].motion=vec4(shoulder(),game.aim.xy*90+game.actor.zw*.25);
+            grenades[i].info=vec4(2,0,0,0);game.inventory.y--;break;
+        }
+    }
+    for(int i=0;i<128;++i)if(bullets[i].info.x>0){
+        vec2 a=bullets[i].motion.xy,b=a+bullets[i].motion.zw*tickDt,hit;int cell=trace(a,b,hit);
+        bool target=false;for(int j=0;j<3;++j)if(targetHit(a,hit,j)){
+            game.targets[j].z--;if(game.targets[j].z==0)game.inventory.z++;target=true;break;}
+        bullets[i].info.yz=a;bullets[i].motion.xy=hit;bullets[i].info.x-=tickDt;
+        if(target||cell!=-1){bullets[i].info.x=0;if(!target)rifleImpact(cell);}
+    }
+    for(int i=0;i<8;++i)if(grenades[i].info.x>0){
+        vec2 a=grenades[i].motion.xy;grenades[i].info.yz=a;grenades[i].motion.w+=180*tickDt;
+        vec2 b=a+grenades[i].motion.zw*tickDt,hit;int cell=trace(a,b,hit);
+        if(cell!=-1){vec2 hx;bool blockedX=trace(a,vec2(b.x,a.y),hx)!=-1;
+            if(blockedX)grenades[i].motion.z*=-.45;else grenades[i].motion.w*=-.45;
+            grenades[i].motion.xy=mix(a,hit,.9);
+        }else grenades[i].motion.xy=b;
+        grenades[i].info.x-=tickDt;
+        if(grenades[i].info.x<=0){
+            // Serialize simultaneous detonations, never overwrite/drop an event.
+            if(game.blast.z>0){grenades[i].info.x=.00001;continue;}
+            game.blast=vec4(grenades[i].motion.xy,20,70);game.flash=vec4(game.blast.xyz,.3);
+            game.events.x++;game.events.y=game.events.x;game.counts.x++;
+        }
+    }
+    if(game.blast.z>0){
+        vec2 delta=game.actor.xy+vec2(0,-9)-game.blast.xy;float r=length(delta);
+        if(r<game.blast.z&&blastVisible(game.blast.xy,game.actor.xy+vec2(0,-9)))game.actor.zw+=normalize(delta+vec2(0,-.001))*game.blast.w*(1-r/game.blast.z);
+        for(int i=0;i<3;++i)if(game.targets[i].z>0&&distance(game.targets[i].xy,game.blast.xy)<20&&blastVisible(game.blast.xy,game.targets[i].xy)){
+            game.targets[i].z=0;game.inventory.z++;}
+    }
+}
+void main(){
+    uint id=gl_GlobalInvocationID.x;
+    if(operation==0){if(id==0u)beginTick();return;}
+    if(operation==1){if(id!=0u)return;
+        game.previous.zw=game.actor.xy;
+        float movement=game.status.w==0u?clamp(game.control.x,-1,1):0;
+        game.actor.z+=clamp(movement*45-game.actor.z,-(movement==0?480:360)*dt,(movement==0?480:360)*dt);
+        uint buttons=uint(game.control.w);game.timers.w=0;
+        if((buttons&2u)!=0u&&game.aim.z>0&&game.status.w==0u){game.actor.w-=300*dt;game.aim.z=max(0,game.aim.z-dt);game.timers.w=1;}
+        else game.aim.z=min(1.5,game.aim.z+dt*.65);
+        game.actor.w=clamp(game.actor.w+180*dt,-90,120);game.locomotion.z=0;
+        vec2 motion=game.actor.zw*dt;int steps=max(1,int(ceil(length(motion)/.35)));
+        for(int k=0;k<steps;++k){game.actor.xy+=motion/steps;terrainBody();}return;
+    }
+    if(operation==3){ // One workgroup; fixed tree reduction, no float atomics.
+        uint lane=gl_LocalInvocationID.x;vec4 sum=vec4(0);
+        for(uint k=lane;k<aliveCount;k+=256u)sum+=terms[N+slots[N+k]];
+        reactions[lane]=sum;barrier();
+        for(uint stride=128u;stride>0u;stride/=2u){if(lane<stride)reactions[lane]+=reactions[lane+stride];barrier();}
+        if(lane==0u){
+            if(dot(reactions[0].xy,reactions[0].xy)>1e-12){game.actor.xy+=reactions[0].xy;terrainBody();}
+            if(reactions[0].z>0)game.locomotion.z=1;
+        }return;
+    }
+    if(operation==4){if(id!=0u)return;
+        vec2 v=(game.actor.xy-game.previous.zw)/dt;
+        if(game.locomotion.z>.5&&game.actor.w>20)game.locomotion.y=min(1,game.actor.w/100);
+        game.actor.zw=clamp(v,vec2(-120,-120),vec2(120,120));
+        if(game.locomotion.z>.5){game.locomotion.x+=abs(game.actor.x-game.previous.z)*.45;game.timers.z=0;}
+        else game.timers.z+=dt;
+        game.locomotion.w=mix(game.locomotion.w,game.locomotion.z>.5?min(1,abs(v.x)/25):0,1-exp(-18*dt));
+        if(game.inventory.z==3u&&all(greaterThanEqual(game.actor.xy,game.exitZone.xy))&&all(lessThanEqual(game.actor.xy,game.exitZone.zw)))game.status.w=1u;
+        return;
+    }
+    if(operation==5){ // Occlusion is evaluated against pre-destruction terrain.
+        if(id>=uint(W*H)||game.blast.z<=0||wall[id]<2u||wall[3*W*H+id]==0u)return;
+        vec2 p=vec2(id%W,id/W)+.5,d=p-game.blast.xy;float r=length(d);if(r>=game.blast.z)return;
+        vec2 hit;int first=trace(game.blast.xy,p,hit);
+        if(first==int(id))damageCell(int(id),uint(max(1,8*(1-r/game.blast.z))));return;
+    }
+    if(operation==6){ // One writer per cell; bounded atomic slot reservation.
+        if(id>=uint(W*H)||game.counts.z==0u||wall[id]<2u||wall[3*W*H+id]!=0u)return;
+        uint ticket=atomicAdd(requested,0u);
+        while(ticket<freeCount){uint prior=atomicCompSwap(requested,ticket,ticket+1u);if(prior==ticket)break;ticket=prior;}
+        if(ticket>=freeCount)return;
+        uint slot=slots[ticket];vec2 pos=vec2(id%W,id/W)+.5;
+        Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,1,4);p.contact=vec4(0,0,pos);p.residual=vec4(0);
+        dst[slot]=p;wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
+    }
+    if(id>=aliveCount)return;id=slots[N+id];Grain p=src[id];
+    if(operation==8){
+        vec4 reaction=vec4(0);
+        if(liquid(p)){
+            float separation=capsuleDistance(p.position.xy,game.actor.xy);
+            float weight=clamp(1-separation/1.25,0,1)*(1-exp(-(p.motion.w==6?36:8)*dt));
+            vec2 bodyVelocity=(game.actor.xy-game.previous.zw)/dt;
+            vec2 dv=(bodyVelocity-p.motion.xy)*weight*p.motion.z/(p.motion.z+game.body.x);
+            p.motion.xy+=dv;reaction.xy=-dv*(game.body.x/p.motion.z)*dt;
+        }
+        terms[N+id]=reaction;dst[id]=p;return;
+    }
+    if(operation==7){
+        if(game.blast.z>0){vec2 d=p.position.xy-game.blast.xy;float r=length(d);
+            if(r<game.blast.z&&blastVisible(game.blast.xy,p.position.xy))p.motion.xy+=normalize(d+vec2(0,-.001))*game.blast.w*(1-r/game.blast.z);}
+        dst[id]=p;return;
+    }
+}

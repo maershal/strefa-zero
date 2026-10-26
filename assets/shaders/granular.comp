@@ -1,0 +1,134 @@
+#version 430 core
+layout(local_size_x=256) in;
+#include "particle_common.glsl"
+void main(){
+    uint id=gl_GlobalInvocationID.x;
+    if(dirtyOnly!=0&&reserved0==0u)return;
+    if(operation==19){if(id<uint(N))dst[id]=src[id];return;}
+    if(operation==20){if(id==0u)reserved0=0u;return;}
+    if(operation==10){if(id==0u){freeCount=0u;requested=0u;aliveCount=0u;waterCount=0u;oilCount=0u;}return;}
+    if(operation==11){
+        if(id>=uint(N))return;
+        Grain p=src[id];
+        if(p.motion.w<.5)slots[atomicAdd(freeCount,1u)]=id;
+        else{slots[N+atomicAdd(aliveCount,1u)]=id;if(p.motion.w==5)atomicAdd(waterCount,1u);if(p.motion.w==6)atomicAdd(oilCount,1u);}
+        return;
+    }
+    if(operation==12){if(id==0u){uint count=min(aliveCount,uint(N));slots[2*N]=(count+255u)/256u;slots[2*N+1]=1u;slots[2*N+2]=1u;
+        slots[2*N+3]=4u;slots[2*N+4]=count;slots[2*N+5]=0u;slots[2*N+6]=0u;}return;}
+    if(operation>=1&&operation<=4){if(id>=aliveCount)return;id=slots[N+id];}
+    if(operation==0){if(id<uint(W*H))head[id]=-1;return;}
+    if(operation==9){
+        if(id>=uint(W*H))return;ivec2 c=ivec2(id%W,id/W);uint nearWall=0u;
+        bool inside=solid(c);float distance=3.5;
+        for(int y=-3;y<=3;++y)for(int x=-3;x<=3;++x){
+            bool occupied=solid(c+ivec2(x,y));
+            if(occupied)nearWall=1u;
+            if(occupied!=inside)distance=min(distance,length(max(abs(vec2(x,y))-.5,vec2(0))));
+        }
+        wall[W*H+id]=nearWall;wall[2*W*H+id]=floatBitsToUint(inside?-distance:distance);return;
+    }
+    if(operation==7){ // terrain painting, one writer per cell
+        if(id>=uint(W*H))return;
+        if(insideStroke(vec2(id%W,id/W)+.5))wall[id]=(material==4)?1u:0u;
+        return;
+    }
+    if(operation==8){ // spawn into free slots, no state copied to the host
+        if(id>=uint(W*H)||material<1||material==4||material>6||wall[id]!=0u)return;
+        vec2 pos=vec2(id%W,id/W)+.5;if(!insideStroke(pos))return;
+        // Small deterministic creation offsets prevent a perfect square
+        // lattice of grains/fluids from becoming an artificial crystal.
+        pos+=(vec2(hash(2u*id)&65535u,hash(2u*id+1u)&65535u)/65535-.5)*.12;
+        ivec2 c=ivec2(floor(pos));
+        for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){
+            ivec2 b=c+ivec2(x,y);if(solid(b))return;
+            int j=head[b.y*W+b.x];
+            while(j>=0){if(distance(pos,src[j].position.xy)<2*R+.04)return;j=link[j];}
+        }
+        uint slot=atomicAdd(requested,1u);if(slot>=freeCount)return;
+        Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,inverseMass(material),material);p.contact=vec4(0,0,pos);p.residual=vec4(0);
+        dst[slots[slot]]=p;atomicAdd(aliveCount,1u);
+        if(material==5)atomicAdd(waterCount,1u);if(material==6)atomicAdd(oilCount,1u);return;
+    }
+    if(id>=uint(N))return;
+    Grain p=src[id];
+    if(operation==5){ // edit and collect free slots (independent IDs)
+        if((material==0||material==4)&&insideStroke(p.position.xy))p.motion.w=0;
+        dst[id]=p;
+        if(p.motion.w<.5)slots[atomicAdd(freeCount,1u)]=id;
+        else {atomicAdd(aliveCount,1u);if(p.motion.w==5)atomicAdd(waterCount,1u);if(p.motion.w==6)atomicAdd(oilCount,1u);}
+        return;
+    }
+    if(p.motion.w<.5){if(operation!=2)dst[id]=p;return;}
+    if(operation==1){ // two 240 Hz contact steps per 120 Hz presentation tick
+        if(substep==0)p.contact.zw=p.position.xy;
+        p.position.zw=p.position.xy;p.residual.zw=p.residual.xy;p.contact.xy=vec2(0);
+        float drag=liquid(p)?.02:(p.motion.w==2?1.6:.12);
+        p.motion.xy*=exp(-drag*dt);p.motion.y+=180*dt;
+        float speed=length(p.motion.xy);if(speed>80)p.motion.xy*=80/speed;
+        for(int i=0;i<4;++i){move(p,p.motion.xy*(dt*.25));terrain(p);}
+        dst[id]=p;return;
+    }
+    if(operation==2){int c=cell(p.position.xy);link[id]=atomicExchange(head[c],int(id));return;}
+    if(operation==3){ // Jacobi PBD: read a coherent state, write only this ID
+        ivec2 c=ivec2(floor(p.position.xy));vec2 correction=vec2(0);
+        for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){
+            ivec2 b=c+ivec2(x,y);if(b.x<0||b.y<0||b.x>=W||b.y>=H)continue;
+            int j=head[b.y*W+b.x];
+            while(j>=0){
+                if(j!=int(id)){
+                    Grain q=src[j];vec2 d=separation(p,q);float len=length(d);
+                    float distance=radius(p)+radius(q);
+                    if(len<distance&&!(liquid(p)&&liquid(q))){
+                        vec2 normal;
+                        if(len>.00001)normal=d/len;
+                        else {float a=float(hash(min(id,uint(j)))%65536u)*.0000958738;normal=vec2(cos(a),sin(a))*(id<uint(j)?1:-1);}
+                        correction+=normal*(distance-len)*(p.motion.z/(p.motion.z+q.motion.z));
+                    }
+                }j=link[j];
+            }
+        }
+        float len=length(correction);move(p,correction*min(.8,.35/max(.00001,len)));
+        terrain(p);
+        if(game.status.x!=0u){
+            vec2 axis=vec2(game.actor.x,clamp(p.position.y,game.actor.y-14,game.actor.y-4));
+            vec2 delta=p.position.xy-axis;float lenBody=length(delta),depth=4+radius(p)-lenBody;vec4 reaction=vec4(0);
+            if(depth>0){vec2 normal=lenBody>1e-5?delta/lenBody:vec2(1,0);
+                vec2 bodyCorrection=normal*min(depth,.4)*.65/(p.motion.z+game.body.x);
+                move(p,bodyCorrection*p.motion.z);terrain(p);reaction.xy=-bodyCorrection*game.body.x;
+                if(!liquid(p)&&normal.y>.55)reaction.z=1;
+            }
+            terms[N+id]=reaction;
+        }
+        dst[id]=p;return;
+    }
+    if(operation==4){
+        vec2 speedNow=velocity(p);
+        // Contact friction acts on relative velocity; it does not damp a whole
+        // freely falling column. Fixed solver frequency is part of this model.
+        ivec2 c=ivec2(floor(p.position.xy));vec2 impulse=vec2(0);int contacts=0;
+        for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){
+            ivec2 b=c+ivec2(x,y);if(b.x<0||b.y<0||b.x>=W||b.y>=H)continue;
+            int j=head[b.y*W+b.x];
+            while(j>=0){
+                if(j!=int(id)){
+                    Grain q=src[j];vec2 d=separation(p,q);float len=length(d);
+                    if(len>.00001&&len<radius(p)+radius(q)+.035&&!(liquid(p)&&liquid(q))){
+                        vec2 n=d/len,relative=speedNow-velocity(q);
+                        float vn=dot(relative,n);vec2 tangent=relative-vn*n;
+                        float friction=liquid(p)||liquid(q)?.02:sqrt((p.motion.w==3?.25:.65)*(q.motion.w==3?.25:.65));
+                        float normalImpulse=max(0,-vn)+180*dt*abs(n.y);
+                        impulse-=tangent*min(1,friction*normalImpulse/max(.00001,length(tangent)))*p.motion.z/(p.motion.z+q.motion.z);
+                        ++contacts;
+                    }
+                }j=link[j];
+            }
+        }
+        speedNow+=impulse/float(max(1,contacts));
+        float nlen=length(p.contact.xy);
+        if(nlen>.00001){vec2 n=p.contact.xy/nlen;float vn=dot(speedNow,n);vec2 tangent=speedNow-vn*n;
+            float friction=liquid(p)?.005:.28;
+            speedNow=n*max(0,vn)+tangent*max(0,1-friction*(abs(dot(p.motion.xy,n))+180*dt)/max(.00001,length(tangent)));}
+        float speed=length(speedNow);p.motion.xy=speedNow*(speed>80?80/speed:1);dst[id]=p;return;
+    }
+}

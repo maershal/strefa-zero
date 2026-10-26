@@ -8,10 +8,11 @@ struct ImFont;
 
 namespace strefa::ui {
 
-enum class Screen { main_menu, settings, preview, about, laboratory, arena };
-enum class Action { none, open_preview, open_settings, open_about, open_laboratory, open_arena, back, apply, reset, quit };
+enum class Screen { main_menu, settings, preview, about, laboratory, arena, gpu_laboratory, gpu_mission };
+enum class Action { none, open_preview, open_settings, open_about, open_laboratory, open_arena, open_gpu, open_mission, back, apply, reset, quit };
 struct LaboratoryFrame;
 struct ArenaFrame;
+struct GpuLaboratoryFrame;
 
 struct Image { std::uintptr_t handle{}; int width{}; int height{}; };
 struct Fonts { ImFont* body{}; ImFont* heading{}; };
@@ -31,6 +32,6 @@ struct ViewState {
 
 [[nodiscard]] Action draw(ViewState& state, const FrameInfo& frame,
     const std::array<Image, 3>& backgrounds, const Fonts& fonts, LaboratoryFrame* laboratory = nullptr,
-    ArenaFrame* arena = nullptr);
+    ArenaFrame* arena = nullptr, GpuLaboratoryFrame* gpu = nullptr);
 
 } // namespace strefa::ui

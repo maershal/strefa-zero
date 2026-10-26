@@ -1,4 +1,4 @@
-# Strefa Zero 0.4.2
+# Strefa Zero 0.7.0
 
 ## Repozytorium
 
@@ -12,7 +12,23 @@ cd strefa-zero
 
 Repozytorium zawiera źródła, zasoby, testy i dokumentację. Wyniki kompilacji powstają lokalnie w `build/` i są pomijane przez Git.
 
-Prototyp offline w C++23, SDL 3.4.18, Dear ImGui 1.93.0 i OpenGL 3.3. Laboratorium i poligon używają wspólnego modelu materiałów na siatce 320 × 192, ze stałym krokiem czasu 1/60 s. Faktyczne tempo symulacji zależy od kosztu sceny.
+Prototyp offline w C++23, SDL 3.4.18 i Dear ImGui 1.93.0. **Laboratorium GPU — ciecze i ziarna** używa OpenGL 4.3 compute i ciągłych pozycji cząstek. Dotychczasowe laboratorium materiałów i poligon zachowują fizykę CPU oraz obsługę OpenGL 3.3.
+
+## Misja GPU 0.7
+
+Wybierz **Misja GPU — rozpocznij grę** albo `StrefaZero.exe --mission`. Zniszcz trzy tarcze i dotrzyj do zielonego wyjścia. Przestrzel zaporę oraz podporę silosu, aby uwolnić wodę i piasek. Postać, broń i materiały współdziałają na GPU; gracz chodzi po usypach, rozpycha ziarna i doświadcza wyporności. Pomarańczowe przegrody są zniszczalne. Sterowanie jak na poligonie; F5 odtwarza misję.
+
+Aktywne ID oraz pośrednie uruchamianie obliczeń i rysowania zastępują przetwarzanie całej puli po użyciu pędzla. Modele, architektura, ograniczenia i pomiary: [GPU_MISSION_070.md](docs/GPU_MISSION_070.md). Testy: `--mission-test --profile <folder>` i `--mission-smoke-test --profile <folder>`.
+
+## Laboratorium GPU 0.6.1
+
+W menu wybierz **Laboratorium GPU — ciecze i ziarna** lub uruchom `StrefaZero.exe --gpu-laboratory`. Woda i olej korzystają z solvera PBF, a piasek, popiół i metalowe drobiny z kontaktów PBD. Krok czasu wynosi 1/120 s i zawiera dwa podkroki. Ruch oraz powierzchnie cieczy są interpolowane; cząstki nie przeskakują całymi rzędami siatki.
+
+LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja pauzuje, F wykonuje krok. Nowe sceny: **Klepsydra**, **Olej pod wodą**, **Kropla oleju**. Przegląd zmian i testy: [PHYSICS_REVIEW_061.md](docs/PHYSICS_REVIEW_061.md). Oprócz trzech scen ziaren i pustej planszy dostępne są zbiornik wody, przerwana zapora, naczynia połączone, olej na wodzie i piasek w wodzie. Limit 32768 obejmuje wspólnie ciecze i ziarna. Stan, edycja, wyszukiwanie sąsiadów i renderowanie pozostają na GPU. Panel podaje czas obliczeń karty, błąd gęstości cieczy oraz pominięty czas przy przeciążeniu.
+
+Gazy, temperatura, reakcje oraz referencyjny poligon CPU pozostają w poprzednim modelu. Misja GPU korzysta ze wspólnego świata postaci i materiałów. Światy nie wymieniają jeszcze stanu. Ciecze GPU używają innego modelu niż CPU/MAC. Matematyka, ograniczenia, testy i pomiary: [GPU_LIQUIDS.md](docs/GPU_LIQUIDS.md). Historia ziaren 0.5: [GPU_MIGRATION.md](docs/GPU_MIGRATION.md).
+
+Aplikacja próbuje utworzyć kontekst OpenGL 4.3 i wraca do 3.3, jeśli sterownik go nie udostępnia. `--opengl33` wymusza starszy kontekst do kontroli zgodności; tryb ziaren GPU jest wtedy niedostępny. Nie jest wymagana instalacja CUDA ani Vulkan.
 
 ## Wydajność i matematyka 0.4.2
 
@@ -52,6 +68,8 @@ Wymagane Visual Studio C++ Build Tools, Windows SDK, CMake >= 3.28, Ninja i Powe
 ```
 
 MSVC używa `/std:c++23preview`, `/W4`, `/WX` i statycznego CRT. Release włącza IPO/LTO, jeśli obsługuje je kompilator. Opcjonalna próba refleksji C++26 jest odizolowana; gra jej nie wymaga.
+
+Test przepływu i rozdziału faz: `StrefaZero.exe --gpu-flow-test --profile flow-results`. Testy GPU wymagają rzeczywistego kontekstu OpenGL 4.3. Na starszym sprzęcie CTest oznacza je jako pominięte kodem 77; testy CPU i okna 3.3 nadal działają. Ziarna: `StrefaZero.exe --gpu-test --profile gpu-results`. Ciecze: `StrefaZero.exe --gpu-liquid-test --profile liquid-results`. Okno z mieszanką piasku i wody: `StrefaZero.exe --gpu-smoke-test --profile gpu-ui-results`. Tryby zapisują raporty i kończą proces; zwykła gra nie wykonuje odczytów całego stanu GPU do RAM.
 
 Narzędzie `StrefaPhysics.exe` uruchamia sceny bez okna:
 

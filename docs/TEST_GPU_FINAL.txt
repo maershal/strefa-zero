@@ -1,0 +1,16 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+    Start  9: gpu.granular_physics
+1/3 Test  #9: gpu.granular_physics .............   Passed    5.82 sec
+    Start 10: gpu.laboratory_ui
+2/3 Test #10: gpu.laboratory_ui ................   Passed    4.74 sec
+    Start 11: app.opengl33_smoke
+3/3 Test #11: app.opengl33_smoke ...............   Passed    7.97 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Label Time Summary:
+gpu            =  10.56 sec*proc (2 tests)
+graphics       =  18.53 sec*proc (3 tests)
+integration    =  18.53 sec*proc (3 tests)
+
+Total Test time (real) =  18.62 sec

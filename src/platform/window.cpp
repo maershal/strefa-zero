@@ -22,10 +22,10 @@ SdlSystem::~SdlSystem() { if (active_) SDL_Quit(); }
 void WindowDeleter::operator()(SDL_Window* window) const noexcept { SDL_DestroyWindow(window); }
 void ContextDeleter::operator()(SDL_GLContextState* context) const noexcept { SDL_GL_DestroyContext(context); }
 
-std::expected<Window, std::string> Window::create(const core::Settings& settings) {
+std::expected<Window, std::string> Window::create(const core::Settings& settings,bool prefer_compute) {
     if (const auto checked = core::validate(settings); !checked) return std::unexpected{checked.error()};
     if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
-        || !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3)
+        || !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, prefer_compute?4:3)
         || !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3)
         || !SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1)
         || !SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0)
@@ -49,6 +49,12 @@ std::expected<Window, std::string> Window::create(const core::Settings& settings
     if (!result.window_) return std::unexpected{sdl_error("Tworzenie okna")};
     SDL_SetWindowMinimumSize(result.window_.get(), 960, 540);
     result.context_.reset(SDL_GL_CreateContext(result.window_.get()));
+    if(!result.context_&&prefer_compute){
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION,3);
+        SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION,3);
+        result.context_.reset(SDL_GL_CreateContext(result.window_.get()));
+        result.warning_="OpenGL 3.3: dostępna fizyka CPU; tryb GPU wymaga OpenGL 4.3.";
+    }
     if (!result.context_) return std::unexpected{sdl_error("OpenGL 3.3 Core")};
     if (!SDL_GL_MakeCurrent(result.window_.get(), result.context_.get()))
         return std::unexpected{sdl_error("Aktywacja OpenGL")};

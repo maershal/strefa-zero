@@ -121,8 +121,8 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::ProgressBar(fuel, {90 * frame.scale, 0}, "Paliwo");
     ImGui::PopStyleColor();
     if (arena.game.reload_remaining() > 0) ImGui::Text("Przeładowanie %.1f s", static_cast<double>(arena.game.reload_remaining()));
-    else ImGui::TextDisabled("POLIGON  /  żołnierz niewrażliwy na obrażenia");
-    if (arena.game.score() == 3) {
+    else ImGui::TextDisabled("%s",arena.game.gpu?"MISJA: 3 tarcze + zielone wyjście. Pomarańczowe przegrody są zniszczalne.":"POLIGON CPU / żołnierz niewrażliwy na obrażenia");
+    if (arena.game.finished) {
         ImGui::PushFont(fonts.heading, 22);
         ImGui::TextWrapped("POLIGON UKOŃCZONY  /  F5 — kolejna próba");
         ImGui::PopFont();
@@ -142,7 +142,7 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     draw->AddImage(texture(arena.background), start, end);
     draw->AddRectFilled(start, end, IM_COL32(7, 14, 17, 165));
     draw->AddImage(texture(arena.world), start, end);
-    actors(arena, start, zoom);
+    if(!arena.game.gpu)actors(arena, start, zoom);
     arena.input.controls.aim = arena.game.player().feet + arena.game.player().aim * 40 + game::Vec2{0, -12};
     if (arena.focused && !ImGui::GetIO().WantTextInput && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
         auto& input = arena.input.controls;
@@ -169,7 +169,7 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::PopStyleColor();
     ImGui::PopItemFlag();
     ImGui::End();
-    return back ? Action::back : Action::none;
+    return back || ImGui::IsKeyPressed(ImGuiKey_Escape,false) ? Action::back : Action::none;
 }
 
 } // namespace strefa::ui

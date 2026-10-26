@@ -1,0 +1,141 @@
+{
+  "version": "0.4.2",
+  "status": "passed_tests_with_documented_realtime_and_volume_limits",
+  "verified_at_utc": "2026-10-25T10:20:29.5998349Z",
+  "platform": "Windows x64",
+  "configuration": "Release",
+  "cpp": "C++23",
+  "compiler": "MSVC 19.51.36256.0",
+  "warnings_as_errors": true,
+  "ipo_release": true,
+  "fast_math": false,
+  "sdl": "3.4.18",
+  "imgui": "1.93.0",
+  "opengl": "3.3",
+  "world": "320x192",
+  "physics_dt": 0.016666666666666666,
+  "hardware": "Intel Core i5-9300HF, 4 cores / 8 logical CPUs; NVIDIA GTX 1650",
+  "physics_threads": {
+    "default_maximum": 2,
+    "persistent": true,
+    "explicit_range": "1..4",
+    "counts_caller": true,
+    "deterministic_partition": true
+  },
+  "gpu_physics": false,
+  "ui_thread_owns_sdl_opengl": true,
+  "pressure": "PCG with MIC(0) LDL and additive Galerkin coarse correction",
+  "tests": [
+    "core.settings",
+    "sim.materials",
+    "sim.numerics_parallel",
+    "game.training",
+    "sim.laboratory_worker",
+    "app.opengl_smoke",
+    "app.laboratory_responsiveness",
+    "app.laboratory_four_threads"
+  ],
+  "ctest": {
+    "seconds": 84.53,
+    "passed": 8,
+    "failed": 0
+  },
+  "validation": [
+    "manufactured variable-coefficient Poisson solution: IC, MIC and MIC+coarse",
+    "bitwise physical state equality at 1/2/4 threads on same compiler and platform",
+    "pool startup and shutdown; invalid configuration rejected",
+    "thermal maximum principle with multiple contacts and heat ledger",
+    "sealed Neumann components and thin barriers",
+    "hot gas ignition and cold fuel inactivity",
+    "time refinement CFL 0.9 vs 0.45: center-of-mass difference 0.184133 cells at 0.5 s",
+    "existing phase, mass, enthalpy, oxygen, shielding and 30/60/144 FPS tests"
+  ],
+  "benchmark": {
+    "method": "ABBA old/new/new/old, 5 scenes x 180 steps; all 15 scenes x 180 steps; 4/2/1/1/2/4 scaling x 120 steps",
+    "results_file": "benchmarks/results.json",
+    "cpu_frequency_controlled": false,
+    "max_local_overfill": 0.13611,
+    "max_enthalpy_error": 1.66707E-06,
+    "scenes_passed": 15,
+    "rendering_included": false,
+    "old_overfill_same_scene": 0.00108976,
+    "overfill_scene": "quench-metal",
+    "max_mass_error": 3.48882E-09,
+    "export_included": false,
+    "nonconverged_ticks": 0,
+    "new_physics_sha256": "8D86A968D5319C309FEB7D89510E259123373CFA3584D48337FDD1651139C246",
+    "warmup_excluded": false
+  },
+  "source_ui_frame_measurements": {
+    "frames": 300.0,
+    "ui_median_ms": 16.6683,
+    "ui_p95_ms": 16.7043,
+    "ui_p99_ms": 17.0406,
+    "ui_max_ms": 17.1036,
+    "physics_last_ms": 75.742,
+    "physics_ticks": 73.0,
+    "physics_steps_per_second": 13.2373,
+    "physics_threads": 2.0,
+    "finite": 1.0
+  },
+  "source_ui_four_thread_measurements": {
+    "frames": 300.0,
+    "ui_median_ms": 16.6683,
+    "ui_p95_ms": 16.7532,
+    "ui_p99_ms": 17.2072,
+    "ui_max_ms": 18.6374,
+    "physics_last_ms": 76.9841,
+    "physics_ticks": 77.0,
+    "physics_steps_per_second": 14.0135,
+    "physics_threads": 4.0,
+    "finite": 1.0
+  },
+  "relocated_ui_frame_measurements": {
+    "frames": 300.0,
+    "ui_median_ms": 16.6689,
+    "ui_p95_ms": 20.191,
+    "ui_p99_ms": 41.433,
+    "ui_max_ms": 56.1994,
+    "physics_last_ms": 75.4897,
+    "physics_ticks": 59.0,
+    "physics_steps_per_second": 12.5521,
+    "physics_threads": 2.0,
+    "finite": 1.0
+  },
+  "relocated_ui_four_thread_measurements": {
+    "frames": 300.0,
+    "ui_median_ms": 16.6683,
+    "ui_p95_ms": 16.6704,
+    "ui_p99_ms": 17.1092,
+    "ui_max_ms": 17.1578,
+    "physics_last_ms": 53.5208,
+    "physics_ticks": 82.0,
+    "physics_steps_per_second": 16.8075,
+    "physics_threads": 4.0,
+    "finite": 1.0
+  },
+  "ui_test_scenario": "dam-break; pause/resume/menu/reentry; 300 frames at 60 FPS cap",
+  "core_only_debug": {
+    "settings_test_passed": true,
+    "built": true,
+    "requires_sdl_or_gpu": false,
+    "worker_test_passed": true
+  },
+  "relocated_checks": {
+    "laboratory_four_threads_exit": 0,
+    "opengl_smoke_exit": 0,
+    "laboratory_smoke_exit": 0,
+    "exe_hashes_match_build": true
+  },
+  "limitations": [
+    "heavy scenes remain below 60 physical steps per wall-clock second",
+    "local liquid overfill worsened in quench-metal; global conservation and PCG convergence do not imply exact cell-volume bounds",
+    "limited liquid reconstruction is not full geometric PLIC/VOF; gas/velocity advection remains first order",
+    "enthalpy ledger excludes kinetic and gravitational energy",
+    "same-version thread equality does not imply bitwise equivalence of different physical models or compilers",
+    "arena still uses a synchronous game loop",
+    "GPU physics was researched but no backend implemented or benchmarked",
+    "desktop load and CPU frequency affect local timings"
+  ],
+  "historical_data": "SCENES.csv / REPORT.md preserve 0.4; LAB_PERFORMANCE.md preserves 0.4.1. Current audit: PERFORMANCE_AUDIT.md."
+}
