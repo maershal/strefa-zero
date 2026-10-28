@@ -1,5 +1,5 @@
 #version 430 core
-layout(local_size_x=256) in;
+layout(local_size_x=LOCAL_SIZE) in;
 #include "particle_common.glsl"
 const float support=2.0,referenceDensity=1.014612762210833;
 // Density and cohesive potential use 2D Poly6. Pressure uses a 2D Spiky
@@ -14,13 +14,13 @@ vec2 pressureGradient(vec2 d){
 void main(){
     uint id=gl_GlobalInvocationID.x;
     if(operation==3){if(id==0)maxCompression=0u;return;}
-    if(id>=aliveCount)return;id=slots[N+id];Grain p=src[id];
-    if(p.motion.w<.5){if(operation==1||operation==4)dst[id]=p;else terms[id]=vec4(0);return;}
+    if(id>=aliveCount)return;id=slots[N+id];Grain p=readParticle(uint(id));
+    if(p.motion.w<.5){if(operation==1||operation==4)storeParticle(uint(id),p);else terms[id]=vec4(0);return;}
     ivec2 c=ivec2(floor(p.position.xy));
     if(operation==0||operation==2){
         if(!liquid(p)){terms[id]=vec4(0);return;}
         float density=kernel(vec2(0)),denominator=0;vec2 grad_i=vec2(0),bodyGrad=vec2(0);
-        if(game.status.x!=0u){
+        if(bodyFluidCandidate(p.position.xy)){
             ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
             for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
                 vec2 b=bodySamplePosition(local+ivec2(x,y));if(!bodySample(b))continue;
@@ -34,15 +34,16 @@ void main(){
                 // Unit-volume stationary boundary samples. Inverse mass is zero.
                 vec2 d=(p.position.xy-(vec2(b)+.5))+p.residual.xy;density+=kernel(d);grad_i+=pressureGradient(d)/referenceDensity;continue;
             }
-            int j=head[b.y*W+b.x];
-            while(j>=0){if(j!=int(id)){
-                vec2 d=separation(p,src[j]);
-                if(dot(d,d)<4&&visible(p.position.xy,src[j].position.xy)){
-                    density+=kernel(d);vec2 grad_j=pressureGradient(d)/referenceDensity;
-                    grad_i+=grad_j;denominator+=src[j].motion.z*dot(grad_j,grad_j);
-                }
-            }j=link[j];}
         }
+        FOR_NEIGHBOR(p,2.0,j)
+            if(j!=int(id)){
+                vec2 d=separation(p,readParticle(uint(j)));
+                if(dot(d,d)<4&&visible(p.position.xy,readParticle(uint(j)).position.xy)){
+                    density+=kernel(d);vec2 grad_j=pressureGradient(d)/referenceDensity;
+                    grad_i+=grad_j;denominator+=readParticle(uint(j)).motion.z*dot(grad_j,grad_j);
+                }
+            }
+        END_NEIGHBOR
         float compression=max(0,density/referenceDensity-1);
         float lambda=-compression/(denominator+p.motion.z*dot(grad_i,grad_i)+.0001);
         terms[id]=vec4(lambda,density/referenceDensity,grad_i);
@@ -50,7 +51,7 @@ void main(){
     }
     if(operation==1){
         vec2 correction=vec2(0),bodyCorrection=vec2(0);float own=liquid(p)?terms[id].x:0;
-        if(game.status.x!=0u&&liquid(p)){
+        if(liquid(p)&&bodyFluidCandidate(p.position.xy)){
             ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
             for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
                 vec2 b=bodySamplePosition(local+ivec2(x,y));if(bodySample(b))bodyCorrection+=own*pressureGradient(p.position.xy-b);
@@ -62,9 +63,10 @@ void main(){
             if(solid(b)){
                 if(liquid(p))correction+=own*pressureGradient((p.position.xy-(vec2(b)+.5))+p.residual.xy);continue;
             }
-            int j=head[b.y*W+b.x];
-            while(j>=0){if(j!=int(id)){
-                Grain q=src[j];vec2 d=separation(p,q);
+        }
+        FOR_NEIGHBOR(p,2.0,j)
+            if(j!=int(id)){
+                Grain q=readParticle(uint(j));vec2 d=separation(p,q);
                 if(dot(d,d)<4&&(liquid(p)||liquid(q))&&visible(p.position.xy,q.position.xy)){
                     float other=liquid(q)?terms[j].x:0;
                     // Small short-range anti-clustering term, symmetric in each
@@ -75,21 +77,20 @@ void main(){
                     }
                     correction+=(own+other+repel)*pressureGradient(d);
                 }
-            }j=link[j];}
-        }
+            }
+        END_NEIGHBOR
         correction*=p.motion.z/referenceDensity;
         float len=length(correction);float scale=min(.8,.2/max(.00001,len));correction*=scale;
-        terms[N+id]=vec4(-bodyCorrection*(game.body.x/referenceDensity)*scale,0,0);
+        writeBodyReaction(id,vec4(-bodyCorrection*(game.body.x/referenceDensity)*scale,0,0),true);
         // A projection cannot teleport a carrier through a one-pixel barrier.
         for(int i=0;i<2;++i){move(p,correction*.5);terrain(p);}
-        dst[id]=p;return;
+        storeParticle(uint(id),p);return;
     }
     if(operation==4){ // XSPH velocity smoothing, time-scaled and pairwise symmetric
-        if(!liquid(p)){dst[id]=p;return;}vec2 change=vec2(0);
-        for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
-            ivec2 b=c+ivec2(x,y);if(solid(b))continue;int j=head[b.y*W+b.x];
-            while(j>=0){if(j!=int(id)&&liquid(src[j])){
-                Grain q=src[j];vec2 d=separation(p,q);
+        if(!liquid(p)){storeParticle(uint(id),p);return;}vec2 change=vec2(0);
+        FOR_NEIGHBOR(p,2.0,j)
+            if(j!=int(id)&&liquid(readParticle(uint(j)))){
+                Grain q=readParticle(uint(j));vec2 d=separation(p,q);
                 if(dot(d,d)<4&&visible(p.position.xy,q.position.xy)){
                     float va=p.motion.w==6?18:1.5,vb=q.motion.w==6?18:1.5;
                     float viscosity=2*va*vb/(va+vb);
@@ -100,8 +101,8 @@ void main(){
                     // density projection supplies the short-range pressure.
                     if(p.motion.w==q.motion.w)change+=p.motion.z*60*gradient(d)*dt;
                 }
-            }j=link[j];}
-        }
-        p.motion.xy+=change;dst[id]=p;return;
+            }
+        END_NEIGHBOR
+        p.motion.xy+=change;storeParticle(uint(id),p);return;
     }
 }

@@ -1,4 +1,4 @@
-# Strefa Zero 0.7 — misja z fizyką GPU
+# Strefa Zero 0.7 — iteracja I04
 
 Uruchom `StrefaZero.exe`. Zachowaj `SDL3.dll`, `assets/` oraz `licenses/` w tym samym folderze.
 
@@ -47,5 +47,5 @@ Aby porównać cztery wątki, uruchom `StrefaZero.exe --laboratory --physics-thr
 
 Otwórz `recordings/index.html`. `summary.csv` zawiera percentyle czasu fizyki, bilanse i zbieżność solvera. Brak zbieżności PCG jest raportowany również w laboratorium. Laboratorium oblicza fizykę osobno od obsługi okna. Panel pokazuje rzeczywiste kroki/s; ciężkie sceny mogą działać wolniej niż 60 kroków fizyki/s, przy płynnie działających kontrolkach.
 
-Windows x64, OpenGL 3.3. C++23 / SDL 3.4.18 / Dear ImGui 1.93.0. Licencje bibliotek i czcionek: `licenses/`. Kod i dokumentacja modeli są w `StrefaZero-source-v0.7.0.zip`. To prototyp fizyki i poligonu; nie zawiera botów ani multiplayera.
+Windows x64, OpenGL 3.3. C++23 / SDL 3.4.18 / Dear ImGui 1.93.0. Licencje bibliotek i czcionek: `licenses/`. Kod i dokumentacja modeli są w `StrefaZero-source-I04.zip`. To prototyp fizyki i poligonu; nie zawiera botów ani multiplayera.
 

@@ -1,24 +1,10 @@
 #version 430 core
-layout(local_size_x=256) in;
+layout(local_size_x=LOCAL_SIZE) in;
 #include "particle_common.glsl"
 uniform vec4 inputControl;
-shared vec4 reactions[256];
+shared vec4 reactions[LOCAL_SIZE];
 const float tickDt=1.0/120.0;
-void terrainBody(){
-    ivec2 base=ivec2(floor(game.actor.xy));
-    for(int y=-19;y<=1;++y)for(int x=-5;x<=5;++x){
-        ivec2 b=base+ivec2(x,y);if(!solid(b))continue;
-        vec2 axis=vec2(game.actor.x,clamp(float(b.y)+.5,game.actor.y-14,game.actor.y-4));
-        vec2 low=vec2(b),d=axis-clamp(axis,low,low+1);float len=length(d);
-        if(len>=4)continue;
-        vec2 n;float depth;
-        if(len>1e-5){n=d/len;depth=4-len;}
-        else{vec4 e=vec4(axis-low,low+1-axis);float k=min(min(e.x,e.y),min(e.z,e.w));
-            n=k==e.x?vec2(-1,0):(k==e.z?vec2(1,0):(k==e.y?vec2(0,-1):vec2(0,1)));depth=4+k;}
-        game.actor.xy+=n*depth;if(n.y<-.55)game.locomotion.z=1;
-    }
-    game.actor.xy=clamp(game.actor.xy,vec2(4,18),vec2(W-4,H));
-}
+#include "body_terrain.glsl"
 // Supercover DDA: corner ties inspect both crossed cells, including one-cell walls.
 int trace(vec2 a,vec2 b,out vec2 hit){
     vec2 d=b-a;ivec2 c=ivec2(floor(a)),end=ivec2(floor(b)),s=ivec2(sign(d));
@@ -116,7 +102,13 @@ void beginTick(){
 }
 void main(){
     uint id=gl_GlobalInvocationID.x;
-    if(operation==0){if(id==0u)beginTick();return;}
+    if(operation==0){if(id==0u){beginTick();
+#if GPU_CONDITIONAL_WORK
+        dispatchCommand(BLAST_COMMAND,game.blast.z>0?(aliveCount+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+        dispatchCommand(BLAST_TERRAIN_COMMAND,game.blast.z>0?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+        dispatchCommand(DEBRIS_COMMAND,(game.counts.z>0u||game.blast.z>0)&&freeCount>0u?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+#endif
+    }return;}
     if(operation==1){if(id!=0u)return;
         game.previous.zw=game.actor.xy;
         float movement=game.status.w==0u?clamp(game.control.x,-1,1):0;
@@ -130,9 +122,9 @@ void main(){
     }
     if(operation==3){ // One workgroup; fixed tree reduction, no float atomics.
         uint lane=gl_LocalInvocationID.x;vec4 sum=vec4(0);
-        for(uint k=lane;k<aliveCount;k+=256u)sum+=terms[N+slots[N+k]];
+        for(uint k=lane;k<aliveCount;k+=uint(LOCAL_SIZE))sum+=terms[N+slots[N+k]];
         reactions[lane]=sum;barrier();
-        for(uint stride=128u;stride>0u;stride/=2u){if(lane<stride)reactions[lane]+=reactions[lane+stride];barrier();}
+        for(uint stride=uint(LOCAL_SIZE)/2u;stride>0u;stride/=2u){if(lane<stride)reactions[lane]+=reactions[lane+stride];barrier();}
         if(lane==0u){
             if(dot(reactions[0].xy,reactions[0].xy)>1e-12){game.actor.xy+=reactions[0].xy;terrainBody();}
             if(reactions[0].z>0)game.locomotion.z=1;
@@ -161,9 +153,9 @@ void main(){
         if(ticket>=freeCount)return;
         uint slot=slots[ticket];vec2 pos=vec2(id%W,id/W)+.5;
         Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,1,4);p.contact=vec4(0,0,pos);p.residual=vec4(0);
-        dst[slot]=p;wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
+        storeParticle(uint(slot),p);wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
     }
-    if(id>=aliveCount)return;id=slots[N+id];Grain p=src[id];
+    if(id>=aliveCount)return;id=slots[N+id];Grain p=readParticle(uint(id));
     if(operation==8){
         vec4 reaction=vec4(0);
         if(liquid(p)){
@@ -173,11 +165,11 @@ void main(){
             vec2 dv=(bodyVelocity-p.motion.xy)*weight*p.motion.z/(p.motion.z+game.body.x);
             p.motion.xy+=dv;reaction.xy=-dv*(game.body.x/p.motion.z)*dt;
         }
-        terms[N+id]=reaction;dst[id]=p;return;
+        writeBodyReaction(id,reaction,false);storeParticle(uint(id),p);return;
     }
     if(operation==7){
         if(game.blast.z>0){vec2 d=p.position.xy-game.blast.xy;float r=length(d);
             if(r<game.blast.z&&blastVisible(game.blast.xy,p.position.xy))p.motion.xy+=normalize(d+vec2(0,-.001))*game.blast.w*(1-r/game.blast.z);}
-        dst[id]=p;return;
+        storeParticle(uint(id),p);return;
     }
 }

@@ -22,7 +22,7 @@ SdlSystem::~SdlSystem() { if (active_) SDL_Quit(); }
 void WindowDeleter::operator()(SDL_Window* window) const noexcept { SDL_DestroyWindow(window); }
 void ContextDeleter::operator()(SDL_GLContextState* context) const noexcept { SDL_GL_DestroyContext(context); }
 
-std::expected<Window, std::string> Window::create(const core::Settings& settings,bool prefer_compute) {
+std::expected<Window, std::string> Window::create(const core::Settings& settings,bool prefer_compute,bool debug_context) {
     if (const auto checked = core::validate(settings); !checked) return std::unexpected{checked.error()};
     if (!SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE)
         || !SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, prefer_compute?4:3)
@@ -31,9 +31,14 @@ std::expected<Window, std::string> Window::create(const core::Settings& settings
         || !SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 0)
         || !SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 0))
         return std::unexpected{sdl_error("Konfiguracja OpenGL")};
-#ifdef __APPLE__
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG);
+#ifndef NDEBUG
+    debug_context=true;
 #endif
+    int context_flags=debug_context?SDL_GL_CONTEXT_DEBUG_FLAG:0;
+#ifdef __APPLE__
+    context_flags|=SDL_GL_CONTEXT_FORWARD_COMPATIBLE_FLAG;
+#endif
+    if(!SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS,context_flags))return std::unexpected{sdl_error("Flagi kontekstu OpenGL")};
     Window result;
     const auto display = SDL_GetPrimaryDisplay();
     const float scale = std::max(1.0F, SDL_GetDisplayContentScale(display));

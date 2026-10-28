@@ -4,6 +4,7 @@ struct MissionState {
     vec4 control,exitZone,body,blast,flash;
     vec4 targets[3];
 };
+uniform int disableBodyCoupling;
 struct Projectile { vec4 motion; vec4 info; };
 layout(std430,binding=6) buffer Counters {
     uint freeCount,requested,aliveCount,waterCount,oilCount,maxCompression,reserved0,reserved1;
@@ -12,10 +13,11 @@ layout(std430,binding=6) buffer Counters {
     Projectile grenades[8];
     vec4 requestedBlast;uvec4 requestedBlastId;
 };
+bool bodyCouplingEnabled(){return game.status.x!=0u&&disableBodyCoupling==0;}
 float capsuleDistance(vec2 p,vec2 feet){
     vec2 q=p-feet;return length(q-vec2(0,clamp(q.y,-14,-4)))-4;
 }
-bool bodySample(vec2 p){return game.status.x!=0u&&capsuleDistance(p,game.actor.xy)<0;}
+bool bodySample(vec2 p){return bodyCouplingEnabled()&&capsuleDistance(p,game.actor.xy)<0;}
 vec2 bodySamplePosition(ivec2 local){return game.actor.xy+vec2(local)+.5;}
 vec2 shoulder(){
     float compression=game.locomotion.y*1.5;

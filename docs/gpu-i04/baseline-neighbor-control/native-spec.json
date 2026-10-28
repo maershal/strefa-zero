@@ -1,0 +1,9 @@
+{
+  "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I03\\StrefaZero.exe",
+  "flags": [
+    "--gpu-neighbor-check"
+  ],
+  "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-results\\baseline-neighbor-control",
+  "timeout_ms": 120000,
+  "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-results\\baseline-neighbor-control\\native-result.json"
+}

@@ -1,0 +1,12 @@
+{
+  "base_git_head": "34da7c461e848a31f2940b052864468bbf887cf7",
+  "source_manifest": "source-sha256.json",
+  "build": "MSVC Release /W4 /WX",
+  "regression_tests_passed": 11,
+  "regression_tests_run": 11,
+  "total_registered_tests": 18,
+  "window_trials": 9,
+  "window_clock_passed": 6,
+  "window_clock_failed": 3,
+  "note": "Window repeat 3 failed for every backend during GPU slowdown; criteria unchanged. Rejected experiments do not correspond to the final source manifest."
+}

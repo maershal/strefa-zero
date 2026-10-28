@@ -1,0 +1,22 @@
+[
+  {
+    "stage": "benchmark",
+    "exit_code": 0
+  },
+  {
+    "stage": "tests",
+    "exit_code": 0
+  },
+  {
+    "stage": "baseline-controls",
+    "exit_code": 0
+  },
+  {
+    "stage": "windows",
+    "exit_code": 1
+  },
+  {
+    "stage": "visible-controls",
+    "exit_code": 0
+  }
+]

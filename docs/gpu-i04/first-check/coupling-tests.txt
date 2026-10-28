@@ -1,0 +1,11 @@
+case mode=1 group=64 count=0
+queue=0 commands=0,0 stats=0,0,0,0
+case mode=1 group=64 count=1
+queue=0 commands=0,0 stats=1,1,1,0
+case mode=1 group=64 count=63
+queue=0 commands=0,0 stats=63,1,1,0
+case mode=1 group=64 count=64
+queue=0 commands=0,0 stats=64,1,1,0
+case mode=1 group=64 count=65
+queue=0 commands=2,1 stats=65,1,2,1
+replay count=0 commands=0,0 batches=1

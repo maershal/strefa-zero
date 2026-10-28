@@ -25,7 +25,7 @@ struct ContextDeleter { void operator()(SDL_GLContextState* context) const noexc
 
 class Window {
 public:
-    [[nodiscard]] static std::expected<Window, std::string> create(const core::Settings& settings,bool prefer_compute=true);
+    [[nodiscard]] static std::expected<Window, std::string> create(const core::Settings& settings,bool prefer_compute=true,bool debug_context=false);
     Window(Window&&) noexcept = default;
     Window(const Window&) = delete;
     Window& operator=(Window&&) = delete;

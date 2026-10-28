@@ -1,0 +1,53 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start  1: game.clock
+ 1/21 Test  #1: game.clock .......................   Passed    0.02 sec
+      Start  2: core.settings
+ 2/21 Test  #2: core.settings ....................   Passed    0.05 sec
+      Start  3: sim.materials
+ 3/21 Test  #3: sim.materials ....................   Passed   23.81 sec
+      Start  4: sim.numerics_parallel
+ 4/21 Test  #4: sim.numerics_parallel ............   Passed   14.40 sec
+      Start  5: game.training
+ 5/21 Test  #5: game.training ....................   Passed   37.65 sec
+      Start  6: sim.laboratory_worker
+ 6/21 Test  #6: sim.laboratory_worker ............   Passed    0.07 sec
+      Start  7: app.opengl_smoke
+ 7/21 Test  #7: app.opengl_smoke .................   Passed   14.22 sec
+      Start  8: app.laboratory_responsiveness
+ 8/21 Test  #8: app.laboratory_responsiveness ....   Passed   10.64 sec
+      Start  9: app.laboratory_four_threads
+ 9/21 Test  #9: app.laboratory_four_threads ......   Passed   10.64 sec
+      Start 10: gpu.mission
+10/21 Test #10: gpu.mission ......................   Passed   33.98 sec
+      Start 11: gpu.instrumentation
+11/21 Test #11: gpu.instrumentation ..............   Passed    0.86 sec
+      Start 12: gpu.coupling
+12/21 Test #12: gpu.coupling .....................   Passed    2.20 sec
+      Start 13: gpu.neighbors
+13/21 Test #13: gpu.neighbors ....................   Passed    1.81 sec
+      Start 14: gpu.execution
+14/21 Test #14: gpu.execution ....................   Passed    2.40 sec
+      Start 15: gpu.readback_ring
+15/21 Test #15: gpu.readback_ring ................   Passed    0.82 sec
+      Start 16: gpu.mission_ui
+16/21 Test #16: gpu.mission_ui ...................   Passed   30.84 sec
+      Start 17: gpu.granular_physics
+17/21 Test #17: gpu.granular_physics .............   Passed    3.80 sec
+      Start 18: gpu.liquid_physics
+18/21 Test #18: gpu.liquid_physics ...............   Passed   12.64 sec
+      Start 19: gpu.flow_behaviour
+19/21 Test #19: gpu.flow_behaviour ...............   Passed   13.25 sec
+      Start 20: gpu.laboratory_ui
+20/21 Test #20: gpu.laboratory_ui ................   Passed    8.75 sec
+      Start 21: app.opengl33_smoke
+21/21 Test #21: app.opengl33_smoke ...............   Passed   14.96 sec
+
+100% tests passed, 0 tests failed out of 21
+
+Label Time Summary:
+gpu            = 111.35 sec*proc (11 tests)
+graphics       = 161.80 sec*proc (15 tests)
+integration    = 161.80 sec*proc (15 tests)
+performance    =  21.28 sec*proc (2 tests)
+
+Total Test time (real) = 239.13 sec

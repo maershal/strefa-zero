@@ -1,0 +1,28 @@
+{
+  "date": "2026-10-28",
+  "hardware": "GTX 1650, NVIDIA 610.47, GL 4.3",
+  "default_coupling": "combined",
+  "neighbors": "reused",
+  "layout": "soa",
+  "ctest_registered": 21,
+  "ctest_failed": [],
+  "gpu_step_target_ms": 1.5,
+  "cpu_submit_target_ms": 0.1,
+  "baseline": "original I03 package; initial unpaced measurements unstable",
+  "final_benchmark": "5 scenes x 3 modes x 3 repetitions; warmup 120, measured 240 ticks; native process supervisor",
+  "remaining_issue": "historical GPU slowdown and frame budgets",
+  "notes": [
+    "Initial indirect argument GetBufferSubData snapshots replaced by GPU staging copy.",
+    "Initial coordinate tolerance calibrated with repeat reference runs plus actor and aggregate error checks.",
+    "Initial WSL timeout left native child running; final runs wait on native Windows process.",
+    "Partial local CTest stopped after selection of combined; final suite restarted on combined."
+  ],
+  "exe_sha256": "d1434de261fb242f7374d31cbfba8988283ce8a5af59a91a72ea981a6948d5ae",
+  "gpu_target_achieved": false,
+  "cpu_submit_p95_target_achieved": true,
+  "ctest_passed": 21,
+  "windows_combined_passed": 3,
+  "windows_combined_attempts": 3,
+  "final_benchmark_path": "optimized-benchmark",
+  "storage": "floating terms in buffer 7, atomic body metadata after the index in buffer 3"
+}

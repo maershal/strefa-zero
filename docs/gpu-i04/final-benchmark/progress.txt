@@ -1,0 +1,90 @@
+repeat=1 variant=i03_reference scene=mission
+world_ready_seconds=0.584495
+repeat=1 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.288814
+repeat=1 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.346764
+repeat=1 variant=i03_reference scene=mission_route
+world_ready_seconds=0.315256
+repeat=1 variant=i03_reference scene=coupled_tank
+world_ready_seconds=0.258536
+repeat=1 variant=local scene=mission
+world_ready_seconds=0.57613
+repeat=1 variant=local scene=stress_16k
+world_ready_seconds=0.293955
+repeat=1 variant=local scene=stress_32k
+world_ready_seconds=0.292256
+repeat=1 variant=local scene=mission_route
+world_ready_seconds=0.319406
+repeat=1 variant=local scene=coupled_tank
+world_ready_seconds=0.290523
+repeat=1 variant=combined scene=mission
+world_ready_seconds=0.289447
+repeat=1 variant=combined scene=stress_16k
+world_ready_seconds=0.274261
+repeat=1 variant=combined scene=stress_32k
+world_ready_seconds=0.302814
+repeat=1 variant=combined scene=mission_route
+world_ready_seconds=0.293856
+repeat=1 variant=combined scene=coupled_tank
+world_ready_seconds=0.308331
+repeat=2 variant=combined scene=mission
+world_ready_seconds=0.301878
+repeat=2 variant=combined scene=stress_16k
+world_ready_seconds=0.278926
+repeat=2 variant=combined scene=stress_32k
+world_ready_seconds=0.276897
+repeat=2 variant=combined scene=mission_route
+world_ready_seconds=0.276832
+repeat=2 variant=combined scene=coupled_tank
+world_ready_seconds=0.30834
+repeat=2 variant=local scene=mission
+world_ready_seconds=0.302873
+repeat=2 variant=local scene=stress_16k
+world_ready_seconds=0.287506
+repeat=2 variant=local scene=stress_32k
+world_ready_seconds=0.296041
+repeat=2 variant=local scene=mission_route
+world_ready_seconds=0.315439
+repeat=2 variant=local scene=coupled_tank
+world_ready_seconds=0.309671
+repeat=2 variant=i03_reference scene=mission
+world_ready_seconds=0.260358
+repeat=2 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.293978
+repeat=2 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.300895
+repeat=2 variant=i03_reference scene=mission_route
+world_ready_seconds=0.312384
+repeat=2 variant=i03_reference scene=coupled_tank
+world_ready_seconds=0.301434
+repeat=3 variant=i03_reference scene=mission
+world_ready_seconds=0.299826
+repeat=3 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.282163
+repeat=3 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.285681
+repeat=3 variant=i03_reference scene=mission_route
+world_ready_seconds=0.292155
+repeat=3 variant=i03_reference scene=coupled_tank
+world_ready_seconds=0.288948
+repeat=3 variant=local scene=mission
+world_ready_seconds=0.293619
+repeat=3 variant=local scene=stress_16k
+world_ready_seconds=0.331151
+repeat=3 variant=local scene=stress_32k
+world_ready_seconds=0.291332
+repeat=3 variant=local scene=mission_route
+world_ready_seconds=0.360529
+repeat=3 variant=local scene=coupled_tank
+world_ready_seconds=0.312524
+repeat=3 variant=combined scene=mission
+world_ready_seconds=0.320282
+repeat=3 variant=combined scene=stress_16k
+world_ready_seconds=0.278424
+repeat=3 variant=combined scene=stress_32k
+world_ready_seconds=0.307869
+repeat=3 variant=combined scene=mission_route
+world_ready_seconds=0.314727
+repeat=3 variant=combined scene=coupled_tank
+world_ready_seconds=0.342444

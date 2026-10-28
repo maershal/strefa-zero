@@ -1,20 +1,114 @@
-struct Grain {vec4 position;vec4 motion;vec4 contact;vec4 residual;};
-layout(std430,binding=0) readonly buffer Input {Grain src[];};
-layout(std430,binding=1) buffer Output {Grain dst[];};
+#include "particle_storage.glsl"
+#if SORTED_NEIGHBORS
+// Header, cell counts, exclusive local prefixes, scatter cursors, block sums
+// and block offsets. The cell grid is never a fixed-capacity particle list.
+layout(std430,binding=2) coherent buffer Cells {uint cells[];};
+layout(std430,binding=3) buffer Sorted {
+    uint order[32768];uint sortedIndex[32768];vec4 anchors[32768];
+#if COUPLING_MODE != 0
+    uvec4 bodyQueue,bodyStats;
+    vec4 bodyLastSum,bodyTotalSum;
+    uint bodyIds[65536];vec4 bodyPartial[1024];
+#endif
+};
+const uint CELL_COUNT=61440u,HEADER=16u,COUNT_BASE=HEADER,START_BASE=HEADER+CELL_COUNT,
+    CURSOR_BASE=HEADER+2u*CELL_COUNT,BLOCK_BASE=HEADER+3u*CELL_COUNT,
+    BLOCK_OFFSET_BASE=BLOCK_BASE+240u;
+#else
 layout(std430,binding=2) buffer Heads {int head[];};
+#if COUPLING_MODE != 0
+layout(std430,binding=3) buffer Links {int link[32768];uvec4 bodyQueue,bodyStats;
+    vec4 bodyLastSum,bodyTotalSum;
+    uint bodyIds[65536];vec4 bodyPartial[1024];};
+#else
 layout(std430,binding=3) buffer Links {int link[];};
+#endif
+#endif
 layout(std430,binding=4) buffer Terrain {uint wall[];};
 layout(std430,binding=5) buffer Free {uint slots[];};
 #include "mission_state.glsl"
+// Floating-point solver data stays separate from atomic queue metadata.
+// Channels: density, contact/drag reaction, and (combined only) PBF reaction.
 layout(std430,binding=7) buffer FluidTerms {vec4 terms[];};
 uniform int dirtyOnly;
+#ifdef PASS_OPERATION
+const int operation=PASS_OPERATION;
+#else
 uniform int operation;
+#endif
+const uint REBUILD_COMMAND=7u,SYNC_COMMAND=10u,TERRAIN_COMMAND=13u,
+    BLAST_COMMAND=16u,BLAST_TERRAIN_COMMAND=19u,DEBRIS_COMMAND=22u,REDUCTION_COMMAND=25u,BODY_REDUCE_COMMAND=28u,BODY_FINAL_COMMAND=31u;
 uniform int substep;
 uniform vec4 stroke; // start xy, end xy
 uniform float brushRadius;
 uniform int material;
 const int W=320,H=192,N=32768;
+void dispatchCommand(uint offset,uint groups){slots[uint(2*N)+offset]=groups;slots[uint(2*N)+offset+1u]=1u;slots[uint(2*N)+offset+2u]=1u;}
 const float dt=1.0/240.0,R=.46;
+void appendBodyEntry(uint taggedId,vec4 reaction){
+#if COUPLING_MODE != 0
+    if(!bodyCouplingEnabled()||all(equal(reaction.xyz,vec3(0))))return;
+    uint ticket=atomicAdd(bodyQueue.x,1u);atomicMax(bodyQueue.y,ticket+1u);
+    if(ticket>=uint(2*N)){atomicAdd(bodyQueue.z,1u);return;}
+    bodyIds[ticket]=taggedId;atomicAdd(bodyStats.x,1u);
+    atomicMax(slots[2*N+BODY_REDUCE_COMMAND],(ticket+REDUCTION_LOCAL_SIZE)/REDUCTION_LOCAL_SIZE);
+    if(ticket>=REDUCTION_LOCAL_SIZE)atomicOr(slots[2*N+BODY_FINAL_COMMAND],1u);
+#endif
+}
+void writeBodyReaction(uint id,vec4 reaction,bool fluid){
+#if COUPLING_MODE == 0
+    terms[N+id]=reaction;
+#else
+    uint tagged=id;
+#if COUPLING_MODE == 2
+    if(fluid)tagged+=uint(N);
+#endif
+    terms[uint(N)+tagged]=reaction;appendBodyEntry(tagged,reaction);
+#endif
+}
+bool bodyFluidCandidate(vec2 p){
+    if(!bodyCouplingEnabled())return false;
+#if COUPLING_MODE != 0
+    // Exact current-pose broad phase: all interior capsule samples with h=2
+    // lie in this box. No cached list can become stale after a body correction.
+    vec2 q=p-game.actor.xy;return abs(q.x)<=6.01&&q.y>=-20.01&&q.y<=2.01;
+#else
+    return true;
+#endif
+}
+#if SORTED_NEIGHBORS
+uint cellStart(uint c){return c==CELL_COUNT?aliveCount:cells[START_BASE+c]+cells[BLOCK_OFFSET_BASE+c/256u];}
+#endif
+void storeParticle(uint id,Grain p){
+    writeParticle(id,p);
+#if REUSE_NEIGHBORS
+    // The source of the next dispatch is bounded relative to the build,
+    // including compensated motion, terrain and capsule corrections.
+    vec4 a=anchors[id];float moved=length((p.position.xy-a.xy)+p.residual.xy);
+    // Round upwards to reduce atomic contention. An older concurrent read can
+    // only cause a redundant atomicMax, never lower the conservative bound.
+    uint bound=floatBitsToUint(ceil((moved+.0001)*16)/16);
+    if(bound>cells[0])atomicMax(cells[0],bound);
+#endif
+}
+// Each row is one contiguous range in the globally sorted cell ordering.
+// Query around CURRENT p, expanded by the maximum displacement of the OTHER
+// endpoint since building. Thus |q_anchor-p| <= R + Dmax for every pair in R.
+// Unlike a capped Verlet list this remains complete even when 2*Dmax > skin.
+ivec4 neighborWindow(Grain p,float reach){
+#if SORTED_NEIGHBORS
+    reach+=uintBitsToFloat(cells[0])+length(p.residual.xy)+.001;
+#endif
+    return ivec4(clamp(ivec2(floor(p.position.xy-reach)),ivec2(0),ivec2(W-1,H-1)),
+                 clamp(ivec2(floor(p.position.xy+reach)),ivec2(0),ivec2(W-1,H-1)));
+}
+#if SORTED_NEIGHBORS
+#define FOR_NEIGHBOR(p,reach,j) {ivec4 box=neighborWindow(p,reach);for(int row=box.y;row<=box.w;++row){uint end=cellStart(uint(row*W+box.z+1));for(uint entry=cellStart(uint(row*W+box.x));entry<end;++entry){int j=int(order[entry]);
+#define END_NEIGHBOR }}}
+#else
+#define FOR_NEIGHBOR(p,reach,j) {ivec4 box=neighborWindow(p,reach);for(int row=box.y;row<=box.w;++row)for(int column=box.x;column<=box.z;++column){int j=head[row*W+column];while(j>=0){
+#define END_NEIGHBOR j=link[j];}}}
+#endif
 bool liquid(Grain p){return p.motion.w>=5;}
 float radius(Grain p){return liquid(p)?.32:R;}
 // Sand mass is the historical unit: rho_sand/rho_water = 2.65,

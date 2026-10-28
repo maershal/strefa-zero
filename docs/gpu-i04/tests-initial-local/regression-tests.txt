@@ -1,0 +1,8 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start  1: game.clock
+ 1/21 Test  #1: game.clock .......................   Passed    0.08 sec
+      Start  2: core.settings
+ 2/21 Test  #2: core.settings ....................   Passed    0.20 sec
+      Start  3: sim.materials
+ 3/21 Test  #3: sim.materials ....................   Passed   85.43 sec
+      Start  4: sim.numerics_parallel

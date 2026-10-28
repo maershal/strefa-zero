@@ -1,0 +1,35 @@
+[
+  {
+    "name": "ctest",
+    "exit_code": 8,
+    "expected": 0
+  },
+  {
+    "name": "reference-mission",
+    "expected": 0,
+    "pid": 9024,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "name": "reference-instrumentation",
+    "expected": 0,
+    "pid": 11424,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "name": "debug-coupling",
+    "expected": 0,
+    "pid": 2872,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "name": "opengl33-coupling",
+    "expected": 77,
+    "pid": 1236,
+    "exit_code": 77,
+    "timed_out": false
+  }
+]

@@ -1,0 +1,50 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start  1: game.clock
+ 1/17 Test  #1: game.clock .......................   Passed    0.10 sec
+      Start  2: core.settings
+ 2/17 Test  #2: core.settings ....................   Passed    0.15 sec
+      Start  3: sim.materials
+ 3/17 Test  #3: sim.materials ....................   Passed   22.42 sec
+      Start  4: sim.numerics_parallel
+ 4/17 Test  #4: sim.numerics_parallel ............   Passed   18.40 sec
+      Start  5: game.training
+ 5/17 Test  #5: game.training ....................   Passed   44.33 sec
+      Start  6: sim.laboratory_worker
+ 6/17 Test  #6: sim.laboratory_worker ............   Passed    0.34 sec
+      Start  7: app.opengl_smoke
+ 7/17 Test  #7: app.opengl_smoke .................   Passed   12.67 sec
+      Start  8: app.laboratory_responsiveness
+ 8/17 Test  #8: app.laboratory_responsiveness ....   Passed    5.98 sec
+      Start  9: app.laboratory_four_threads
+ 9/17 Test  #9: app.laboratory_four_threads ......   Passed    6.00 sec
+      Start 10: gpu.mission
+10/17 Test #10: gpu.mission ......................   Passed   44.27 sec
+      Start 11: gpu.instrumentation
+11/17 Test #11: gpu.instrumentation ..............   Passed    0.98 sec
+      Start 12: gpu.mission_ui
+12/17 Test #12: gpu.mission_ui ...................***Failed   17.73 sec
+
+      Start 13: gpu.granular_physics
+13/17 Test #13: gpu.granular_physics .............   Passed    4.77 sec
+      Start 14: gpu.liquid_physics
+14/17 Test #14: gpu.liquid_physics ...............   Passed   13.05 sec
+      Start 15: gpu.flow_behaviour
+15/17 Test #15: gpu.flow_behaviour ...............   Passed   14.30 sec
+      Start 16: gpu.laboratory_ui
+16/17 Test #16: gpu.laboratory_ui ................   Passed    4.69 sec
+      Start 17: app.opengl33_smoke
+17/17 Test #17: app.opengl33_smoke ...............   Passed    7.72 sec
+
+94% tests passed, 1 tests failed out of 17
+
+Label Time Summary:
+gpu            =  99.78 sec*proc (7 tests)
+graphics       = 132.15 sec*proc (11 tests)
+integration    = 132.15 sec*proc (11 tests)
+performance    =  11.98 sec*proc (2 tests)
+
+Total Test time (real) = 218.08 sec
+
+The following tests FAILED:
+	 12 - gpu.mission_ui (Failed)                           gpu graphics integration
+Errors while running CTest

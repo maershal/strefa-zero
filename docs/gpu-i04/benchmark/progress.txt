@@ -1,0 +1,72 @@
+repeat=1 variant=i03_reference scene=mission
+world_ready_seconds=0.367179
+repeat=1 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.275208
+repeat=1 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.265887
+repeat=1 variant=i03_reference scene=mission_route
+world_ready_seconds=0.276392
+repeat=1 variant=local scene=mission
+world_ready_seconds=0.32129
+repeat=1 variant=local scene=stress_16k
+world_ready_seconds=0.297137
+repeat=1 variant=local scene=stress_32k
+world_ready_seconds=0.298591
+repeat=1 variant=local scene=mission_route
+world_ready_seconds=0.295793
+repeat=1 variant=combined scene=mission
+world_ready_seconds=0.274525
+repeat=1 variant=combined scene=stress_16k
+world_ready_seconds=0.293169
+repeat=1 variant=combined scene=stress_32k
+world_ready_seconds=0.289069
+repeat=1 variant=combined scene=mission_route
+world_ready_seconds=0.287822
+repeat=2 variant=combined scene=mission
+world_ready_seconds=0.305862
+repeat=2 variant=combined scene=stress_16k
+world_ready_seconds=0.318956
+repeat=2 variant=combined scene=stress_32k
+world_ready_seconds=0.275116
+repeat=2 variant=combined scene=mission_route
+world_ready_seconds=0.330933
+repeat=2 variant=local scene=mission
+world_ready_seconds=0.321326
+repeat=2 variant=local scene=stress_16k
+world_ready_seconds=0.310293
+repeat=2 variant=local scene=stress_32k
+world_ready_seconds=0.306939
+repeat=2 variant=local scene=mission_route
+world_ready_seconds=0.299364
+repeat=2 variant=i03_reference scene=mission
+world_ready_seconds=0.293654
+repeat=2 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.319977
+repeat=2 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.270291
+repeat=2 variant=i03_reference scene=mission_route
+world_ready_seconds=0.280272
+repeat=3 variant=i03_reference scene=mission
+world_ready_seconds=0.289312
+repeat=3 variant=i03_reference scene=stress_16k
+world_ready_seconds=0.292557
+repeat=3 variant=i03_reference scene=stress_32k
+world_ready_seconds=0.281708
+repeat=3 variant=i03_reference scene=mission_route
+world_ready_seconds=0.266043
+repeat=3 variant=local scene=mission
+world_ready_seconds=0.28484
+repeat=3 variant=local scene=stress_16k
+world_ready_seconds=0.295594
+repeat=3 variant=local scene=stress_32k
+world_ready_seconds=0.30308
+repeat=3 variant=local scene=mission_route
+world_ready_seconds=0.280952
+repeat=3 variant=combined scene=mission
+world_ready_seconds=0.283641
+repeat=3 variant=combined scene=stress_16k
+world_ready_seconds=0.288293
+repeat=3 variant=combined scene=stress_32k
+world_ready_seconds=0.27766
+repeat=3 variant=combined scene=mission_route
+world_ready_seconds=0.260491

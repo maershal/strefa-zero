@@ -1,0 +1,1 @@
+Stopped the owned measurement script after throughput completed and the first window began. GPU timings changed several-fold with counters enabled and disabled. Preserve data; do not treat this run as a stable performance baseline.

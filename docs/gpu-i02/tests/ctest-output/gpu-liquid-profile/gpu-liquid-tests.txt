@@ -1,0 +1,21 @@
+renderer=NVIDIA GeForce GTX 1650/PCIe/SSE2
+model=PBF 2D; h=2; dt=1/240; outer=120Hz
+density_cpu_max_error=5.67815e-07
+projection_compression_before=0.360201
+projection_compression_after=7.67708e-05
+thin_wall_transport_and_pressure=passed
+liquid_brush_counts=passed
+fps_30_60_144=passed
+scene_4_mass=preserved; compression=0.00571275
+scene_5_mass=preserved; compression=0.00967157
+dam_right_particles=2418
+scene_6_mass=preserved; compression=0.0110729
+vessels_estimated_level_difference_cells=0.000159141
+scene_7_mass=preserved; compression=0.0105641
+water_mean_y=179.138
+oil_mean_y=165.274
+scene_8_mass=preserved; compression=0.0144264
+sand_mean_y=184.019
+water_mixed_mean_y=173.613
+liquid_capacity_32768=passed
+status=passed

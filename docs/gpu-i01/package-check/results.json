@@ -1,0 +1,14 @@
+[
+  {
+    "name": "relocated-readback",
+    "exit_code": 0,
+    "expected_exit_code": 0,
+    "passed": true
+  },
+  {
+    "name": "opengl33-readback-skip",
+    "exit_code": 77,
+    "expected_exit_code": 77,
+    "passed": true
+  }
+]
