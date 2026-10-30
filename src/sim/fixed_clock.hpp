@@ -27,6 +27,8 @@ public:
     }
     void reset() noexcept { accumulator_ = 0; dropped_seconds_ = 0; }
     [[nodiscard]] double dropped_seconds() const noexcept { return dropped_seconds_; }
+    // Includes retained whole ticks and the fractional next tick; observation only.
+    [[nodiscard]] double pending_seconds() const noexcept { return accumulator_; }
     [[nodiscard]] double fraction() const noexcept { return std::fmod(accumulator_,tick_seconds)/tick_seconds; }
 private:
     double accumulator_{};

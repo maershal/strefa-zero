@@ -1,0 +1,33 @@
+Measuring throughput-off-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-off-1"
+Measuring throughput-passes-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-passes-1"
+Measuring throughput-bounds-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-bounds-1"
+Measuring throughput-snapshots-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-snapshots-1"
+Measuring throughput-passes-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-passes-2"
+Measuring throughput-bounds-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-bounds-2"
+Measuring throughput-snapshots-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-snapshots-2"
+Measuring throughput-off-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-off-2"
+Measuring throughput-bounds-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-bounds-3"
+Measuring throughput-snapshots-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-snapshots-3"
+Measuring throughput-off-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-off-3"
+Measuring throughput-passes-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-passes-3"
+Measuring throughput-snapshots-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-snapshots-4"
+Measuring throughput-off-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-off-4"
+Measuring throughput-passes-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-passes-4"
+Measuring throughput-bounds-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix\cost-bounds-4"
+Analyze with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\cost-matrix"

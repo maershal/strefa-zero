@@ -1,0 +1,3 @@
+gpu_timer_mode=elapsed
+neighbor_reads_effective=narrow
+neighbor_mode=2

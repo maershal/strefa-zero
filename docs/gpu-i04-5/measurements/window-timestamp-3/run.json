@@ -1,0 +1,31 @@
+﻿{
+    "schema_version":  1,
+    "name":  "window-timestamp-3",
+    "order":  18,
+    "phase":  "window",
+    "mode":  "timestamp",
+    "repeat":  3,
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "arguments":  [
+                      "--mission-smoke-test",
+                      "--gpu-timer-mode",
+                      "timestamp",
+                      "--gpu-counters",
+                      "--test-vsync",
+                      "off",
+                      "--test-frame-limit",
+                      "60",
+                      "--show-test-window",
+                      "--profile",
+                      "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5-results\\measurements\\window-timestamp-3"
+                  ],
+    "profile":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5-results\\measurements\\window-timestamp-3",
+    "start_utc":  "2026-10-29T15:00:01.8802003+00:00",
+    "end_utc":  "2026-10-29T15:00:18.4915975+00:00",
+    "pid":  7792,
+    "exit_code":  0,
+    "timed_out":  false,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "launch_error":  null
+}

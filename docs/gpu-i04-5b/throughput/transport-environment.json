@@ -1,0 +1,21 @@
+﻿{
+    "schema_version":  1,
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "storage_modes":  [
+                          "direct",
+                          "staged",
+                          "immutable"
+                      ],
+    "readback_periods":  [
+                             2,
+                             0
+                         ],
+    "repetitions":  6,
+    "timer_mode":  "elapsed",
+    "counters":  "on",
+    "phase_gating":  "off",
+    "zero_projection":  "off",
+    "order_policy":  "Two conditions alternate ABBA. More conditions use cyclic Latin order; a complete block needs as many repetitions as conditions. Inspect schedule for partial blocks.",
+    "correctness_precondition":  "Run --gpu-transport-check separately.",
+    "window_visibility":  "visible"
+}

@@ -1,0 +1,26 @@
+﻿{
+    "schema_version":  1,
+    "name":  "throughput-off-1",
+    "order":  3,
+    "phase":  "throughput",
+    "mode":  "off",
+    "repeat":  1,
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "arguments":  [
+                      "--gpu-stabilization-profile",
+                      "--gpu-timer-mode",
+                      "off",
+                      "--gpu-counters",
+                      "--profile",
+                      "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5-results\\measurements\\throughput-off-1"
+                  ],
+    "profile":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5-results\\measurements\\throughput-off-1",
+    "start_utc":  "2026-10-29T14:57:13.0503678+00:00",
+    "end_utc":  "2026-10-29T14:57:17.4433326+00:00",
+    "pid":  1240,
+    "exit_code":  0,
+    "timed_out":  false,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "launch_error":  null
+}

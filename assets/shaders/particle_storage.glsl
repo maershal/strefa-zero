@@ -21,6 +21,18 @@ layout(std430,binding=1) buffer Output {Grain dst[];};
 #endif
 Grain readParticle(uint id){return src[id];}
 #endif
+#if HOT_READS > 0
+// Previous positions/contact history remain in the authoritative ID arrays.
+// These four passes only need current compensated geometry and motion.
+struct Interaction {vec4 position;vec4 motion;vec4 residual;};
+Interaction readInteractionRaw(uint id){
+#if PARTICLE_SOA
+    return Interaction(vec4(positions[id].xy,0,0),motions[id],vec4(residuals[id].xy,0,0));
+#else
+    return Interaction(vec4(src[id].position.xy,0,0),src[id].motion,vec4(src[id].residual.xy,0,0));
+#endif
+}
+#endif
 #ifndef PARTICLE_RENDER
 void writeParticle(uint id,Grain p){
 #if PARTICLE_SOA

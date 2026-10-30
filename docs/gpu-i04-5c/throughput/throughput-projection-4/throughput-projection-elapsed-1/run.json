@@ -1,0 +1,33 @@
+﻿{
+    "schema_version":  1,
+    "name":  "throughput-projection-elapsed-1",
+    "order":  1,
+    "phase":  "throughput",
+    "mode":  "elapsed",
+    "repeat":  1,
+    "variant_label":  "projection",
+    "phase_gating":  "off",
+    "zero_projection":  "on",
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "arguments":  [
+                      "--gpu-stabilization-profile",
+                      "--gpu-timer-mode",
+                      "elapsed",
+                      "--gpu-phase-gating",
+                      "off",
+                      "--gpu-zero-projection",
+                      "on",
+                      "--gpu-counters",
+                      "--profile",
+                      "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5c-results\\throughput\\throughput-projection-4\\throughput-projection-elapsed-1"
+                  ],
+    "profile":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5c-results\\throughput\\throughput-projection-4\\throughput-projection-elapsed-1",
+    "start_utc":  "2026-10-29T20:05:42.7415610+00:00",
+    "end_utc":  "2026-10-29T20:05:55.1365809+00:00",
+    "pid":  11772,
+    "exit_code":  0,
+    "timed_out":  false,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "launch_error":  null
+}

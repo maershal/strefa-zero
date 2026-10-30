@@ -1,0 +1,94 @@
+{
+  "diagnostic_limit_seconds": 120,
+  "ctest_limits_unchanged": true,
+  "runs": [
+    {
+      "variant": "A",
+      "mode": "gl43",
+      "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+      "pid": 5284,
+      "exit_code": 0,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:04:34.3134647Z",
+      "ended_utc": "2026-10-29T21:05:08.3320337Z",
+      "elapsed_seconds": 34.018569
+    },
+    {
+      "variant": "C",
+      "mode": "gl43",
+      "exe_sha256": "4679ce7ce6bfe9dc84a72288c2693468a77e12d32e80beb13a81dd2765f27d84",
+      "pid": 5744,
+      "exit_code": 0,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:05:19.3887941Z",
+      "ended_utc": "2026-10-29T21:05:50.1072867Z",
+      "elapsed_seconds": 30.718492599999998
+    },
+    {
+      "variant": "A",
+      "mode": "gl33",
+      "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+      "pid": 22216,
+      "exit_code": 0,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:06:00.5256632Z",
+      "ended_utc": "2026-10-29T21:06:31.5447197Z",
+      "elapsed_seconds": 31.019056499999998
+    },
+    {
+      "variant": "C",
+      "mode": "gl33",
+      "exe_sha256": "4679ce7ce6bfe9dc84a72288c2693468a77e12d32e80beb13a81dd2765f27d84",
+      "pid": 21804,
+      "exit_code": 0,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:06:41.7092193Z",
+      "ended_utc": "2026-10-29T21:07:10.5482132Z",
+      "elapsed_seconds": 28.8389939
+    },
+    {
+      "variant": "A",
+      "mode": "coupling",
+      "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+      "pid": 7792,
+      "exit_code": 1,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:07:21.5698041Z",
+      "ended_utc": "2026-10-29T21:07:28.7230114Z",
+      "elapsed_seconds": 7.1532073
+    },
+    {
+      "variant": "C",
+      "mode": "coupling",
+      "exe_sha256": "4679ce7ce6bfe9dc84a72288c2693468a77e12d32e80beb13a81dd2765f27d84",
+      "pid": 18464,
+      "exit_code": 0,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:07:39.1050372Z",
+      "ended_utc": "2026-10-29T21:07:48.6886477Z",
+      "elapsed_seconds": 9.583610499999999
+    },
+    {
+      "variant": "A",
+      "mode": "mission_ui",
+      "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+      "pid": 17248,
+      "exit_code": 1,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:07:58.5831705Z",
+      "ended_utc": "2026-10-29T21:09:08.4208701Z",
+      "elapsed_seconds": 69.8376996
+    },
+    {
+      "variant": "C",
+      "mode": "mission_ui",
+      "exe_sha256": "4679ce7ce6bfe9dc84a72288c2693468a77e12d32e80beb13a81dd2765f27d84",
+      "pid": 16752,
+      "exit_code": 1,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:09:18.8942491Z",
+      "ended_utc": "2026-10-29T21:10:30.0355737Z",
+      "elapsed_seconds": 71.14132459999999
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+Name,Phase,Mode,Variant,Repeat,ProfileDirectory,ExitCode,TimedOut,PhaseGating,ZeroProjection
+case,throughput,elapsed,phase,1,group/run,0,False,on,off

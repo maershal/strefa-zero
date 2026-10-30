@@ -1,0 +1,2 @@
+gpu_timer_mode=elapsed
+cost_mode=bounds

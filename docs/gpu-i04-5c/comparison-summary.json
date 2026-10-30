@@ -1,0 +1,1010 @@
+[
+  {
+    "variant": "reference",
+    "scene": "mission",
+    "gpu_step_ms_median_median_of_runs": 11.375408,
+    "gpu_step_ms_median_range": [
+      11.164064,
+      11.42032
+    ],
+    "gpu_step_ms_p95_median_of_runs": 11.630624000000001,
+    "gpu_step_ms_p95_range": [
+      11.415776,
+      11.68384
+    ],
+    "gpu_step_ms_p99_median_of_runs": 11.780832,
+    "gpu_step_ms_p99_range": [
+      11.605536,
+      11.84768
+    ],
+    "gpu_step_ms_max_median_of_runs": 12.88624,
+    "gpu_step_ms_max_range": [
+      11.923456,
+      14.896928
+    ],
+    "cpu_submit_ms_median_median_of_runs": 2.4002499999999998,
+    "cpu_submit_ms_median_range": [
+      2.2375,
+      2.4863
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 3.24575,
+    "cpu_submit_ms_p95_range": [
+      2.8976,
+      3.7188
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.67095,
+    "cpu_submit_ms_p99_range": [
+      3.9166,
+      5.054
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.558,
+    "cpu_submit_ms_max_range": [
+      6.5097,
+      6.6827
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 11.453664795,
+    "batch_mean_step_wall_ms_median_range": [
+      11.3208725,
+      11.49635917
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 11.453664795,
+    "batch_mean_step_wall_ms_p95_range": [
+      11.3208725,
+      11.49635917
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 11.453664795,
+    "batch_mean_step_wall_ms_p99_range": [
+      11.3208725,
+      11.49635917
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 11.453664795,
+    "batch_mean_step_wall_ms_max_range": [
+      11.3208725,
+      11.49635917
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.385856,
+    "gpu_render_ms_median_range": [
+      0.3856,
+      0.534528
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.465056,
+    "gpu_render_ms_p95_range": [
+      0.391168,
+      0.539264
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.625216,
+    "gpu_render_ms_p99_range": [
+      0.425984,
+      1.18336
+    ],
+    "gpu_render_ms_max_median_of_runs": 1.246544,
+    "gpu_render_ms_max_range": [
+      0.511488,
+      3.072512
+    ]
+  },
+  {
+    "variant": "reference",
+    "scene": "stress_16k",
+    "gpu_step_ms_median_median_of_runs": 4.76576,
+    "gpu_step_ms_median_range": [
+      4.753408,
+      4.778816
+    ],
+    "gpu_step_ms_p95_median_of_runs": 5.283184,
+    "gpu_step_ms_p95_range": [
+      5.262944,
+      5.337088
+    ],
+    "gpu_step_ms_p99_median_of_runs": 5.451328,
+    "gpu_step_ms_p99_range": [
+      5.439584,
+      5.50912
+    ],
+    "gpu_step_ms_max_median_of_runs": 5.474576,
+    "gpu_step_ms_max_range": [
+      5.471616,
+      6.004736
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.65145,
+    "cpu_submit_ms_median_range": [
+      1.4845,
+      1.8114
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.8964499999999997,
+    "cpu_submit_ms_p95_range": [
+      2.5141,
+      3.1702
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 3.9720999999999997,
+    "cpu_submit_ms_p99_range": [
+      3.2787,
+      5.2663
+    ],
+    "cpu_submit_ms_max_median_of_runs": 5.746,
+    "cpu_submit_ms_max_range": [
+      5.6186,
+      7.5968
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 4.826110625,
+    "batch_mean_step_wall_ms_median_range": [
+      4.8233725,
+      4.829795833
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 4.826110625,
+    "batch_mean_step_wall_ms_p95_range": [
+      4.8233725,
+      4.829795833
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 4.826110625,
+    "batch_mean_step_wall_ms_p99_range": [
+      4.8233725,
+      4.829795833
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 4.826110625,
+    "batch_mean_step_wall_ms_max_range": [
+      4.8233725,
+      4.829795833
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.397664,
+    "gpu_render_ms_median_range": [
+      0.397312,
+      0.551008
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.401408,
+    "gpu_render_ms_p95_range": [
+      0.401408,
+      0.553056
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.42598400000000003,
+    "gpu_render_ms_p99_range": [
+      0.411488,
+      0.558208
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.501248,
+    "gpu_render_ms_max_range": [
+      0.442144,
+      1.00352
+    ]
+  },
+  {
+    "variant": "reference",
+    "scene": "stress_32k",
+    "gpu_step_ms_median_median_of_runs": 8.747104,
+    "gpu_step_ms_median_range": [
+      8.689504,
+      8.841216
+    ],
+    "gpu_step_ms_p95_median_of_runs": 9.431648,
+    "gpu_step_ms_p95_range": [
+      9.406528,
+      9.5752
+    ],
+    "gpu_step_ms_p99_median_of_runs": 9.709776000000002,
+    "gpu_step_ms_p99_range": [
+      9.58768,
+      10.13984
+    ],
+    "gpu_step_ms_max_median_of_runs": 10.873312,
+    "gpu_step_ms_max_range": [
+      9.636032,
+      10.97936
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.72535,
+    "cpu_submit_ms_median_range": [
+      1.663,
+      1.8035
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 3.0004,
+    "cpu_submit_ms_p95_range": [
+      2.5412,
+      3.0898
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 5.5116,
+    "cpu_submit_ms_p99_range": [
+      4.2617,
+      6.9626
+    ],
+    "cpu_submit_ms_max_median_of_runs": 51.4136,
+    "cpu_submit_ms_max_range": [
+      6.3111,
+      69.8149
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 8.822189583,
+    "batch_mean_step_wall_ms_median_range": [
+      8.771354583,
+      8.910691667
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 8.822189583,
+    "batch_mean_step_wall_ms_p95_range": [
+      8.771354583,
+      8.910691667
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 8.822189583,
+    "batch_mean_step_wall_ms_p99_range": [
+      8.771354583,
+      8.910691667
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 8.822189583,
+    "batch_mean_step_wall_ms_max_range": [
+      8.771354583,
+      8.910691667
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.493392,
+    "gpu_render_ms_median_range": [
+      0.492896,
+      0.681984
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.496224,
+    "gpu_render_ms_p95_range": [
+      0.495808,
+      0.684288
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.5077119999999999,
+    "gpu_render_ms_p99_range": [
+      0.506304,
+      0.685568
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.5390079999999999,
+    "gpu_render_ms_max_range": [
+      0.538624,
+      0.688224
+    ]
+  },
+  {
+    "variant": "phase",
+    "scene": "mission",
+    "gpu_step_ms_median_median_of_runs": 11.275712,
+    "gpu_step_ms_median_range": [
+      10.987456,
+      11.315104
+    ],
+    "gpu_step_ms_p95_median_of_runs": 11.523824000000001,
+    "gpu_step_ms_p95_range": [
+      11.27248,
+      11.608416
+    ],
+    "gpu_step_ms_p99_median_of_runs": 11.653904,
+    "gpu_step_ms_p99_range": [
+      11.44192,
+      11.780864
+    ],
+    "gpu_step_ms_max_median_of_runs": 11.975344,
+    "gpu_step_ms_max_range": [
+      11.714368,
+      14.761856
+    ],
+    "cpu_submit_ms_median_median_of_runs": 2.38675,
+    "cpu_submit_ms_median_range": [
+      2.3461,
+      2.4504
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 3.2878499999999997,
+    "cpu_submit_ms_p95_range": [
+      3.1197,
+      3.4988
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.35495,
+    "cpu_submit_ms_p99_range": [
+      3.9293,
+      4.892
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.77255,
+    "cpu_submit_ms_max_range": [
+      6.3634,
+      7.4359
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 11.350305625,
+    "batch_mean_step_wall_ms_median_range": [
+      11.10014083,
+      11.38694583
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 11.350305625,
+    "batch_mean_step_wall_ms_p95_range": [
+      11.10014083,
+      11.38694583
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 11.350305625,
+    "batch_mean_step_wall_ms_p99_range": [
+      11.10014083,
+      11.38694583
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 11.350305625,
+    "batch_mean_step_wall_ms_max_range": [
+      11.10014083,
+      11.38694583
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.38513600000000003,
+    "gpu_render_ms_median_range": [
+      0.3848,
+      0.53312
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.38969600000000004,
+    "gpu_render_ms_p95_range": [
+      0.38912,
+      0.538624
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.5265599999999999,
+    "gpu_render_ms_p99_range": [
+      0.510016,
+      1.283072
+    ],
+    "gpu_render_ms_max_median_of_runs": 1.347344,
+    "gpu_render_ms_max_range": [
+      0.9288,
+      1.445184
+    ]
+  },
+  {
+    "variant": "phase",
+    "scene": "stress_16k",
+    "gpu_step_ms_median_median_of_runs": 4.816592,
+    "gpu_step_ms_median_range": [
+      4.784576,
+      4.832928
+    ],
+    "gpu_step_ms_p95_median_of_runs": 5.324384,
+    "gpu_step_ms_p95_range": [
+      5.277696,
+      5.384192
+    ],
+    "gpu_step_ms_p99_median_of_runs": 5.4583200000000005,
+    "gpu_step_ms_p99_range": [
+      5.441504,
+      5.777664
+    ],
+    "gpu_step_ms_max_median_of_runs": 5.7024,
+    "gpu_step_ms_max_range": [
+      5.46816,
+      8.476704
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.7252,
+    "cpu_submit_ms_median_range": [
+      1.6523,
+      1.7967
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.50805,
+    "cpu_submit_ms_p95_range": [
+      2.1415,
+      2.9303
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 3.8112,
+    "cpu_submit_ms_p99_range": [
+      3.0121,
+      4.4919
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.61055,
+    "cpu_submit_ms_max_range": [
+      5.413,
+      6.8688
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 4.854639375,
+    "batch_mean_step_wall_ms_median_range": [
+      4.841291667,
+      4.915229583
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 4.854639375,
+    "batch_mean_step_wall_ms_p95_range": [
+      4.841291667,
+      4.915229583
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 4.854639375,
+    "batch_mean_step_wall_ms_p99_range": [
+      4.841291667,
+      4.915229583
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 4.854639375,
+    "batch_mean_step_wall_ms_max_range": [
+      4.841291667,
+      4.915229583
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.39756800000000003,
+    "gpu_render_ms_median_range": [
+      0.397312,
+      0.397792
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.401088,
+    "gpu_render_ms_p95_range": [
+      0.400736,
+      0.401248
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.411568,
+    "gpu_render_ms_p99_range": [
+      0.411296,
+      0.411744
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.442288,
+    "gpu_render_ms_max_range": [
+      0.44128,
+      0.442944
+    ]
+  },
+  {
+    "variant": "phase",
+    "scene": "stress_32k",
+    "gpu_step_ms_median_median_of_runs": 8.838144,
+    "gpu_step_ms_median_range": [
+      8.806624,
+      8.886272
+    ],
+    "gpu_step_ms_p95_median_of_runs": 9.51512,
+    "gpu_step_ms_p95_range": [
+      9.474176,
+      9.563712
+    ],
+    "gpu_step_ms_p99_median_of_runs": 9.76272,
+    "gpu_step_ms_p99_range": [
+      9.683072,
+      9.783712
+    ],
+    "gpu_step_ms_max_median_of_runs": 10.16064,
+    "gpu_step_ms_max_range": [
+      9.844704,
+      10.68032
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.7641,
+    "cpu_submit_ms_median_range": [
+      1.6738,
+      1.7934
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.9568000000000003,
+    "cpu_submit_ms_p95_range": [
+      2.6471,
+      3.074
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.3888,
+    "cpu_submit_ms_p99_range": [
+      3.5829,
+      6.0332
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.35115,
+    "cpu_submit_ms_max_range": [
+      5.7479,
+      6.6342
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 8.898697292000001,
+    "batch_mean_step_wall_ms_median_range": [
+      8.871082083,
+      8.960811667
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 8.898697292000001,
+    "batch_mean_step_wall_ms_p95_range": [
+      8.871082083,
+      8.960811667
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 8.898697292000001,
+    "batch_mean_step_wall_ms_p99_range": [
+      8.871082083,
+      8.960811667
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 8.898697292000001,
+    "batch_mean_step_wall_ms_max_range": [
+      8.871082083,
+      8.960811667
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.58856,
+    "gpu_render_ms_median_range": [
+      0.49312,
+      0.682496
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.685168,
+    "gpu_render_ms_p95_range": [
+      0.495168,
+      0.68608
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.6868,
+    "gpu_render_ms_p99_range": [
+      0.505856,
+      0.689184
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.687728,
+    "gpu_render_ms_max_range": [
+      0.537152,
+      0.69008
+    ]
+  },
+  {
+    "variant": "projection",
+    "scene": "mission",
+    "gpu_step_ms_median_median_of_runs": 11.290672,
+    "gpu_step_ms_median_range": [
+      11.199008,
+      11.341312
+    ],
+    "gpu_step_ms_p95_median_of_runs": 11.587408,
+    "gpu_step_ms_p95_range": [
+      11.457536,
+      11.638784
+    ],
+    "gpu_step_ms_p99_median_of_runs": 11.730367999999999,
+    "gpu_step_ms_p99_range": [
+      11.538432,
+      11.8064
+    ],
+    "gpu_step_ms_max_median_of_runs": 11.820032000000001,
+    "gpu_step_ms_max_range": [
+      11.620832,
+      11.868064
+    ],
+    "cpu_submit_ms_median_median_of_runs": 2.40525,
+    "cpu_submit_ms_median_range": [
+      2.3086,
+      2.5195
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 3.2941,
+    "cpu_submit_ms_p95_range": [
+      2.7742,
+      3.6122
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.05325,
+    "cpu_submit_ms_p99_range": [
+      3.5108,
+      4.5421
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.023350000000001,
+    "cpu_submit_ms_max_range": [
+      5.8464,
+      7.233
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 11.36881417,
+    "batch_mean_step_wall_ms_median_range": [
+      11.27212917,
+      11.44549125
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 11.36881417,
+    "batch_mean_step_wall_ms_p95_range": [
+      11.27212917,
+      11.44549125
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 11.36881417,
+    "batch_mean_step_wall_ms_p99_range": [
+      11.27212917,
+      11.44549125
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 11.36881417,
+    "batch_mean_step_wall_ms_max_range": [
+      11.27212917,
+      11.44549125
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.38529599999999997,
+    "gpu_render_ms_median_range": [
+      0.385024,
+      0.38544
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.46366399999999997,
+    "gpu_render_ms_p95_range": [
+      0.390432,
+      0.536512
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.5636639999999999,
+    "gpu_render_ms_p99_range": [
+      0.509952,
+      1.281024
+    ],
+    "gpu_render_ms_max_median_of_runs": 1.690096,
+    "gpu_render_ms_max_range": [
+      0.882784,
+      3.287776
+    ]
+  },
+  {
+    "variant": "projection",
+    "scene": "stress_16k",
+    "gpu_step_ms_median_median_of_runs": 4.765136,
+    "gpu_step_ms_median_range": [
+      4.75536,
+      4.78208
+    ],
+    "gpu_step_ms_p95_median_of_runs": 5.307536,
+    "gpu_step_ms_p95_range": [
+      5.292288,
+      5.3288
+    ],
+    "gpu_step_ms_p99_median_of_runs": 5.442288,
+    "gpu_step_ms_p99_range": [
+      5.428192,
+      5.445472
+    ],
+    "gpu_step_ms_max_median_of_runs": 6.060336,
+    "gpu_step_ms_max_range": [
+      5.475392,
+      6.792128
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.6885,
+    "cpu_submit_ms_median_range": [
+      1.6283,
+      1.7275
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.4242,
+    "cpu_submit_ms_p95_range": [
+      2.1527,
+      2.6621
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 3.534,
+    "cpu_submit_ms_p99_range": [
+      3.1199,
+      4.0034
+    ],
+    "cpu_submit_ms_max_median_of_runs": 5.69495,
+    "cpu_submit_ms_max_range": [
+      5.361,
+      6.253
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 4.837482917,
+    "batch_mean_step_wall_ms_median_range": [
+      4.8136325,
+      4.8469225
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 4.837482917,
+    "batch_mean_step_wall_ms_p95_range": [
+      4.8136325,
+      4.8469225
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 4.837482917,
+    "batch_mean_step_wall_ms_p99_range": [
+      4.8136325,
+      4.8469225
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 4.837482917,
+    "batch_mean_step_wall_ms_max_range": [
+      4.8136325,
+      4.8469225
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.3976,
+    "gpu_render_ms_median_range": [
+      0.397312,
+      0.550752
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.401424,
+    "gpu_render_ms_p95_range": [
+      0.401344,
+      0.55296
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.411536,
+    "gpu_render_ms_p99_range": [
+      0.410528,
+      0.553888
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.442864,
+    "gpu_render_ms_max_range": [
+      0.441088,
+      0.557312
+    ]
+  },
+  {
+    "variant": "projection",
+    "scene": "stress_32k",
+    "gpu_step_ms_median_median_of_runs": 8.763584,
+    "gpu_step_ms_median_range": [
+      8.729216,
+      8.784416
+    ],
+    "gpu_step_ms_p95_median_of_runs": 9.445632,
+    "gpu_step_ms_p95_range": [
+      9.385184,
+      9.467776
+    ],
+    "gpu_step_ms_p99_median_of_runs": 9.65616,
+    "gpu_step_ms_p99_range": [
+      9.604096,
+      10.778048
+    ],
+    "gpu_step_ms_max_median_of_runs": 9.991983999999999,
+    "gpu_step_ms_max_range": [
+      9.69616,
+      11.13696
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.73065,
+    "cpu_submit_ms_median_range": [
+      1.6399,
+      1.8274
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.82395,
+    "cpu_submit_ms_p95_range": [
+      2.5089,
+      3.7744
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.72435,
+    "cpu_submit_ms_p99_range": [
+      3.8564,
+      6.0046
+    ],
+    "cpu_submit_ms_max_median_of_runs": 7.493,
+    "cpu_submit_ms_max_range": [
+      5.6406,
+      37.2567
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 8.824261875000001,
+    "batch_mean_step_wall_ms_median_range": [
+      8.79866,
+      8.830617083
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 8.824261875000001,
+    "batch_mean_step_wall_ms_p95_range": [
+      8.79866,
+      8.830617083
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 8.824261875000001,
+    "batch_mean_step_wall_ms_p99_range": [
+      8.79866,
+      8.830617083
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 8.824261875000001,
+    "batch_mean_step_wall_ms_max_range": [
+      8.79866,
+      8.830617083
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.49344,
+    "gpu_render_ms_median_range": [
+      0.491968,
+      0.579488
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.49568,
+    "gpu_render_ms_p95_range": [
+      0.493568,
+      0.68416
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.50776,
+    "gpu_render_ms_p99_range": [
+      0.504416,
+      0.6856
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.5381119999999999,
+    "gpu_render_ms_max_range": [
+      0.537184,
+      0.687968
+    ]
+  },
+  {
+    "variant": "combined",
+    "scene": "mission",
+    "gpu_step_ms_median_median_of_runs": 11.365744,
+    "gpu_step_ms_median_range": [
+      11.195904,
+      11.582976
+    ],
+    "gpu_step_ms_p95_median_of_runs": 11.739312,
+    "gpu_step_ms_p95_range": [
+      11.507424,
+      11.903296
+    ],
+    "gpu_step_ms_p99_median_of_runs": 12.14688,
+    "gpu_step_ms_p99_range": [
+      11.843968,
+      13.22624
+    ],
+    "gpu_step_ms_max_median_of_runs": 15.394816,
+    "gpu_step_ms_max_range": [
+      11.994688,
+      32.147456
+    ],
+    "cpu_submit_ms_median_median_of_runs": 2.3817500000000003,
+    "cpu_submit_ms_median_range": [
+      0.0324,
+      2.4794
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 3.1703,
+    "cpu_submit_ms_p95_range": [
+      0.1813,
+      3.4195
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 3.8137,
+    "cpu_submit_ms_p99_range": [
+      0.3882,
+      11.9284
+    ],
+    "cpu_submit_ms_max_median_of_runs": 7.16005,
+    "cpu_submit_ms_max_range": [
+      0.6239,
+      43.1365
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 11.478470000000002,
+    "batch_mean_step_wall_ms_median_range": [
+      11.39147167,
+      11.790675
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 11.478470000000002,
+    "batch_mean_step_wall_ms_p95_range": [
+      11.39147167,
+      11.790675
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 11.478470000000002,
+    "batch_mean_step_wall_ms_p99_range": [
+      11.39147167,
+      11.790675
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 11.478470000000002,
+    "batch_mean_step_wall_ms_max_range": [
+      11.39147167,
+      11.790675
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.385536,
+    "gpu_render_ms_median_range": [
+      0.385024,
+      0.386944
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.46553599999999995,
+    "gpu_render_ms_p95_range": [
+      0.391296,
+      0.540928
+    ],
+    "gpu_render_ms_p99_median_of_runs": 1.446096,
+    "gpu_render_ms_p99_range": [
+      0.684256,
+      2.95936
+    ],
+    "gpu_render_ms_max_median_of_runs": 1.955216,
+    "gpu_render_ms_max_range": [
+      1.499488,
+      4.676992
+    ]
+  },
+  {
+    "variant": "combined",
+    "scene": "stress_16k",
+    "gpu_step_ms_median_median_of_runs": 4.813312,
+    "gpu_step_ms_median_range": [
+      4.760224,
+      4.863776
+    ],
+    "gpu_step_ms_p95_median_of_runs": 5.363136,
+    "gpu_step_ms_p95_range": [
+      5.316608,
+      5.4152
+    ],
+    "gpu_step_ms_p99_median_of_runs": 5.541856,
+    "gpu_step_ms_p99_range": [
+      5.470016,
+      5.559072
+    ],
+    "gpu_step_ms_max_median_of_runs": 5.8973759999999995,
+    "gpu_step_ms_max_range": [
+      5.59216,
+      6.26304
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.6769500000000002,
+    "cpu_submit_ms_median_range": [
+      0.0242,
+      1.7233
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.70115,
+    "cpu_submit_ms_p95_range": [
+      0.1542,
+      2.8362
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 3.8319,
+    "cpu_submit_ms_p99_range": [
+      0.3634,
+      4.4751
+    ],
+    "cpu_submit_ms_max_median_of_runs": 5.5235,
+    "cpu_submit_ms_max_range": [
+      1.3234,
+      6.1249
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 4.8890977079999995,
+    "batch_mean_step_wall_ms_median_range": [
+      4.853437083,
+      4.940775833
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 4.8890977079999995,
+    "batch_mean_step_wall_ms_p95_range": [
+      4.853437083,
+      4.940775833
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 4.8890977079999995,
+    "batch_mean_step_wall_ms_p99_range": [
+      4.853437083,
+      4.940775833
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 4.8890977079999995,
+    "batch_mean_step_wall_ms_max_range": [
+      4.853437083,
+      4.940775833
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.397888,
+    "gpu_render_ms_median_range": [
+      0.397312,
+      0.398496
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.401408,
+    "gpu_render_ms_p95_range": [
+      0.400608,
+      0.55296
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.412848,
+    "gpu_render_ms_p99_range": [
+      0.411552,
+      0.557312
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.44246399999999997,
+    "gpu_render_ms_max_range": [
+      0.441472,
+      0.558784
+    ]
+  },
+  {
+    "variant": "combined",
+    "scene": "stress_32k",
+    "gpu_step_ms_median_median_of_runs": 8.869248,
+    "gpu_step_ms_median_range": [
+      8.824832,
+      8.890656
+    ],
+    "gpu_step_ms_p95_median_of_runs": 9.530224,
+    "gpu_step_ms_p95_range": [
+      9.489376,
+      9.609216
+    ],
+    "gpu_step_ms_p99_median_of_runs": 9.76296,
+    "gpu_step_ms_p99_range": [
+      9.752192,
+      9.820288
+    ],
+    "gpu_step_ms_max_median_of_runs": 9.831008,
+    "gpu_step_ms_max_range": [
+      9.818112,
+      18.979552
+    ],
+    "cpu_submit_ms_median_median_of_runs": 1.7018499999999999,
+    "cpu_submit_ms_median_range": [
+      0.0239,
+      1.7479
+    ],
+    "cpu_submit_ms_p95_median_of_runs": 2.6407,
+    "cpu_submit_ms_p95_range": [
+      0.1934,
+      2.9443
+    ],
+    "cpu_submit_ms_p99_median_of_runs": 4.10375,
+    "cpu_submit_ms_p99_range": [
+      0.4596,
+      5.3347
+    ],
+    "cpu_submit_ms_max_median_of_runs": 6.454000000000001,
+    "cpu_submit_ms_max_range": [
+      0.5524,
+      16.3149
+    ],
+    "batch_mean_step_wall_ms_median_median_of_runs": 8.9169916665,
+    "batch_mean_step_wall_ms_median_range": [
+      8.878958333,
+      9.029431667
+    ],
+    "batch_mean_step_wall_ms_p95_median_of_runs": 8.9169916665,
+    "batch_mean_step_wall_ms_p95_range": [
+      8.878958333,
+      9.029431667
+    ],
+    "batch_mean_step_wall_ms_p99_median_of_runs": 8.9169916665,
+    "batch_mean_step_wall_ms_p99_range": [
+      8.878958333,
+      9.029431667
+    ],
+    "batch_mean_step_wall_ms_max_median_of_runs": 8.9169916665,
+    "batch_mean_step_wall_ms_max_range": [
+      8.878958333,
+      9.029431667
+    ],
+    "gpu_render_ms_median_median_of_runs": 0.58768,
+    "gpu_render_ms_median_range": [
+      0.493184,
+      0.683904
+    ],
+    "gpu_render_ms_p95_median_of_runs": 0.6839679999999999,
+    "gpu_render_ms_p95_range": [
+      0.495712,
+      0.686176
+    ],
+    "gpu_render_ms_p99_median_of_runs": 0.6845600000000001,
+    "gpu_render_ms_p99_range": [
+      0.506432,
+      0.688064
+    ],
+    "gpu_render_ms_max_median_of_runs": 0.685184,
+    "gpu_render_ms_max_range": [
+      0.536576,
+      0.689344
+    ]
+  }
+]

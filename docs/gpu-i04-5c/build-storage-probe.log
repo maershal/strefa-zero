@@ -1,0 +1,8 @@
+[0/2] Re-checking globbed directories...
+[1/19] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\stabilization_profile.cpp for CXX dependencies
+[2/19] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\world.cpp for CXX dependencies
+[3/19] Generating CXX dyndep file CMakeFiles\strefa_gpu.dir\CXX.dd
+[4/8] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\stabilization_profile.cpp.obj
+[5/8] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\world.cpp.obj
+[6/8] Linking CXX static library strefa_gpu.lib
+[7/8] Linking CXX executable runtime-070\StrefaZero.exe

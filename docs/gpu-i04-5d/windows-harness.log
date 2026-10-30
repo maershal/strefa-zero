@@ -1,0 +1,16 @@
+Measuring window-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-full-1"
+Measuring window-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-narrow-1"
+Measuring window-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-narrow-2"
+Measuring window-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-full-2"
+Measuring window-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-full-3"
+Measuring window-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison\window-narrow-3"
+Analyze hot-read variants with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\windows-comparison"
+Measuring window-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\window-sorted-diagnostic\window-sorted-1"
+Analyze hot-read variants with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\window-sorted-diagnostic"

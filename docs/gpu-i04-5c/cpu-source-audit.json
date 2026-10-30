@@ -1,0 +1,170 @@
+{
+  "note": "Identical source hashes do not establish identical runtime environment, compiler output, or shared application setup. Smoke uses CPU scenes and never opens ParticleWorld.",
+  "matched_source_count": 41,
+  "files": {
+    "src/core/metadata.hpp": {
+      "A": "37de6880b2ae1945cc585859acda29c80eb82cf4eeedfdaab4140014bde2f3d5",
+      "C": "37de6880b2ae1945cc585859acda29c80eb82cf4eeedfdaab4140014bde2f3d5"
+    },
+    "src/core/settings.cpp": {
+      "A": "3946f296942b90ddaf1b3f0b1e092b51dcd70e264386209aa64e17198908b2ef",
+      "C": "3946f296942b90ddaf1b3f0b1e092b51dcd70e264386209aa64e17198908b2ef"
+    },
+    "src/core/settings.hpp": {
+      "A": "0f724f4e7f4e0faeb5763fd540139addf9da375bf86b5dd11f3b80b9644a4205",
+      "C": "0f724f4e7f4e0faeb5763fd540139addf9da375bf86b5dd11f3b80b9644a4205"
+    },
+    "src/game/animation.hpp": {
+      "A": "e437cebde1e4b049aac4d923902b8361c33850416ac9d01785f96e495bcde695",
+      "C": "e437cebde1e4b049aac4d923902b8361c33850416ac9d01785f96e495bcde695"
+    },
+    "src/game/session.cpp": {
+      "A": "ff0d298de47e62b876c6170f0a0f6c7abe67ade148a639fbc977d58e46ae7750",
+      "C": "ff0d298de47e62b876c6170f0a0f6c7abe67ade148a639fbc977d58e46ae7750"
+    },
+    "src/game/session.hpp": {
+      "A": "6f442ae00328eb8328de11ac28f6d8a63b7b62ad7f1555fe5a8f11c957b1061a",
+      "C": "6f442ae00328eb8328de11ac28f6d8a63b7b62ad7f1555fe5a8f11c957b1061a"
+    },
+    "src/platform/gl_debug.cpp": {
+      "A": "0a2cead9485fd87eb41215763d76108172c2566b07b62f53623e892ae2ed8bd5",
+      "C": "0a2cead9485fd87eb41215763d76108172c2566b07b62f53623e892ae2ed8bd5"
+    },
+    "src/platform/gl_debug.hpp": {
+      "A": "e35981025e98219a4d7d678e3e5809c45e0cfa69ea2e8556dd9eb9a467c250d9",
+      "C": "e35981025e98219a4d7d678e3e5809c45e0cfa69ea2e8556dd9eb9a467c250d9"
+    },
+    "src/platform/settings_store.cpp": {
+      "A": "3f4de8af9f1b2e28c6c70f3c823f065c5332f286d15df811ae803360406c4cfb",
+      "C": "3f4de8af9f1b2e28c6c70f3c823f065c5332f286d15df811ae803360406c4cfb"
+    },
+    "src/platform/settings_store.hpp": {
+      "A": "ad17e01bbaf1098c5f02aa1f548651d9c2e2b70ade56fd38dd9a7907cdced471",
+      "C": "ad17e01bbaf1098c5f02aa1f548651d9c2e2b70ade56fd38dd9a7907cdced471"
+    },
+    "src/platform/texture.cpp": {
+      "A": "ccf1d5ded347fa547ce8ff899e58e248cb601b7d6e0c65c57a697204cafbf0f8",
+      "C": "ccf1d5ded347fa547ce8ff899e58e248cb601b7d6e0c65c57a697204cafbf0f8"
+    },
+    "src/platform/texture.hpp": {
+      "A": "4ea4911b59e9c0967ae69d21e6b69b52c253709b47a00fc84688167e96f91cc7",
+      "C": "4ea4911b59e9c0967ae69d21e6b69b52c253709b47a00fc84688167e96f91cc7"
+    },
+    "src/platform/window.cpp": {
+      "A": "c4feef7bcdd88cb2d60f59dfbf5148b5cd50758351f6d27864b48ad3bdb944a8",
+      "C": "c4feef7bcdd88cb2d60f59dfbf5148b5cd50758351f6d27864b48ad3bdb944a8"
+    },
+    "src/platform/window.hpp": {
+      "A": "a5bc3c56cc23680327b37d0ffe4671d1e30ecc846ae1f3e6d7de9f4e7d709699",
+      "C": "a5bc3c56cc23680327b37d0ffe4671d1e30ecc846ae1f3e6d7de9f4e7d709699"
+    },
+    "src/sim/air.cpp": {
+      "A": "f81f6fdfef4b918b7335b5ca48141655532e1e0a4b24384bb0df020d30be01c8",
+      "C": "f81f6fdfef4b918b7335b5ca48141655532e1e0a4b24384bb0df020d30be01c8"
+    },
+    "src/sim/executor.hpp": {
+      "A": "8bf24d501566869eb74103ec0d31aa3c674ffa1eff3f0e619df29f654ef5d830",
+      "C": "8bf24d501566869eb74103ec0d31aa3c674ffa1eff3f0e619df29f654ef5d830"
+    },
+    "src/sim/fixed_clock.hpp": {
+      "A": "e9aaa5ef698cb7ed605c9c8fe4480e06ab391e2ee530907f7014397313fcac29",
+      "C": "e9aaa5ef698cb7ed605c9c8fe4480e06ab391e2ee530907f7014397313fcac29"
+    },
+    "src/sim/laboratory.cpp": {
+      "A": "ba20e4826ad86c5196cd82fcd8b7145b6b01c4627b1677e51b218546229f6137",
+      "C": "ba20e4826ad86c5196cd82fcd8b7145b6b01c4627b1677e51b218546229f6137"
+    },
+    "src/sim/laboratory.hpp": {
+      "A": "52a567589eb2ae9ccbc0af3bd7869e8843031fb907f2690aaef9a0a8c7bc6d5e",
+      "C": "52a567589eb2ae9ccbc0af3bd7869e8843031fb907f2690aaef9a0a8c7bc6d5e"
+    },
+    "src/sim/liquids.cpp": {
+      "A": "0120364626fcce4ac9cfc54d35ba5a73ff995fa58677754f00b3b8198458d63c",
+      "C": "0120364626fcce4ac9cfc54d35ba5a73ff995fa58677754f00b3b8198458d63c"
+    },
+    "src/sim/material.hpp": {
+      "A": "8aacfcf28231f23d4ab502bfa2e4073b40acceb96cc46b77e362d4cf08a4da10",
+      "C": "8aacfcf28231f23d4ab502bfa2e4073b40acceb96cc46b77e362d4cf08a4da10"
+    },
+    "src/sim/motion.cpp": {
+      "A": "95cbcfcf39243e77c694cd421d5fd4aff4584bfbf59712aafba34b72767519c1",
+      "C": "95cbcfcf39243e77c694cd421d5fd4aff4584bfbf59712aafba34b72767519c1"
+    },
+    "src/sim/physics.hpp": {
+      "A": "78a13860589d46cd4f08b3a4e21aaf628eb5c8f6ca9ad7f2a96cb9dd23cb4376",
+      "C": "78a13860589d46cd4f08b3a4e21aaf628eb5c8f6ca9ad7f2a96cb9dd23cb4376"
+    },
+    "src/sim/pressure.cpp": {
+      "A": "750e3948e682161ea935bfd1f7d1e2543eac6419e82c5b0d9fbcda534922bdb2",
+      "C": "750e3948e682161ea935bfd1f7d1e2543eac6419e82c5b0d9fbcda534922bdb2"
+    },
+    "src/sim/reactions.cpp": {
+      "A": "83e64de2e923d107b66a1c9e7b5f97bee784502081a38dc24c63dc215dac3f20",
+      "C": "83e64de2e923d107b66a1c9e7b5f97bee784502081a38dc24c63dc215dac3f20"
+    },
+    "src/sim/recording.cpp": {
+      "A": "86194986c5735dbacb60fc7a4ade7ffb53b18ba0f9500fed36dcd229da0ba30a",
+      "C": "86194986c5735dbacb60fc7a4ade7ffb53b18ba0f9500fed36dcd229da0ba30a"
+    },
+    "src/sim/recording.hpp": {
+      "A": "f2f4b0250333c68ac0c8bcbc5799a1409509148b60c473aab430647fce5877b9",
+      "C": "f2f4b0250333c68ac0c8bcbc5799a1409509148b60c473aab430647fce5877b9"
+    },
+    "src/sim/scenes.cpp": {
+      "A": "f8a4fabedf2e09e3a96baf50ef483aeb45ae6c3b9d7fe1f24d0d6e912b5f8c8d",
+      "C": "f8a4fabedf2e09e3a96baf50ef483aeb45ae6c3b9d7fe1f24d0d6e912b5f8c8d"
+    },
+    "src/sim/thermal.cpp": {
+      "A": "c5d6fe4f5c093fa8cbaa576b1fe37941f03cd9c69cbf2af86bb6bbee8f071b9a",
+      "C": "c5d6fe4f5c093fa8cbaa576b1fe37941f03cd9c69cbf2af86bb6bbee8f071b9a"
+    },
+    "src/sim/world.cpp": {
+      "A": "8b9e5ac98c72af6e6057a1b0932614d9b75d0269f0ecdf7134cd0c506d7d6b9a",
+      "C": "8b9e5ac98c72af6e6057a1b0932614d9b75d0269f0ecdf7134cd0c506d7d6b9a"
+    },
+    "src/sim/world.hpp": {
+      "A": "31f9b84f97ca19b5ff3cdd00db6f5b0df70c06dc2057e2dd9a6227c453f12bd8",
+      "C": "31f9b84f97ca19b5ff3cdd00db6f5b0df70c06dc2057e2dd9a6227c453f12bd8"
+    },
+    "src/ui/arena.cpp": {
+      "A": "8444b77572f01d58201c6df3558a6f2b86423bdad341fc1bcbc214fe95f843d5",
+      "C": "8444b77572f01d58201c6df3558a6f2b86423bdad341fc1bcbc214fe95f843d5"
+    },
+    "src/ui/arena.hpp": {
+      "A": "15284b8d5d9b78118fea82548e1021a648f5d46f3b3b60e9fb0457114bfbec74",
+      "C": "15284b8d5d9b78118fea82548e1021a648f5d46f3b3b60e9fb0457114bfbec74"
+    },
+    "src/ui/gpu_laboratory.cpp": {
+      "A": "18d7df890db7340ed32e74fb22e7cdd3d75e2f24f891ccf380a7da81782d5a5b",
+      "C": "18d7df890db7340ed32e74fb22e7cdd3d75e2f24f891ccf380a7da81782d5a5b"
+    },
+    "src/ui/gpu_laboratory.hpp": {
+      "A": "6fd3bc0a6ade500beee017616a157f8c037fbcaca70ee761a4bd52a00b06847c",
+      "C": "6fd3bc0a6ade500beee017616a157f8c037fbcaca70ee761a4bd52a00b06847c"
+    },
+    "src/ui/laboratory.cpp": {
+      "A": "40b442445c008e338bb43781b75bf3ab350fde6e1b3aadec5f0ce2d20ed40075",
+      "C": "40b442445c008e338bb43781b75bf3ab350fde6e1b3aadec5f0ce2d20ed40075"
+    },
+    "src/ui/laboratory.hpp": {
+      "A": "f4b867a7ea18915c74a14f1cd18d873fb2f7d78369424bd4ac4af28d23445859",
+      "C": "f4b867a7ea18915c74a14f1cd18d873fb2f7d78369424bd4ac4af28d23445859"
+    },
+    "src/ui/menu.cpp": {
+      "A": "0080433aa78483b9135f89fdf232302ae3dd041bdc2906fd254193a211cbdc92",
+      "C": "0080433aa78483b9135f89fdf232302ae3dd041bdc2906fd254193a211cbdc92"
+    },
+    "src/ui/session.cpp": {
+      "A": "c07215c137158051732b086abb8bb9079fa4ae73b2d54a5fb90398f3b12b1b6e",
+      "C": "c07215c137158051732b086abb8bb9079fa4ae73b2d54a5fb90398f3b12b1b6e"
+    },
+    "src/ui/session.hpp": {
+      "A": "3ed198a1010103045985859a4a3a114c5a4509889407c9d43178d3b85c4df35d",
+      "C": "3ed198a1010103045985859a4a3a114c5a4509889407c9d43178d3b85c4df35d"
+    },
+    "src/ui/view.hpp": {
+      "A": "527b35b4b0ef076b41d05b4d688850bcb0bccc4c0c03964bf37b1c9866c2da21",
+      "C": "527b35b4b0ef076b41d05b4d688850bcb0bccc4c0c03964bf37b1c9866c2da21"
+    }
+  }
+}

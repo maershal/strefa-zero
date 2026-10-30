@@ -1,0 +1,211 @@
+[0/2] Re-checking globbed directories...
+[1/2] Re-running CMake...
+-- Could NOT find PkgConfig (missing: PKG_CONFIG_EXECUTABLE) 
+-- Could NOT find LibUSB (missing: LibUSB_LIBRARY LibUSB_INCLUDE_PATH) (found version "LibUSB_VERSION-NOTFOUND")
+-- 
+-- SDL3 was configured with the following options:
+-- 
+-- Platform: Windows-10.0.26200
+-- 64-bit:   TRUE
+-- Compiler: C:/Program Files (x86)/Microsoft Visual Studio/18/BuildTools/VC/Tools/MSVC/14.51.36231/bin/Hostx64/x64/cl.exe
+-- Revision: SDL-release-3.4.18-0-g829a65d76
+-- Vendor:   
+-- 
+-- Subsystems:
+--   Audio:    ON
+--   Video:    ON
+--   GPU:      ON
+--   Render:   ON
+--   Camera:   ON
+--   Joystick: ON
+--   Haptic:   ON
+--   Hidapi:   ON
+--   Power:    ON
+--   Sensor:   ON
+--   Dialog:   ON
+--   Tray:     ON
+-- 
+-- Options:
+--   SDL_ALSA                    (Wanted: OFF): OFF
+--   SDL_ALSA_SHARED             (Wanted: OFF): OFF
+--   SDL_ALTIVEC                 (Wanted: OFF): OFF
+--   SDL_ARMNEON                 (Wanted: OFF): OFF
+--   SDL_ASAN                    (Wanted: OFF): OFF
+--   SDL_ASSEMBLY                (Wanted: ON): ON
+--   SDL_ASSERTIONS              (Wanted: auto): auto
+--   SDL_AVX                     (Wanted: ON): ON
+--   SDL_AVX2                    (Wanted: ON): ON
+--   SDL_AVX512F                 (Wanted: ON): ON
+--   SDL_BACKGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_CCACHE                  (Wanted: OFF): OFF
+--   SDL_CLANG_TIDY              (Wanted: OFF): OFF
+--   SDL_CLOCK_GETTIME           (Wanted: OFF): OFF
+--   SDL_COCOA                   (Wanted: OFF): OFF
+--   SDL_DBUS                    (Wanted: OFF): OFF
+--   SDL_DEPS_SHARED             (Wanted: ON): OFF
+--   SDL_DIRECTX                 (Wanted: ON): ON
+--   SDL_DISKAUDIO               (Wanted: ON): ON
+--   SDL_DLOPEN_NOTES            (Wanted: OFF): OFF
+--   SDL_DUMMYAUDIO              (Wanted: ON): ON
+--   SDL_DUMMYCAMERA             (Wanted: ON): ON
+--   SDL_DUMMYVIDEO              (Wanted: ON): ON
+--   SDL_EXAMPLES                (Wanted: OFF): OFF
+--   SDL_EXAMPLES_LINK_SHARED    (Wanted: ON): OFF
+--   SDL_FOREGROUNDING_SIGNAL    (Wanted: OFF): OFF
+--   SDL_FRIBIDI                 (Wanted: OFF): OFF
+--   SDL_FRIBIDI_SHARED          (Wanted: OFF): OFF
+--   SDL_GCC_ATOMICS             (Wanted: OFF): OFF
+--   SDL_HIDAPI                  (Wanted: ON): ON
+--   SDL_HIDAPI_JOYSTICK         (Wanted: ON): ON
+--   SDL_HIDAPI_LIBUSB           (Wanted: ON): OFF
+--   SDL_HIDAPI_LIBUSB_SHARED    (Wanted: ON): OFF
+--   SDL_IBUS                    (Wanted: OFF): OFF
+--   SDL_INSTALL                 (Wanted: OFF): OFF
+--   SDL_INSTALL_TESTS           (Wanted: OFF): OFF
+--   SDL_JACK                    (Wanted: OFF): OFF
+--   SDL_JACK_SHARED             (Wanted: OFF): OFF
+--   SDL_KMSDRM                  (Wanted: OFF): OFF
+--   SDL_KMSDRM_SHARED           (Wanted: OFF): OFF
+--   SDL_LASX                    (Wanted: OFF): OFF
+--   SDL_LIBC                    (Wanted: ON): ON
+--   SDL_LIBICONV                (Wanted: OFF): OFF
+--   SDL_LIBTHAI                 (Wanted: OFF): OFF
+--   SDL_LIBTHAI_SHARED          (Wanted: OFF): OFF
+--   SDL_LIBUDEV                 (Wanted: ON): OFF
+--   SDL_LIBURING                (Wanted: OFF): OFF
+--   SDL_LSX                     (Wanted: OFF): OFF
+--   SDL_METAL                   (Wanted: OFF): OFF
+--   SDL_MMX                     (Wanted: ON): OFF
+--   SDL_OFFSCREEN               (Wanted: ON): ON
+--   SDL_OPENGL                  (Wanted: ON): ON
+--   SDL_OPENGLES                (Wanted: ON): ON
+--   SDL_OPENVR                  (Wanted: OFF): OFF
+--   SDL_OSS                     (Wanted: OFF): OFF
+--   SDL_PIPEWIRE                (Wanted: OFF): OFF
+--   SDL_PIPEWIRE_SHARED         (Wanted: OFF): OFF
+--   SDL_PTHREADS                (Wanted: OFF): OFF
+--   SDL_PTHREADS_SEM            (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO              (Wanted: OFF): OFF
+--   SDL_PULSEAUDIO_SHARED       (Wanted: OFF): OFF
+--   SDL_RENDER_D3D              (Wanted: ON): ON
+--   SDL_RENDER_D3D11            (Wanted: ON): ON
+--   SDL_RENDER_D3D12            (Wanted: ON): ON
+--   SDL_RENDER_GPU              (Wanted: ON): ON
+--   SDL_RENDER_METAL            (Wanted: OFF): OFF
+--   SDL_RENDER_VULKAN           (Wanted: ON): ON
+--   SDL_ROCKCHIP                (Wanted: OFF): OFF
+--   SDL_RPATH                   (Wanted: OFF): OFF
+--   SDL_RPI                     (Wanted: OFF): OFF
+--   SDL_SNDIO                   (Wanted: OFF): OFF
+--   SDL_SNDIO_SHARED            (Wanted: OFF): OFF
+--   SDL_SSE                     (Wanted: ON): ON
+--   SDL_SSE2                    (Wanted: ON): ON
+--   SDL_SSE3                    (Wanted: ON): ON
+--   SDL_SSE4_1                  (Wanted: ON): ON
+--   SDL_SSE4_2                  (Wanted: ON): ON
+--   SDL_SYSTEM_ICONV            (Wanted: OFF): OFF
+--   SDL_TESTS                   (Wanted: OFF): OFF
+--   SDL_TESTS_LINK_SHARED       (Wanted: ON): OFF
+--   SDL_UNINSTALL               (Wanted: OFF): OFF
+--   SDL_VIRTUAL_JOYSTICK        (Wanted: ON): ON
+--   SDL_VIVANTE                 (Wanted: OFF): OFF
+--   SDL_VULKAN                  (Wanted: ON): ON
+--   SDL_WASAPI                  (Wanted: ON): ON
+--   SDL_WAYLAND                 (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR        (Wanted: OFF): OFF
+--   SDL_WAYLAND_LIBDECOR_SHARED (Wanted: OFF): OFF
+--   SDL_WAYLAND_SHARED          (Wanted: OFF): OFF
+--   SDL_X11                     (Wanted: OFF): OFF
+--   SDL_X11_SHARED              (Wanted: OFF): OFF
+--   SDL_X11_XCURSOR             (Wanted: OFF): OFF
+--   SDL_X11_XDBE                (Wanted: OFF): OFF
+--   SDL_X11_XFIXES              (Wanted: OFF): OFF
+--   SDL_X11_XINPUT              (Wanted: OFF): OFF
+--   SDL_X11_XRANDR              (Wanted: OFF): OFF
+--   SDL_X11_XSCRNSAVER          (Wanted: OFF): OFF
+--   SDL_X11_XSHAPE              (Wanted: OFF): OFF
+--   SDL_X11_XSYNC               (Wanted: OFF): OFF
+--   SDL_X11_XTEST               (Wanted: OFF): OFF
+--   SDL_XINPUT                  (Wanted: ON): ON
+-- 
+--  Build Shared Library: ON
+--  Build Static Library: OFF
+-- 
+-- Enabled backends:
+--   Video drivers: dummy offscreen windows
+--   Render drivers: d3d d3d11 d3d12 gpu ogl ogl_es2 vulkan
+--   GPU drivers: d3d12 vulkan
+--   Audio drivers: disk dsound dummy wasapi
+--   Joystick drivers: dinput gameinput hidapi rawinput virtual wgi xinput
+--   Camera drivers: dummy mediafoundation
+-- 
+-- Configuring done (9.3s)
+-- Generating done (1.0s)
+-- Build files have been written to: C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+[0/4] Re-checking globbed directories...
+[1/97] Generating CXX dyndep file CMakeFiles\strefa_core.dir\CXX.dd
+[2/95] Generating CXX dyndep file CMakeFiles\strefa_game.dir\CXX.dd
+[3/93] Generating CXX dyndep file CMakeFiles\strefa_sim.dir\CXX.dd
+[4/82] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\platform\window.cpp for CXX dependencies
+[5/82] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\validation.cpp for CXX dependencies
+[6/82] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\platform\gl_debug.cpp for CXX dependencies
+[7/82] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\world.cpp for CXX dependencies
+[8/82] Generating CXX dyndep file CMakeFiles\strefa_platform.dir\CXX.dd
+[9/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\liquid_validation.cpp for CXX dependencies
+[10/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\flow_validation.cpp for CXX dependencies
+[11/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\mission_validation.cpp for CXX dependencies
+[12/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\profiling.cpp for CXX dependencies
+[13/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\readback_ring.cpp for CXX dependencies
+[14/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\stabilization_profile.cpp for CXX dependencies
+[15/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\readback_validation.cpp for CXX dependencies
+[16/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\execution_validation.cpp for CXX dependencies
+[17/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\neighbor_validation.cpp for CXX dependencies
+[18/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\session.cpp for CXX dependencies
+[19/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\coupling_validation.cpp for CXX dependencies
+[20/81] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\menu.cpp for CXX dependencies
+[21/81] Generating CXX dyndep file CMakeFiles\strefa_storage.dir\CXX.dd
+[22/79] Generating CXX dyndep file CMakeFiles\strefa_gpu.dir\CXX.dd
+[23/79] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\gpu_laboratory.cpp for CXX dependencies
+[24/79] Generating CXX dyndep file CMakeFiles\strefa_ui.dir\CXX.dd
+[25/77] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\main.cpp for CXX dependencies
+[26/77] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\clock_tests.cpp for CXX dependencies
+[27/77] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\application.cpp for CXX dependencies
+[28/77] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\sim_tests.cpp for CXX dependencies
+[29/77] Generating CXX dyndep file CMakeFiles\strefa_physics.dir\CXX.dd
+[30/75] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\game_tests.cpp for CXX dependencies
+[31/75] Building CXX object CMakeFiles\strefa_platform.dir\src\platform\window.cpp.obj
+[32/75] Building CXX object CMakeFiles\strefa_platform.dir\src\platform\gl_debug.cpp.obj
+[33/75] Linking CXX static library strefa_platform.lib
+[34/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\validation.cpp.obj
+[35/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\liquid_validation.cpp.obj
+[36/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\world.cpp.obj
+[37/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\flow_validation.cpp.obj
+[38/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\mission_validation.cpp.obj
+[39/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\readback_ring.cpp.obj
+[40/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\profiling.cpp.obj
+[41/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\stabilization_profile.cpp.obj
+[42/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\readback_validation.cpp.obj
+[43/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\execution_validation.cpp.obj
+[44/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\neighbor_validation.cpp.obj
+[45/75] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\coupling_validation.cpp.obj
+[46/75] Generating CXX dyndep file CMakeFiles\strefa_zero.dir\CXX.dd
+[47/75] Generating CXX dyndep file CMakeFiles\strefa_clock_tests.dir\CXX.dd
+[48/75] Generating CXX dyndep file CMakeFiles\strefa_core_tests.dir\CXX.dd
+[49/73] Generating CXX dyndep file CMakeFiles\strefa_sim_tests.dir\CXX.dd
+[50/73] Generating CXX dyndep file CMakeFiles\strefa_numerics_tests.dir\CXX.dd
+[51/71] Generating CXX dyndep file CMakeFiles\strefa_game_tests.dir\CXX.dd
+[52/71] Generating CXX dyndep file CMakeFiles\strefa_laboratory_tests.dir\CXX.dd
+[53/69] Linking CXX static library strefa_gpu.lib
+[54/69] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\session.cpp.obj
+[55/69] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\gpu_laboratory.cpp.obj
+[56/69] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\menu.cpp.obj
+[57/69] Linking CXX static library strefa_ui.lib
+[58/69] Building CXX object CMakeFiles\strefa_zero.dir\src\main.cpp.obj
+[59/69] Building CXX object CMakeFiles\strefa_clock_tests.dir\tests\clock_tests.cpp.obj
+[60/69] Linking CXX executable runtime-070\strefa_clock_tests.exe
+[61/69] Building CXX object CMakeFiles\strefa_sim_tests.dir\tests\sim_tests.cpp.obj
+[62/69] Building CXX object CMakeFiles\strefa_game_tests.dir\tests\game_tests.cpp.obj
+[63/69] Building CXX object CMakeFiles\strefa_zero.dir\src\app\application.cpp.obj
+[64/69] Linking CXX executable runtime-070\strefa_sim_tests.exe
+[65/69] Linking CXX executable runtime-070\strefa_game_tests.exe
+[66/69] Linking CXX executable runtime-070\StrefaZero.exe

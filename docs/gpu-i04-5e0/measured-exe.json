@@ -1,0 +1,6 @@
+{
+  "sha256": "adebd3b3ecdf42ef44df623953c3d909eb42f84e680d120091c56ef437402cf7",
+  "default_neighbor_reads": "full",
+  "default_storage": "direct",
+  "diagnostics_default": "off"
+}

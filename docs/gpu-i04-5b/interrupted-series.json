@@ -1,0 +1,7 @@
+{
+  "completed_processes": 11,
+  "scheduled_processes": 36,
+  "all_completed_exit_zero": true,
+  "completion_report_present": false,
+  "reason": "No completion report; no owned game or supervisor remained at continuation. Historical series retained separately; new complete series uses a fresh directory."
+}

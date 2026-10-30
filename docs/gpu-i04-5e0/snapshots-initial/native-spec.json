@@ -1,0 +1,11 @@
+{
+  "executable": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+  "flags": [
+    "--gpu-cost-profile",
+    "--gpu-cost-mode",
+    "snapshots"
+  ],
+  "profile": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5e-results\\snapshots-initial",
+  "timeout_ms": 300000,
+  "result": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5e-results\\snapshots-initial\\native-result.json"
+}

@@ -3,8 +3,16 @@
 // Header, cell counts, exclusive local prefixes, scatter cursors, block sums
 // and block offsets. The cell grid is never a fixed-capacity particle list.
 layout(std430,binding=2) coherent buffer Cells {uint cells[];};
+#if HOT_READS == 2
+struct HotParticle {vec4 geometry;vec4 motion;};
+#endif
 layout(std430,binding=3) buffer Sorted {
     uint order[32768];uint sortedIndex[32768];vec4 anchors[32768];
+#if HOT_READS == 2
+    // Two streams mirror the authoritative particle ping-pong banks. The
+    // reverse map is for producers; neighbor gathers use their existing entry.
+    HotParticle hot[65536];
+#endif
 #if COUPLING_MODE != 0
     uvec4 bodyQueue,bodyStats;
     vec4 bodyLastSum,bodyTotalSum;
@@ -13,7 +21,8 @@ layout(std430,binding=3) buffer Sorted {
 };
 const uint CELL_COUNT=61440u,HEADER=16u,COUNT_BASE=HEADER,START_BASE=HEADER+CELL_COUNT,
     CURSOR_BASE=HEADER+2u*CELL_COUNT,BLOCK_BASE=HEADER+3u*CELL_COUNT,
-    BLOCK_OFFSET_BASE=BLOCK_BASE+240u;
+    BLOCK_OFFSET_BASE=BLOCK_BASE+240u,
+    PHASE_MASK_BASE=BLOCK_OFFSET_BASE+240u,PHASE_TILE_COLUMNS=20u,PHASE_TILE_COUNT=240u;
 #else
 layout(std430,binding=2) buffer Heads {int head[];};
 #if COUPLING_MODE != 0
@@ -39,6 +48,9 @@ uniform int operation;
 const uint REBUILD_COMMAND=7u,SYNC_COMMAND=10u,TERRAIN_COMMAND=13u,
     BLAST_COMMAND=16u,BLAST_TERRAIN_COMMAND=19u,DEBRIS_COMMAND=22u,REDUCTION_COMMAND=25u,BODY_REDUCE_COMMAND=28u,BODY_FINAL_COMMAND=31u;
 uniform int substep;
+#if HOT_READS == 2 && SORTED_NEIGHBORS
+uniform int hotReadBank,hotWriteBank,hotValid;
+#endif
 uniform vec4 stroke; // start xy, end xy
 uniform float brushRadius;
 uniform int material;
@@ -81,6 +93,12 @@ uint cellStart(uint c){return c==CELL_COUNT?aliveCount:cells[START_BASE+c]+cells
 #endif
 void storeParticle(uint id,Grain p){
     writeParticle(id,p);
+#if HOT_READS == 2 && SORTED_NEIGHBORS
+    if(hotValid!=0&&p.motion.w>.5){
+        uint entry=sortedIndex[id];HotParticle value=HotParticle(vec4(p.position.xy,p.residual.xy),p.motion);
+        hot[uint(hotWriteBank)*uint(N)+entry]=value;
+    }
+#endif
 #if REUSE_NEIGHBORS
     // The source of the next dispatch is bounded relative to the build,
     // including compensated motion, terrain and capsule corrections.
@@ -102,6 +120,20 @@ ivec4 neighborWindow(Grain p,float reach){
     return ivec4(clamp(ivec2(floor(p.position.xy-reach)),ivec2(0),ivec2(W-1,H-1)),
                  clamp(ivec2(floor(p.position.xy+reach)),ivec2(0),ivec2(W-1,H-1)));
 }
+bool liquidInNeighborWindow(Grain p){
+#if PHASE_GATING && SORTED_NEIGHBORS
+    // Histogram phases refer to the same anchor positions as order[]. Query
+    // every tile intersecting the CURRENT R+Dmax+residual window, including
+    // arbitrarily large corrections. No fixed halo or displacement cap.
+    ivec4 tiles=neighborWindow(p,2.0)/16;
+    for(int y=tiles.y;y<=tiles.w;++y)for(int x=tiles.x;x<=tiles.z;++x)
+        if((cells[PHASE_MASK_BASE+uint(y)*PHASE_TILE_COLUMNS+uint(x)]&1u)!=0u)return true;
+    return false;
+#else
+    // Linked lists have no anchor-phase index; their complete old scan is used.
+    return true;
+#endif
+}
 #if SORTED_NEIGHBORS
 #define FOR_NEIGHBOR(p,reach,j) {ivec4 box=neighborWindow(p,reach);for(int row=box.y;row<=box.w;++row){uint end=cellStart(uint(row*W+box.z+1));for(uint entry=cellStart(uint(row*W+box.x));entry<end;++entry){int j=int(order[entry]);
 #define END_NEIGHBOR }}}
@@ -111,6 +143,29 @@ ivec4 neighborWindow(Grain p,float reach){
 #endif
 bool liquid(Grain p){return p.motion.w>=5;}
 float radius(Grain p){return liquid(p)?.32:R;}
+#if HOT_READS > 0
+bool liquid(Interaction p){return p.motion.w>=5;}
+float radius(Interaction p){return liquid(p)?.32:R;}
+vec2 separation(Grain a,Interaction b){return (a.position.xy-b.position.xy)+(a.residual.xy-b.residual.xy);}
+#if SORTED_NEIGHBORS
+Interaction readInteraction(uint id,uint entry){
+#if HOT_READS == 2
+    if(hotValid!=0){
+        HotParticle value=hot[uint(hotReadBank)*uint(N)+entry];
+        return Interaction(vec4(value.geometry.xy,0,0),value.motion,vec4(value.geometry.zw,0,0));
+    }
+#endif
+    return readInteractionRaw(id);
+}
+#define READ_INTERACTION(j) readInteraction(uint(j),entry)
+#else
+#define READ_INTERACTION(j) readInteractionRaw(uint(j))
+#endif
+#define NEIGHBOR_DATA Interaction
+#else
+#define NEIGHBOR_DATA Grain
+#define READ_INTERACTION(j) readParticle(uint(j))
+#endif
 // Sand mass is the historical unit: rho_sand/rho_water = 2.65,
 // rho_oil/rho_water = .8. Equal-volume carriers have unequal masses.
 float inverseMass(int kind){return kind==1?1.0:(kind==2?4.0:(kind==3?.35:(kind==5?2.65:(kind==6?3.3125:1.0))));}
@@ -189,6 +244,29 @@ void terrain(inout Grain p){
     }
     clampWorld(p,r);
 }
+#if SKIP_ZERO_PROJECTION
+// A local certificate, never persisted across a dispatch or terrain edit.
+// Only explicit nonpenetration plus an unchanged clamp certifies that another
+// terrain call on the SAME position/residual is a no-op. Exhausting Newton's
+// three iterations, the box fallback and all liquids remain uncertified.
+bool terrainCertified(inout Grain p){
+    if(liquid(p)){terrainBox(p);return false;}
+    bool clear=false;float r=radius(p);
+    if(wall[W*H+cell(p.position.xy)]!=0u){
+        for(int i=0;i<3;++i){
+            vec3 field=terrainField(p.position.xy);float depth=r-field.x;
+            if(depth<=0){clear=true;break;}
+            float norm2=dot(field.yz,field.yz);
+            if(norm2<.00001){terrainBox(p);break;}
+            vec2 correction=field.yz*(depth/norm2);float len=length(correction);
+            move(p,correction*min(1,.4/max(len,.00001)));p.contact.xy+=normalize(field.yz);
+        }
+    }else clear=true;
+    uvec4 before=uvec4(floatBitsToUint(p.position.xy),floatBitsToUint(p.residual.xy));
+    clampWorld(p,r);
+    return clear&&all(equal(before,uvec4(floatBitsToUint(p.position.xy),floatBitsToUint(p.residual.xy))));
+}
+#endif
 // Exact grid traversal for kernel support (length <= 2). A wall blocks
 // pressure and viscous interactions, as well as the actual particle path.
 bool visible(vec2 a,vec2 b){

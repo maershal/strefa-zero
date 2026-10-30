@@ -1,7 +1,9 @@
 #include "gpu/world.hpp"
 #include "gpu/gl_api.hpp"
 #include "gpu/readback_ring.hpp"
+#include "gpu/upload_ring.hpp"
 #include "gpu/dispatch_layout.hpp"
+#include "gpu/diagnostic_trace.hpp"
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 #include <SDL3/SDL_opengl_glext.h>
@@ -57,7 +59,10 @@ std::array<float,2> seeded_position(int x,int y){
 }
 struct ParticleWorld::Impl {
     Api gl;
+    detail::UploadRing uploads{gl};
     detail::ReadbackRing readbacks{gl};
+    detail::DiagnosticTrace trace{gl};
+    bool trace_step{};
     std::uint64_t readback_revision{1};
     bool readback_refresh{};
     bool debug_groups{};
@@ -75,13 +80,17 @@ struct ParticleWorld::Impl {
     struct Kernel {
         GLuint id{};unsigned local_size{};
         GLint operation{-1},dirty{-1},substep{-1},stroke{-1},radius{-1},material{-1},input{-1},coupling{-1},test_count{-1};
+        GLint hot_read{-1},hot_write{-1},hot_valid{-1};
+        int hot_read_value{-2},hot_write_value{-2},hot_valid_value{-2};
+        unsigned family{};
         int dirty_value{-1};
     };
     std::array<Kernel,21> granular;
     std::array<Kernel,5> liquids;
     std::array<Kernel,8> neighbors;
     bool bins_valid{};
-    std::string layout_defines()const{return std::string{"#define PARTICLE_SOA "}+(execution.soa?"1\n":"0\n")+"#define SORTED_NEIGHBORS "+(execution.neighbors!=NeighborMode::linked?"1\n":"0\n")+"#define REUSE_NEIGHBORS "+(execution.neighbors==NeighborMode::reused?"1\n":"0\n")+"#define COUPLING_MODE "+std::to_string(static_cast<int>(execution.coupling))+"\n#define REDUCTION_LOCAL_SIZE "+std::to_string(execution.reduction_size)+"u\n";}
+    NeighborReads read_mode()const{return effective_neighbor_reads(execution.neighbor_reads,execution.neighbors);}
+    std::string layout_defines()const{return std::string{"#define PARTICLE_SOA "}+(execution.soa?"1\n":"0\n")+"#define SORTED_NEIGHBORS "+(execution.neighbors!=NeighborMode::linked?"1\n":"0\n")+"#define REUSE_NEIGHBORS "+(execution.neighbors==NeighborMode::reused?"1\n":"0\n")+"#define COUPLING_MODE "+std::to_string(static_cast<int>(execution.coupling))+"\n#define REDUCTION_LOCAL_SIZE "+std::to_string(execution.reduction_size)+"u\n#define PHASE_GATING "+(execution.phase_gating?"1\n":"0\n")+"#define SKIP_ZERO_PROJECTION "+(execution.skip_zero_projection?"1\n":"0\n")+"#define HOT_READS "+std::to_string(static_cast<int>(read_mode()))+"\n";}
     std::array<Kernel,9> mission_kernels;
     std::array<Kernel,3> coupling_kernels;
     GLuint bound_program{},bound_indirect{};
@@ -110,6 +119,8 @@ struct ParticleWorld::Impl {
                 k.operation=location("operation");k.dirty=location("dirtyOnly");k.substep=location("substep");
                 k.stroke=location("stroke");k.radius=location("brushRadius");k.material=location("material");
                 k.input=location("inputControl");k.coupling=location("disableBodyCoupling");k.test_count=location("bodyTestCount");
+                k.hot_read=location("hotReadBank");k.hot_write=location("hotWriteBank");k.hot_valid=location("hotValid");
+                k.family=std::string_view{file}=="granular.comp"?0U:std::string_view{file}=="mission.comp"?1U:2U;
                 if(debug_groups){const auto label=std::string{file}+" / "+std::to_string(op)+" / "+std::to_string(k.local_size);gl.ObjectLabel(GL_PROGRAM,k.id,-1,label.c_str());}
             }
         };
@@ -118,6 +129,15 @@ struct ParticleWorld::Impl {
         if(execution.neighbors!=NeighborMode::linked)compile(neighbors,"neighbors.comp",{0,1,2,3,4,5,6,7});
         compile(mission_kernels,"mission.comp",{0,1,3,4,5,6,7,8});
         if(execution.coupling!=CouplingMode::reference)compile(coupling_kernels,"coupling.comp",{0,1,2});
+    }
+    void configure_hot(Kernel& k,bool in_place,unsigned op){
+        const auto set=[&](GLint location,int value,int& cached){if(location>=0&&value!=cached){gl.Uniform1i(location,value);cached=value;}};
+        set(k.hot_read,static_cast<int>(current),k.hot_read_value);
+        set(k.hot_write,static_cast<int>(in_place?current:1-current),k.hot_write_value);
+        // New/free IDs have no reverse map until the next index build. Never
+        // publish them into an old entry, including in-place spawning.
+        const bool edits=(k.family==0&&(op==5||op==8||op==19))||(k.family==1&&op==6);
+        set(k.hot_valid,bins_valid&&!edits?1:0,k.hot_valid_value);
     }
     Kernel& prepare(auto& kernels,int op,bool in_place=false,bool separate=false){
         auto& k=kernels[execution.specialized||separate?static_cast<unsigned>(op):0];
@@ -129,6 +149,7 @@ struct ParticleWorld::Impl {
             if(!execution.cached_bindings||bound_bases[i]!=buffer){gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,i,buffer);bound_bases[i]=buffer;}
         }
         if(k.operation>=0)gl.Uniform1i(k.operation,op);
+        configure_hot(k,in_place,static_cast<unsigned>(op));
         return k;
     }
     void indirect(unsigned command){
@@ -144,15 +165,52 @@ struct ParticleWorld::Impl {
     GLint splat_alpha{};
     bool fluids_enabled{},grains_enabled{};
     GLint alpha{},terrain_pass{};
-    struct Timer {GLuint id{};bool pending{};unsigned generation{};};
+    struct Timer {
+        GLuint id{},start{};
+        bool pending{};unsigned generation{};
+        TimerMode mode{TimerMode::elapsed};
+    };
     std::array<Timer,32> timers{},render_timers{};unsigned render_cursor{};
     unsigned timer_cursor{},timer_head{},render_head{},group_head{},current{};
     Metrics metrics;
     std::vector<double> timings,render_timings,cpu_timings;
+    void reset_timer_queries(TimerMode mode){
+        // Query objects acquire an immutable target on first use. Recreate the
+        // pools on mode changes, including pending results; deletion is deferred
+        // by GL and needs no CPU/GPU wait. No active query spans this method.
+        for(auto* queue:{&timers,&render_timers})for(auto& timer:*queue){
+            if(timer.id)gl.DeleteQueries(1,&timer.id);
+            if(timer.start)gl.DeleteQueries(1,&timer.start);
+            timer={};timer.mode=mode;
+            if(mode!=TimerMode::off)gl.GenQueries(1,&timer.id);
+            if(mode==TimerMode::timestamp)gl.GenQueries(1,&timer.start);
+        }
+        timer_cursor=timer_head=render_cursor=render_head=0;
+        metrics.gpu_ms=0;metrics.render_ms=0;metrics.timing_samples=0;
+        timings.clear();render_timings.clear();
+    }
+    void reset_group_queries(bool enabled){
+        for(auto& timer:group_timers){
+            if(timer.ids[0])gl.DeleteQueries(6,timer.ids.data());
+            timer={};if(enabled)gl.GenQueries(6,timer.ids.data());
+        }
+        group_cursor=group_head=0;group_profiles.clear();
+    }
+    void begin_timer(Timer& timer){
+        if(timer.mode==TimerMode::timestamp)gl.QueryCounter(timer.start,GL_TIMESTAMP);
+        else gl.BeginQuery(GL_TIME_ELAPSED,timer.id);
+    }
+    void end_timer(Timer& timer){
+        if(timer.mode==TimerMode::timestamp)gl.QueryCounter(timer.id,GL_TIMESTAMP);
+        else gl.EndQuery(GL_TIME_ELAPSED);
+        timer.pending=true;timer.generation=epoch;
+    }
     ~Impl(){
         gl.observe(nullptr);
-        for(const auto& timer:timers)if(timer.id)gl.DeleteQueries(1,&timer.id);
-        for(const auto& timer:render_timers)if(timer.id)gl.DeleteQueries(1,&timer.id);
+        for(const auto* queue:{&timers,&render_timers})for(const auto& timer:*queue){
+            if(timer.id)gl.DeleteQueries(1,&timer.id);
+            if(timer.start)gl.DeleteQueries(1,&timer.start);
+        }
         for(const auto& timer:group_timers)if(timer.ids[0])gl.DeleteQueries(6,timer.ids.data());
         for(auto& kernels:{std::span<Kernel>{granular},std::span<Kernel>{liquids},std::span<Kernel>{mission_kernels},std::span<Kernel>{neighbors},std::span<Kernel>{coupling_kernels}})for(const auto& k:kernels)if(k.id)gl.DeleteProgram(k.id);
         if(actor_program)gl.DeleteProgram(actor_program);if(draw)gl.DeleteProgram(draw);
@@ -172,6 +230,7 @@ struct ParticleWorld::Impl {
             if(k.radius>=0)gl.Uniform1f(k.radius,std::clamp(brush.radius,1.F,16.F));
             if(k.material>=0)gl.Uniform1i(k.material,static_cast<int>(brush.material));
         }
+        const auto token=trace.begin(PassFamily::granular,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
         if(op>=1&&op<=4)indirect(detail::active_command);
         else if(execution.conditional_work&&conditional&&(op==11||op==19||op==9))
             indirect(op==11?detail::rebuild_command:op==19?detail::sync_command:detail::terrain_command);
@@ -180,13 +239,17 @@ struct ParticleWorld::Impl {
         if(op==12||(op==10&&execution.conditional_work)||(op==3&&execution.coupling!=CouplingMode::reference))barriers|=GL_COMMAND_BARRIER_BIT;
         gl.MemoryBarrier(barriers);
         if(swap)current=1-current;
+        trace.end(token,bins_valid&&op!=5&&op!=8&&op!=19,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
     void neighbor_dispatch(unsigned op,unsigned groups){
         auto& k=neighbors[op];
         if(!execution.cached_bindings||bound_program!=k.id){gl.UseProgram(k.id);bound_program=k.id;}
         for(unsigned i=0;i<buffers.size();++i){const auto buffer=i<2?buffers[i==0?current:1-current]:buffers[i];
             if(!execution.cached_bindings||bound_bases[i]!=buffer){gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,i,buffer);bound_bases[i]=buffer;}}
+        configure_hot(k,false,op);
+        const auto token=trace.begin(PassFamily::neighbors,op,epoch,metrics.steps+(trace_step?1:0));
         gl.DispatchCompute(groups,1,1);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        trace.end(token,bins_valid||op==4,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
     void bins(){
         if(execution.neighbors==NeighborMode::reused&&bins_valid)return;
@@ -202,10 +265,13 @@ struct ParticleWorld::Impl {
     }
     void liquid_dispatch(int op,bool swap=false){
         prepare(liquids,op);
+        const auto token=trace.begin(PassFamily::liquids,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
         if(op==3)gl.DispatchCompute(1,1,1);else indirect(detail::active_command);
         gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|((op==1&&execution.coupling!=CouplingMode::reference)?GL_COMMAND_BARRIER_BIT:0));if(swap)current=1-current;
+        trace.end(token,bins_valid,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
     void rebuild_active(bool conditional=false){
+        bins_valid=false;
         if(profile_options.collect)++calls.active_rebuilds;
         dispatch(10,1,false,false,conditional);dispatch(11,capacity,false,false,conditional);dispatch(12,1,false,false,conditional);
         // Membership edits must reach both ping-pong copies before active-only work.
@@ -217,32 +283,39 @@ struct ParticleWorld::Impl {
         if(!profile_options.body_coupling&&(op==3||op==8))return;
         if(profile_options.collect&&op==3)++calls.body_reductions;
         if(op==3&&execution.coupling!=CouplingMode::reference){
-            prepare(coupling_kernels,0,false,true);indirect(detail::body_reduce_command);
+            prepare(coupling_kernels,0,false,true);
+            auto token=trace.begin(PassFamily::coupling,0,epoch,metrics.steps+(trace_step?1:0));indirect(detail::body_reduce_command);
             gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);
-            prepare(coupling_kernels,1,false,true);indirect(detail::body_final_command);
-            gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);return;
+            trace.end(token,bins_valid,execution.soa,buffers[current],buffers[2],buffers[3]);
+            prepare(coupling_kernels,1,false,true);
+            token=trace.begin(PassFamily::coupling,1,epoch,metrics.steps+(trace_step?1:0));indirect(detail::body_final_command);
+            gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);
+            trace.end(token,bins_valid,execution.soa,buffers[current],buffers[2],buffers[3]);return;
         }
         // Blast impulses touch only their own IDs. In-place work can be gated
         // without switching to a stale ping-pong copy when zero groups execute.
         if(execution.conditional_work&&op==7){in_place=true;swap=false;}
         auto& k=prepare(mission_kernels,op,in_place);
         if(op==0)gl.Uniform4f(k.input,std::clamp(controls.move,-1.F,1.F),controls.aim_x,controls.aim_y,static_cast<float>(controls.buttons&31U));
+        const auto token=trace.begin(PassFamily::mission,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
         if(execution.conditional_work&&(op==3||op==5||op==6||op==7))
             indirect(op==3?detail::reduction_command:op==5?detail::blast_terrain_command:op==6?detail::debris_command:detail::blast_command);
         else if(active)indirect(detail::active_command);
         else gl.DispatchCompute((count+k.local_size-1)/k.local_size,1,1);
         gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|(((op==0&&execution.conditional_work)||(op==8&&execution.coupling!=CouplingMode::reference))?GL_COMMAND_BARRIER_BIT:0));
         if(swap)current=1-current;
+        trace.end(token,bins_valid&&op!=6,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
-    std::size_t body_offset()const{return execution.neighbors==NeighborMode::linked?capacity*4:capacity*24;}
+    std::size_t body_offset()const{return execution.neighbors==NeighborMode::linked?capacity*4:capacity*24+(read_mode()==NeighborReads::sorted?capacity*64:0);}
     std::size_t index_buffer_size()const{return body_offset()+(execution.coupling==CouplingMode::reference?0:detail::body_metadata_size);}
     std::size_t terms_buffer_size()const{return capacity*(execution.coupling==CouplingMode::reference?32U:48U);}
     void reset_body(){
         const std::array<GLuint,16> zero{};const std::array<GLuint,6> commands{0,1,1,0,1,1};
         gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-        if(execution.coupling!=CouplingMode::reference){gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[3]);gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,static_cast<GLintptr>(body_offset()),sizeof(zero),zero.data());}
-        gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[5]);gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,detail::command_offset(detail::body_reduce_command),sizeof(commands),commands.data());
+        if(execution.coupling!=CouplingMode::reference)upload(3,static_cast<GLintptr>(body_offset()),sizeof(zero),zero.data());
+        upload(5,detail::command_offset(detail::body_reduce_command),sizeof(commands),commands.data());
     }
+    void upload(unsigned index,GLintptr offset,GLsizeiptr bytes,const void* data){uploads.write(buffers[index],offset,bytes,data);}
     void active_draw(){
         gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,5,buffers[5]);
         gl.BindBuffer(GL_DRAW_INDIRECT_BUFFER,buffers[5]);gl.DrawArraysIndirect(GL_TRIANGLE_STRIP,reinterpret_cast<void*>(capacity*8+12));
@@ -257,11 +330,16 @@ struct ParticleWorld::Impl {
 };
 ParticleWorld::ParticleWorld():impl_{std::make_unique<Impl>()}{}
 ParticleWorld::~ParticleWorld()=default;
-std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(const std::filesystem::path& shaders,const ExecutionOptions& execution){
+std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(const std::filesystem::path& shaders,const ExecutionOptions& execution,const ProfileOptions& profiling){
     GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
     if(major<4||(major==4&&minor<3))return std::unexpected{"Laboratorium GPU wymaga OpenGL 4.3. Laboratorium CPU jest dostępne."};
     try{
         auto world=std::unique_ptr<ParticleWorld>{new ParticleWorld};auto& s=*world->impl_;s.gl.load();
+        // Apply transport/timer policy before the first reset or staging copy.
+        // Group query objects are allocated by set_profile_options below.
+        s.profile_options=profiling;s.profile_options.group_timers=false;
+        s.gl.observe(profiling.collect?&s.calls:nullptr);
+        s.uploads.configure(execution.storage);
         GLint flags{};glGetIntegerv(GL_CONTEXT_FLAGS,&flags);s.debug_groups=(flags&GL_CONTEXT_FLAG_DEBUG_BIT)!=0;
         const auto valid_size=[](unsigned size){return size==64||size==128||size==256;};
         if(!valid_size(execution.local_size)||!valid_size(execution.reduction_size)||(!execution.specialized&&execution.local_size!=execution.reduction_size))
@@ -276,13 +354,13 @@ std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(
         s.draw=program(s.gl,{{GL_VERTEX_SHADER,shaders/"granular.vert"},{GL_FRAGMENT_SHADER,shaders/"granular.frag"}},s.layout_defines());
         s.alpha=s.gl.GetUniformLocation(s.draw,"alpha");s.terrain_pass=s.gl.GetUniformLocation(s.draw,"terrainPass");
         s.gl.GenBuffers(static_cast<GLsizei>(s.buffers.size()),s.buffers.data());
-        const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480)*4),s.index_buffer_size(),width*height*16,capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
-        for(unsigned i=0;i<s.buffers.size();++i){s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[i]);s.gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(sizes[i]),nullptr,GL_DYNAMIC_COPY);}
+        const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480+(s.execution.phase_gating?240:0))*4),s.index_buffer_size(),width*height*16,capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
+        for(unsigned i=0;i<s.buffers.size();++i)s.uploads.allocate(s.buffers[i],static_cast<GLsizeiptr>(sizes[i]));
         if(s.debug_groups){
             constexpr std::array names{"particles A","particles B","cell counts and prefixes","sorted IDs, reverse mapping and anchors","terrain","active/free IDs","mission state","fluid terms"};
             for(std::size_t i=0;i<names.size();++i)s.gl.ObjectLabel(GL_BUFFER,s.buffers[i],-1,names[i]);
         }
-        s.readbacks.configure(ReadbackMode::automatic,s.debug_groups);
+        s.readbacks.configure(profiling.readback_mode,s.debug_groups);
         glGenTextures(1,&s.image);glBindTexture(GL_TEXTURE_2D,s.image);
         glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,width*3,height*3,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
         glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -298,8 +376,8 @@ std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(
         s.gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,s.fluid_image,0);
         if(s.gl.CheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)throw std::runtime_error{"Niekompletny framebuffer cieczy."};
         s.gl.BindFramebuffer(GL_FRAMEBUFFER,0);s.gl.GenVertexArrays(1,&s.vao);
-        for(auto& timer:s.timers)s.gl.GenQueries(1,&timer.id);
-        for(auto& timer:s.render_timers)s.gl.GenQueries(1,&timer.id);
+        s.reset_timer_queries(effective_timer_mode(s.profile_options));
+        world->set_profile_options(profiling);
         world->reset(Scene::hourglass);return world;
     }catch(const std::exception& e){return std::unexpected{e.what()};}
 }
@@ -309,22 +387,23 @@ void ParticleWorld::load(std::span<const Grain> grains,std::span<const std::uint
     for(auto& p:all){p.contact[2]=p.position[0];p.contact[3]=p.position[1];}
     ++s.readback_revision;s.readback_refresh=false;s.mission_enabled=false;s.snapshot={};s.explosions.clear();++s.epoch;
     const std::vector<std::byte> empty(mission_buffer_size);
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,mission_buffer_size,empty.data());
+    s.upload(6,0,mission_buffer_size,empty.data());
     s.reset_body();s.current=0;s.bins_valid=false;
-    const std::array<GLuint,16> neighbor_zero{};s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[2]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,sizeof(neighbor_zero),neighbor_zero.data());
+    const std::array<GLuint,16> neighbor_zero{};s.upload(2,0,sizeof(neighbor_zero),neighbor_zero.data());
     s.metrics.steps=0;s.readback_age=0;s.metrics.grains=static_cast<unsigned>(std::ranges::count_if(all,[](const Grain& p){return p.motion[3]>.5F;}));
+    s.metrics.gpu_ms=0;s.metrics.render_ms=0;s.metrics.timing_samples=0;
     s.metrics.water=static_cast<unsigned>(std::ranges::count_if(all,[](const Grain& p){return p.motion[3]==5;}));
     s.metrics.oil=static_cast<unsigned>(std::ranges::count_if(all,[](const Grain& p){return p.motion[3]==6;}));
     s.metrics.max_compression=0;s.fluids_enabled=s.metrics.water+s.metrics.oil>0;
     s.grains_enabled=s.metrics.grains>s.metrics.water+s.metrics.oil;
     const std::array<GLuint,8> counters{0,0,s.metrics.grains,s.metrics.water,s.metrics.oil,0,0,0};
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,32,counters.data());
+    s.upload(6,0,32,counters.data());
     std::vector<std::array<float,4>> packed(capacity*4);
     if(s.execution.soa)for(unsigned i=0;i<capacity;++i){packed[i]=all[i].position;packed[capacity+i]=all[i].motion;packed[2*capacity+i]=all[i].contact;packed[3*capacity+i]=all[i].residual;}
-    for(int i=0;i<2;++i){s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[i]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,static_cast<GLsizeiptr>(all.size()*sizeof(Grain)),s.execution.soa?static_cast<const void*>(packed.data()):static_cast<const void*>(all.data()));}
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[4]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,static_cast<GLsizeiptr>(walls.size_bytes()),walls.data());
+    for(unsigned i=0;i<2;++i)s.upload(i,0,static_cast<GLsizeiptr>(all.size()*sizeof(Grain)),s.execution.soa?static_cast<const void*>(packed.data()):static_cast<const void*>(all.data()));
+    s.upload(4,0,static_cast<GLsizeiptr>(walls.size_bytes()),walls.data());
     std::vector<std::uint32_t> strength(walls.size());for(std::size_t i=0;i<walls.size();++i)strength[i]=walls[i]>=2?3U:0U;
-    s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,width*height*12,static_cast<GLsizeiptr>(strength.size()*4),strength.data());
+    s.upload(4,width*height*12,static_cast<GLsizeiptr>(strength.size()*4),strength.data());
     s.dispatch(9,width*height);s.rebuild_active();
     render(1);
 }
@@ -387,7 +466,7 @@ void ParticleWorld::reset(Scene scene){
 }
 void ParticleWorld::paint(const Stroke& stroke){
     auto& s=*impl_;s.invalidate_bindings();s.bins_valid=false;++s.readback_revision;s.brush=stroke;
-    const std::array<GLuint,8> zero{};s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,32,zero.data());
+    const std::array<GLuint,8> zero{};s.upload(6,0,32,zero.data());
     // Conservative flags: an asynchronous counter must never disable a solver
     // after a newer edit. Reset/load can clear them from known scene state.
     if(stroke.material==Material::water||stroke.material==Material::oil)s.fluids_enabled=true;
@@ -405,6 +484,7 @@ void ParticleWorld::step(const MissionInput& input){
 void ParticleWorld::step(){
     const auto started=SDL_GetTicksNS();
     auto& s=*impl_;s.invalidate_bindings();const auto initial_calls=s.calls;
+    s.trace_step=true;s.trace.begin_step(s.metrics.steps+1);
     if(s.debug_groups)s.gl.PushDebugGroup(GL_DEBUG_SOURCE_APPLICATION,1,-1,"Physics tick");
     const auto stamp=[&](){return s.profile_options.collect?SDL_GetTicksNS():std::uint64_t{0};};
     const auto elapsed=[](std::uint64_t a,std::uint64_t b){return static_cast<double>(b-a)/1e6;};
@@ -412,20 +492,21 @@ void ParticleWorld::step(){
     // per-tick HUD polling; normal HUD collection is once per UI frame.
     const auto mode=s.readbacks.stats().mode;
     const auto poll_start=stamp();poll(mode==ReadbackMode::legacy||mode==ReadbackMode::stream);const auto poll_end=stamp();
-    auto& timer=s.timers[s.timer_cursor];const bool measure=s.profile_options.gpu_timers&&!timer.pending;
-    auto& group=s.group_timers[s.group_cursor];const bool grouped=s.profile_options.group_timers&&!group.pending;
+    const bool timers_enabled=effective_timer_mode(s.profile_options)!=TimerMode::off;
+    auto& timer=s.timers[s.timer_cursor];const bool measure=timers_enabled&&!timer.pending;
+    auto& group=s.group_timers[s.group_cursor];const bool grouped=timers_enabled&&s.profile_options.group_timers&&!group.pending;
     if(grouped){if(s.profile_options.collect)++s.calls.timer_submissions;group.tick=s.metrics.steps+1;group.generation=s.epoch;s.gl.QueryCounter(group.ids[0],GL_TIMESTAMP);}
-    if(s.profile_options.collect&&s.profile_options.gpu_timers){if(measure)++s.calls.timer_submissions;else ++s.calls.timer_skips;}
-    if(measure)s.gl.BeginQuery(GL_TIME_ELAPSED,timer.id);
+    if(s.profile_options.collect&&timers_enabled){if(measure)++s.calls.timer_submissions;else ++s.calls.timer_skips;}
+    if(measure)s.begin_timer(timer);
     double upload_ms=0;
     const auto prepare_start=stamp();
     if(s.mission_enabled){
         if(!s.explosions.empty()){
             const auto upload_start=stamp();
             const auto e=s.explosions.front();s.explosions.pop_front();const std::array<float,4> payload{e.x,e.y,e.radius,e.impulse};
-            const std::array<std::uint32_t,4> id{e.id,0,0,0};s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);
-            s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,mission_buffer_size-32,16,payload.data());
-            s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,mission_buffer_size-16,16,id.data());
+            const std::array<std::uint32_t,4> id{e.id,0,0,0};
+            s.upload(6,mission_buffer_size-32,16,payload.data());
+            s.upload(6,mission_buffer_size-16,16,id.data());
             upload_ms=elapsed(upload_start,stamp());
         }
         s.mission_dispatch(0);s.mission_dispatch(7,capacity,true,true);s.mission_dispatch(5,width*height);
@@ -438,27 +519,31 @@ void ParticleWorld::step(){
     // At |v|<=80 each half-tick travels <=1/3 cell. Two approaching,
     // nonoverlapping radius-.46 grains cannot exchange centers undetected.
     for(int half=0;half<2;++half){
+        s.trace.context(half+1,-1);
         s.bins_valid=false;
         if(s.mission_enabled)s.mission_dispatch(1);
         s.half_step=half;s.dispatch(1,capacity,true);
         const int iterations=s.grains_enabled?12:8;
         for(int iteration=0;iteration<iterations;++iteration){
+            s.trace.context(half+1,iteration);
             s.bins();
             if(s.fluids_enabled&&iteration<8){s.liquid_dispatch(0);s.liquid_dispatch(1,true);if(s.mission_enabled&&(s.execution.coupling!=CouplingMode::combined||!s.grains_enabled))s.mission_dispatch(3);}
             if(s.grains_enabled){if(s.fluids_enabled&&iteration<8)s.bins();s.dispatch(3,capacity,true);}
             if(s.mission_enabled)s.mission_dispatch(3);
         }
-        s.bins();s.dispatch(4,capacity,true);
+        s.trace.context(half+1,iterations);s.bins();s.dispatch(4,capacity,true);
         if(s.fluids_enabled)s.liquid_dispatch(4,true);
         if(s.mission_enabled){if(s.fluids_enabled){s.mission_dispatch(8,capacity,true,true);s.mission_dispatch(3);}s.mission_dispatch(4);}
         if(grouped)s.gl.QueryCounter(group.ids[2+half],GL_TIMESTAMP);
     }
     const auto solver_end=stamp();
+    s.trace.context(3,-1);
     const bool diagnostic_due=s.profile_options.periodic_diagnostics&&s.fluids_enabled&&s.metrics.steps%30==0;
     if(diagnostic_due){s.bins();s.liquid_dispatch(3);s.liquid_dispatch(2);}
     const auto diagnostics_end=stamp();
     if(grouped)s.gl.QueryCounter(group.ids[4],GL_TIMESTAMP);
-    if(measure){s.gl.EndQuery(GL_TIME_ELAPSED);timer.pending=true;timer.generation=s.epoch;s.timer_cursor=(s.timer_cursor+1)%static_cast<unsigned>(s.timers.size());}
+    if(measure){s.end_timer(timer);s.timer_cursor=(s.timer_cursor+1)%static_cast<unsigned>(s.timers.size());}
+    const auto timer_closed=stamp();
     ++s.metrics.steps;if(s.mission_enabled||diagnostic_due)s.stage_count(!s.mission_enabled);
     if(grouped){s.gl.QueryCounter(group.ids[5],GL_TIMESTAMP);group.pending=true;s.group_cursor=(s.group_cursor+1)%static_cast<unsigned>(s.group_timers.size());}
     const auto finished=SDL_GetTicksNS();
@@ -469,10 +554,13 @@ void ParticleWorld::step(){
         auto& p=s.last_profile;p={};p.tick=s.metrics.steps;p.generation=s.epoch;p.calls=s.calls-initial_calls;
         p.total_ms=s.metrics.cpu_submit_ms;p.poll_ms=elapsed(poll_start,poll_end);p.upload_ms=upload_ms;
         p.prepare_ms=elapsed(prepare_start,prepare_end)-upload_ms;p.solver_ms=elapsed(prepare_end,solver_end);
-        p.diagnostics_ms=elapsed(solver_end,diagnostics_end);p.staging_ms=elapsed(diagnostics_end,finished);
+        p.diagnostics_ms=elapsed(solver_end,diagnostics_end);p.staging_ms=elapsed(timer_closed,finished);
+        p.timer_begin_ms=elapsed(poll_end,prepare_start);p.timer_end_ms=elapsed(diagnostics_end,timer_closed);
+        p.timer_mode=effective_timer_mode(s.profile_options);
         p.timer_poll_ms=s.poll_timer_ms;p.fence_poll_ms=s.poll_fence_ms;p.read_ms=s.poll_read_ms;p.readback_age_ticks=s.mission_enabled?s.metrics.steps-s.snapshot.status[2]:s.readback_age;
         if(s.profiles.size()<10000)s.profiles.push_back(p);
     }
+    s.trace_step=false;s.trace.end_step();
 }
 void ParticleWorld::poll(bool collect_hud){
     auto& s=*impl_;
@@ -492,6 +580,9 @@ void ParticleWorld::poll(bool collect_hud){
     const auto scalar=[&](auto& queue,unsigned& head,bool rendering){
         collect(queue,head,[&](auto& timer){
             GLuint64 ns{};s.gl.GetQueryObjectui64v(timer.id,GL_QUERY_RESULT,&ns);
+            if(timer.mode==TimerMode::timestamp){
+                GLuint64 began{};s.gl.GetQueryObjectui64v(timer.start,GL_QUERY_RESULT,&began);ns-=began;
+            }
             if(timer.generation!=s.epoch){if(s.profile_options.collect)++s.calls.timer_stale;return;}
             const auto ms=static_cast<double>(ns)*1e-6;
             if(rendering){s.metrics.render_ms=ms;if(s.render_timings.size()<10000)s.render_timings.push_back(ms);}
@@ -499,7 +590,7 @@ void ParticleWorld::poll(bool collect_hud){
         });
     };
     scalar(s.timers,s.timer_head,false);scalar(s.render_timers,s.render_head,true);
-    if(s.profile_options.group_timers)collect(s.group_timers,s.group_head,[&](auto& timer){
+    if(effective_timer_mode(s.profile_options)!=TimerMode::off&&s.profile_options.group_timers)collect(s.group_timers,s.group_head,[&](auto& timer){
         std::array<GLuint64,6> timestamps{};
         for(std::size_t i=0;i<timestamps.size();++i)s.gl.GetQueryObjectui64v(timer.ids[i],GL_QUERY_RESULT,&timestamps[i]);
         if(timer.generation==s.epoch&&s.group_profiles.size()<10000){
@@ -521,9 +612,12 @@ void ParticleWorld::poll(bool collect_hud){
     if(s.readback_refresh)s.stage_count(true);
 }
 void ParticleWorld::render(float alpha){
-    auto& s=*impl_;auto& render_timer=s.render_timers[s.render_cursor];const bool measure_render=s.profile_options.gpu_timers&&!render_timer.pending;
+    auto& s=*impl_;auto& render_timer=s.render_timers[s.render_cursor];
+    const bool timers_enabled=effective_timer_mode(s.profile_options)!=TimerMode::off;
+    const bool measure_render=timers_enabled&&!render_timer.pending;
+    if(s.profile_options.collect&&timers_enabled&&!measure_render)++s.calls.timer_skips;
     if(s.profile_options.collect)s.calls.render_state_queries+=18;
-    if(measure_render)s.gl.BeginQuery(GL_TIME_ELAPSED,render_timer.id);s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    if(measure_render)s.begin_timer(render_timer);s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     GLint previous_fbo{},previous_vao{},previous_program{},viewport[4]{};
     glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&previous_fbo);glGetIntegerv(GL_VERTEX_ARRAY_BINDING,&previous_vao);
     glGetIntegerv(GL_CURRENT_PROGRAM,&previous_program);glGetIntegerv(GL_VIEWPORT,viewport);
@@ -567,7 +661,7 @@ void ParticleWorld::render(float alpha){
     s.gl.BlendFuncSeparate(static_cast<GLenum>(blend_src),static_cast<GLenum>(blend_dst),static_cast<GLenum>(alpha_src),static_cast<GLenum>(alpha_dst));
     s.gl.BlendEquationSeparate(static_cast<GLenum>(eq_rgb),static_cast<GLenum>(eq_alpha));
     if(!blend)glDisable(GL_BLEND);
-    if(measure_render){s.gl.EndQuery(GL_TIME_ELAPSED);render_timer.pending=true;render_timer.generation=s.epoch;if(s.profile_options.collect)++s.calls.timer_submissions;s.render_cursor=(s.render_cursor+1)%static_cast<unsigned>(s.render_timers.size());}
+    if(measure_render){s.end_timer(render_timer);if(s.profile_options.collect)++s.calls.timer_submissions;s.render_cursor=(s.render_cursor+1)%static_cast<unsigned>(s.render_timers.size());}
     if(blend)glEnable(GL_BLEND);if(scissor)glEnable(GL_SCISSOR_TEST);if(depth)glEnable(GL_DEPTH_TEST);if(cull)glEnable(GL_CULL_FACE);
 }
 unsigned ParticleWorld::texture()const noexcept{return impl_->image;}
@@ -576,16 +670,24 @@ std::vector<double> ParticleWorld::take_cpu_timings(){return std::exchange(impl_
 const Metrics& ParticleWorld::metrics()const noexcept{return impl_->metrics;}
 const MissionSnapshot& ParticleWorld::mission()const noexcept{return impl_->snapshot;}
 void ParticleWorld::set_profile_options(const ProfileOptions& options){
-    auto& s=*impl_;s.profile_options=options;s.gl.observe(options.collect?&s.calls:nullptr);
+    auto& s=*impl_;
+    const auto previous_mode=effective_timer_mode(s.profile_options),next_mode=effective_timer_mode(options);
+    const bool previous_groups=previous_mode!=TimerMode::off&&s.profile_options.group_timers;
+    const bool next_groups=next_mode!=TimerMode::off&&options.group_timers;
+    if(previous_mode!=next_mode)s.reset_timer_queries(next_mode);
+    if(previous_mode!=next_mode||previous_groups!=next_groups)s.reset_group_queries(next_groups);
+    s.profile_options=options;s.gl.observe(options.collect?&s.calls:nullptr);
     s.readbacks.configure(options.readback_mode,s.debug_groups);
     if(options.readback_period==0)s.readback_refresh=false;
     for(auto kernels:{std::span<Impl::Kernel>{s.granular},std::span<Impl::Kernel>{s.liquids},std::span<Impl::Kernel>{s.mission_kernels},std::span<Impl::Kernel>{s.coupling_kernels}})for(const auto& k:kernels)if(k.id&&k.coupling>=0){s.gl.UseProgram(k.id);s.gl.Uniform1i(k.coupling,options.body_coupling?0:1);}
     s.invalidate_bindings();
-    if(options.group_timers)for(auto& timer:s.group_timers)if(!timer.ids[0])s.gl.GenQueries(6,timer.ids.data());
+
 }
+ProfileOptions ParticleWorld::profile_options()const noexcept{return impl_->profile_options;}
 const StepProfile& ParticleWorld::step_profile()const noexcept{return impl_->last_profile;}
 PollTimings ParticleWorld::poll_timings()const noexcept{return {impl_->poll_timer_ms,impl_->poll_fence_ms,impl_->poll_read_ms};}
 ReadbackStats ParticleWorld::readback_stats()const noexcept{return impl_->readbacks.stats();}
+UploadStats ParticleWorld::upload_stats()const noexcept{return impl_->uploads.stats();}
 ExecutionOptions ParticleWorld::execution_options()const noexcept{return impl_->execution;}
 std::array<std::uint32_t,28> ParticleWorld::read_dispatch_commands()const{
     auto& s=*impl_;std::array<std::uint32_t,28> result{};s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -624,8 +726,16 @@ void ParticleWorld::configure_mission(const MissionConfig& config){
     constexpr float area=80+16*3.14159265358979323846F;
     g.body={2.65F/(area*config.relative_density),config.relative_density,area,0};
     const std::vector<std::byte> empty(mission_buffer_size-32);
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,32,empty.size(),empty.data());
-    s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,32,sizeof(g),&g);s.snapshot=g;s.controls={0,g.control[1],g.control[2],0};s.mission_enabled=true;s.grains_enabled=true;
+    s.upload(6,32,static_cast<GLsizeiptr>(empty.size()),empty.data());
+    s.upload(6,32,sizeof(g),&g);s.snapshot=g;s.controls={0,g.control[1],g.control[2],0};s.mission_enabled=true;s.grains_enabled=true;
+}
+void ParticleWorld::restore_coupling_checkpoint(const MissionSnapshot& checkpoint,std::uint64_t tick){
+    if(checkpoint.status[0]==0||checkpoint.events[0]!=0||checkpoint.counts[2]!=0)
+        throw std::invalid_argument{"Coupling checkpoint requires an active scene without projectile/destruction events"};
+    for(float value:checkpoint.actor)if(!std::isfinite(value))throw std::invalid_argument{"Nonfinite coupling checkpoint"};
+    auto& s=*impl_;s.reset_body();s.explosions.clear();++s.epoch;++s.readback_revision;s.readback_refresh=false;
+    auto state=checkpoint;state.status[1]=s.epoch;s.upload(6,32,sizeof(state),&state);s.snapshot=state;
+    s.metrics.steps=tick;s.controls={0,state.control[1],state.control[2],0};s.mission_enabled=true;s.grains_enabled=true;
 }
 void ParticleWorld::reset_mission(){
     std::vector<std::uint32_t> walls(width*height);std::vector<Grain> grains;
@@ -664,17 +774,72 @@ NeighborSnapshot ParticleWorld::read_neighbors(){
     s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,capacity*4,capacity*4,result.indices.data());
     s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,capacity*8,capacity*16,result.anchors.data());return result;
 }
+std::array<std::uint32_t,240> ParticleWorld::read_phase_mask(){
+    auto& s=*impl_;
+    if(s.execution.neighbors==NeighborMode::linked||!s.execution.phase_gating)
+        throw std::logic_error{"Sorted phase-gated index required"};
+    // Keep the same anchor generation as the neighbor index. With reuse enabled
+    // bins() preserves the cached index and mask after bounded particle motion.
+    s.invalidate_bindings();s.bins();std::array<std::uint32_t,240> result{};
+    constexpr auto offset=static_cast<GLintptr>((16+3*width*height+480)*4);
+    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    GLuint staging{};s.gl.GenBuffers(1,&staging);s.gl.BindBuffer(GL_COPY_WRITE_BUFFER,staging);
+    s.gl.BufferData(GL_COPY_WRITE_BUFFER,sizeof(result),nullptr,GL_STREAM_READ);
+    s.gl.BindBuffer(GL_COPY_READ_BUFFER,s.buffers[2]);
+    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,offset,0,sizeof(result));
+    s.gl.BindBuffer(GL_COPY_READ_BUFFER,staging);s.gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,sizeof(result),result.data());
+    s.gl.DeleteBuffers(1,&staging);return result;
+}
+void ParticleWorld::start_diagnostic_trace(const TraceConfig& config){
+    auto& s=*impl_;
+    if((config.mode==CostMode::bounds||config.mode==CostMode::snapshots)&&s.execution.neighbors!=NeighborMode::reused)
+        throw std::invalid_argument{"Spatial trace requires the production reused index"};
+    const auto cells=static_cast<std::size_t>(16+3*width*height+480+(s.execution.phase_gating?240:0))*4;
+    s.trace.start(config,capacity*sizeof(Grain),cells,capacity*24);
+}
+TraceReport ParticleWorld::read_diagnostic_trace(){impl_->trace_step=false;return impl_->trace.read();}
+void ParticleWorld::capture_diagnostic_snapshot(std::string label){
+    auto& s=*impl_;
+    if(!s.bins_valid||s.execution.neighbors!=NeighborMode::reused)throw std::logic_error{"Snapshot requires an existing valid reused index"};
+    s.trace.capture(std::move(label),s.epoch,s.metrics.steps,0,s.execution.soa,s.buffers[s.current],s.buffers[2],s.buffers[3]);
+}
+HotAudit ParticleWorld::audit_hot_view(){
+    auto& s=*impl_;HotAudit result;
+    if(s.read_mode()!=NeighborReads::sorted)return result;
+    result.indexed=s.bins_valid;if(!result.indexed)return result;
+    struct alignas(16) HotEntry {std::array<float,4> geometry,motion;};static_assert(sizeof(HotEntry)==32);
+    constexpr auto view_bytes=capacity*sizeof(HotEntry),index_bytes=capacity*sizeof(std::uint32_t);
+    std::vector<HotEntry> view(capacity);std::vector<std::uint32_t> indices(capacity);
+    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    GLuint staging{};s.gl.GenBuffers(1,&staging);s.gl.BindBuffer(GL_COPY_WRITE_BUFFER,staging);
+    s.gl.BufferData(GL_COPY_WRITE_BUFFER,view_bytes+index_bytes,nullptr,GL_STREAM_READ);
+    s.gl.BindBuffer(GL_COPY_READ_BUFFER,s.buffers[3]);
+    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,static_cast<GLintptr>(capacity*24+s.current*view_bytes),0,view_bytes);
+    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,capacity*4,view_bytes,index_bytes);
+    s.gl.BindBuffer(GL_COPY_READ_BUFFER,staging);s.gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,view_bytes,view.data());
+    s.gl.GetBufferSubData(GL_COPY_READ_BUFFER,view_bytes,index_bytes,indices.data());s.gl.DeleteBuffers(1,&staging);
+    const auto actual=readback();std::vector<bool> used(capacity);
+    const auto count=static_cast<unsigned>(std::ranges::count_if(actual,[](const auto& p){return p.motion[3]>.5F;}));
+    for(unsigned id=0;id<capacity;++id)if(actual[id].motion[3]>.5F){
+        ++result.active;const auto entry=indices[id];
+        if(entry>=count||used[entry]){++result.mismatches;continue;}used[entry]=true;
+        const auto& p=actual[id];const std::array<float,4> geometry{p.position[0],p.position[1],p.residual[0],p.residual[1]};
+        if(std::bit_cast<std::array<std::uint32_t,4>>(geometry)!=std::bit_cast<std::array<std::uint32_t,4>>(view[entry].geometry)
+            ||std::bit_cast<std::array<std::uint32_t,4>>(p.motion)!=std::bit_cast<std::array<std::uint32_t,4>>(view[entry].motion))++result.mismatches;
+    }
+    return result;
+}
 std::vector<std::array<float,4>> ParticleWorld::audit_neighbors(bool pairs){
     auto& s=*impl_;if(s.execution.neighbors==NeighborMode::linked)throw std::logic_error{"Sorted index required"};s.invalidate_bindings();s.bins();
     std::vector<std::array<float,4>> result(pairs?65536:capacity);
-    if(pairs){s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,static_cast<GLsizeiptr>(result.size()*16),result.data());}
+    if(pairs){s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.upload(7,0,static_cast<GLsizeiptr>(result.size()*16),result.data());}
     s.neighbor_dispatch(pairs?5U:7U,pairs?1U:128U);s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,0,static_cast<GLsizeiptr>(result.size()*16),result.data());return result;
 }
 void ParticleWorld::displace_for_test(std::span<const std::array<float,4>> deltas){
     if(deltas.size()>capacity)throw std::invalid_argument{"Too many test displacements"};
     auto& s=*impl_;if(s.execution.neighbors==NeighborMode::linked)throw std::logic_error{"Sorted index required"};s.invalidate_bindings();s.bins();std::vector<std::array<float,4>> packed(capacity);std::ranges::copy(deltas,packed.begin());
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,capacity*16,packed.data());
+    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.upload(7,0,capacity*16,packed.data());
     s.neighbor_dispatch(6,128);s.current=1-s.current;
 }
 BodySnapshot ParticleWorld::read_body(){
@@ -688,8 +853,8 @@ BodySnapshot ParticleWorld::read_body(){
 }
 void ParticleWorld::inject_body_for_test(std::span<const std::array<float,4>> reactions,bool apply){
     auto& s=*impl_;if(s.execution.coupling==CouplingMode::reference||reactions.size()>2*capacity)throw std::invalid_argument{"Invalid compact body test batch"};
-    s.invalidate_bindings();s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);
-    if(!reactions.empty())s.gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,capacity*16,static_cast<GLsizeiptr>(reactions.size_bytes()),reactions.data());
+    s.invalidate_bindings();s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+    if(!reactions.empty())s.upload(7,capacity*16,static_cast<GLsizeiptr>(reactions.size_bytes()),reactions.data());
     auto& k=s.prepare(s.coupling_kernels,2,false,true);s.gl.Uniform1i(k.test_count,static_cast<GLint>(reactions.size()));
     s.gl.DispatchCompute(static_cast<GLuint>(std::max<std::size_t>(1,(reactions.size()+k.local_size-1)/k.local_size)),1,1);
     s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);

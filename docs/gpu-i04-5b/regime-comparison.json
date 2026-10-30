@@ -1,0 +1,30 @@
+{
+  "interrupted": {
+    "processes": 11,
+    "exe_sha256": [
+      "dec2c4991fc1b23d5551e9283edb4c68d39db4937d770229a05e44ad1387526b"
+    ],
+    "mission_gpu_median_range_ms": [
+      12.046528,
+      12.52352
+    ],
+    "first_start_utc": "2026-10-29T21:49:23.9842966+00:00",
+    "last_end_utc": "2026-10-29T21:52:19.8869333+00:00",
+    "direct_r2_whole_process_clock_median_mhz": 1395.0,
+    "direct_r2_whole_process_power_median_w": 18.62
+  },
+  "complete": {
+    "processes": 36,
+    "exe_sha256": [
+      "dec2c4991fc1b23d5551e9283edb4c68d39db4937d770229a05e44ad1387526b"
+    ],
+    "mission_gpu_median_range_ms": [
+      2.781184,
+      2.955264
+    ],
+    "first_start_utc": "2026-10-30T07:29:42.3258652+00:00",
+    "last_end_utc": "2026-10-30T07:32:47.1440558+00:00",
+    "direct_r2_whole_process_clock_median_mhz": 1890.0,
+    "direct_r2_whole_process_power_median_w": 40.835
+  }
+}

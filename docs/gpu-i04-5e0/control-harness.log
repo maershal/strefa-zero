@@ -1,0 +1,12 @@
+Measuring throughput-d-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-D-1"
+Measuring throughput-e0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-E0-1"
+Measuring throughput-e0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-E0-2"
+Measuring throughput-d-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-D-2"
+Measuring throughput-d-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-D-3"
+Measuring throughput-e0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5e-results\disabled-control\control-E0-3"

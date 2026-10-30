@@ -90,7 +90,7 @@ void main(){
         vec2 correction=vec2(0);
         FOR_NEIGHBOR(p,1.0,j)
                 if(j!=int(id)){
-                    Grain q=readParticle(uint(j));vec2 d=separation(p,q);float len=length(d);
+                    NEIGHBOR_DATA q=READ_INTERACTION(j);vec2 d=separation(p,q);float len=length(d);
                     float distance=radius(p)+radius(q);
                     if(len<distance&&!(liquid(p)&&liquid(q))){
                         vec2 normal;

@@ -1,0 +1,2672 @@
+{
+  "full": {
+    "mission": [
+      {
+        "repeat": 1,
+        "world_create_ms": 77.0261,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 69.5769,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 68.3089,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 66.9728,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 72.8236,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 66.793,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_16k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 62.1029,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 68.5771,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 65.9684,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 64.8501,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 67.7403,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 64.7748,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_32k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 63.0914,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 67.4801,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 64.1022,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 64.5179,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 65.9857,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 66.5333,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ]
+  },
+  "narrow": {
+    "mission": [
+      {
+        "repeat": 1,
+        "world_create_ms": 65.5322,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 69.0685,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 67.1068,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 67.362,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 66.7685,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 74.5802,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 128613,
+            "mean": 535.8875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_16k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 63.3144,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 68.1416,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 65.571,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 67.1429,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 68.1223,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 68.121,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_32k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 63.7616,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 64.3519,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 64.9484,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 62.4848,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 66.6278,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 67.1966,
+        "hot_cache_bytes": 0,
+        "device_bytes": 8821464,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 90165,
+            "mean": 375.6875
+          },
+          "uniform_updates": {
+            "sum": 720,
+            "mean": 3
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ]
+  },
+  "sorted": {
+    "mission": [
+      {
+        "repeat": 1,
+        "world_create_ms": 66.2179,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 68.927,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 70.1394,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 70.7269,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 67.3979,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 68.4989,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 33616,
+            "mean": 140.06666666666666
+          },
+          "barriers": {
+            "sum": 33676,
+            "mean": 140.31666666666666
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 6240,
+            "mean": 26
+          },
+          "api_calls": {
+            "sum": 132453,
+            "mean": 551.8875
+          },
+          "uniform_updates": {
+            "sum": 4560,
+            "mean": 19
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_16k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 68.9605,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 66.9986,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 65.2436,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 68.8501,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 66.7954,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 67.0805,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ],
+    "stress_32k": [
+      {
+        "repeat": 1,
+        "world_create_ms": 70.5258,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 2,
+        "world_create_ms": 67.8021,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 3,
+        "world_create_ms": 63.0427,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 4,
+        "world_create_ms": 71.5787,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 5,
+        "world_create_ms": 63.3338,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      },
+      {
+        "repeat": 6,
+        "world_create_ms": 65.1161,
+        "hot_cache_bytes": 2097152,
+        "device_bytes": 10918616,
+        "step_counters": {
+          "dispatches": {
+            "sum": 24000,
+            "mean": 100
+          },
+          "barriers": {
+            "sum": 24060,
+            "mean": 100.25
+          },
+          "bins": {
+            "sum": 480,
+            "mean": 2
+          },
+          "active_rebuilds": {
+            "sum": 240,
+            "mean": 1
+          },
+          "body_reductions": {
+            "sum": 5760,
+            "mean": 24
+          },
+          "api_calls": {
+            "sum": 101685,
+            "mean": 423.6875
+          },
+          "uniform_updates": {
+            "sum": 12240,
+            "mean": 51
+          },
+          "stage_copies": {
+            "sum": 30,
+            "mean": 0.125
+          },
+          "stage_drops": {
+            "sum": 90,
+            "mean": 0.375
+          },
+          "timer_skips": {
+            "sum": 0,
+            "mean": 0
+          }
+        },
+        "full_world_readback_submitted": 73
+      }
+    ]
+  }
+}

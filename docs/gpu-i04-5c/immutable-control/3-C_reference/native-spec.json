@@ -1,0 +1,10 @@
+{
+  "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5c-comparison\\StrefaZero.exe",
+  "flags": [
+    "--gpu-stabilization-profile",
+    "--gpu-counters"
+  ],
+  "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5c-results\\immutable-control\\3-C_reference",
+  "timeout_ms": 240000,
+  "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5c-results\\immutable-control\\3-C_reference\\native-result.json"
+}

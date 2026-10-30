@@ -37,11 +37,19 @@ void main(){
         }
         FOR_NEIGHBOR(p,2.0,j)
             if(j!=int(id)){
+#if HOT_READS > 0
+                Interaction q=READ_INTERACTION(j);vec2 d=separation(p,q);
+                if(dot(d,d)<4&&visible(p.position.xy,q.position.xy)){
+                    density+=kernel(d);vec2 grad_j=pressureGradient(d)/referenceDensity;
+                    grad_i+=grad_j;denominator+=q.motion.z*dot(grad_j,grad_j);
+                }
+#else
                 vec2 d=separation(p,readParticle(uint(j)));
                 if(dot(d,d)<4&&visible(p.position.xy,readParticle(uint(j)).position.xy)){
                     density+=kernel(d);vec2 grad_j=pressureGradient(d)/referenceDensity;
                     grad_i+=grad_j;denominator+=readParticle(uint(j)).motion.z*dot(grad_j,grad_j);
                 }
+#endif
             }
         END_NEIGHBOR
         float compression=max(0,density/referenceDensity-1);
@@ -58,15 +66,22 @@ void main(){
             }
             correction+=bodyCorrection;
         }
+#if PHASE_GATING && SORTED_NEIGHBORS
+        if(liquid(p))
+#endif
         for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
             ivec2 b=c+ivec2(x,y);
             if(solid(b)){
                 if(liquid(p))correction+=own*pressureGradient((p.position.xy-(vec2(b)+.5))+p.residual.xy);continue;
             }
         }
+        // A dry carrier can only receive PBF correction from liquid neighbors.
+        // Even when the mask proves none exist, preserve both zero-motion
+        // microprojections, the reaction-channel write and ping-pong output.
+        if(liquid(p)||liquidInNeighborWindow(p)){
         FOR_NEIGHBOR(p,2.0,j)
             if(j!=int(id)){
-                Grain q=readParticle(uint(j));vec2 d=separation(p,q);
+                NEIGHBOR_DATA q=READ_INTERACTION(j);vec2 d=separation(p,q);
                 if(dot(d,d)<4&&(liquid(p)||liquid(q))&&visible(p.position.xy,q.position.xy)){
                     float other=liquid(q)?terms[j].x:0;
                     // Small short-range anti-clustering term, symmetric in each
@@ -79,18 +94,36 @@ void main(){
                 }
             }
         END_NEIGHBOR
+        }
         correction*=p.motion.z/referenceDensity;
         float len=length(correction);float scale=min(.8,.2/max(.00001,len));correction*=scale;
         writeBodyReaction(id,vec4(-bodyCorrection*(game.body.x/referenceDensity)*scale,0,0),true);
         // A projection cannot teleport a carrier through a one-pixel barrier.
+#if SKIP_ZERO_PROJECTION
+        bool certified=false;uvec4 certifiedState=uvec4(0);
+        for(int i=0;i<2;++i){
+            // Even move(0) may renormalize the compensated residual. It must
+            // execute before comparing the complete certified geometric state.
+            move(p,correction*.5);
+            uvec4 state=uvec4(floatBitsToUint(p.position.xy),floatBitsToUint(p.residual.xy));
+            if(!certified||!all(equal(state,certifiedState)))certified=terrainCertified(p);
+            certifiedState=uvec4(floatBitsToUint(p.position.xy),floatBitsToUint(p.residual.xy));
+        }
+#else
         for(int i=0;i<2;++i){move(p,correction*.5);terrain(p);}
+#endif
         storeParticle(uint(id),p);return;
     }
     if(operation==4){ // XSPH velocity smoothing, time-scaled and pairwise symmetric
         if(!liquid(p)){storeParticle(uint(id),p);return;}vec2 change=vec2(0);
         FOR_NEIGHBOR(p,2.0,j)
+#if HOT_READS > 0
+            if(j!=int(id)){
+                Interaction q=READ_INTERACTION(j);if(liquid(q)){vec2 d=separation(p,q);
+#else
             if(j!=int(id)&&liquid(readParticle(uint(j)))){
                 Grain q=readParticle(uint(j));vec2 d=separation(p,q);
+#endif
                 if(dot(d,d)<4&&visible(p.position.xy,q.position.xy)){
                     float va=p.motion.w==6?18:1.5,vb=q.motion.w==6?18:1.5;
                     float viscosity=2*va*vb/(va+vb);
@@ -101,6 +134,9 @@ void main(){
                     // density projection supplies the short-range pressure.
                     if(p.motion.w==q.motion.w)change+=p.motion.z*60*gradient(d)*dt;
                 }
+#if HOT_READS > 0
+                }
+#endif
             }
         END_NEIGHBOR
         p.motion.xy+=change;storeParticle(uint(id),p);return;

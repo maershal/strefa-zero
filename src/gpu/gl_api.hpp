@@ -68,7 +68,7 @@ template<class Function,CallKind kind> struct ObservedFunction {
  X(PFNGLBEGINQUERYPROC,BeginQuery) X(PFNGLENDQUERYPROC,EndQuery) X(PFNGLQUERYCOUNTERPROC,QueryCounter) X(PFNGLGETQUERYOBJECTIVPROC,GetQueryObjectiv) X(PFNGLGETQUERYOBJECTUI64VPROC,GetQueryObjectui64v) \
  X(PFNGLFENCESYNCPROC,FenceSync) X(PFNGLCLIENTWAITSYNCPROC,ClientWaitSync) X(PFNGLDELETESYNCPROC,DeleteSync)
 struct Api {
-    PFNGLBUFFERSTORAGEPROC BufferStorage{};
+    ObservedFunction<PFNGLBUFFERSTORAGEPROC,CallKind::other> BufferStorage;
     bool persistent_storage{};
     CallCounters* observation{};
 #define DECLARE(type,name) ObservedFunction<type,call_kind(#name)> name;
@@ -80,10 +80,11 @@ struct Api {
 #undef LOAD
         GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
         persistent_storage=major>4||(major==4&&minor>=4)||SDL_GL_ExtensionSupported("GL_ARB_buffer_storage");
-        if(persistent_storage){BufferStorage=reinterpret_cast<PFNGLBUFFERSTORAGEPROC>(SDL_GL_GetProcAddress("glBufferStorage"));persistent_storage=BufferStorage!=nullptr;}
+        if(persistent_storage){BufferStorage.function=reinterpret_cast<PFNGLBUFFERSTORAGEPROC>(SDL_GL_GetProcAddress("glBufferStorage"));persistent_storage=BufferStorage.function!=nullptr;}
     }
     void observe(CallCounters* counters){
         observation=counters;
+        BufferStorage.counters=counters;
 #define OBSERVE(type,name) name.counters=counters;
         GL_FUNCTIONS(OBSERVE)
 #undef OBSERVE

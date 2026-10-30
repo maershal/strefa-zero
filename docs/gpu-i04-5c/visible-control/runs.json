@@ -1,0 +1,28 @@
+{
+  "diagnostic_limit_seconds": 120,
+  "ctest_limits_unchanged": true,
+  "runs": [
+    {
+      "variant": "A",
+      "mode": "mission_ui",
+      "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+      "pid": 21100,
+      "exit_code": 1,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:12:02.5718455Z",
+      "ended_utc": "2026-10-29T21:13:07.7303586Z",
+      "elapsed_seconds": 65.1585131
+    },
+    {
+      "variant": "C",
+      "mode": "mission_ui",
+      "exe_sha256": "4679ce7ce6bfe9dc84a72288c2693468a77e12d32e80beb13a81dd2765f27d84",
+      "pid": 21496,
+      "exit_code": 1,
+      "timed_out": false,
+      "started_utc": "2026-10-29T21:13:21.9174438Z",
+      "ended_utc": "2026-10-29T21:14:25.3022847Z",
+      "elapsed_seconds": 63.3848409
+    }
+  ]
+}

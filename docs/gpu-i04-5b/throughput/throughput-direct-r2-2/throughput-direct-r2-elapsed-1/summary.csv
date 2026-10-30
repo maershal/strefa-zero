@@ -1,0 +1,7 @@
+scene,variant,repeat,metric,samples,available,median,p95,p99,max
+mission,elapsed,1,gpu_step_ms,240,1,12.70784,16.34096,20.185088,21.07392
+mission,elapsed,1,cpu_submit_ms,240,1,0.0326,0.1669,0.4952,0.6028
+mission,elapsed,1,batch_wall_ms,1,1,3581.8395,3581.8395,3581.8395,3581.8395
+mission,elapsed,1,batch_mean_step_wall_ms,1,1,14.92433125,14.92433125,14.92433125,14.92433125
+mission,elapsed,1,batch_ticks_per_second,1,1,67.00467735,67.00467735,67.00467735,67.00467735
+mission,elapsed,1,gpu_render_ms,120,1,0.384768,25.462208,125.776128,243.136256

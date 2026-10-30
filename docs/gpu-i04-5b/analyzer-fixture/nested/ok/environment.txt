@@ -1,0 +1,3 @@
+gpu_timer_mode=elapsed
+storage_effective=immutable
+readback_period=0

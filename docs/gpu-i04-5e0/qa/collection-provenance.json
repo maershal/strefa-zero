@@ -1,0 +1,8 @@
+{
+  "start_utc": "2026-10-30T10:36:11.6124981Z",
+  "fresh_files_copied": 116,
+  "older_files_excluded": [
+    "mission-ui-profile/smoke-error.txt",
+    "gpu-ui-profile/smoke-error.txt"
+  ]
+}

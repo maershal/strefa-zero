@@ -1,0 +1,12 @@
+{
+  "start_utc": "2026-10-29T20:43:45.5502942Z",
+  "fresh_files_copied": 35,
+  "older_files_excluded": [
+    "smoke-profile/smoke-report.txt",
+    "mission-ui-profile/mission-frames.csv",
+    "mission-ui-profile/mission-ui.txt",
+    "mission-ui-profile/smoke-error.txt",
+    "gpu-ui-profile/smoke-error.txt",
+    "legacy-smoke-profile/smoke-report.txt"
+  ]
+}

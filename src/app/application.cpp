@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "app/frame_profile.hpp"
 #include "platform/settings_store.hpp"
 #include "platform/texture.hpp"
 #include "platform/window.hpp"
@@ -15,6 +16,9 @@
 #include <SDL3/SDL_opengl.h>
 #include <algorithm>
 #include <array>
+#include <charconv>
+#include <chrono>
+#include <iomanip>
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -36,11 +40,11 @@ class Application {
 public:
     Application(platform::Window& window, ui::Session& gui, const platform::SettingsStore& store,
         core::Settings settings, std::array<ui::Image, 3> images, platform::Texture& canvas,
-        ui::Image soldier, ui::Image parts, ui::Image weapons, std::string message, sim::PhysicsConfig physics,gpu::ProfileOptions gpu_profiling,gpu::ExecutionOptions execution)
+        ui::Image soldier, ui::Image parts, ui::Image weapons, std::string message, sim::PhysicsConfig physics,gpu::ProfileOptions gpu_profiling,gpu::ExecutionOptions execution,platform::GlDebugLog* gl_debug)
         : window_{window}, gui_{gui}, store_{store}, images_{images}, canvas_{canvas}, soldier_{soldier},
           parts_{parts}, weapons_{weapons}, state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics},
           message_{std::move(message)}, renderer_{gl_string(GL_RENDERER)}, gl_version_{gl_string(GL_VERSION)},
-          physics_{physics},game_{{},{},physics},gpu_profiling_{gpu_profiling},execution_{execution} {
+          physics_{physics},game_{{},{},physics},gpu_profiling_{gpu_profiling},execution_{execution},gl_debug_{gl_debug} {
 
     }
 
@@ -59,18 +63,50 @@ public:
         if(start_gpu||gpu_smoke){if(!perform(ui::Action::open_gpu))return std::unexpected{message_};}
         if(gpu_smoke){gpu_world_->reset(gpu::Scene::sand_water);gpu_controls_.scene=static_cast<int>(gpu::Scene::sand_water);}
         if(start_mission||mission_smoke){if(!perform(ui::Action::open_mission))return std::unexpected{message_};}
+        // Keep the historical 60 FPS run at 900 frames, but let faster displays
+        // execute the entire tick-based mission route before its final capture.
+        constexpr unsigned mission_smoke_min_frames=900;
+        constexpr std::uint64_t mission_smoke_min_ticks=1700;
         std::array<bool, 6> visited_screens{};
         std::array<bool, 3> visited_themes{};
         bool smoke_ok = true;
         unsigned frames{};
         std::vector<double> ui_frame_times;
-        std::vector<std::array<double,10>> mission_frames;
+        std::vector<std::array<double,12>> mission_frames;
+        const bool profile_frames=gpu_profiling_.collect;
+        std::vector<FrameProfile> frame_profiles;
+        if(profile_frames){frame_profiles.reserve(1024);mission_frames.reserve(1024);}
+        const auto profile_anchor_ns=profile_frames?SDL_GetTicksNS():std::uint64_t{0};
+        const auto profile_anchor_utc_ns=profile_frames?std::chrono::duration_cast<std::chrono::nanoseconds>(
+            std::chrono::system_clock::now().time_since_epoch()).count():std::int64_t{0};
+        const auto profile_anchor_after_ns=profile_frames?SDL_GetTicksNS():std::uint64_t{0};
+        std::uint64_t iterations{},frame_profiles_dropped{};
+        constexpr std::size_t frame_profile_capacity=10000;
+        auto append_frame_profile=[&](const FrameProfile& row){
+            if(frame_profiles.size()<frame_profile_capacity){
+                frame_profiles.push_back(row);frame_profiles.back().finish(SDL_GetTicksNS());
+            }else ++frame_profiles_dropped;
+        };
         std::uint64_t gpu_paused_step{};bool gpu_pause_ok=true;
+        if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::runtime);
         auto previous = SDL_GetTicksNS();
         while (running_) {
             const auto frame_start = SDL_GetTicksNS();
             const float frame_ms = static_cast<float>(frame_start - previous) / 1'000'000.0F;
             previous = frame_start;
+            FrameProfile frame_profile;
+            std::optional<std::array<double,12>> mission_frame;
+            auto phase_started=frame_start;
+            auto mark=[&](double& duration){
+                if(profile_frames){const auto now=SDL_GetTicksNS();duration+=static_cast<double>(now-phase_started)/1e6;phase_started=now;}
+            };
+            if(profile_frames){
+                frame_profile.iteration=iterations++;frame_profile.frame=frames;
+                frame_profile.screen=static_cast<int>(state_.screen);frame_profile.start_ns=frame_start;
+                frame_profile.previous_interval_ms=frame_ms;
+                frame_profile.frame_limit=static_cast<unsigned>(state_.applied.frame_limit);
+            }
+            mission_ticks_this_frame_=0;gpu_ticks_this_frame_=0;world_render_submit_ms_=0;
             SDL_Event event;
             while (SDL_PollEvent(&event)) {
                 gui_.process_event(event);
@@ -79,7 +115,23 @@ public:
                         && event.window.windowID == SDL_GetWindowID(window_.native()))) running_ = false;
             }
             if (!running_) break;
-            if (window_.minimized()) { if(lab_worker_) lab_worker_->set_active(false); clock_.reset(); game_clock_.reset(); gpu_clock_.reset();game_input_.clear();mission_clock_.reset();mission_input_.clear(); SDL_Delay(30); continue; }
+            mark(frame_profile.input_ms);
+            if(profile_frames)frame_profile.presentation=window_.presentation_info();
+            mark(frame_profile.metadata_ms);
+            if (window_.minimized()) {
+                if(lab_worker_)lab_worker_->set_active(false);
+                clock_.reset();game_clock_.reset();gpu_clock_.reset();game_input_.clear();
+                mission_clock_.reset();mission_input_.clear();
+                if(profile_frames){
+                    frame_profile.mission_tick=mission_world_?mission_world_->metrics().steps:0;
+                    frame_profile.mission_pending_seconds=mission_clock_.pending_seconds();
+                    frame_profile.mission_dropped_seconds=mission_clock_.dropped_seconds();
+                }
+                mark(frame_profile.update_ms);
+                SDL_Delay(30);mark(frame_profile.sleep_ms);
+                if(profile_frames)append_frame_profile(frame_profile);
+                continue;
+            }
 
             if (smoke_test) smoke_ok = smoke_step(frames) && smoke_ok;
             if(lab_smoke) {
@@ -97,11 +149,14 @@ public:
                 if(frames==140)perform(ui::Action::back);
                 if(frames==155)perform(ui::Action::open_gpu);
             }
+            mark(frame_profile.scenario_ms);
+            if(profile_frames)frame_profile.screen=static_cast<int>(state_.screen);
             gui_.set_scale(window_.display_scale(), state_.applied.ui_scale);
             gui_.new_frame();
             if(static_cast<std::size_t>(state_.screen)<visited_screens.size())visited_screens[static_cast<std::size_t>(state_.screen)] = true;
             visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
             const ui::FrameInfo info{gui_.scale(), frame_ms, renderer_, gl_version_, message_};
+            mark(frame_profile.ui_prepare_ms);
             // Render one coherent snapshot of actors and terrain. Input collected by
             // the UI advances the next snapshot; no GPU view can mutate the world.
             if (state_.screen == ui::Screen::arena) {
@@ -119,6 +174,7 @@ public:
                 }
                 lab_controls_.recording=lab_snapshot_->recording;
             }
+            mark(frame_profile.upload_ms);
             ui::LaboratoryInput input;
             ui::LaboratoryFrame lab{{canvas_.id(), canvas_.width(), canvas_.height()}, *lab_snapshot_,
                 lab_controls_, input, lab_snapshot_->step_ms, lab_snapshot_->overload_seconds};
@@ -137,10 +193,11 @@ public:
                 gpu_world_->poll();
                 gpu_frame.emplace(ui::GpuLaboratoryFrame{{gpu_world_->texture(),gpu::width*3,gpu::height*3},gpu_world_->metrics(),gpu_controls_,gpu_input});
             }
+            mark(frame_profile.poll_ms);
             const auto action = ui::draw(state_, info, images_, gui_.fonts(), &lab, &arena,gpu_frame?&*gpu_frame:nullptr);
+            mark(frame_profile.ui_build_ms);
             if(gpu_frame){
                 update_gpu(gpu_input,static_cast<double>(frame_ms)/1000.0,focused||gpu_smoke);
-                if(gpu_smoke&&frames==230)gpu_world_->save_image(store_.path().parent_path()/"gpu-preview.bmp");
             }else gpu_clock_.reset();
             if (state_.screen == ui::Screen::laboratory) {
                 const auto updated = update_lab(input, static_cast<double>(frame_ms) / 1000.0);
@@ -148,37 +205,111 @@ public:
             } else { if(lab_worker_) lab_worker_->set_active(false); clock_.reset(); lab_controls_.previous.reset(); }
             if(state_.screen==ui::Screen::gpu_mission&&action!=ui::Action::back){
                 update_mission(arena_input,static_cast<double>(frame_ms)/1000,focused||mission_smoke,mission_smoke);
-                if(mission_smoke)mission_frames.push_back({static_cast<double>(frames),frame_ms,mission_world_->metrics().gpu_ms,mission_world_->metrics().cpu_submit_ms,mission_clock_.dropped_seconds(),ui_poll_ms,ui_poll.timers_ms,ui_poll.fence_ms,ui_poll.read_ms,mission_step_submit_ms_});
-                if(mission_smoke&&frames==899)mission_world_->save_image(store_.path().parent_path()/"mission-preview.bmp");
+                if(mission_smoke){
+                    const auto& metrics=mission_world_->metrics();
+                    const bool timing_available=gpu::effective_timer_mode(gpu_profiling_)!=gpu::TimerMode::off&&metrics.timing_samples>0;
+                    mission_frame=std::array<double,12>{static_cast<double>(frames),frame_ms,metrics.gpu_ms,metrics.cpu_submit_ms,mission_clock_.dropped_seconds(),ui_poll_ms,ui_poll.timers_ms,ui_poll.fence_ms,ui_poll.read_ms,mission_step_submit_ms_,timing_available?1.0:0.0,static_cast<double>(metrics.timing_samples)};
+                }
             }else{mission_clock_.reset();mission_input_.clear();}
             if (state_.screen == ui::Screen::arena && action != ui::Action::back)
                 update_game(arena_input, static_cast<double>(frame_ms) / 1000.0, focused, smoke_test);
             else { game_clock_.reset(); game_input_.clear(); }
+            mark(frame_profile.update_ms);
+            if(profile_frames){
+                frame_profile.world_render_ms=world_render_submit_ms_;
+                frame_profile.update_ms-=world_render_submit_ms_;
+                frame_profile.mission_ticks=mission_ticks_this_frame_;
+                frame_profile.gpu_ticks=gpu_ticks_this_frame_;
+                frame_profile.mission_tick=mission_world_?mission_world_->metrics().steps:0;
+                frame_profile.mission_pending_seconds=mission_clock_.pending_seconds();
+                frame_profile.mission_dropped_seconds=mission_clock_.dropped_seconds();
+            }
+            const bool mission_final_frame=mission_smoke&&frames>=mission_smoke_min_frames-1&&
+                mission_world_->metrics().steps>=mission_smoke_min_ticks;
+            const bool capture_frame=(gpu_smoke&&frames==230)||mission_final_frame;
+            frame_profile.capture_performed=capture_frame;
+            mark(frame_profile.metadata_ms);
+            if(capture_frame){
+                if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::capture);
+                if(gpu_smoke)gpu_world_->save_image(store_.path().parent_path()/"gpu-preview.bmp");
+                if(mission_smoke)mission_world_->save_image(store_.path().parent_path()/"mission-preview.bmp");
+                if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::runtime);
+                mark(frame_profile.capture_ms);
+            }
             window_.clear();
             gui_.render();
-            if(mission_smoke&&frames==899){
+            mark(frame_profile.gui_render_ms);
+            if(mission_final_frame){
+                if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::capture);
                 int w{},h{};SDL_GetWindowSizeInPixels(window_.native(),&w,&h);std::vector<std::uint32_t> capture(static_cast<std::size_t>(w)*h);
                 glReadPixels(0,0,w,h,GL_RGBA,GL_UNSIGNED_BYTE,capture.data());
                 for(int y=0;y<h/2;++y)for(int x=0;x<w;++x)std::swap(capture[y*w+x],capture[(h-1-y)*w+x]);
                 auto* surface=SDL_CreateSurfaceFrom(w,h,SDL_PIXELFORMAT_RGBA32,capture.data(),w*4);
                 if(surface){const auto path=(store_.path().parent_path()/"mission-window.bmp").u8string();SDL_SaveBMP(surface,reinterpret_cast<const char*>(path.c_str()));SDL_DestroySurface(surface);}
             }
+            if(mission_final_frame){
+                if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::runtime);
+                mark(frame_profile.capture_ms);
+            }
             if ((smoke_test||gpu_smoke||mission_smoke) && glGetError() != GL_NO_ERROR)
                 return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
+            mark(frame_profile.validation_ms);
             window_.present();
+            mark(frame_profile.present_ms);
+            frame_profile.rendered=true;
             if (action != ui::Action::none) perform(action);
             ++frames;
             if (smoke_test && frames >= 238) running_ = false;
             if(lab_smoke&&frames>=300) running_=false;
             if(gpu_smoke&&frames>=240)running_=false;
-            if(mission_smoke&&frames>=900)running_=false;
+            if(mission_final_frame)running_=false;
 
+            mark(frame_profile.actions_ms);
             if (!window_.vsync_enabled()) {
                 const auto budget = static_cast<Uint64>(1'000'000'000 / state_.applied.frame_limit);
                 const auto elapsed = SDL_GetTicksNS() - frame_start;
                 if (elapsed < budget) SDL_DelayPrecise(budget - elapsed);
             }
+            mark(frame_profile.sleep_ms);
+            if(mission_frame)mission_frames.push_back(*mission_frame);
+            if(profile_frames)append_frame_profile(frame_profile);
         }
+        if(profile_frames){
+            std::ofstream timing_out{store_.path().parent_path()/"frame-timings.csv"};
+            std::ofstream info_out{store_.path().parent_path()/"frame-timings-info.txt"};
+            if(!timing_out||!info_out)return std::unexpected{"Nie można zapisać pełnego profilu klatek."};
+            timing_out<<std::setprecision(12);write_frame_profile_header(timing_out);
+            for(const auto& row:frame_profiles)write_frame_profile(timing_out,row);
+            info_out<<"schema=1\nrows_capacity="<<frame_profile_capacity<<"\nrows_dropped="<<frame_profiles_dropped
+                <<"\nanchor_sdl_ns="<<profile_anchor_ns<<"\nanchor_utc_unix_ns="<<profile_anchor_utc_ns
+                <<"\nanchor_sdl_after_ns="<<profile_anchor_after_ns
+                <<"\nanchor_pair_order=sdl_before_utc_then_sdl_after\nanchor_precision=bracketed_cpu_samples\n"
+                <<"mission_smoke="<<mission_smoke<<"\nmission_smoke_min_frames="<<mission_smoke_min_frames
+                <<"\nmission_smoke_min_ticks="<<mission_smoke_min_ticks<<"\nrendered_frames="<<frames
+                <<"\nloop_iterations="<<iterations<<"\nmission_submitted_ticks="<<(mission_world_?mission_world_->metrics().steps:0)<<'\n'
+                <<"durations=current_loop_iteration_after_present_and_limiter\n"
+                <<"previous_interval_ms=preceding_frame_start_to_current_frame_start\n"
+                <<"phase_partition=input+metadata+scenario+ui_prepare+upload+poll+ui_build+update+world_render+gui_render+capture+validation+present+actions+sleep+other\n"
+                <<"rendered_0=minimized_loop_no_swap_or_simulation\n"
+                <<"input_ms=SDL_event_poll_and_gui_event_dispatch\n"
+                <<"ui_build_ms=UI_widgets_and_game_input_collection\n"
+                <<"world_render_ms=CPU_submission_in_update_not_GPU_execution\n"
+                <<"capture_ms=synchronous_test_capture_excluded_from_runtime_comparisons\n"
+                <<"capture_performed=explicit_capture_marker_not_a_duration_threshold\n"
+                <<"validation_ms=per_frame_glGetError_not_full_snapshot_validation\n"
+                <<"full_snapshot_validation=after_loop_not_in_frame_timings_csv\n"
+                <<"presentation_snapshot=after_event_poll_before_UI_actions\n"
+                <<"frame_limit_snapshot=before_UI_actions_may_change_limiter_for_same_iteration\n"
+                <<"mission_tick=last_submitted_tick_not_GPU_completion\n"
+                <<"mission_pending_seconds=clock_accumulator_including_fractional_tick\n"
+                <<"timer_mode="<<gpu::timer_mode_name(gpu::effective_timer_mode(gpu_profiling_))
+                <<"\ngpu_timers_enabled="<<gpu_profiling_.gpu_timers
+                <<"\nphase_gating="<<execution_.phase_gating
+                <<"\nphase_gating_effective="<<(execution_.phase_gating&&execution_.neighbors!=gpu::NeighborMode::linked)
+                <<"\nneighbor_reads_requested="<<gpu::neighbor_reads_name(execution_.neighbor_reads)<<"\nneighbor_reads_effective="<<gpu::neighbor_reads_name(gpu::effective_neighbor_reads(execution_.neighbor_reads,execution_.neighbors))<<"\nstorage_requested="<<gpu::device_storage_name(execution_.storage)<<"\nreadback_period="<<gpu_profiling_.readback_period<<"\nskip_zero_projection="<<execution_.skip_zero_projection<<'\n';
+            if(!timing_out||!info_out)return std::unexpected{"Niepełny zapis profilu klatek."};
+        }
+        if(gl_debug_)gl_debug_->set_phase(platform::DebugPhase::validation);
         if(lab_worker_) {
             lab_worker_->stop();
             if(!lab_worker_->snapshot()->error.empty()) return std::unexpected{lab_worker_->snapshot()->error};
@@ -208,14 +339,23 @@ public:
             // Final validation is outside the measured window, including readback-off ablations.
             const auto final_mission=mission_smoke?measured.read_mission():gpu::MissionSnapshot{};
             if(gpu_profiling_.collect){measured.poll();gpu::write_profile_samples(measured,store_.path().parent_path());}
-            if(mission_smoke){std::ofstream frames_out{store_.path().parent_path()/"mission-frames.csv"};frames_out<<"frame,frame_ms,gpu_physics_ms,cpu_submit_ms,dropped_seconds,ui_poll_ms,ui_timer_poll_ms,ui_fence_poll_ms,ui_read_ms,frame_step_submit_ms\n";
+            if(mission_smoke){std::ofstream frames_out{store_.path().parent_path()/"mission-frames.csv"};frames_out<<"frame,frame_ms,gpu_physics_ms,cpu_submit_ms,dropped_seconds,ui_poll_ms,ui_timer_poll_ms,ui_fence_poll_ms,ui_read_ms,frame_step_submit_ms,gpu_timing_available,gpu_timing_samples\n";
                 for(const auto& row:mission_frames){for(std::size_t i=0;i<row.size();++i){if(i)frames_out<<',';frames_out<<row[i];}frames_out<<'\n';}}
             report<<"scene="<<(mission_smoke?"mission":"sand_water")<<"\nframes="<<frames<<"\nmedian_ms="<<percentile(.5)<<"\np95_ms="<<percentile(.95)<<"\np99_ms="<<percentile(.99)
                 <<"\nmax_ms="<<ui_frame_times.back()<<"\nsteps="<<measured.metrics().steps<<"\ngpu_step_ms="<<measured.metrics().gpu_ms<<"\ngpu_render_ms="<<measured.metrics().render_ms<<"\ncpu_submit_ms="<<measured.metrics().cpu_submit_ms
                 <<"\npaused_ok="<<gpu_pause_ok<<"\ndropped_seconds="<<(mission_smoke?mission_clock_.dropped_seconds():gpu_controls_.lost_seconds)<<"\nrenderer="<<renderer_<<'\n';
-            if(mission_smoke)report<<"hud_epoch="<<async_mission.status[1]<<"\nhud_tick="<<async_mission.status[2]<<"\nvalidation_tick="<<final_mission.status[2]
+            report<<"phase_gating="<<execution_.phase_gating
+                <<"\nphase_gating_effective="<<(execution_.phase_gating&&execution_.neighbors!=gpu::NeighborMode::linked)
+                <<"\nneighbor_reads_requested="<<gpu::neighbor_reads_name(execution_.neighbor_reads)<<"\nneighbor_reads_effective="<<gpu::neighbor_reads_name(gpu::effective_neighbor_reads(execution_.neighbor_reads,execution_.neighbors))<<"\nstorage_requested="<<gpu::device_storage_name(execution_.storage)<<"\nreadback_period="<<gpu_profiling_.readback_period<<"\nskip_zero_projection="<<execution_.skip_zero_projection<<'\n';
+            report<<"storage_effective="<<gpu::device_storage_name(measured.upload_stats().mode)<<'\n';
+            report<<"gpu_timer_mode="<<gpu::timer_mode_name(gpu::effective_timer_mode(gpu_profiling_))
+                <<"\ngpu_timing_available="<<(gpu::effective_timer_mode(gpu_profiling_)!=gpu::TimerMode::off&&measured.metrics().timing_samples>0)
+                <<"\ngpu_timing_samples="<<measured.metrics().timing_samples<<'\n';
+            if(mission_smoke)report<<"mission_min_frames="<<mission_smoke_min_frames<<"\nmission_min_ticks="<<mission_smoke_min_ticks
+                <<"\nhud_epoch="<<async_mission.status[1]<<"\nhud_tick="<<async_mission.status[2]<<"\nvalidation_tick="<<final_mission.status[2]
                 <<"\nshots="<<final_mission.inventory[3]<<"\nexplosions="<<final_mission.counts[0]<<"\nmission_complete="<<final_mission.status[3]<<"\nscore="<<final_mission.inventory[2]<<'\n';
-            if(mission_smoke&&(mission_clock_.dropped_seconds()!=0||(gpu_profiling_.body_coupling&&(final_mission.status[3]!=1||final_mission.inventory[2]!=3))))
+            if(mission_smoke&&(frames<mission_smoke_min_frames||measured.metrics().steps<mission_smoke_min_ticks||
+                mission_clock_.dropped_seconds()!=0||(gpu_profiling_.body_coupling&&(final_mission.status[3]!=1||final_mission.inventory[2]!=3))))
                 return std::unexpected{"Misja GPU: niepełny przebieg lub pominięte kroki czasu."};
             if(!gpu_pause_ok||measured.metrics().steps<100||percentile(.95)>100)return std::unexpected{"Nieudany test okna GPU."};
         }
@@ -252,7 +392,10 @@ private:
             const unsigned buttons=(c.jump?gpu::jump:0U)|(c.jet?gpu::jet:0U)|(c.fire?gpu::fire:0U)|(c.reload?gpu::reload:0U)|(c.grenade?gpu::grenade:0U);
             mission_world_->step(scripted?gpu::scripted_mission_input(static_cast<unsigned>(mission_world_->metrics().steps)):gpu::MissionInput{c.move,c.aim.x,c.aim.y,buttons});
             mission_step_submit_ms_+=mission_world_->metrics().cpu_submit_ms;}
+        mission_ticks_this_frame_=static_cast<unsigned>(steps);
+        const auto render_started=gpu_profiling_.collect?SDL_GetTicksNS():std::uint64_t{0};
         mission_world_->render(static_cast<float>(mission_clock_.fraction()));
+        if(gpu_profiling_.collect)world_render_submit_ms_+=static_cast<double>(SDL_GetTicksNS()-render_started)/1e6;
     }
     void update_gpu(const ui::GpuInput& input,double elapsed,bool focused){
         if(input.reset){gpu_world_->reset(static_cast<gpu::Scene>(gpu_controls_.scene));gpu_clock_.reset();gpu_controls_.lost_seconds=0;}
@@ -260,7 +403,10 @@ private:
         const int steps=gpu_clock_.advance(elapsed,gpu_controls_.paused||!focused,1,input.step&&gpu_controls_.paused);
         for(int i=0;i<steps;++i)gpu_world_->step();
         gpu_controls_.lost_seconds=gpu_clock_.dropped_seconds();
+        gpu_ticks_this_frame_=static_cast<unsigned>(steps);
+        const auto render_started=gpu_profiling_.collect?SDL_GetTicksNS():std::uint64_t{0};
         gpu_world_->render(gpu_controls_.paused||!focused?1.F:static_cast<float>(gpu_clock_.fraction()));
+        if(gpu_profiling_.collect)world_render_submit_ms_+=static_cast<double>(SDL_GetTicksNS()-render_started)/1e6;
     }
     std::expected<void, std::string> upload_world(const sim::World& world, bool transparent = false) {
         last_lab_pixels_.reset();
@@ -339,7 +485,7 @@ private:
             case ui::Action::none: break;
             case ui::Action::open_mission:
                 if(!mission_world_){
-                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders",execution_);
+                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders",execution_,gpu_profiling_);
                     if(!created){message_=created.error();return false;}mission_world_=std::move(*created);
                     mission_world_->set_profile_options(gpu_profiling_);
                     mission_world_->set_actor_textures(static_cast<unsigned>(parts_.handle),static_cast<unsigned>(weapons_.handle),weapons_.width,weapons_.height);mission_world_->reset_mission();
@@ -347,7 +493,7 @@ private:
                 state_.screen=ui::Screen::gpu_mission;mission_clock_.reset();mission_input_.clear();message_.clear();break;
             case ui::Action::open_gpu:
                 if(!gpu_world_){
-                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders",execution_);
+                    auto created=gpu::ParticleWorld::create(utf8_path(SDL_GetBasePath())/"assets"/"shaders",execution_,gpu_profiling_);
                     if(!created){message_=created.error();return false;}
                     // Move the successfully initialized owner only after capability/shader checks.
                     gpu_world_=std::move(*created);
@@ -447,7 +593,9 @@ private:
     std::unique_ptr<gpu::ParticleWorld> gpu_world_,mission_world_;
     gpu::ProfileOptions gpu_profiling_;
     gpu::ExecutionOptions execution_;
-    double mission_step_submit_ms_{};
+    platform::GlDebugLog* gl_debug_{};
+    double mission_step_submit_ms_{},world_render_submit_ms_{};
+    unsigned mission_ticks_this_frame_{},gpu_ticks_this_frame_{};
     sim::FixedStepClock<120,4,24> mission_clock_;game::InputBuffer mission_input_;
     ui::GpuControls gpu_controls_;
     sim::FixedStepClock<120,4> gpu_clock_;
@@ -472,7 +620,41 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
         else if(argument=="--gpu-flow-test")result.gpu_flow_test=true;
         else if(argument=="--gpu-smoke-test")result.gpu_smoke_test=true;
         else if(argument=="--opengl33")result.legacy_graphics=true;
+        else if(argument=="--gpu-work-check")result.work_test=true;
+        else if(argument=="--gpu-transport-check")result.transport_test=true;
+        else if(argument=="--gpu-hot-check")result.hot_test=true;
+        else if(argument=="--gpu-cost-profile")result.cost_profile=true;
+        else if(argument=="--gpu-cost-check")result.cost_check=true;
+        else if(argument=="--gpu-cost-mode"&&i+1<argc){
+            const std::string_view value{argv[++i]};bool found=false;
+            for(const auto mode:{gpu::CostMode::off,gpu::CostMode::passes,gpu::CostMode::bounds,gpu::CostMode::snapshots})
+                if(value==gpu::cost_mode_name(mode)){result.cost_mode=mode;found=true;}
+            if(!found)return std::unexpected{"Diagnostyka kosztu GPU: off, passes, bounds lub snapshots."};
+        }
+        else if(argument=="--gpu-neighbor-reads"&&i+1<argc){
+            const std::string_view value{argv[++i]};
+            if(value=="full")result.gpu_execution.neighbor_reads=gpu::NeighborReads::full;
+            else if(value=="narrow")result.gpu_execution.neighbor_reads=gpu::NeighborReads::narrow;
+            else if(value=="sorted")result.gpu_execution.neighbor_reads=gpu::NeighborReads::sorted;
+            else return std::unexpected{"Odczyty sąsiadów: full, narrow lub sorted."};
+        }
+        else if(argument=="--gpu-storage"&&i+1<argc){
+            const std::string_view value{argv[++i]};
+            if(value=="direct")result.gpu_execution.storage=gpu::DeviceStorageMode::direct;
+            else if(value=="staged")result.gpu_execution.storage=gpu::DeviceStorageMode::staged;
+            else if(value=="immutable")result.gpu_execution.storage=gpu::DeviceStorageMode::immutable;
+            else if(value=="auto")result.gpu_execution.storage=gpu::DeviceStorageMode::automatic;
+            else return std::unexpected{"Pamięć GPU: direct, staged, immutable lub auto."};
+        }
+        else if((argument=="--gpu-phase-gating"||argument=="--gpu-zero-projection")&&i+1<argc){
+            const std::string_view value{argv[++i]};
+            if(value!="on"&&value!="off")return std::unexpected{"Optymalizacja pracy GPU: on lub off."};
+            if(argument=="--gpu-phase-gating")result.gpu_execution.phase_gating=value=="on";
+            else result.gpu_execution.skip_zero_projection=value=="on";
+        }
         else if(argument=="--gpu-coupling-check")result.coupling_test=true;
+        else if(argument=="--gpu-coupling-control"){result.coupling_test=true;result.coupling_reference_control=true;}
+        else if(argument=="--gpu-coupling-legacy-check"){result.coupling_test=true;result.coupling_legacy_check=true;}
         else if(argument=="--gpu-coupling-profile")result.coupling_profile=true;
         else if(argument=="--gpu-coupling"&&i+1<argc){
             const std::string_view value{argv[++i]};
@@ -518,11 +700,33 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
             if(!found)return std::unexpected{"Tryb odczytu GPU: auto, legacy, stream, staging lub persistent."};
         }
         else if(argument=="--gpu-profile")result.gpu_profile=true;
+        else if(argument=="--gpu-stabilization-profile")result.stabilization_profile=true;
         else if(argument=="--gpu-profile-check")result.gpu_profile_check=true;
         else if(argument=="--gl-debug")result.gl_debug=true;
         else if(argument=="--show-test-window")result.show_test_window=true;
         else if(argument=="--gpu-counters")result.gpu_profiling.collect=true;
+        else if(argument=="--gpu-timer-mode"&&i+1<argc){
+            const std::string_view value{argv[++i]};
+            if(value=="elapsed")result.gpu_profiling.timer_mode=gpu::TimerMode::elapsed;
+            else if(value=="timestamp")result.gpu_profiling.timer_mode=gpu::TimerMode::timestamp;
+            else if(value=="off")result.gpu_profiling.timer_mode=gpu::TimerMode::off;
+            else return std::unexpected{"Tryb timerów GPU: elapsed, timestamp lub off."};
+            result.gpu_profiling.gpu_timers=value!="off";
+        }
+        else if(argument=="--test-vsync"&&i+1<argc){
+            const std::string_view value{argv[++i]};
+            if(value!="on"&&value!="off")return std::unexpected{"Test VSync: on lub off."};
+            result.test_vsync=value=="on";
+        }
+        else if(argument=="--test-frame-limit"&&i+1<argc){
+            const std::string_view value{argv[++i]};unsigned limit{};
+            const auto parsed=std::from_chars(value.data(),value.data()+value.size(),limit);
+            if(parsed.ec!=std::errc{}||parsed.ptr!=value.data()+value.size()||limit<30||limit>240)
+                return std::unexpected{"Testowy limit FPS musi wynosić 30–240."};
+            result.test_frame_limit=limit;
+        }
         else if(argument=="--gpu-group-timers"){result.gpu_profiling.collect=true;result.gpu_profiling.group_timers=true;}
+        else if(argument=="--gpu-no-timers"){result.gpu_profiling.gpu_timers=false;result.gpu_profiling.timer_mode=gpu::TimerMode::off;}
         else if(argument=="--gpu-no-coupling")result.gpu_profiling.body_coupling=false;
         else if(argument=="--gpu-no-diagnostics"){result.gpu_profiling.gpu_timers=false;result.gpu_profiling.periodic_diagnostics=false;}
         else if(argument=="--gpu-readback-period"&&i+1<argc){
@@ -539,11 +743,18 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
         else if (argument == "--profile" && i + 1 < argc) result.profile = utf8_path(argv[++i]);
         else return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
     }
-    if ((result.smoke_test||result.laboratory_smoke_test||result.gpu_test||result.gpu_liquid_test||result.gpu_flow_test||result.gpu_smoke_test||result.mission_test||result.mission_smoke||result.gpu_profile||result.gpu_profile_check||result.readback_test||result.readback_profile||result.execution_test||result.execution_profile||result.neighbor_test||result.neighbor_profile||result.coupling_test||result.coupling_profile) && result.profile.empty())
+    if ((result.smoke_test||result.laboratory_smoke_test||result.gpu_test||result.gpu_liquid_test||result.gpu_flow_test||result.gpu_smoke_test||result.mission_test||result.mission_smoke||result.gpu_profile||result.stabilization_profile||result.gpu_profile_check||result.readback_test||result.readback_profile||result.execution_test||result.execution_profile||result.neighbor_test||result.neighbor_profile||result.coupling_test||result.coupling_profile||result.work_test||result.transport_test||result.hot_test||result.cost_profile||result.cost_check) && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
     if (static_cast<int>(result.start_in_arena)+result.start_in_laboratory+result.start_in_gpu+result.start_in_mission>1)
         return std::unexpected{"Wybierz jeden tryb startowy."};
-    if(static_cast<int>(result.smoke_test)+result.laboratory_smoke_test+result.gpu_test+result.gpu_liquid_test+result.gpu_flow_test+result.gpu_smoke_test+result.mission_test+result.mission_smoke+result.gpu_profile+result.gpu_profile_check+result.readback_test+result.readback_profile+result.execution_test+result.execution_profile+result.neighbor_test+result.neighbor_profile+result.coupling_test+result.coupling_profile>1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if(result.coupling_reference_control&&result.coupling_legacy_check)return std::unexpected{"Wybierz jedną kontrolę sprzężenia: reference control albo legacy."};
+    if(result.cost_profile&&(!result.gpu_profiling.gpu_timers||result.gpu_profiling.timer_mode!=gpu::TimerMode::elapsed||result.gpu_profiling.group_timers
+        ||!result.gpu_profiling.periodic_diagnostics||!result.gpu_profiling.body_coupling||result.gpu_profiling.readback_period!=2||result.gpu_profiling.readback_mode!=gpu::ReadbackMode::automatic))
+        return std::unexpected{"Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
+    if(static_cast<int>(result.smoke_test)+result.laboratory_smoke_test+result.gpu_test+result.gpu_liquid_test+result.gpu_flow_test+result.gpu_smoke_test+result.mission_test+result.mission_smoke+result.gpu_profile+result.stabilization_profile+result.gpu_profile_check+result.readback_test+result.readback_profile+result.execution_test+result.execution_profile+result.neighbor_test+result.neighbor_profile+result.coupling_test+result.coupling_profile+result.work_test+result.transport_test+result.hot_test+result.cost_profile+result.cost_check>1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if((result.test_vsync.has_value()||result.test_frame_limit.has_value())&&
+        !(result.smoke_test||result.laboratory_smoke_test||result.gpu_smoke_test||result.mission_smoke))
+        return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;
 }
 
@@ -559,13 +770,15 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
         profile = utf8_path(path.get());
     }
     platform::SettingsStore store{profile / "settings.ini"};
-    const bool testing=options.smoke_test||options.laboratory_smoke_test||options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile;
+    const bool testing=options.smoke_test||options.laboratory_smoke_test||options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.stabilization_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile||options.work_test||options.transport_test||options.hot_test||options.cost_profile||options.cost_check;
     if(testing) std::filesystem::create_directories(profile);
     auto loaded = store.load();
     std::string message = loaded ? std::string{} : loaded.error() + " Użyto ustawień domyślnych.";
     // A smoke run starts from known defaults and only writes its dedicated profile.
     auto settings = testing ? core::Settings{} : loaded.value_or(core::Settings{});
-    if(options.laboratory_smoke_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile) {settings.vsync=false;settings.frame_limit=60;}
+    if(options.laboratory_smoke_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.stabilization_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile||options.work_test||options.transport_test||options.hot_test||options.cost_profile||options.cost_check) {settings.vsync=false;settings.frame_limit=60;}
+    if(options.test_vsync.has_value())settings.vsync=*options.test_vsync;
+    if(options.test_frame_limit.has_value())settings.frame_limit=static_cast<int>(*options.test_frame_limit);
     auto window = platform::Window::create(settings,!options.legacy_graphics,options.gl_debug);
     if (!window) return std::unexpected{window.error()};
     if(testing&&options.show_test_window)window->show();
@@ -579,12 +792,30 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     const char* base = SDL_GetBasePath();
     if (!base) return std::unexpected{"Nie można ustalić katalogu aplikacji."};
     const auto assets = utf8_path(base) / "assets";
-    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile){
+    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.gpu_smoke_test||options.mission_test||options.mission_smoke||options.gpu_profile||options.stabilization_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile||options.work_test||options.transport_test||options.hot_test||options.cost_profile||options.cost_check){
         GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
         if(major<4||(major==4&&minor<3)){std::ofstream{profile/"gpu-skipped.txt"}<<"OpenGL 4.3 unavailable; GPU tests skipped, CPU mode remains supported.\n";return 77;}
     }
+    if(testing&&!(options.smoke_test||options.laboratory_smoke_test||options.gpu_smoke_test||options.mission_smoke)&&gl_debug)
+        gl_debug->set_phase(platform::DebugPhase::validation);
+    if(options.work_test){
+        const auto result=gpu::validate_work(profile,options.gpu_execution);
+        if(!result)return std::unexpected{result.error()};return 0;
+    }
+    if(options.transport_test){
+        const auto result=gpu::validate_transport(profile);
+        if(!result)return std::unexpected{result.error()};return 0;
+    }
+    if(options.cost_profile||options.cost_check){
+        const auto result=gpu::profile_cost(profile,options.gpu_execution,options.cost_mode,options.cost_check);
+        if(!result)return std::unexpected{result.error()};return 0;
+    }
+    if(options.hot_test){
+        const auto result=gpu::validate_hot_reads(profile,options.gpu_execution);
+        if(!result)return std::unexpected{result.error()};return 0;
+    }
     if(options.coupling_test||options.coupling_profile){
-        const auto result=gpu::validate_coupling(profile,options.coupling_profile);
+        const auto result=gpu::validate_coupling(profile,options.coupling_profile,options.coupling_reference_control,options.coupling_legacy_check);
         if(!result)return std::unexpected{result.error()};return 0;
     }
     if(options.neighbor_test||options.neighbor_profile){
@@ -599,8 +830,9 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
         const auto result=options.readback_test?gpu::validate_readback(profile):gpu::profile_readback(profile);
         if(!result)return std::unexpected{result.error()};return 0;
     }
-    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.mission_test||options.gpu_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile){
-        auto world=gpu::ParticleWorld::create(assets/"shaders",options.gpu_execution);if(!world)return std::unexpected{world.error()};
+    if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.mission_test||options.gpu_profile||options.stabilization_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile||options.work_test||options.transport_test||options.hot_test||options.cost_profile||options.cost_check){
+        auto world=gpu::ParticleWorld::create(assets/"shaders",options.gpu_execution,options.gpu_profiling);if(!world)return std::unexpected{world.error()};
+        if(options.stabilization_profile){const auto result=gpu::profile_stabilization(**world,profile,options.gpu_profiling);if(!result)return std::unexpected{result.error()};return 0;}
         if(options.gpu_profile||options.gpu_profile_check){const auto result=gpu::profile_gpu(**world,profile,options.gpu_profile_check);if(!result)return std::unexpected{result.error()};return 0;}
         const auto validated=options.mission_test?gpu::validate_mission(**world,profile):options.gpu_flow_test?gpu::validate_flow(**world,profile):options.gpu_liquid_test?gpu::validate_liquids(**world,profile):gpu::validate_granular(**world,profile);if(!validated)return std::unexpected{validated.error()};return 0;
     }
@@ -631,8 +863,10 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     sim::PhysicsConfig physics;physics.worker_threads=options.physics_threads;
     Application application{*window, *gui, store, settings, images, *canvas,
         {soldier->id(), soldier->width(), soldier->height()}, {parts->id(),parts->width(),parts->height()},
-        {weapons->id(),weapons->width(),weapons->height()}, std::move(message),physics,options.gpu_profiling,options.gpu_execution};
-    return application.run(options.smoke_test, options.start_in_laboratory, options.start_in_arena,options.laboratory_smoke_test,options.start_in_gpu,options.gpu_smoke_test,options.start_in_mission,options.mission_smoke);
+        {weapons->id(),weapons->width(),weapons->height()}, std::move(message),physics,options.gpu_profiling,options.gpu_execution,gl_debug.get()};
+    auto result=application.run(options.smoke_test, options.start_in_laboratory, options.start_in_arena,options.laboratory_smoke_test,options.start_in_gpu,options.gpu_smoke_test,options.start_in_mission,options.mission_smoke);
+    if(gl_debug)gl_debug->set_phase(platform::DebugPhase::shutdown);
+    return result;
 }
 
 } // namespace strefa::app

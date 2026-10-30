@@ -9,12 +9,14 @@ int main(){
         auto check=[](bool ok){if(!ok)throw std::runtime_error{"Fixed clock/input contract failed"};};
         strefa::sim::FixedStepClock<120,4,24> clock;
         int count=clock.advance(.1,false,1);check(count==4&&clock.dropped_seconds()==0);
+        check(std::abs(clock.pending_seconds()-8.0/120)<1e-9);
         count+=clock.advance(0,false,1);count+=clock.advance(0,false,1);
         check(count==12&&clock.dropped_seconds()==0&&clock.fraction()<1);
-        clock.reset();check(clock.advance(1,false,1)==4);
+        clock.reset();check(clock.pending_seconds()==0);check(clock.advance(1,false,1)==4);
+        check(std::abs(clock.pending_seconds()-24.0/120)<1e-9);
         check(std::abs(clock.dropped_seconds()-92.0/120)<1e-9);
         for(int i=0;i<6;++i)check(clock.advance(0,false,1)==4);
-        check(clock.advance(0,false,1)==0);
+        check(clock.advance(0,false,1)==0&&clock.pending_seconds()<1e-9);
         clock.reset();clock.advance(.1,false,1);check(clock.advance(0,true,1)==0&&clock.advance(0,false,1)==0);
         for(int fps:{30,60,144}){
             clock.reset();int ticks=0;for(int i=0;i<fps*10;++i)ticks+=clock.advance(1.0/fps,false,1);

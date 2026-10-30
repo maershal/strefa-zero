@@ -1,0 +1,9 @@
+renderer=NVIDIA GeForce GTX 1650/PCIe/SSE2
+version=4.3.0 NVIDIA 610.47
+repeats=3
+warmup=120
+measured=240
+fresh_world_per_variant=1
+readback=auto,period=2
+group_timers=1
+mode=unpaced; glFinish and HUD poll every 16 ticks outside CPU step timer

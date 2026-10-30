@@ -1,0 +1,28 @@
+--- a/src/gpu/world.cpp
++++ b/src/gpu/world.cpp
+@@ -314,7 +314,14 @@
+         s.alpha=s.gl.GetUniformLocation(s.draw,"alpha");s.terrain_pass=s.gl.GetUniformLocation(s.draw,"terrainPass");
+         s.gl.GenBuffers(static_cast<GLsizei>(s.buffers.size()),s.buffers.data());
+         const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480+(s.execution.phase_gating?240:0))*4),s.index_buffer_size(),width*height*16,capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
+-        for(unsigned i=0;i<s.buffers.size();++i){s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[i]);s.gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(sizes[i]),nullptr,GL_DYNAMIC_COPY);}
++        const auto* storage_probe=SDL_getenv("STREFA_GPU_STORAGE_PROBE");
++        const bool immutable_probe=storage_probe&&std::string_view{storage_probe}=="immutable";
++        if(immutable_probe&&!s.gl.persistent_storage)throw std::runtime_error{"Immutable storage probe requires ARB_buffer_storage"};
++        for(unsigned i=0;i<s.buffers.size();++i){
++            s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[i]);
++            if(immutable_probe)s.gl.BufferStorage(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(sizes[i]),nullptr,GL_DYNAMIC_STORAGE_BIT);
++            else s.gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(sizes[i]),nullptr,GL_DYNAMIC_COPY);
++        }
+         if(s.debug_groups){
+             constexpr std::array names{"particles A","particles B","cell counts and prefixes","sorted IDs, reverse mapping and anchors","terrain","active/free IDs","mission state","fluid terms"};
+             for(std::size_t i=0;i<names.size();++i)s.gl.ObjectLabel(GL_BUFFER,s.buffers[i],-1,names[i]);
+--- a/src/gpu/stabilization_profile.cpp
++++ b/src/gpu/stabilization_profile.cpp
+@@ -72,6 +72,7 @@
+ #endif
+         metadata<<"phase_note=timer_begin/end_ms are disjoint CPU query submission phases; staging_ms starts after timer_end_ms\n";
+         metadata<<"timeline_note=phase boundaries sampled outside measured batches; UTC bracketed by SDL timestamps, driver callbacks may arrive asynchronously\n";
++        metadata<<"device_storage_probe="<<(SDL_getenv("STREFA_GPU_STORAGE_PROBE")?SDL_getenv("STREFA_GPU_STORAGE_PROBE"):"mutable")<<'\n';
+         metadata.flush();
+         summary<<"scene,variant,repeat,metric,samples,available,median,p95,p99,max\n"<<std::setprecision(10);
+         validation<<"scene,expected_particles,actual_particles,finite,steps,timer_mode\n";

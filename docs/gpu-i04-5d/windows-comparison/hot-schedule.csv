@@ -1,0 +1,7 @@
+﻿"Order","Name","Phase","Variant","Repeat","PhaseGating","ZeroProjection"
+"1","window-full-1","window","full","1","off","off"
+"2","window-narrow-1","window","narrow","1","off","off"
+"3","window-narrow-2","window","narrow","2","off","off"
+"4","window-full-2","window","full","2","off","off"
+"5","window-full-3","window","full","3","off","off"
+"6","window-narrow-3","window","narrow","3","off","off"

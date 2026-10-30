@@ -1,10 +1,12 @@
 #pragma once
 #include "gpu/mission.hpp"
 #include "gpu/profiling.hpp"
+#include "gpu/diagnostics.hpp"
 #include <array>
 #include <cstdint>
 #include <expected>
 #include <filesystem>
+#include <iosfwd>
 #include <memory>
 #include <span>
 #include <string>
@@ -36,12 +38,13 @@ struct BodySnapshot {
     std::array<float,4> last_sum{},total_sum{};
     std::array<std::uint32_t,6> commands{};
 };
+struct HotAudit {bool indexed{};unsigned active{},mismatches{};};
 static_assert(offsetof(BodySnapshot,commands)==64&&sizeof(BodySnapshot)==88);
 // Owns GL resources; all methods (including destruction) require the owning
 // context on its thread. No GL dependency leaks into the CPU reference model.
 class ParticleWorld {
 public:
-    static std::expected<std::unique_ptr<ParticleWorld>,std::string> create(const std::filesystem::path& shaders,const ExecutionOptions& execution={});
+    static std::expected<std::unique_ptr<ParticleWorld>,std::string> create(const std::filesystem::path& shaders,const ExecutionOptions& execution={},const ProfileOptions& profiling={});
     ~ParticleWorld();
     ParticleWorld(const ParticleWorld&)=delete;
     ParticleWorld& operator=(const ParticleWorld&)=delete;
@@ -52,6 +55,7 @@ public:
     void reset_mission();
     void queue_explosion(const Explosion& event); // monotonically increasing nonzero ID per world generation
     void configure_mission(const MissionConfig& config); // attach to a loaded validation scene
+    void restore_coupling_checkpoint(const MissionSnapshot&,std::uint64_t engine_tick); // validation only, after load(), no projectiles/events
     const MissionSnapshot& mission() const noexcept;
     MissionSnapshot read_mission() const; // synchronous validation only
     std::vector<std::uint32_t> read_terrain() const; // validation only
@@ -64,6 +68,11 @@ public:
     void load(std::span<const Grain> grains,std::span<const std::uint32_t> walls);
     std::vector<Grain> readback() const;
     NeighborSnapshot read_neighbors(); // synchronous validation only
+    std::array<std::uint32_t,240> read_phase_mask(); // same anchor generation, validation only
+    HotAudit audit_hot_view(); // no rebuild: compare current cache bank against authoritative ID state
+    void start_diagnostic_trace(const TraceConfig& config); // CLI only, off by default
+    TraceReport read_diagnostic_trace(); // explicit GPU drain required; no index rebuild
+    void capture_diagnostic_snapshot(std::string label); // current generation only, no rebuild
     std::vector<std::array<float,4>> audit_neighbors(bool pairs=true); // <=256 stable IDs for pair audit
     void displace_for_test(std::span<const std::array<float,4>> deltas);
     BodySnapshot read_body(); // synchronous validation only
@@ -73,10 +82,12 @@ public:
     std::vector<double> take_render_timings();
     std::vector<double> take_cpu_timings();
     void set_profile_options(const ProfileOptions& options);
+    ProfileOptions profile_options() const noexcept;
     const StepProfile& step_profile() const noexcept;
     PollTimings poll_timings() const noexcept;
     CallCounters counters() const noexcept;
     ReadbackStats readback_stats() const noexcept;
+    UploadStats upload_stats() const noexcept;
     ExecutionOptions execution_options() const noexcept;
     std::array<std::uint32_t,28> read_dispatch_commands() const; // validation only
     std::vector<StepProfile> take_step_profiles();
@@ -95,7 +106,13 @@ std::expected<void,std::string> validate_liquids(ParticleWorld&,const std::files
 std::expected<void,std::string> validate_flow(ParticleWorld&,const std::filesystem::path& output);
 std::expected<void,std::string> profile_gpu(ParticleWorld&,const std::filesystem::path& output,bool check_only=false);
 void write_profile_samples(ParticleWorld&,const std::filesystem::path& output);
-std::expected<void,std::string> validate_coupling(const std::filesystem::path& output,bool benchmark=false);
+std::expected<void,std::string> profile_stabilization(ParticleWorld&,const std::filesystem::path& output,const ProfileOptions&);
+std::expected<void,std::string> validate_transport(const std::filesystem::path& output);
+std::expected<void,std::string> validate_hot_reads(const std::filesystem::path& output,const ExecutionOptions& layout={});
+std::expected<void,std::string> profile_cost(const std::filesystem::path& output,const ExecutionOptions&,CostMode,bool check_only=false);
+std::expected<void,std::string> validate_work(const std::filesystem::path& output,const ExecutionOptions& layout={});
+std::expected<void,std::string> validate_coupling(const std::filesystem::path& output,bool benchmark=false,bool reference_control=false,bool legacy_check=false);
+void validate_coupling_replay(const std::filesystem::path& output,std::ostream& checks);
 std::expected<void,std::string> validate_neighbors(const std::filesystem::path& output,bool benchmark=false);
 std::expected<void,std::string> validate_execution(const std::filesystem::path& output,bool benchmark=false);
 std::expected<void,std::string> validate_readback(const std::filesystem::path& output);

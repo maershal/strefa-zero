@@ -16,7 +16,7 @@ void main(){
     }else{
         id=slots[32768u+id];Grain g=readParticle(id);if(g.motion.w<.5||g.motion.w>=5){gl_Position=vec4(2,2,0,1);return;}
         pos=mix(g.contact.zw,g.position.xy,alpha)+(corners[gl_VertexID]-.5)*.92;
-        color=(g.motion.w==1?vec3(.85,.70,.37):(g.motion.w==2?vec3(.56,.57,.55):vec3(.46,.63,.72)))*shade;
+        color=(g.motion.w==1?vec3(.85,.70,.37):(g.motion.w==2?vec3(.56,.57,.55):(g.motion.w==4?vec3(.65,.42,.22):vec3(.46,.63,.72))))*shade;
     }
     // FBO UV origin matches the UI texture orientation (top is v=0).
     gl_Position=vec4(pos/vec2(320,192)*2-1,0,1);

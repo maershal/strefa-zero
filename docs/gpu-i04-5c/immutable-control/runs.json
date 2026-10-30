@@ -1,0 +1,42 @@
+[
+  {
+    "order": 1,
+    "variant": "A",
+    "started_utc": "2026-10-29T20:08:07.213156+00:00",
+    "ended_utc": "2026-10-29T20:08:22.827208+00:00",
+    "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+    "pid": 15044,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "order": 2,
+    "variant": "C_reference",
+    "started_utc": "2026-10-29T20:08:27.490351+00:00",
+    "ended_utc": "2026-10-29T20:08:44.205349+00:00",
+    "exe_sha256": "b70b4dc146b6bfe223cf3ff17a144f67d6254e42bd0ef787e9c7306c735ed624",
+    "pid": 10348,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "order": 3,
+    "variant": "C_reference",
+    "started_utc": "2026-10-29T20:08:48.760209+00:00",
+    "ended_utc": "2026-10-29T20:09:05.066334+00:00",
+    "exe_sha256": "b70b4dc146b6bfe223cf3ff17a144f67d6254e42bd0ef787e9c7306c735ed624",
+    "pid": 15180,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "order": 4,
+    "variant": "A",
+    "started_utc": "2026-10-29T20:09:09.633709+00:00",
+    "ended_utc": "2026-10-29T20:09:24.916372+00:00",
+    "exe_sha256": "b3c2fd4910856a4dabb5c72dcac961b748086a29ba20c384c9152cc1662c5e1d",
+    "pid": 3208,
+    "exit_code": 0,
+    "timed_out": false
+  }
+]

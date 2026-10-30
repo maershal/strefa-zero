@@ -78,6 +78,26 @@ float Window::display_scale() const noexcept {
 bool Window::minimized() const noexcept {
     return (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_MINIMIZED) != 0;
 }
+PresentationInfo Window::presentation_info() const noexcept {
+    PresentationInfo result;
+    result.window_flags=SDL_GetWindowFlags(window_.get());
+    result.focused=(result.window_flags&SDL_WINDOW_INPUT_FOCUS)!=0;
+    result.minimized=(result.window_flags&SDL_WINDOW_MINIMIZED)!=0;
+    result.display_id=SDL_GetDisplayForWindow(window_.get());
+    SDL_GetWindowSizeInPixels(window_.get(),&result.pixel_width,&result.pixel_height);
+    if(result.display_id!=0){
+        if(const auto* mode=SDL_GetCurrentDisplayMode(result.display_id)){
+            result.mode_available=true;
+            result.mode_width=mode->w;result.mode_height=mode->h;
+            result.refresh_hz=mode->refresh_rate;
+            result.refresh_numerator=mode->refresh_rate_numerator;
+            result.refresh_denominator=mode->refresh_rate_denominator;
+        }
+    }
+    result.vsync_enabled=vsync_;
+    result.swap_interval_available=SDL_GL_GetSwapInterval(&result.swap_interval);
+    return result;
+}
 std::expected<void, std::string> Window::apply_video(
     const core::Settings& next, const core::Settings& previous) {
     if (!SDL_GL_SetSwapInterval(next.vsync ? 1 : 0))

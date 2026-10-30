@@ -1,11 +1,17 @@
 # Plan rozwoju: wspólny świat GPU, wydajność i efekty
 
-Data: 2026-10-28. Punkt wyjścia: źródła Strefa Zero 0.7.0 w `outputs/strefa-zero`.
-Status: **I04 wdrożone: 21/21 regresji, okna combined 3/3. P95 CPU submit <0,1 ms w benchmarku; cel 1,5 ms GPU pozostaje otwarty. Kolejny zakres: I05. Nie uznajemy historycznej niestabilności GPU za naprawioną**.
+Data utworzenia: 2026-10-28. Aktualizacja: **2026-10-30**, po review `v0.7.0-i04` (`6f318ea`). Punkt wyjścia: źródła Strefa Zero 0.7.0 w `outputs/strefa-zero`.
+Status: **A/F wdrożone; B/C/D zbadane; E0 zakończone jako diagnostyka; Q zakończone ze zmianą metody odbioru sprzężenia. 38/38 w protokole Q, 12/12 powtórek, 12/12 wykrytych wyłączeń sprzężenia. Stara reguła odrzuciła identyczne referencje 1/16 i pozostaje diagnostyką. Solver bez zmian; cel 1,5 ms otwarty. Domyślne full/direct, opcje C i sondy OFF. Następne PBF G; lokalny E odroczony, I05–I11 nadal zaplanowane**.
+
+Aktualne QA: **38/38 w zmienionym protokole Q**. Stałe najniższe progi stosuje się do wspólnych checkpointów i skumulowanego defektu. To nie zaliczenie dawnej reguły porównania niezależnych trajektorii: nadal jest raportowana i dostępna jawnie. Historyczne 37/38 E0 pozostaje w raporcie.
 
 To główny plan dalszych prac. Dokumenty `GPU_MIGRATION.md`, `GPU_LIQUIDS.md` i `GPU_MISSION_070.md` opisują etapy istniejącego wydania; ten dokument określa kierunek następnych zmian. Przy każdej iteracji aktualizujemy checklistę, tabelę wyników i dziennik decyzji poniżej. Nie zmieniamy historycznych raportów, żeby dopasować je do nowych założeń.
 
-## 1. Ocena review na podstawie kodu
+Uwagi z dostarczonego review zostały przypisane do etapów poniżej. [Rejestr rozstrzygnięć review](REVIEW_I04_ROZSTRZYGNIECIA.md) dokumentuje pokrycie, hipotezy i korekty propozycji; [oryginał review](reviews/review_strefa_zero_v0_7_0_i04_roadmap.md) pozostaje materiałem źródłowym. Polecenia zawarte w review są propozycjami do oceny, nie samodzielną zgodą na wykonanie zmian. Wyniki I00–I04 poniżej są historyczne. Wdrożenie A/F opisuje [raport I04.5-A/F](I04_5_GPU_STABILIZATION.md), warianty C opisuje [raport C](I04_5C_GPU_WORK.md), transport — [raport B](I04_5B_GPU_TRANSPORT.md), odczyty sąsiadów — [raport D](I04_5D_GPU_NEIGHBOR_READS.md), koszty przebiegów i Dmax — [raport E0](I04_5E0_GPU_COSTS.md), a zmianę metody odbioru sprzężenia i aktualne QA — [raport Q](I04_5Q_GPU_COUPLING_QA.md).
+
+## 1. Historyczna ocena review bazowej wersji 0.7.0
+
+Ta sekcja zachowuje audyt wykonany przed I00–I04. Tabela, liczby dispatchy, układ danych i numery linii opisują ówczesną wersję 0.7.0, nie bieżące I04. Wdrożone zmiany i aktualne ograniczenia są w raportach I00–I04 oraz rejestrze postępu; rozstrzygnięcia nowego review I04 są w osobnym rejestrze wskazanym na początku dokumentu.
 
 Kierunek review jest trafny: najpierw ograniczyć narzut przebiegów i komunikacji, następnie połączyć ścieżki aplikacji, dopiero potem wydawać odzyskany budżet na wodę, ogień i oświetlenie. Kilka diagnoz wymaga doprecyzowania przed wdrożeniem.
 
@@ -82,6 +88,23 @@ Cele po odchudzeniu rdzenia, dla tej samej misji i sprzętu referencyjnego GTX 1
 
 Protokół pomiaru: Release, zapis GPU/sterownika/rozdzielczości/ustawień, stałe sceny i seed, rozgrzewka, co najmniej 3 porównywalne przebiegi. Osobno test przepustowości bez ograniczenia i normalna pętla okna. Timery GPU nieblokujące; eksporty i synchroniczne walidacje poza pomiarem. Koszt liczników mierzymy również z diagnostyką wyłączoną. Nie dodajemy czasu CPU i GPU jako czasu klatki, bo ich praca może się nakładać.
 
+Po I04 punkt odniesienia stanowi [raport I04](I04_GPU_COUPLING.md): kontrolowana mediana `mission` około 2,97–3,09 ms/tick, CPU submit około 0,011 ms, 2 budowy indeksu/tick. Nie łączymy tych wyników z wolniejszymi seriami w jedną średnią. I04.5 musi odtworzyć bazę na bieżącym sprzęcie i skorelować czas z telemetrią tego samego przebiegu.
+
+Robocze budżety rozszerzeń z nowego review służą do planowania, nie są zmierzonym zyskiem ani zgodą na przekroczenie budżetu klatki:
+
+| Etap | Hipoteza budżetu na GTX 1650 | Sposób odbioru |
+| --- | --- | --- |
+| I04.5 | Mediana fizyki `mission` <1,50 ms/tick; p95 <2 ms | Pomiar przed/po oraz 6/6 prób okna bez utraty czasu; 60 FPS jako cel podstawowy, 120 FPS osobno jako cel rozszerzony |
+| I05 | Mniej duplikacji zasobów i kosztu startu | Osobno pierwsza kompilacja, trafienie cache binarnego i zmiana widoku istniejącego świata; bez obietnicy zimnego startu <40 ms |
+| I06 | Zaostrzony cel etapu: p95 CPU submit <0,10 ms/tick; logika CPU raportowana osobno | Koszt pełnego kontraktu komend/zdarzeń oraz kompletność wyników przy opóźnieniach |
+| I07 | Przyrost około +0,15–0,25 ms/tick | Pełny koszt nowych przebiegów i kontrola jakości względem odebranej bazy I04.5 |
+| I08 | Woda około 0,20–0,30 ms/klatkę przy 960 × 576 | Osobno całkowity koszt wody i zmiana kosztu renderu terenu |
+| I09 | VFX około 0,15–0,25 ms/klatkę | Aktualizacja + emisja + rysowanie, także przy pełnej puli |
+| I10 | Około +0,45–0,70 ms/tick z aktywnymi gazami/ciepłem; cel <0,05 ms/tick przy braku pracy | Osobno podetapy A–D, sceny zimne i gorące oraz poprawność wykrywania aktywności |
+| I11 | Światło + HDR + bloom około 0,25–0,35 ms/klatkę | Osobno przebudowa pola cieni po destrukcji; cała klatka p95 ≤16,67 ms, mediana <6,5 ms jako cel rozszerzony |
+
+Nie sumujemy bezpośrednio wartości „na tick” i „na klatkę”. Przy 60 FPS i fizyce 120 Hz zwykle przypadają dwa ticki na klatkę; rzeczywisty rozkład i narzut prezentacji mierzymy w oknie. Po I04.5, I07 i I10 aktualizujemy budżety na podstawie pomiarów.
+
 ## 4. Kolejne iteracje
 
 Każda iteracja kończy się działającą, porównywalną wersją, krótkim raportem i decyzją o następnej. Jeśli zakres jest za duży na jeden przegląd zmian, dzielimy go według poniższych podpunktów; nie łączymy optymalizacji modelu numerycznego z wymianą renderera w jednym pomiarze A/B.
@@ -93,7 +116,8 @@ Każda iteracja kończy się działającą, porównywalną wersją, krótkim rap
 | I02 | Wyspecjalizowane przebiegi i koszt GL | I00–I01 | [x] |
 | I03 | Dane cząstek i kompletne sąsiedztwo | I02 | [x]; wydajność okna otwarta |
 | I04 | Lokalne sprzężenie postaci | I03 | [x]; cele wydajności w raporcie |
-| I05 | Jeden silnik i odchudzenie Application | I01–I04 | [ ] |
+| I04.5 | Diagnoza okna/pamięci, ograniczenie pustej pracy, kolor gruzu | I00–I04 | A/F [x], B/C zbadane jako eksperymenty; direct domyślne, opcje C OFF. Cel i stabilność warunków otwarte; D/E warunkowe |
+| I05 | Jeden silnik i odchudzenie Application | I01–I04 oraz odbiór I04.5 | [ ] |
 | I06 | Jedna logika rozgrywki na CPU | I05 | [ ] |
 | I07 | Jakość fizyki cieczy | I03–I06 | [ ] |
 | I08 | Renderer i wygląd wody | I05–I06; profil I07 | [ ] |
@@ -171,6 +195,29 @@ Gotowe, gdy: koszt kapsuły skaluje się z otoczeniem, a testy nie wykazują utr
 
 Raport wdrożenia: [I04_GPU_COUPLING.md](I04_GPU_COUPLING.md). Domyślny `combined` stosuje jedną redukcję po PBF i kontakcie, z niezależnym kanałem PBF i hierarchią dla dużych partii. `local` zachowuje poprzednią kolejność do porównania. Wyniki benchmarku, pełne regresje i ograniczenia FPS zapisano w raporcie.
 
+### I04.5 — zamknięcie otwartych pomiarów i bezpieczne ograniczenie pracy
+
+Priorytet P0. Najpierw I04.5-A, potem niezależne porównania B/C. Zmiany układu danych z D/E są warunkowe: wdrażamy je dopiero, jeśli profil potwierdzi koszt i prostsze zmiany nie zamkną celu. Nie zmieniamy w tym etapie równań fizyki ani tolerancji odbioru, aby poprawić wynik benchmarku.
+
+- [x] **A — pomiar całej klatki:** dodać czas CPU `present()`, obsługi wejścia, ticków, renderu i pozostałej pracy. Zapisywać fokus/minimalizację, VSync, tryb/odświeżanie monitora, liczbę ticków/klatkę, zaległość zegara i utracony czas. Porównać `GL_TIME_ELAPSED` z parami `GL_TIMESTAMP` oraz wyłączonym profilowaniem; odczytywać wyniki dopiero po gotowości. Żadne wywołanie GL nie ma z góry gwarancji zerowego oczekiwania.
+- [x] **A — seria diagnostyczna:** przeplot ABBA dla dwóch wariantów / Latin dla trzech, co najmniej 3 powtórzenia na wariant; benchmark oraz widoczne okno, także kontrola fokusu/VSync. Zestawić czasy z zegarami, mocą, temperaturą i pamięcią GPU. Osobno logować zwykły runtime i odczyty walidacyjne. Ocenić hipotezy limitu prezentacji, presji kolejki i migracji VIDEO → HOST. Wynik 2026-10-29: dawnego reżimu 30 FPS nie odtworzono; przyczyna historyczna niepotwierdzona i pozostaje otwarta, szczegóły w raporcie.
+- [x] **B — badanie transportu i podziału pamięci:** odtworzono bazę QA bez zmiany limitów/tolerancji. Dodano trzy sloty UploadRing, ścieżki direct/staged/immutable/auto i immutable storage z flags=0 bez bezpośrednich zapisów CPU. Fallback staged używa GL 4.3. Pełne QA 28/28 oraz 36/36 procesów porównawczych; brak spójnej przewagi uzasadniającej zmianę domyślnego direct. Początkowa polityka odczytów obejmuje cały cykl od create(). Szczegóły i odrzucone hipotezy w raporcie B. Miejsce pamięci nadal wybiera sterownik; id=131186 liczono według faz, bez wyciszania callbacku.
+- [x] **C — badanie pracy bez cieczy:** dodano eksperymentalną maskę 240 kafelków 16 × 16 i warunek cieczy przed próbkami ścian. Maska sprawdza pełny konserwatywny zakres z aktualnym przemieszczeniem, bez stałego halo; brak pewności zachowuje pełną ścieżkę. Ping-pong, reakcje i liczniki pozostają zachowane. `phase_gating` pozostaje domyślnie OFF, ponieważ pomiary nie wykazały pewnego przyspieszenia; wyniki QA w raporcie C.
+- [x] **C — badanie projekcji terenu:** odrzucono pomijanie na podstawie samego `correction == 0` lub progu `1e-14`. Wariant opt-in używa lokalnego potwierdzenia braku penetracji i bitowej zgodności pozycji oraz kompensacji po kolejnym `move()`. Nie przenosi potwierdzenia między dispatchami ani edycjami terenu. `skip_zero_projection` pozostaje domyślnie OFF; wyniki QA w raporcie C.
+- [x] **D — badanie odczytów i `sortedHot`:** porównano full/narrow/sorted w 18 procesach. Cache ma dwa aktualizowane banki pozycji/kompensacji/prędkości/masy/typu, bezpośredni gather według wpisu, mapę odwrotną dla producentów oraz unieważnianie przy edycji ID. Dodatkowe 2 MiB mieszczą się w istniejących 8 SSBO. 35/35 QA, po 88 audytów bitowych w pięciu testach cache; siedem okien bez utraty czasu. Narrow: około −2,2% mediany misji bez podobnego zysku 16k/32k; sorted spowalnia większe sceny. Domyślne full zachowane, szczegóły w raporcie D.
+- [x] **E0 — profil kosztów i Dmax w czasie:** 16/16 procesów w porządku Latin i 6/6 kontroli wyłączonej sondy; 384 snapshoty, brak pominiętych geometrycznych par, kontrola outliera 96,2. W misji dominują gęstość/korekta PBF, przy 16k/32k kontakty ziaren. Dmax do 0,125/0,25/0,4375 w nagranych scenach; snapshoty eksplozji do około 50% więcej kandydatów niż świeży indeks. Jawnie zmierzono narzut; diagnostyka pozostaje OFF. Pełne QA 37/38 i znany błąd sprzężenia opisuje raport E0.
+- [ ] **E — warunkowy lokalny `Dmax`:** odroczony po E0; profil nie uzasadnia obecnie dodatkowego indeksu lokalnego. Zachować globalny konserwatywny zakres. Wrócić po potwierdzeniu kosztu cięższych outlierów; potrzebny dowód kompletności także dla sąsiada przeniesionego z odległego kafelka, fallback i porównanie all-pairs przy eksplozji, przekroczeniu kafelków, resecie i destrukcji. Stałe halo 3 × 3 nie jest dowodem.
+- [x] **F — kolor gruzu:** jawnie przypisano typowi 4 barwę zniszczalnej przegrody. Zachowano porównawcze obrazy ukończonej misji; wspólna ścieżka renderuje gruz ze strzałów i wybuchów, a tworzenie/bilanse gruzu po wybuchu nadal sprawdza `gpu.mission`.
+- [x] **Q — wiarygodna weryfikacja sprzężenia:** wykazano odrzucenie identycznych referencji przez starą regułę (1/16). Wprowadzono odtwarzanie wspólnych stanów przed krokiem, stałe najniższe progi i skumulowane budżety, kontrolę rzeczywiście wyłączonego sprzężenia oraz niezależne sprawdzenie zastosowania reakcji do postaci. 12/12 powtórek, 1080 checkpointów, 12/12 odrzuconych usterek, pełne QA 38/38 w nowym protokole. Stare porównanie 90 kroków jest diagnostyką i nadal może nie przejść; solver bez zmian.
+- [ ] **G — punktowe przebiegi PBF:** po odbiorze Q porównać grupy PBF 64/128/256 przy pozostawieniu ziaren i redukcji na 256, bez zmiany równań, iteracji i tolerancji. Osobno rozważyć brak aliasowania tylko dla dowiedzionych, rozdzielonych banków Jacobi. Wykonywać Q w każdej konfiguracji. Zachować referencję, pełne testy i pomiar narzutu/okna; nie zakładać przyspieszenia.
+- [ ] **Raport:** zapisać sprzęt/sterownik, dokładne komendy, surowe CSV/logi, liczniki pracy, pamięć, opóźnienia, wyniki wariantów i odrzucone hipotezy. Wykonać pełną regresję przed wydaniem, w tym mission/16k/32k, sprzężenie materiałów, fallback GL 4.3 oraz trasy 30/60/144 FPS.
+
+Wdrożony i zweryfikowany zakres A/F: [raport A/F](I04_5_GPU_STABILIZATION.md). [Eksperyment C](I04_5C_GPU_WORK.md) pozostaje OFF. [Badanie B](I04_5B_GPU_TRANSPORT.md): 28/28 QA, 36/36 pomiarów, direct nadal domyślne. Ten sam build pracował w wolnym i szybkim reżimie w różnych sesjach; przyczyna zmienności nie jest zamknięta. [Badanie D](I04_5D_GPU_NEIGHBOR_READS.md): 35/35 QA, 18/18 pomiarów i 7 okien; full pozostaje domyślne. [E0](I04_5E0_GPU_COSTS.md) przypisało koszt i zbadało trajektorie: lokalny E odroczony, PBF wskazane do punktowego G. [Q](I04_5Q_GPU_COUPLING_QA.md) zmieniło niewiarygodną regułę odbioru: 38/38 w nowym protokole, bez zmiany solvera. Następne G; zmienność długich trajektorii pozostaje jawna. Pełny odbiór całego I04.5 pozostaje otwarty.
+
+Gotowe, gdy: mediana `mission` <1,50 ms/tick na sprzęcie referencyjnym, 6/6 porównywalnych prób okna przechodzi bez utraty czasu, kolor gruzu jest poprawny, a masa, pary sąsiadów i reakcje pozostają kompletne. p95 fizyki <2 ms jest celem roboczym; 60 FPS weryfikujemy czasem całej klatki, 120 FPS raportujemy osobno. Brak migracji w logu nie zastępuje pomiaru stabilności. Jeżeli cel pozostaje otwarty, zapisujemy wynik i kolejny eksperyment; I05 nie otrzymuje automatycznie statusu rozpoczętego.
+
+**Nie przyjmujemy skrócenia `RetainedSteps` z 24 do 3 jako optymalizacji.** Zmianę polityki zegara można rozważyć osobno dopiero z testem przeciążenia i jawnym raportem utraty czasu. Ustawień sterownika/systemu nie zmieniamy po cichu; warianty środowiska są opisanymi warunkami pomiaru.
+
 ### I05 — jeden silnik, jeden zestaw zasobów, mniejsze Application
 
 - [ ] Wydzielić współdzielone programy/zasoby GPU, transport wyników, harmonogram symulacji i renderer. Wprowadzać konkretne klasy według odpowiedzialności, bez rozbudowanego ogólnego frameworka.
@@ -178,6 +225,12 @@ Raport wdrożenia: [I04_GPU_COUPLING.md](I04_GPU_COUPLING.md). Domyślny `combin
 - [ ] Misja i narzędzia laboratorium korzystają z tej samej aktywnej sceny. Przełączenie widoku lub powrót z menu nie resetuje jej po cichu; reset/zmiana sceny to jawne działanie.
 - [ ] Wyprowadzić sekwencje smoke, zbieranie CSV i benchmarki z `Application::run()` do scenariuszy używających tego samego wejścia i kroku co gra.
 - [ ] Zachować stary model CPU jako referencję/testy i narzędzie badawcze. Wycofanie starych pozycji menu wykonać po przeniesieniu potrzebnych funkcji; do tego czasu oznaczyć je jako referencyjne.
+- [ ] Wydzielić `DeviceContext` (API/możliwości/zasoby), `ShaderLibrary`, `SimulationWorld` i `SceneRenderer`, z jawną własnością i czasem życia kontekstu. Istniejący `ReadbackRing` wykorzystać ponownie. Liczbę klas podporządkować odpowiedzialnościom, nie celowi liczby linii.
+- [ ] Dodać opcjonalny cache binarny programów: klucz obejmuje GPU/sterownik/wersję GL, rozwinięte źródła z include, definicje i format binarium. Sprawdzać link po wczytaniu, uszkodzony/niezgodny cache odrzucać i kompilować źródła. Raportować trafienia, chybienia i czasy osobno; cache nie przyspieszy pierwszej kompilacji na nowym sterowniku.
+- [ ] `GameSession`/`LaboratoryRunner` CPU tworzyć dopiero po wejściu do narzędzia referencyjnego. Start `--mission` nie uruchamia nieużywanych światów i pul wątków CPU. Zweryfikować wejście/wyjście oraz zamykanie aplikacji w obu ścieżkach.
+- [ ] Wspólna nakładka laboratorium: pędzel, pauza, pojedynczy krok i dostępne inspektory działają na żywej misji. Niedostępne pola termiki/gazów są oznaczone do I10; samo przełączenie narzędzi nie resetuje cząstek, celu, wyniku ani kolejki zdarzeń.
+- [ ] Wspólny zapis scenariusza/sesji, obrazów i CSV korzysta z produkcyjnego kroku oraz asynchronicznych odczytów; eksport nie wchodzi do czasu fizyki. Funkcje nagrywania CPU przenosić według potrzeb na wspólny świat, bez drugiego symulatora.
+- [ ] Dodać porządkowanie przenośności: zweryfikować i usunąć ostrzeżenia `-Wmisleading-indentation`, sprawdzić listę targetów IPO (w tym `strefa_clock_tests`), wykonać headless z `STREFA_WARNINGS_AS_ERRORS=ON` na dostępnych GCC/Clang/MSVC. Nie wyciszać kategorii ostrzeżeń, aby uzyskać sukces.
 
 Gotowe, gdy: jeden komplet programów obsługuje grę i laboratorium, Application organizuje cykl życia i klatkę, a powrót między widokami nie gubi świata ani nie przyjmuje starych wyników.
 
@@ -188,6 +241,12 @@ Gotowe, gdy: jeden komplet programów obsługuje grę i laboratorium, Applicatio
 - [ ] Zdarzenia trafień/destrukcji łączyć z tickiem, generacją i ID polecenia. Dodać potwierdzanie wykonania, deduplikację i ochronę przed wyczerpaniem kolejki; rezerwacja amunicji musi mieć zdefiniowany wynik przy odrzuceniu polecenia.
 - [ ] Zapewnić, że komendy ze zbuforowanych wejść nie giną przy 144 FPS bez kroku fizyki ani nie wykonują się wielokrotnie przy kilku tickach na klatkę.
 - [ ] Testować sztucznie opóźnione i porcjowane wyniki, jednoczesne wybuchy, reset w locie, stratę fokusu i przeciążenie. Zdarzenia krytyczne muszą być kompletne; HUD może pokazywać starszą próbkę.
+- [ ] Zdefiniować `WorldCommand`/`WorldEvent` oraz ABI C++/GLSL: generacja, docelowy/wykonany tick, ID komendy/zdarzenia, rodzaj, podmiot i wymagany payload. 32 B i align 16 z review to punkt startowy; zweryfikować offsety/refleksję, komplet danych trafienia, zawijanie liczników i kolejność publikacji zapisów.
+- [ ] Rozpisać `CommandRing`/`EventRing`: kursory zapisu/ack, rezerwacja miejsca, bariery/fence, deduplikacja oraz ograniczenie zlecania przy przeciążeniu. Początkowe 1024 zdarzenia wymiarować według maksymalnej liczby zdarzeń na tick i opóźnienia, nie liczby ticków. Reset unieważnia komendy i rozlicza rezerwacje amunicji.
+- [ ] Dodać wspólne cooldowny karabinu/granatu oraz rezerwację amunicji ze zwrotem przy odrzuceniu. Reguły nie zależą od częstotliwości wywołania UI; wykonanie i aktualny początek pocisku pozostają na GPU.
+- [ ] Dodać strojoną tolerancję skoku: coyote time 80–90 ms i jump buffer 100 ms jako wartości początkowe. Okna wejścia są numerowane tickiem i zużywane jednokrotnie; aktualne podparcie i wykonanie skoku sprawdza GPU. Opóźniony HUD nie autoryzuje skoku. Przetestować lądowanie, zbocza, ruchomy piasek, utratę fokusu i 3 klatki opóźnienia.
+- [ ] Usunąć odcięcie plecaka/granatu po wyjściu kursora poza arenę przy aktywnym oknie; zdefiniować clamp/przeliczenie celu i respektować przechwycenie wejścia przez UI. Utrata fokusu nadal bezpiecznie zeruje sterowanie.
+- [ ] Ujednolicić `SoldierPose`/IK i warstwę prezentacji postaci, bez przenoszenia autorytatywnej kolizji na interpolowaną pozycję CPU. HP celów i potwierdzone trafienia udostępnić rendererowi I08/VFX I09.
 
 Gotowe, gdy: reguły mają jednego właściciela, trasa misji i wynik są zgodne przy 30/60/144 FPS, CPU nie używa starego snapshotu do autorytatywnych kolizji, a zmiana nie pogarsza odczuwalnej reakcji sterowania.
 
@@ -198,7 +257,10 @@ Gotowe, gdy: reguły mają jednego właściciela, trasa misji i wynik są zgodne
 - [ ] Dodać ograniczone vorticity confinement jako opcję jakości, z poprawnymi etapami obliczeń. Kontrolować wzrost energii, fale i bryzgi; nie maskować nim błędów objętości.
 - [ ] Obecne próbki ścian o jednostkowej objętości zastąpić/przetestować ważeniem objętością zgodnym z metodą brzegową. Sprawdzać narożniki, menisk, cienkie kanały i sprzężenie kapsuły. Inspiracja: [Akinci i in. 2012](https://cg.informatik.uni-freiburg.de/publications/2012_SIGGRAPH_rigidFluidCoupling.pdf).
 - [ ] Osobno porównać obecną kohezję `k=60` z modelem napięcia, krzywizny i adhezji inspirowanym [Akinci i in. 2013](https://cg.informatik.uni-freiburg.de/publications/2013_SIGGRAPHASIA_surfaceTensionAdhesion.pdf). Zadaptować kernele i jednostki do 2D; nie sumować bez kontroli dwóch modeli napięcia.
-- [ ] Rozdzielczość 0,5 komórki badać dopiero po pomiarze zapasu. W 2D daje około 4× więcej nośników przy tym samym obszarze: zmienić masę/objętość nośnika, promienie, gęstość odniesienia i pojemność. Pełne obecne 32k mogłoby wymagać około 128k miejsc.
+- [ ] Rozdzielczość 0,5 komórki pozostawić jako eksperyment po odbiorze I08–I11 i pomiarze zapasu. W 2D daje około 4× więcej nośników przy tym samym obszarze: zmienić masę/objętość nośnika, promienie, gęstość odniesienia i pojemność. Pełne obecne 32k mogłoby wymagać około 128k miejsc.
+- [ ] Objętości próbek brzegu prekomputować po zmianie terenu; osobno skalibrować próbki kapsuły. Pakowanie fp16/flag uzgodnić z wszystkimi konsumentami terenu. Zweryfikować jednostki i znormalizowane kernele 2D niezależnym obliczeniem referencyjnym przed wdrożeniem wzorów z review.
+- [ ] Zacząć sweep `s_corr` od {0,0001; 0,0005; 0,002; 0,008} przy jawnym `h`, `delta_q` i wykładniku. Raportować amplitudę powierzchni po 600 tickach, błąd gęstości, pęd, energię i koszt. Próg oscylacji 0,05% komórki z review jest propozycją do kalibracji, nie wynikiem istniejącego testu.
+- [ ] Wirość wdrożyć jako policzenie pola omega, barierę i ograniczony impuls z poprawnie wyprowadzonym iloczynem wektorowym 2D. Sprawdzić zerowe wzbudzenie spoczynku i kierunek wiru; odrzucić błędną macierz podaną w review. Każde ulepszenie granic/napięcia/wirości ma osobne A/B i możliwość wyłączenia do diagnozy.
 
 Gotowe, gdy: wybrany wariant ma lepszą jakość przy udokumentowanym koszcie i przechodzi sceny naczyń połączonych, przerwanej zapory, kropli oleju, warstw woda/olej, piasku w wodzie i postaci. APIC/FLIP pozostaje osobnym eksperymentem dopiero przy wykazanej słabości ulepszonego PBF.
 
@@ -215,6 +277,9 @@ Etap A: wydzielenie renderera i nieprzezroczystej tekstury sceny. Etap B: pole c
 - [ ] Dodać refrakcję ograniczoną maską cieczy i przeszkód, z bezpiecznym próbkowaniem krawędzi. Zanurzony piasek i aktor otrzymują odpowiednie podbarwienie/absorpcję.
 - [ ] Dodać tanią pianę powierzchniową i stylizowane kaustyki maskowane obecnością wody i dna. Sama duża prędkość lub dywergencja nie wystarczy do rozpoznania grzbietów fal.
 - [ ] Utrzymać zgodne rozmiary pikseli, kontrolę palety i dithering Bayera. Przy późniejszym HDR końcowa kwantyzacja następuje po tonemappingu.
+- [ ] Dla tekstury terenu zacząć od R16UI 320 × 192; jawnie rozdzielić materiał, HP/pęknięcia i resztę stanu. Format i pakowanie zweryfikować po I10, zamiast nazywać teksturę „VAO”.
+- [ ] Refrakcja sprawdza cały odcinek do przesuniętej próbki względem maski terenu, nie tylko jego koniec. Kandydat ma pozostawać w odpowiednim obszarze cieczy i nie przechodzić przez ścianę; w razie niepewności użyć próbki bez przesunięcia. Sprawdzić ściany 1px, narożniki i oddzielone zbiorniki.
+- [ ] Fresnel, rimlight i stylizowane kaustyki dodawać po czytelnej bazowej absorpcji. Tarcze otrzymują czytelny znak, słupek/obrys i pozostałe HP; potwierdzone trafienie daje krótką informację wizualną, rozwijaną wspólnie z I09.
 
 Gotowe, gdy: zanurzenie jest czytelne, woda i olej nie zlewają się, nie ma refrakcji przez ściany ani znikających cienkich strużek, a raport zawiera koszt każdego etapu przy 960 × 576 oraz większym oknie. Cel 0,2–0,3 ms weryfikujemy, a przy przekroczeniu ustalamy poziomy jakości.
 
@@ -226,6 +291,9 @@ Gotowe, gdy: zanurzenie jest czytelne, woda i olej nie zlewają się, nie ma ref
 - [ ] Źródła emisji oceniać na powierzchni: grzbiety/krzywizna, energia względnego ruchu i wskaźnik uwięzionego powietrza. To model wizualny; nie deklarować rzeczywistej symulacji bąbli bez odpowiedniego stanu fizycznego.
 - [ ] Kolizje lokalnych VFX korzystają z pola terenu; kontrolować przeskakiwanie cienkich ścian przy dużej prędkości. Piana nie przepływa wizualnie przez osłony.
 - [ ] Przepełnienie puli ogranicza emisję według priorytetu i jest raportowane. Wyłączenie VFX nie zmienia trajektorii, liczby ani masy cząstek fizycznych.
+- [ ] `VfxPool` zaczyna od 16 384 slotów, wariant 65 536 wymaga pomiaru pamięci i kosztu. Rozpisać priorytety emisji i przejścia spray/foam/bubbles według gęstości pola oraz jego znormalizowanej prędkości; progi 0,15/0,75 z review podlegają strojeniu. Bufor 32 B/slot to propozycja wymagająca kompletnego stanu życia/koloru/typu.
+- [ ] Emiter GPU ma własny kursor konsumpcji zdarzeń lub osobną kolejkę emisji; odczyt VFX nie potwierdza zdarzeń w imieniu `GameplaySession`. Brak zasobów dekoracyjnych nigdy nie blokuje krytycznych ack/trafień.
+- [ ] Bramka A/B: VFX wyłączone/niskie/wysokie przy tych samych komendach mają tę samą masę, trajektorie fizyczne i wynik misji. To korekta odwróconej bramki w tabeli review.
 
 Gotowe, gdy: efekty obu dotychczasowych trybów korzystają z jednego systemu, masa świata nie zależy od jakości VFX, a wielokrotne eksplozje i pełna pula nie blokują gry. Budżet ustalamy z odzyskanego czasu po I04, osobno dla symulacji VFX i rysowania.
 
@@ -240,6 +308,15 @@ Etap A: materiały i ciepło. Etap B: przepływ gazów. Etap C: reakcje i gaszen
 - [ ] Spalanie zużywa paliwo i tlen, wytwarza zadeklarowane produkty oraz ciepło. Rozróżnić płomień, gorący gaz, dym i żar; wygląd sam nie wywołuje reakcji. Gaśnięcie wynika z chłodzenia/niedoboru substratów.
 - [ ] Przenieść potrzebne przemiany fazowe, w tym parowanie/skraplanie i pozostałości spalania. Źródła, ujścia i promieniowanie prowadzić w bilansie. Ich zakres wdrażać stopniowo, bez deklarowania zgodności wszystkich 19 materiałów przed testami.
 - [ ] Scena odbiorcza: palący się olej/drewno, dym pod sufitem i przez otwór, ściana oddzielająca paliwo, gaszenie wodą, para i wyczerpanie tlenu w zamknięciu. Sprawdzić różne FPS i edycję terenu w trakcie pożaru.
+- [ ] **A — entalpia:** jawne H cząstek/terenu i funkcja T(H, materiał), z masą i ciepłem utajonym. Zachować spójną konwencję jednostek istniejącego `material.hpp`; nie kopiować temperatur i stałych dla ogólnego „metalu” bez decyzji materiałowej. Sprawdzić lód↔woda↔para oraz lawa→kamień.
+- [ ] **A — wymiana ciepła:** odczyty ze wspólnego stanu wejściowego, symetryczne źródło/ujście i osobny zapis. Dla cząstka↔gaz porównać akumulację stałoprzecinkową; skala 2^10 z review wymaga analizy zakresu, overflow, zaokrągleń i łącznego poboru z komórki przez wiele cząstek. Testować także teren↔gaz i nieruchomą izolowaną parę.
+- [ ] **B — gazy:** wariant bazowy MAC 320 × 192; 160 × 96 dopuszczać tylko po dowodzie zachowania pełnej topologii przeszkód. Zamknięta krawędź ma zerowy przepływ, jeśli którakolwiek strona jest ścianą. Uszczelnienie przez upakowany piasek wymaga osobnego modelu porowatości i testu, nie samego wskaźnika gęstości.
+- [x] **B — badanie transportu i podziału pamięci:** odtworzono bazę QA bez zmiany limitów/tolerancji. Dodano trzy sloty UploadRing, ścieżki direct/staged/immutable/auto i immutable storage z flags=0 bez bezpośrednich zapisów CPU. Fallback staged używa GL 4.3. Pełne QA 28/28 oraz 36/36 procesów porównawczych; brak spójnej przewagi uzasadniającej zmianę domyślnego direct. Początkowa polityka odczytów obejmuje cały cykl od create(). Szczegóły i odrzucone hipotezy w raporcie B. Miejsce pamięci nadal wybiera sterownik; id=131186 liczono według faz, bez wyciszania callbacku.
+- [ ] **C — reakcje:** poprawnie odjąć spalone paliwo, zużyć tlen, dodać zadeklarowane produkty i ciepło; szybkości mają spójne jednostki i zależność od dt. Ustalić obsługę nośnika/inertnych produktów, aby bilans obejmował całą masę gazu. Zaadaptować model ze źródeł/testów CPU zamiast uszkodzonego równania spalania z review.
+- [ ] **D — odbiór i narzędzia:** mapy temperatury/ciśnienia/prędkości/tlenu/paliwa i inspektor na wspólnym świecie. Prowadzić matrycę funkcji/materialów CPU→GPU z osobnym statusem: olej/drewno/ogień, dym/para, lód/lawa/metal, kwas/korozja, proch/termit/nitrogliceryna i detonacje. Każda deklarowana funkcja ma scenę i bilans; I10 nie oznacza automatycznego przeniesienia wszystkich 19 materiałów.
+- [ ] Narzędzia grzania/chłodzenia przekazują numerowane polecenia energii o jednostkach i dawce zależnych od ticka, nie FPS UI. Uwzględnić je jako jawne źródła/ujścia w bilansie. Matryca funkcji obejmuje też falę ciśnienia/akustykę: przenieść z testem albo jawnie pozostawić poza zakresem.
+
+Proponowana twarda tolerancja odbioru I10: względny błąd całkowitej masy i entalpii <0,1% w zamkniętej komorze przez 600 ticków, bez zewnętrznych źródeł/ujść; dla spalania bilans zawiera energię chemiczną. Raportować również błąd bezwzględny, dłuższy przebieg i tempo dryfu. Zmiana tolerancji wymaga jawnej decyzji z uzasadnieniem, nie dopasowania po wyniku.
 
 Gotowe, gdy: ogień reaguje na rzeczywisty stan świata, osłony i wodę, błędy bilansów mają określone tolerancje i nie rosną bez kontroli, a koszt termiki/gazów mieści się w zrewidowanym budżecie. Nie wracamy do pełnego odczytu świata na CPU, by wykonać jeden brakujący etap reakcji.
 
@@ -252,6 +329,10 @@ Gotowe, gdy: ogień reaguje na rzeczywisty stan świata, osłony i wodę, błęd
 - [ ] Piasek: paleta 3–4 odcieni, AO z gęstości usypu, smugi i pył przy uderzeniu. Ciemniejszy wygląd po kontakcie z wodą powiązać z trwałym parametrem wilgoci, jeśli ma utrzymywać się po wyjściu z wody.
 - [ ] Rozdzielić wizualnie mokry piasek od jego mechaniki: kohezja wymaga osobnej zmiany solvera i testów usypywania, wypierania wody oraz bilansów. Nie uznawać zmiany koloru za wdrożenie spójnego mokrego materiału.
 - [ ] Zapisać porównawcze obrazy/nagrania dnia, ciemnej sceny, pożaru, wybuchu i wody; osobno profilować światło, bloom i kompozycję.
+- [ ] Porównać JFA+1 z polem referencyjnym; nasiona zapisują dwie współrzędne w RG16UI albo pojedynczy liniowy ID w R16UI. Nie traktować przybliżenia JFA jako dokładnego SDF. Przebudowa po rewizji terenu ma osobny pomiar i budżet piku destrukcji.
+- [ ] Sphere tracing zatrzymuje się przed źródłem; w pobliżu ściany stosuje konserwatywny krok/weryfikację odcinka, a wyczerpanie limitu kroków ma bezpieczny fallback. Testy: osłona 1px, skos/narożnik, ściana za bliską lampą, lampa przy ścianie i zmiana terenu w tej samej klatce.
+- [ ] Jawny potok barw: tekstury koloru sRGB → liniowy RGBA16F → światła → bloom (kandydat Dual Kawase) → tonemapping ACES/AgX i LUT → konwersja/kwantyzacja/dithering Bayera 4 × 4 → UI. Zagwarantować pojedynczą konwersję sRGB; tekst i celownik pozostają ostre po efektach kamery.
+- [ ] Odcienie piasku stabilizować przez ID; wilgoć przechowywać jako jawny parametr z wysychaniem zależnym od warunków. Pakowanie w `motion.w` wymaga zmiany ABI i wszystkich testów identyfikacji materiału, nie może po cichu zmienić typu. Kohezja mokrego piasku zostaje osobnym eksperymentem fizycznym.
 
 Gotowe, gdy: styl pasuje do pikselowych teł, efekty nie zasłaniają rozgrywki, a poziomy jakości respektują zmierzony budżet. Radiance Cascades nie jest zależnością ukończenia tego etapu.
 
@@ -259,8 +340,8 @@ Gotowe, gdy: styl pasuje do pikselowych teł, efekty nie zasłaniają rozgrywki,
 
 | Eksperyment | Warunek rozpoczęcia | Kryterium decyzji |
 | --- | --- | --- |
-| APIC/FLIP dla cieczy, PBD dla ziaren | I07 wykazuje konkretny nierozwiązany problem jakości/skali PBF | Ten sam test wody/oleju, cienkich ścian, materiałów i kapsuły; porównać jakość, całkowity koszt transferów/ciśnienia i złożoność sprzężenia. Bez drugiego silnika gry. |
-| Rozdzielczość cieczy 0,5 komórki | Zapewniony budżet po I04/I07 | Czterokrotnie większa liczba cząstek z poprawioną masą i promieniem; policzona pamięć, sąsiedzi i FPS. |
+| APIC/FLIP dla cieczy, PBD dla ziaren | Po odbiorze I08–I11; I07 wykazuje konkretny nierozwiązany problem jakości/skali PBF | Ten sam test wody/oleju, cienkich ścian, materiałów i kapsuły; porównać jakość, całkowity koszt transferów/ciśnienia i złożoność sprzężenia. Bez drugiego silnika gry. |
+| Rozdzielczość cieczy 0,5 komórki | Po odbiorze I08–I11 i potwierdzeniu budżetu | Czterokrotnie większa liczba cząstek z poprawioną masą i promieniem; policzona pamięć, sąsiedzi i FPS. |
 | Gruz w bryłach przez shape matching | Podstawowa destrukcja i VFX stabilne | Zachować masę i ID przy tworzeniu/rozpadzie klastrów; kontakt z kapsułą i cieczą, kolizje cienkich ścian, koszt gęstych stosów. Inspiracja: [Müller i in. 2005](https://matthias-research.github.io/pages/publications/MeshlessDeformations_SIG05.pdf). |
 | Radiance Cascades | Światła bezpośrednie I11 mieszczą się w budżecie i potrzeba światła pośredniego jest widoczna | Mierzalna poprawa obrazu przy akceptowalnym koszcie i bez smug/opóźnień po destrukcji. Opcja jakości, nie fundament fizyki. |
 
@@ -285,6 +366,11 @@ Gotowe, gdy: styl pasuje do pikselowych teł, efekty nie zasłaniają rozgrywki,
 | Ogień i dym związany z materiałami | I10 |
 | Piasek, oświetlenie, HDR, bloom i paleta | I11 |
 | APIC/FLIP, bryły gruzu, Radiance Cascades | Eksperymenty warunkowe w sekcji 5 |
+| Review v0.7.0-i04: pamięć, okno, maski faz, sortedHot, lokalny Dmax, gruz | I04.5; hipotezy i ograniczenia w rejestrze rozstrzygnięć |
+| Cache shaderów, leniwe CPU, ScenarioRunner, GCC/IPO | I05 |
+| ABI, ack/odrzucenie, skok, sterowanie poza areną, cooldown, IK | I06 |
+| HP tarcz i informacja trafienia; narzędzia/pola na misji | I05/I06/I08/I09/I10 według właściciela stanu |
+| Szczegółowe wzory i deklaracje QA w dostarczonym review | Materiał źródłowy, korekty w REVIEW_I04_ROZSTRZYGNIECIA.md; nie są odbiorem implementacji |
 
 ## 7. Zasady odbioru i kontynuacji
 
@@ -293,7 +379,7 @@ Gotowe, gdy: styl pasuje do pikselowych teł, efekty nie zasłaniają rozgrywki,
 - Kontrolować stabilne ID, masy materiałów, aktywne sloty, brak odradzania usuniętych cząstek, szczelność cienkich ścian, skalowanie czasu, utratę fokusu i reset. Termika dodatkowo wymaga bilansu energii i składników.
 - Zachować testy tras 30/60/144 FPS. Nowe metody numeryczne oceniać tolerancjami i mierzalnym zachowaniem; brak zgodności bitowej między GPU nie jest sam w sobie błędem.
 - Zmieniony etap ma instrukcję odtworzenia, sprzęt, surowe CSV oraz opis ograniczeń. Raportować także nieudane cele i eksperymenty odrzucone na podstawie pomiaru.
-- Nie przebudowujemy całej aplikacji w jednym wydaniu. Po I04 ustalamy rzeczywisty odzyskany budżet; po I07 wybieramy parametry wody; po I10 ponownie bilansujemy koszt pełnego świata.
+- Nie przebudowujemy całej aplikacji w jednym wydaniu. Po I04.5 ustalamy rzeczywisty odzyskany budżet; po I07 wybieramy parametry wody; po I10 ponownie bilansujemy koszt pełnego świata.
 
 ### Rejestr postępu
 
@@ -304,7 +390,14 @@ Gotowe, gdy: styl pasuje do pikselowych teł, efekty nie zasłaniają rozgrywki,
 | I01 | Wdrożone, z ograniczeniami pomiarów FPS | [Raport I01](I01_GPU_READBACK.md): ring 3 sloty, mapowanie/fallback, generacje, frame-level poll, regresje 11/11, kontrolowane p95 CPU <0,1 ms | I02 — przebiegi i zlecanie pracy |
 | I02 | Wdrożone 2026-10-28 | [Raport I02](I02_GPU_EXECUTION.md): 27 programów, tracker, komendy indirect, FIFO, regresje 12/12, okna 6/6; kontrolowane GPU misji około −7% | I03 — dane i kompletne sąsiedztwo |
 | I03 | Wdrożone 2026-10-28; odbiór okna otwarty | [Raport I03](I03_GPU_NEIGHBORS.md): counting sort i prefix scan, stabilne ID, SoA, pełne zakresy po ruchu, 42/43 → 2 budowy indeksu; regresje 20/20, okna 4/6 | I04 — lokalne sprzężenie postaci |
-| I04 | Wdrożone 2026-10-28; cel GPU otwarty | [Raport I04](I04_GPU_COUPLING.md): kompakcja reakcji, dwa kanały, hierarchia, konserwatywny zasięg próbek, regresje 21/21 i okna combined 3/3; 16k/32k około −29%/−33% GPU | I05 — jeden silnik i współdzielone zasoby |
+| I04 | Wdrożone 2026-10-28; cel GPU otwarty | [Raport I04](I04_GPU_COUPLING.md): kompakcja reakcji, dwa kanały, hierarchia, konserwatywny zasięg próbek, regresje 21/21 i okna combined 3/3; 16k/32k około −29%/−33% GPU | I04.5 — uzupełniająca diagnoza i optymalizacja |
+| Integracja review I04 | Dokumentacja zakończona 2026-10-29 | Przypisano uwagi do I04.5–I11, dodano kryteria i rejestr korekt; bez zmian runtime i bez nowych wyników testów | I04.5-A — odtworzenie bazy i pomiar present |
+| I04.5-A/F | Wdrożone 2026-10-29; cały etap otwarty | [Raport I04.5](I04_5_GPU_STABILIZATION.md): pełna klatka/present, tryby timerów, debug phases, gruz; 21/21 + końcowe 4/4, 18/18 prób, mediana GPU misji 2,79–3,09 ms | I04.5-C, potem ponowna ocena B/D/E i odbiór całego I04.5 |
+| I04.5-C | Eksperyment opt-in zrealizowany 2026-10-29; obie opcje domyślnie OFF | [Raport C](I04_5C_GPU_WORK.md): 16/16 pomiarów przepustowości, brak potwierdzonego przyspieszenia; poprawiono przekazanie początkowej polityki odczytów. Nowe C 5/5 PASS; pełny CTest 22/26 (trzy timeouty UI i błąd tolerancji lokalnego sprzężenia). Wyniki QA w raporcie C | I04.5-B — najpierw odtworzenie i wyjaśnienie bazy QA, potem transport i inicjalizacja; D/E warunkowe |
+| I04.5-B | Badanie i implementacja opt-in zakończone 2026-10-30; direct domyślne | [Raport B](I04_5B_GPU_TRANSPORT.md): UploadRing, immutable flags=0, fallback GL 4.3, 28/28 QA, 36/36 procesów; brak spójnej przewagi i zmienność tego samego EXE między sesjami | Przypisanie kosztu i decyzja D/E; cel 1,5 ms oraz stabilność warunków nadal otwarte |
+| I04.5-D | Badanie opt-in zakończone 2026-10-30; full domyślne | [Raport D](I04_5D_GPU_NEIGHBOR_READS.md): wąskie odczyty i aktualizowany cache w 8 SSBO, 35/35 QA, 18/18 procesów i 7 okien bez utraty czasu. Brak podstaw do zmiany domyślnej ścieżki; cache +2 MiB spowalnia 16k/32k | Profil kosztów przebiegów i chwilowego Dmax przed warunkowym E; cel 1,5 ms nadal otwarty |
+| I04.5-E0 | Diagnostyka zakończona 2026-10-30; pełne QA otwarte | [Raport E0](I04_5E0_GPU_COSTS.md): 16/16 pomiarów, 6/6 kontroli, 384 snapshoty; sondy OFF. Dominujące PBF/ziarna, Dmax do 0,4375 po eksplozjach. Pełne QA 37/38; powtórka E0 PASS, to samo sprzężenie FAIL na D | Najpierw wyjaśnienie bazy QA sprzężenia, potem punktowy PBF G. Lokalny E warunkowy; cel 1,5 ms otwarty |
+| I04.5-Q | Zakończone 2026-10-30; metoda QA zmieniona jawnie | [Raport Q](I04_5Q_GPU_COUPLING_QA.md): identyczna referencja odrzucona 1/16 przez starą regułę, 12/12 nowych powtórek, 1080 checkpointów, wszystkie wyłączenia sprzężenia wykryte; 38/38 Q. Solver bez zmian, stary warunek nadal diagnostyczny | Punktowe PBF G, z Q dla każdej konfiguracji. Cel 1,5 ms i przyczyny zmienności długich trajektorii otwarte |
 
 Po każdej zakończonej iteracji dopisać: zakres i pliki, wynik testów, medianę/p95/p99 GPU i CPU, czas całej klatki, liczbę przebiegów/przebudów, pamięć, opóźnienie odczytów/zdarzeń, decyzje i pozostałe problemy. Zaktualizować status w sekcji 4.
 
@@ -324,9 +417,28 @@ Po każdej zakończonej iteracji dopisać: zakres i pliki, wynik testów, median
 
 - **2026-10-28, I04:** lokalność uzyskujemy przez zbieranie aktualnych reakcji w istniejących przebiegach, bez drugiej listy geometrycznej z marginesem ważności. Wybrano combined po pełnych testach misji i porównaniu kosztu z local. Niezależny kanał PBF zachowuje oba składniki; local pozostaje opcją zachowującą sekwencyjną kolejność. Natywny harness czeka na rzeczywisty proces Windows, a diagnostyka kolejki używa kopii staging poza czasem kroku.
 
+- **2026-10-29, review I04:** dodajemy I04.5 przed I05. Diagnozy DWM/VRAM i obietnice przyspieszenia są hipotezami do porównania z bazą, a nie potwierdzonym usunięciem problemu. Nie skracamy zaległości zegara w celu ukrycia kosztu fizyki; zachowujemy fallback GL 4.3 i kompletność sąsiedztwa.
+- **2026-10-29, review I04:** I05 obejmuje wspólny świat/zasoby i narzędzia, I06 reguły CPU/komendy/zdarzenia. Nowe wzory wymagają niezależnej walidacji; sprzeczności review rozstrzyga osobny rejestr. APIC/FLIP, zagęszczenie 0,5 i Radiance Cascades czekają na odbiór I08–I11; nie zakładamy, że PBF na pewno usunie wszystkie artefakty.
+
+- **2026-10-29, I04.5-A/F:** trzy tryby timerów nie zamknęły celu 1,5 ms; pozostawiamy domyślne elapsed. Seria 18/18 zakończona poprawnie, ale fokus był zmienny, a p95 klatki nadal bywa ponad 16,67 ms. W kontroli debug id=131186 odebrano przy walidacji, nie w runtime; to nie dowód przyczyny dawnych spowolnień. Kolejne prace C dotyczą pustych przebiegów i terenu, bez zmiany równań solvera.
+
+- **2026-10-29, I04.5-C:** maska faz i lokalne potwierdzenie projekcji pozostają opcjami eksperymentalnymi, domyślnie OFF; 16/16 pomiarów przepustowości nie wykazało pewnego przyspieszenia. Politykę odczytów przekazujemy przed inicjalizacją świata, także w starszych helperach, aby próba bez odczytów nie zaczynała się od ukrytych kopii. Następne B bada transport i inicjalizację osobno; nie ogłaszamy zamknięcia celu 1,5 ms ani przyczyny historycznych spowolnień. D/E nadal wymagają wskazania kosztu pomiarem.
+
+- **2026-10-29, QA po C:** nowe testy C zakończyły się 5/5 PASS, pełny CTest wynikiem 22/26. Otwarte pozostają trzy timeouty UI i błąd tolerancji lokalnego sprzężenia. Limity oraz tolerancje nie zostały zmienione. B rozpoczynamy od odtworzenia i wyjaśnienia tej bazy QA; dalsze optymalizacje transportu wymagają osobnej oceny.
+
+- **2026-10-30, I04.5-B:** pozostawiamy direct; staged/immutable/auto są eksperymentalne. Pełne QA 28/28 i 36/36 procesów bez błędu. Niewielka przewaga mediany w jednym warunku nie utrzymuje się we wszystkich scenach; nowe ścieżki kosztują dodatkową pamięć. Duża zmiana wydajności między sesjami wystąpiła na tym samym EXE, więc nie przypisujemy jej uploadowi ani nie deklarujemy naprawy warunków systemowych. D/E wymagają najpierw przypisania kosztu; I05 nie rozpoczyna się automatycznie.
+
+- **2026-10-30, I04.5-D:** zachowujemy full/direct oraz obie opcje C OFF. 18/18 procesów potwierdziło niewielką przewagę narrow w misji, bez podobnej korzyści 16k/32k; sorted ma dodatkowy koszt zapisów i 2 MiB. Pełne QA 35/35, siedem prób okna bez utraty czasu. Mały końcowy Dmax nie wyklucza chwilowych outlierów; lokalny E czeka na profil w czasie i dowód kompletności. Cel 1,5 ms oraz historyczna przyczyna zmienności nadal otwarte.
+
+- **2026-10-30, E0:** odraczamy lokalny Dmax po profilu trajektorii i kosztów. Wąskie gardła: PBF w misji i kontakt ziaren w 16k/32k. Sonda passes ma znaczny koszt CPU, bounds/snapshots zwiększają GPU; wszystkie pozostają OFF. Pełny CTest 37/38 ujawnił znaną zmienność sprzężenia, odtworzoną również na D. Zachowujemy nieudaną próbę, tolerancje i limity. Najpierw baza QA, potem eksperyment rozmiaru grupy wyłącznie PBF; I05 nie jest rozpoczęte.
+
+- **2026-10-30, Q:** zmieniamy metodę akceptacji sprzężenia po wykazaniu odrzucenia identycznych referencji 1/16. Nie podnosimy wartości progów: najniższe dawne minima ograniczają krok i skumulowany defekt na wspólnych stanach. Prawdziwe wyłączenie sprzężenia jest wykrywane. 38/38 dotyczy nowego protokołu; nie oznacza zaliczenia starego ilorazu ani deterministyczności solvera. Następne PBF G; I04.5 pozostaje otwarte.
+
 ## 8. Materiały pomocnicze
 
 Kod i dane: [architektura 0.7](ARCHITECTURE.md), [misja GPU](GPU_MISSION_070.md), [przegląd fizyki 0.6.1](PHYSICS_REVIEW_061.md), [benchmark misji](gpu070/build/gpu-mission-benchmark.csv), [próbki okna](gpu070/build/mission-frames.csv), [obecne testy](TEST_RESULTS.txt).
+
+Review z 2026-10-29: [oryginał dostarczony przez użytkownika](reviews/review_strefa_zero_v0_7_0_i04_roadmap.md) oraz [rejestr przyjęcia i korekt](REVIEW_I04_ROZSTRZYGNIECIA.md). Te materiały nie zmieniają historycznych raportów ani statusu wydania I04.
 
 Źródła pierwotne metod, do dalszego wdrażania:
 

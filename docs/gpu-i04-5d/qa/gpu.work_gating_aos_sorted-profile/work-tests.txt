@@ -1,0 +1,16 @@
+reference_world_begin layout=0 neighbors=1
+reference_world_create_ms=98.5177
+candidate_world_begin phase=1 certificate=0
+candidate_world_create_ms=8800.26
+deep_penetration_y=179.54 contact_y=-6
+layout=0 neighbors=1 phase=1 certificate=0=passed
+candidate_world_begin phase=0 certificate=1
+candidate_world_create_ms=8072.58
+deep_penetration_y=179.54 contact_y=-6
+layout=0 neighbors=1 phase=0 certificate=1=passed
+candidate_world_begin phase=1 certificate=1
+candidate_world_create_ms=8247.81
+deep_penetration_y=179.54 contact_y=-6
+layout=0 neighbors=1 phase=1 certificate=1=passed
+linked_fallback=passed
+status=passed

@@ -1,0 +1,37 @@
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-1"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-1"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-1"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-2"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-2"
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-2"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-3"
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-3"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-3"
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-4"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-4"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-4"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-5"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-5"
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-5"
+Measuring throughput-sorted-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-sorted-6"
+Measuring throughput-full-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-full-6"
+Measuring throughput-narrow-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput\throughput-narrow-6"
+Analyze hot-read variants with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5d-results\throughput"

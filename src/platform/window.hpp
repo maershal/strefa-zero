@@ -23,6 +23,15 @@ private:
 struct WindowDeleter { void operator()(SDL_Window* window) const noexcept; };
 struct ContextDeleter { void operator()(SDL_GLContextState* context) const noexcept; };
 
+struct PresentationInfo {
+    SDL_WindowFlags window_flags{};
+    SDL_DisplayID display_id{};
+    int pixel_width{},pixel_height{},mode_width{},mode_height{};
+    float refresh_hz{};
+    int refresh_numerator{},refresh_denominator{},swap_interval{};
+    bool focused{},minimized{},mode_available{},vsync_enabled{},swap_interval_available{};
+};
+
 class Window {
 public:
     [[nodiscard]] static std::expected<Window, std::string> create(const core::Settings& settings,bool prefer_compute=true,bool debug_context=false);
@@ -36,6 +45,8 @@ public:
     [[nodiscard]] float display_scale() const noexcept;
     [[nodiscard]] bool vsync_enabled() const noexcept { return vsync_; }
     [[nodiscard]] bool minimized() const noexcept;
+    // Diagnostic queries only; callers account for their CPU cost separately.
+    [[nodiscard]] PresentationInfo presentation_info() const noexcept;
     [[nodiscard]] const std::string& warning() const noexcept { return warning_; }
     [[nodiscard]] std::expected<void, std::string> apply_video(
         const core::Settings& next, const core::Settings& previous);

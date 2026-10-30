@@ -1,0 +1,164 @@
+{
+  "throughput_mission": {
+    "E0": {
+      "gpu_step_ms": {
+        "median_of_medians": 2.94032,
+        "median_of_p95": 3.340288,
+        "median_range": [
+          2.929664,
+          3.012224
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.0078,
+        "median_of_p95": 0.0233,
+        "median_range": [
+          0.0078,
+          0.0118
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 3.016264583,
+        "median_of_p95": 3.016264583,
+        "median_range": [
+          3.001714583,
+          3.133913333
+        ]
+      }
+    },
+    "Q": {
+      "gpu_step_ms": {
+        "median_of_medians": 2.843744,
+        "median_of_p95": 3.407648,
+        "median_range": [
+          2.79632,
+          2.873344
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.008,
+        "median_of_p95": 0.0231,
+        "median_range": [
+          0.008,
+          0.0081
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 2.949384583,
+        "median_of_p95": 2.949384583,
+        "median_range": [
+          2.901681667,
+          2.996234167
+        ]
+      }
+    }
+  },
+  "throughput_stress_16k": {
+    "E0": {
+      "gpu_step_ms": {
+        "median_of_medians": 1.794048,
+        "median_of_p95": 2.232736,
+        "median_range": [
+          1.785856,
+          1.810848
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.006,
+        "median_of_p95": 0.021,
+        "median_range": [
+          0.0059,
+          0.006
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 1.80417125,
+        "median_of_p95": 1.80417125,
+        "median_range": [
+          1.770589167,
+          1.831604167
+        ]
+      }
+    },
+    "Q": {
+      "gpu_step_ms": {
+        "median_of_medians": 1.791648,
+        "median_of_p95": 1.995136,
+        "median_range": [
+          1.774208,
+          1.797344
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.006,
+        "median_of_p95": 0.0192,
+        "median_range": [
+          0.006,
+          0.006
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 1.773160833,
+        "median_of_p95": 1.773160833,
+        "median_range": [
+          1.766555833,
+          1.77513375
+        ]
+      }
+    }
+  },
+  "throughput_stress_32k": {
+    "E0": {
+      "gpu_step_ms": {
+        "median_of_medians": 3.193632,
+        "median_of_p95": 3.729376,
+        "median_range": [
+          3.17168,
+          3.204224
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.0059,
+        "median_of_p95": 0.018,
+        "median_range": [
+          0.0058,
+          0.0059
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 3.273243333,
+        "median_of_p95": 3.273243333,
+        "median_range": [
+          3.217773333,
+          3.303695417
+        ]
+      }
+    },
+    "Q": {
+      "gpu_step_ms": {
+        "median_of_medians": 3.196512,
+        "median_of_p95": 3.669216,
+        "median_range": [
+          3.194496,
+          3.201248
+        ]
+      },
+      "cpu_submit_ms": {
+        "median_of_medians": 0.006,
+        "median_of_p95": 0.0176,
+        "median_range": [
+          0.006,
+          0.006
+        ]
+      },
+      "batch_mean_step_wall_ms": {
+        "median_of_medians": 3.240502083,
+        "median_of_p95": 3.240502083,
+        "median_range": [
+          3.238814583,
+          3.277072917
+        ]
+      }
+    }
+  }
+}

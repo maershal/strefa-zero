@@ -1,0 +1,20 @@
+{
+  "direct": {
+    "samples_after_30_warmup_frames": 870,
+    "median_ms": 16.6686,
+    "p95_ms": 16.6693,
+    "p99_ms": 16.7198,
+    "max_ms": 46.7086,
+    "focused_frames": 870,
+    "minimized_frames": 0
+  },
+  "auto": {
+    "samples_after_30_warmup_frames": 870,
+    "median_ms": 16.6685,
+    "p95_ms": 16.6693,
+    "p99_ms": 16.7172,
+    "max_ms": 40.9844,
+    "focused_frames": 870,
+    "minimized_frames": 0
+  }
+}

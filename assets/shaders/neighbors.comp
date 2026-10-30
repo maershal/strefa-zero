@@ -12,9 +12,22 @@ void main(){
     uint id=gl_GlobalInvocationID.x,lane=gl_LocalInvocationID.x,block=gl_WorkGroupID.x;
     if(operation==0){
         if(id<CELL_COUNT){cells[COUNT_BASE+id]=0u;cells[CURSOR_BASE+id]=0u;}
+#if PHASE_GATING
+        if(id<PHASE_TILE_COUNT)cells[PHASE_MASK_BASE+id]=0u;
+#endif
         if(id==0u){cells[0]=0u;cells[1]++;}return;
     }
-    if(operation==1){if(id<aliveCount)atomicAdd(cells[COUNT_BASE+uint(cell(readParticle(slots[N+id]).position.xy))],1u);return;}
+    if(operation==1){
+        if(id<aliveCount){
+            Grain p=readParticle(slots[N+id]);uint c=uint(cell(p.position.xy));
+            atomicAdd(cells[COUNT_BASE+c],1u);
+#if PHASE_GATING
+            uint tile=((c/uint(W))/16u)*PHASE_TILE_COLUMNS+(c%uint(W))/16u;
+            atomicOr(cells[PHASE_MASK_BASE+tile],liquid(p)?1u:2u);
+#endif
+        }
+        return;
+    }
     if(operation==2){
         uint count=id<CELL_COUNT?cells[COUNT_BASE+id]:0u;prefix(count);
         if(id<CELL_COUNT)cells[START_BASE+id]=scan[lane]-count;
@@ -44,6 +57,10 @@ void main(){
         if(id>=aliveCount)return;uint stable=slots[N+id];Grain p=readParticle(stable);uint c=uint(cell(p.position.xy));
         uint index=cellStart(c)+atomicAdd(cells[CURSOR_BASE+c],1u);
         order[index]=stable;sortedIndex[stable]=index;anchors[stable]=vec4(p.position.xy,p.residual.xy);
+#if HOT_READS == 2
+        HotParticle value=HotParticle(vec4(p.position.xy,p.residual.xy),p.motion);
+        hot[index]=value;hot[uint(N)+index]=value;
+#endif
         atomicMax(cells[0],floatBitsToUint(length(p.residual.xy)));return;
     }
 }

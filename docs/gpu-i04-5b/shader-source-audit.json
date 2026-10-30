@@ -1,0 +1,19 @@
+{
+  "assets/shaders/body_terrain.glsl": true,
+  "assets/shaders/coupling.comp": true,
+  "assets/shaders/granular.comp": true,
+  "assets/shaders/granular.frag": true,
+  "assets/shaders/granular.vert": true,
+  "assets/shaders/liquid_splat.frag": true,
+  "assets/shaders/liquid_splat.vert": true,
+  "assets/shaders/liquid_surface.frag": true,
+  "assets/shaders/liquid_surface.vert": true,
+  "assets/shaders/liquids.comp": true,
+  "assets/shaders/mission.comp": true,
+  "assets/shaders/mission.frag": true,
+  "assets/shaders/mission.vert": true,
+  "assets/shaders/mission_state.glsl": true,
+  "assets/shaders/neighbors.comp": true,
+  "assets/shaders/particle_common.glsl": true,
+  "assets/shaders/particle_storage.glsl": true
+}

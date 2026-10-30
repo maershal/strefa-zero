@@ -1,0 +1,5 @@
+{
+  "nested_profiles": "passed",
+  "nonzero_exit_invalid": "passed",
+  "effective_work_mismatch_invalid": "passed"
+}

@@ -1,0 +1,303 @@
+{
+  "baseline_exe_sha256": "dec2c4991fc1b23d5551e9283edb4c68d39db4937d770229a05e44ad1387526b",
+  "snapshot_only": true,
+  "rows": [
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "candidate_count",
+      "samples": "3096",
+      "median": "27",
+      "p95": "39",
+      "p99": "44",
+      "max": "46"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "neighbor_count",
+      "samples": "3096",
+      "median": "12",
+      "p95": "18",
+      "p99": "18",
+      "max": "18"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "candidate_count",
+      "samples": "16000",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "neighbor_count",
+      "samples": "16000",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "candidate_count",
+      "samples": "32768",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "1",
+      "metric": "neighbor_count",
+      "samples": "32768",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "candidate_count",
+      "samples": "3096",
+      "median": "27",
+      "p95": "39",
+      "p99": "44",
+      "max": "46"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "neighbor_count",
+      "samples": "3096",
+      "median": "12",
+      "p95": "18",
+      "p99": "18",
+      "max": "18"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "candidate_count",
+      "samples": "16000",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "neighbor_count",
+      "samples": "16000",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "candidate_count",
+      "samples": "32768",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "2",
+      "metric": "neighbor_count",
+      "samples": "32768",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "candidate_count",
+      "samples": "3096",
+      "median": "27",
+      "p95": "39",
+      "p99": "44",
+      "max": "45"
+    },
+    {
+      "scene": "3096",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "neighbor_count",
+      "samples": "3096",
+      "median": "12",
+      "p95": "18",
+      "p99": "18",
+      "max": "18"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "candidate_count",
+      "samples": "16000",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "16000",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "neighbor_count",
+      "samples": "16000",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "final_displacement_bound",
+      "samples": "1",
+      "median": "0.0625",
+      "p95": "0.0625",
+      "p99": "0.0625",
+      "max": "0.0625"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "candidate_count",
+      "samples": "32768",
+      "median": "25",
+      "p95": "35",
+      "p99": "35",
+      "max": "35"
+    },
+    {
+      "scene": "32768",
+      "variant": "reused_soa",
+      "repeat": "3",
+      "metric": "neighbor_count",
+      "samples": "32768",
+      "median": "10",
+      "p95": "10",
+      "p99": "10",
+      "max": "10"
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-1"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-1"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-1"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-1"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-1"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-1"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-2"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-2"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-2"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-2"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-2"
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-2"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-3"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-3"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-3"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-3"
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-3"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-3"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-4"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-4"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-4"
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-4"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-4"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-4"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-5"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-5"
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-5"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-5"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-5"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-5"
+Measuring throughput-immutable-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r0-6"
+Measuring throughput-direct-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r2-6"
+Measuring throughput-staged-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r2-6"
+Measuring throughput-immutable-r2-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-immutable-r2-6"
+Measuring throughput-direct-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-direct-r0-6"
+Measuring throughput-staged-r0-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5b-results\throughput-complete\throughput-staged-r0-6"

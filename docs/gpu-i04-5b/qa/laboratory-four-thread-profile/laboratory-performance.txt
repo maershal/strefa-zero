@@ -1,0 +1,10 @@
+frames=300
+ui_median_ms=16.6682
+ui_p95_ms=16.6704
+ui_p99_ms=16.7512
+ui_max_ms=17.5697
+physics_last_ms=60.4425
+physics_ticks=84
+physics_steps_per_second=16.299
+physics_threads=4
+finite=1

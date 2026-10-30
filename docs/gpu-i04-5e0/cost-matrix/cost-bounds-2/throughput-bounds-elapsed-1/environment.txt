@@ -1,0 +1,23 @@
+renderer=NVIDIA GeForce GTX 1650/PCIe/SSE2
+version=4.3.0 NVIDIA 610.47
+cost_mode=bounds
+mode=unpaced
+warmup_ticks=120
+measured_ticks=240
+gpu_timer_mode=elapsed
+readback_period=2
+counters=1
+group_timers=0
+soa=1
+neighbor_mode=2
+neighbor_reads_requested=full
+phase_gating=0
+skip_zero_projection=0
+storage_requested=direct
+storage_effective=direct
+neighbor_reads_effective=full
+coupling_mode=2
+scene=mission storage_effective=direct neighbor_reads_effective=full
+scene=stress_16k storage_effective=direct neighbor_reads_effective=full
+scene=stress_32k storage_effective=direct neighbor_reads_effective=full
+scene=mission_blast storage_effective=direct neighbor_reads_effective=full

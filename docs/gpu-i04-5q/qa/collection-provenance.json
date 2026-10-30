@@ -1,0 +1,10 @@
+{
+  "start_utc": "2026-10-30T11:26:42.6976227Z",
+  "fresh_files_copied": 116,
+  "older_files_excluded": [
+    "coupling-profile/coupling-error.txt",
+    "coupling-profile/smoke-error.txt",
+    "mission-ui-profile/smoke-error.txt",
+    "gpu-ui-profile/smoke-error.txt"
+  ]
+}
