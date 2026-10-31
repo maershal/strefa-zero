@@ -1,0 +1,6 @@
+[0/2] Re-checking globbed directories...
+[1/10] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\gpu_laboratory.cpp for CXX dependencies
+[2/10] Generating CXX dyndep file CMakeFiles\strefa_ui.dir\CXX.dd
+[3/6] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\gpu_laboratory.cpp.obj
+[4/6] Linking CXX static library strefa_ui.lib
+[5/6] Linking CXX executable runtime-070\StrefaZero.exe

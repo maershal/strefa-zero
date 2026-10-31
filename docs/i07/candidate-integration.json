@@ -1,0 +1,56 @@
+[
+  {
+    "case": "candidate-liquid",
+    "pid": 13668,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "candidate-flow",
+    "pid": 23456,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "candidate-coupling",
+    "pid": 21516,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "candidate-mission",
+    "pid": 4200,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "candidate-recording",
+    "pid": 4684,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "candidate-window",
+    "pid": 18252,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "four-liquid",
+    "pid": 15072,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "four-mission",
+    "pid": 4372,
+    "exit_code": 0,
+    "timed_out": false
+  },
+  {
+    "case": "four-coupling",
+    "pid": 13820,
+    "exit_code": 0,
+    "timed_out": false
+  }
+]

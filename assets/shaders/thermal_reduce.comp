@@ -1,0 +1,11 @@
+#version 430 core
+layout(local_size_x=128) in;
+#include "thermal_common.glsl"
+layout(std430,binding=0) readonly buffer ThermalParticles {ThermalParticle particles[];};
+layout(std430,binding=1) readonly buffer ThermalCells {ThermalCell cells[];};
+layout(std430,binding=2) writeonly buffer Totals {dvec4 result[];};
+void main(){uint group=gl_GlobalInvocationID.x;if(group>=240u)return;double a[16];for(int k=0;k<16;++k)a[k]=0.;
+ for(uint n=group*256u;n<(group+1u)*256u;++n){ThermalCell c=cells[n];a[0]+=double(c.matter.x)+double(c.gas0.x)+double(c.gas0.y)+double(c.gas0.z)+double(c.gas0.w)+double(c.gas1.x)+double(c.gas1.y);a[1]+=double(c.matter.y)+double(c.gas1.z);a[2]+=double(chemical(c.matter))+double(c.gas1.x)*double(combustionProperties[11].z);a[3]+=double(c.budget.x);a[4]+=double(c.budget.y);a[5]+=double(c.budget.w);a[6]+=double(c.budget.z);a[7]+=double(c.gas0.y);a[8]+=double(c.gas1.x)+double(c.matter.z);a[9]+=double(c.gas0.z);a[10]+=double(c.gas0.w);a[11]+=double(c.flow.w)*double(c.flow.w);a[15]+=double(c.gas1.w);a[12]=max(a[12],double(abs(c.flow.w)));if(any(isnan(c.matter))||any(isinf(c.matter))||any(isnan(c.gas0))||any(isinf(c.gas0))||any(isnan(c.gas1))||any(isinf(c.gas1))||any(lessThan(c.gas0,vec4(-1e-6)))||any(lessThan(c.gas1.xy,vec2(-1e-6)))||c.matter.x< -1e-6||c.matter.y<minimumH(c.matter)-max(.001,abs(c.matter.y)*1e-6)||c.gas1.z<gasOffset(c)+gasCapacity(c)-max(.001,abs(c.gas1.z)*1e-6))a[13]++;
+  if(n<uint(TN)){ThermalParticle p=particles[n];a[0]+=double(p.matter.x);a[1]+=double(p.matter.y);a[2]+=double(chemical(p.matter));a[8]+=double(p.matter.z);if(p.matter.x>0)a[14]++;if(any(isnan(p.matter))||any(isinf(p.matter))||p.matter.x< -1e-6)a[13]++;}}
+ for(uint k=0u;k<4u;++k)result[group*4u+k]=dvec4(a[k*4u],a[k*4u+1u],a[k*4u+2u],a[k*4u+3u]);
+}

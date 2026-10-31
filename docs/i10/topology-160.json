@@ -1,0 +1,17 @@
+{
+  "closed_wall": {
+    "fine_320x192": false,
+    "coarse_OR": false,
+    "coarse_AND": true
+  },
+  "single_cell_door": {
+    "fine_320x192": true,
+    "coarse_OR": false,
+    "coarse_AND": true
+  },
+  "selected_grid": [
+    320,
+    192
+  ],
+  "scope": "Connectivity experiment, not a coarse-grid fluid benchmark."
+}

@@ -1,0 +1,12 @@
+**8/8 widocznych prób okna**, Q/G256/G128/G64 po dwa powtórzenia w odwróconej kolejności, elapsed, VSync OFF, limit 60 FPS, debug/counters ON. Każda próba osiągnęła wynik 3, co najmniej 900 klatek i 1700 ticków, z działającą pauzą i bez odrzuconego czasu. To kontrole działającej gry na paczce G oraz niezmienionej Q.
+
+| Wariant | Mediana / p95 całej klatki, ms | Fokus / analizowane klatki | Zminimalizowane |
+| --- | ---: | ---: | ---: |
+| q | 16.66865 / 16.66950 | 1740 / 1740 | 0 |
+| g256 | 16.66880 / 16.67015 | 1740 / 1740 | 0 |
+| g128 | 16.66875 / 16.66960 | 1740 / 1740 | 0 |
+| g64 | 16.66865 / 16.66935 | 1740 / 1740 | 0 |
+
+W tabeli mediana dwóch median i mediana dwóch p95; pierwsze 30 renderowanych klatek pominięto. Przechwytywanie obrazu jest wliczone, największa klatka 50.28210 ms. Limit 60 FPS i czas oczekiwania nie pozwalają przypisać podobnej klatki przyspieszeniu fizyki. Fokus i minimalizację raportujemy jawnie.
+
+KHR_debug id131186 według fazy odebrania callbacku: {'initialization': 0, 'runtime': 0, 'capture': 0, 'validation': 8, 'shutdown': 0}; zgubione komunikaty: 0. Faza odbioru asynchronicznego komunikatu nie jest dowodem przyczyny ani miejsca fizycznej pamięci. [Procesy](gpu-i04-5g/windows/runs.csv), [pełne podsumowanie](gpu-i04-5g/window-summary.json). Archiwum zachowuje CSV/logi; duże BMP z okien pominięto.

@@ -1,0 +1,10 @@
+{
+  "stress_16k": {
+    "equal_histogram_bytes": true,
+    "sha256": "97cdfa956f1739175085ab61ee5319bee74cbf567093bb5df10922f0ad7d0e18"
+  },
+  "stress_32k": {
+    "equal_histogram_bytes": true,
+    "sha256": "1fcd9072a62b5ba58790fa7316299a064409744e64d98b906c8187ebedd89a45"
+  }
+}

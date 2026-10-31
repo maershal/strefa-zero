@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="3"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="maershal"
+	time="43"
+	timestamp="2026-10-31T13:39:47"
+	>
+	<testcase name="gpu.thermal_ui" classname="gpu.thermal_ui" time="14.7533" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.thermal" classname="gpu.thermal" time="27.2072" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.instrumentation" classname="gpu.instrumentation" time="1.29104" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+</testsuite>

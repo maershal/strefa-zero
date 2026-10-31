@@ -1,0 +1,96 @@
+[0/2] Re-checking globbed directories...
+[1/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\lighting_system.cpp for CXX dependencies
+[2/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\world.cpp for CXX dependencies
+[3/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\scene_renderer.cpp for CXX dependencies
+[4/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\fluid_quality.cpp for CXX dependencies
+[5/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\flow_validation.cpp for CXX dependencies
+[6/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\liquid_validation.cpp for CXX dependencies
+[7/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\validation.cpp for CXX dependencies
+[8/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\mission_validation.cpp for CXX dependencies
+[9/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\profiling.cpp for CXX dependencies
+[10/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\stabilization_profile.cpp for CXX dependencies
+[11/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\cost_profile.cpp for CXX dependencies
+[12/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\work_validation.cpp for CXX dependencies
+[13/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\hot_validation.cpp for CXX dependencies
+[14/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\transport_validation.cpp for CXX dependencies
+[15/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\readback_validation.cpp for CXX dependencies
+[16/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\execution_validation.cpp for CXX dependencies
+[17/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\coupling_replay.cpp for CXX dependencies
+[18/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\neighbor_validation.cpp for CXX dependencies
+[19/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\coupling_validation.cpp for CXX dependencies
+[20/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\pbf_access_validation.cpp for CXX dependencies
+[21/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\menu.cpp for CXX dependencies
+[22/106] C:\WINDOWS\system32\cmd.exe /C "cd /D C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\build-strefa-zero-release && "C:\Program Files (x86)\Microsoft Visual Studio\18\BuildTools\Common7\IDE\CommonExtensions\Microsoft\CMake\CMake\bin\cmake.exe" -E copy_directory C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/outputs/strefa-zero/assets C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/assets"
+[23/106] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\ui\gpu_laboratory.cpp for CXX dependencies
+[24/106] Generating CXX dyndep file CMakeFiles\strefa_ui.dir\CXX.dd
+[25/103] Generating CXX dyndep file CMakeFiles\strefa_gpu.dir\CXX.dd
+[26/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\lighting_tests.cpp for CXX dependencies
+[27/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\main.cpp for CXX dependencies
+[28/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[29/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\simulation_world.cpp for CXX dependencies
+[30/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\application.cpp for CXX dependencies
+[31/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\diagnostic_scenarios.cpp for CXX dependencies
+[32/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\thermal_validation.cpp for CXX dependencies
+[33/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\session_recording.cpp for CXX dependencies
+[34/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\shader_cache_validation.cpp for CXX dependencies
+[35/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[36/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\vfx_tests.cpp for CXX dependencies
+[37/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[38/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\fluid_tests.cpp for CXX dependencies
+[39/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\session_recording.cpp for CXX dependencies
+[40/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[41/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\lighting_pressure_tests.cpp for CXX dependencies
+[42/97] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\thermal_gpu_tests.cpp for CXX dependencies
+[43/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\fluid_quality.cpp.obj
+[44/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\lighting_system.cpp.obj
+[45/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\scene_renderer.cpp.obj
+[46/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\liquid_validation.cpp.obj
+[47/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\validation.cpp.obj
+[48/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\world.cpp.obj
+[49/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\flow_validation.cpp.obj
+[50/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\mission_validation.cpp.obj
+[51/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\profiling.cpp.obj
+[52/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\stabilization_profile.cpp.obj
+[53/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\cost_profile.cpp.obj
+[54/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\work_validation.cpp.obj
+[55/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\hot_validation.cpp.obj
+[56/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\transport_validation.cpp.obj
+[57/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\readback_validation.cpp.obj
+[58/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\execution_validation.cpp.obj
+[59/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\neighbor_validation.cpp.obj
+[60/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\coupling_replay.cpp.obj
+[61/97] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\coupling_validation.cpp.obj
+[62/97] Generating CXX dyndep file CMakeFiles\strefa_zero.dir\CXX.dd
+[63/96] Generating CXX dyndep file CMakeFiles\strefa_lighting_tests.dir\CXX.dd
+[64/96] Generating CXX dyndep file CMakeFiles\strefa_vfx_tests.dir\CXX.dd
+[65/96] Generating CXX dyndep file CMakeFiles\strefa_fluid_tests.dir\CXX.dd
+[66/96] Generating CXX dyndep file CMakeFiles\strefa_lighting_pressure_tests.dir\CXX.dd
+[67/96] Generating CXX dyndep file CMakeFiles\strefa_thermal_gpu_tests.dir\CXX.dd
+[68/96] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\pbf_access_validation.cpp.obj
+[69/96] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\gpu_laboratory.cpp.obj
+[70/96] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\menu.cpp.obj
+[71/96] Building CXX object CMakeFiles\strefa_zero.dir\src\main.cpp.obj
+[72/96] Linking CXX static library strefa_ui.lib
+[73/96] Linking CXX static library strefa_gpu.lib
+[74/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\launch_options.cpp.obj
+[75/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\simulation_world.cpp.obj
+[76/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\diagnostic_scenarios.cpp.obj
+[77/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\application.cpp.obj
+[78/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\thermal_validation.cpp.obj
+[79/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\shader_cache_validation.cpp.obj
+[80/96] Building CXX object CMakeFiles\strefa_zero.dir\src\app\session_recording.cpp.obj
+[81/96] Building CXX object CMakeFiles\strefa_lighting_tests.dir\tests\lighting_tests.cpp.obj
+[82/96] Building CXX object CMakeFiles\strefa_vfx_tests.dir\tests\vfx_tests.cpp.obj
+[83/96] Building CXX object CMakeFiles\strefa_lighting_tests.dir\src\app\launch_options.cpp.obj
+[84/96] Building CXX object CMakeFiles\strefa_vfx_tests.dir\src\app\launch_options.cpp.obj
+[85/96] Building CXX object CMakeFiles\strefa_fluid_tests.dir\tests\fluid_tests.cpp.obj
+[86/96] Building CXX object CMakeFiles\strefa_fluid_tests.dir\src\app\session_recording.cpp.obj
+[87/96] Building CXX object CMakeFiles\strefa_thermal_gpu_tests.dir\tests\thermal_gpu_tests.cpp.obj
+[88/96] Building CXX object CMakeFiles\strefa_fluid_tests.dir\src\app\launch_options.cpp.obj
+[89/96] Building CXX object CMakeFiles\strefa_lighting_pressure_tests.dir\tests\lighting_pressure_tests.cpp.obj
+[90/96] Linking CXX executable runtime-070\strefa_fluid_tests.exe
+[91/96] Linking CXX executable runtime-070\strefa_lighting_tests.exe
+[92/96] Linking CXX executable runtime-070\strefa_vfx_tests.exe
+[93/96] Linking CXX executable runtime-070\strefa_lighting_pressure_tests.exe
+[94/96] Linking CXX executable runtime-070\strefa_thermal_gpu_tests.exe
+[95/96] Linking CXX executable runtime-070\StrefaZero.exe

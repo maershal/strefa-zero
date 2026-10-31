@@ -1,0 +1,7 @@
+﻿{
+    "available":  true,
+    "polls":  794,
+    "active_rows":  743,
+    "error":  null,
+    "scope":  "Whole protocol, asynchronous formatted Windows counters; includes idle and initialization; engine instances contain PID/LUID, no application titles."
+}

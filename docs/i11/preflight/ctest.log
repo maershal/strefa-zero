@@ -1,0 +1,20 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+    Start  1: graphics.lighting_contract
+1/5 Test  #1: graphics.lighting_contract .......   Passed    0.05 sec
+    Start 17: gpu.lighting_pressure
+2/5 Test #17: gpu.lighting_pressure ............   Passed    0.47 sec
+    Start 22: gpu.lighting
+3/5 Test #22: gpu.lighting .....................   Passed    2.37 sec
+    Start 41: gpu.instrumentation
+4/5 Test #41: gpu.instrumentation ..............   Passed    0.81 sec
+    Start 63: gpu.mission_ui
+5/5 Test #63: gpu.mission_ui ...................   Passed   15.53 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+gpu            =  19.17 sec*proc (4 tests)
+graphics       =  19.17 sec*proc (4 tests)
+integration    =  19.17 sec*proc (4 tests)
+
+Total Test time (real) =  19.25 sec

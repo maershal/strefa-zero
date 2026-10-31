@@ -1,0 +1,399 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="64"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="maershal"
+	time="854"
+	timestamp="2026-10-31T12:55:57"
+	>
+	<testcase name="game.vfx_contract" classname="game.vfx_contract" time="0.126908" status="run">
+		<properties/>
+		<system-out>PASS: VFX CLI, configuration isolation, CPU presentation identity/lifecycle
+</system-out>
+	</testcase>
+	<testcase name="physics.fluid_reference" classname="physics.fluid_reference" time="0.220706" status="run">
+		<properties/>
+		<system-out>PASS: independent 2D quadrature, presets, invalid coefficients, CLI, recording v2 and v1 compatibility
+</system-out>
+	</testcase>
+	<testcase name="game.protocol" classname="game.protocol" time="0.0230313" status="run">
+		<properties/>
+		<system-out>PASS: reservations, refunds, dedup, cooldown/reload, reset, overflow, wrap, 3-frame latency, 30/60/144 FPS, input and clock debt
+</system-out>
+	</testcase>
+	<testcase name="game.clock" classname="game.clock" time="0.0183061" status="run">
+		<properties/>
+		<system-out>PASS: bounded backlog, overflow accounting, pause, 30/60/144 FPS, single-shot input
+</system-out>
+	</testcase>
+	<testcase name="core.settings" classname="core.settings" time="0.110593" status="run">
+		<properties/>
+		<system-out>PASS: round-trip, invalid inputs, atomic replacement and corruption handling
+</system-out>
+	</testcase>
+	<testcase name="sim.materials" classname="sim.materials" time="20.5859" status="run">
+		<properties/>
+		<system-out>PASS thermal and latent heat
+Hydrostatic p(top/bottom)=1594/4456.38 residual=9.95415e-05
+Connected vessels transfer=1382.01
+PASS liquid mass, walls, density and hydrostatics
+PASS reactions, oxygen, acid, acoustics and shielding
+PASS reference, compact PCG and fixed clock
+</system-out>
+	</testcase>
+	<testcase name="sim.numerics_parallel" classname="sim.numerics_parallel" time="11.1211" status="run">
+		<properties/>
+		<system-out>IC iterations=88 error=3.31626e-11 true residual=9.17701e-11
+MIC iterations=43 error=1.03861e-11 true residual=5.85012e-11
+MIC+coarse iterations=39 error=7.00351e-12 true residual=5.15173e-11
+PASS manufactured pressure and MIC
+PASS bitwise 1/2/4-thread equivalence
+PASS aggregate heat-flux stability
+PASS sealed Neumann compatibility/gauges
+PASS species-based fuel activation
+Centers 77.6434 / 77.4592
+CFL .9/.45 falling-water center difference=0.184164 cells
+PASS timestep refinement/configuration
+</system-out>
+	</testcase>
+	<testcase name="game.training" classname="game.training" time="22.6172" status="run">
+		<properties/>
+		<system-out>PASS: input edges, movement/collision, jump, jet fuel, weapons/occlusion, targets, reload, grenade, reset, 30/60/144 FPS determinism
+</system-out>
+	</testcase>
+	<testcase name="sim.laboratory_worker" classname="sim.laboratory_worker" time="0.0402702" status="run">
+		<properties/>
+		<system-out>PASS: worker, immutable snapshots, inspector, pause, steps, commands and shutdown
+</system-out>
+	</testcase>
+	<testcase name="physics.thermal_contract" classname="physics.thermal_contract" time="0.0500765" status="run">
+		<properties/>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="app.opengl_smoke" classname="app.opengl_smoke" time="5.22882" status="run">
+		<properties>
+			<property name="cmake_labels" value="graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="app.laboratory_responsiveness" classname="app.laboratory_responsiveness" time="5.54505" status="run">
+		<properties>
+			<property name="cmake_labels" value="graphics;integration;performance"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="app.laboratory_four_threads" classname="app.laboratory_four_threads" time="5.63678" status="run">
+		<properties>
+			<property name="cmake_labels" value="graphics;integration;performance"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="app.shared_session" classname="app.shared_session" time="3.14148" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.shader_cache" classname="gpu.shader_cache" time="0.620547" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.thermal_ui" classname="gpu.thermal_ui" time="4.70003" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.thermal" classname="gpu.thermal" time="23.4883" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.vfx" classname="gpu.vfx" time="27.7723" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.renderer" classname="gpu.renderer" time="2.3105" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.fluid_quality" classname="gpu.fluid_quality" time="38.1046" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.gameplay" classname="gpu.gameplay" time="4.67565" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.mission" classname="gpu.mission" time="30.4779" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_64_liquid" classname="gpu.pbf_64_liquid" time="13.4867" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_64_mission" classname="gpu.pbf_64_mission" time="30.3879" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_64_coupling" classname="gpu.pbf_64_coupling" time="22.5513" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_128_liquid" classname="gpu.pbf_128_liquid" time="15.1238" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_128_mission" classname="gpu.pbf_128_mission" time="30.6307" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_128_coupling" classname="gpu.pbf_128_coupling" time="18.9942" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_bindings" classname="gpu.pbf_restrict_bindings" time="5.76964" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_liquid" classname="gpu.pbf_restrict_liquid" time="10.4548" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_mission" classname="gpu.pbf_restrict_mission" time="30.7079" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_coupling" classname="gpu.pbf_restrict_coupling" time="16.9082" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_hot_aos_sorted" classname="gpu.pbf_restrict_hot_aos_sorted" time="48.0725" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_hot_aos_reused" classname="gpu.pbf_restrict_hot_aos_reused" time="49.2928" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_hot_soa_sorted" classname="gpu.pbf_restrict_hot_soa_sorted" time="50.229" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.pbf_restrict_hot_soa_reused" classname="gpu.pbf_restrict_hot_soa_reused" time="44.2356" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.instrumentation" classname="gpu.instrumentation" time="0.896339" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_aos_sorted" classname="gpu.hot_aos_sorted" time="2.35645" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_aos_reused" classname="gpu.hot_aos_reused" time="2.22149" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_soa_sorted" classname="gpu.hot_soa_sorted" time="2.74463" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_soa_reused" classname="gpu.hot_soa_reused" time="2.71901" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_mission_narrow" classname="gpu.hot_mission_narrow" time="29.9504" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_mission_sorted" classname="gpu.hot_mission_sorted" time="30.6094" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.hot_immutable" classname="gpu.hot_immutable" time="2.58167" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.cost_aos" classname="gpu.cost_aos" time="1.61039" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.cost_soa" classname="gpu.cost_soa" time="1.68452" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.cost_immutable" classname="gpu.cost_immutable" time="1.44793" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.transport" classname="gpu.transport" time="1.19114" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.transport_mission" classname="gpu.transport_mission" time="32.5701" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.work_gating" classname="gpu.work_gating" time="13.4056" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.work_mission" classname="gpu.work_mission" time="30.6877" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.work_gating_aos_sorted" classname="gpu.work_gating_aos_sorted" time="9.47752" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.work_gating_aos_reused" classname="gpu.work_gating_aos_reused" time="10.3272" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.work_gating_soa_sorted" classname="gpu.work_gating_soa_sorted" time="11.8995" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.coupling" classname="gpu.coupling" time="7.65583" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.neighbors" classname="gpu.neighbors" time="1.84838" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.execution" classname="gpu.execution" time="10.0653" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.readback_ring" classname="gpu.readback_ring" time="0.677576" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.mission_ui" classname="gpu.mission_ui" time="15.827" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.granular_physics" classname="gpu.granular_physics" time="3.29059" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.liquid_physics" classname="gpu.liquid_physics" time="10.365" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.flow_behaviour" classname="gpu.flow_behaviour" time="11.1778" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="gpu.laboratory_ui" classname="gpu.laboratory_ui" time="4.68936" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+	<testcase name="app.opengl33_smoke" classname="app.opengl33_smoke" time="6.69142" status="run">
+		<properties>
+			<property name="cmake_labels" value="graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+</testsuite>

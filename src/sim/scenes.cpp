@@ -64,7 +64,8 @@ void World::load_scene(Scene scene) {
         rectangle({140, 98}, {177, 115}, Material::molten_metal); break;
     case Scene::ice_fire:
         rectangle({135, 148}, {180, 183}, Material::ice);
-        for (int y = 148; y < 181; y += 3) set({134, y}, Material::fire); break;
+        for (int y = 148; y < 181; y += 3) set({134, y}, Material::fire);
+        break;
     case Scene::shielded_explosion:
         rectangle({160, 120}, {163, 183}, Material::metal);
         rectangle({146, 150}, {153, 177}, Material::wood);

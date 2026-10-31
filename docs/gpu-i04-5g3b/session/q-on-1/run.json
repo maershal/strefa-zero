@@ -1,0 +1,28 @@
+﻿{
+    "schema_version":  1,
+    "name":  "q-on-1",
+    "order":  5,
+    "kind":  "triggerOn",
+    "cost_mode":  "off",
+    "visible_requested":  false,
+    "window_observer":  true,
+    "executable":  "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "executable_sha256":  "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
+    "arguments":  [
+                      "--gpu-coupling-check",
+                      "--gpu-pbf-restrict",
+                      "on",
+                      "--profile",
+                      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\session\\q-on-1"
+                  ],
+    "timeout_seconds":  180,
+    "start_utc":  "2026-10-30T15:34:32.3362777+00:00",
+    "end_utc":  "2026-10-30T15:34:56.2973290+00:00",
+    "pid":  9232,
+    "exit_code":  0,
+    "timed_out":  false,
+    "launch_error":  null,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "observer_samples":  89
+}

@@ -1,0 +1,4 @@
+{
+  "intentional_interruption": true,
+  "reason": "gpu.pbf_restrict_hot_aos_sorted exceeded 600 seconds at creation of sorted compatibility_C=1 programs; the reused case reached the same stage. Comparing I10 and limiting presentation image declarations to birth kernels. Restart full regression on corrected shader set."
+}

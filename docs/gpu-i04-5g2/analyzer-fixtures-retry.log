@@ -1,0 +1,15 @@
+Artifact tree copied
+{
+  "wrong_effective_mode": {
+    "rejected": true,
+    "reason": "Effective restrict mode mismatch"
+  },
+  "missing_raw_tick": {
+    "rejected": true,
+    "reason": "Missing raw tick samples"
+  },
+  "diagnostic_overhead_enabled": {
+    "rejected": true,
+    "reason": "Diagnostic overhead enabled"
+  }
+}

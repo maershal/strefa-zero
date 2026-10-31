@@ -1,0 +1,13 @@
+scene,metric,samples,median,p95,p99,max
+mission,gpu_step_ms,240,2.8008,2.863104,2.899776,2.924512
+mission,cpu_submit_ms,240,0.0079,0.0246,0.1223,0.3718
+mission,batch_mean_step_wall_ms,1,2.828985417,2.828985417,2.828985417,2.828985417
+stress_16k,gpu_step_ms,240,1.77216,1.848224,1.869824,1.875456
+stress_16k,cpu_submit_ms,240,0.006,0.0225,0.1011,0.2489
+stress_16k,batch_mean_step_wall_ms,1,1.733369167,1.733369167,1.733369167,1.733369167
+stress_32k,gpu_step_ms,240,3.166208,3.292512,3.330208,3.33824
+stress_32k,cpu_submit_ms,240,0.006,0.0329,0.084,0.4421
+stress_32k,batch_mean_step_wall_ms,1,3.173269583,3.173269583,3.173269583,3.173269583
+mission_blast,gpu_step_ms,240,2.977856,3.191072,3.23584,3.252224
+mission_blast,cpu_submit_ms,240,0.008,0.0192,0.0851,0.1342
+mission_blast,batch_mean_step_wall_ms,1,3.038575417,3.038575417,3.038575417,3.038575417

@@ -1,0 +1,13 @@
+pbf_64=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08
+pbf_128=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08
+pbf_256=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08
+query_queue_64 submitted=33 skipped=37
+groups_64=passed (empty, tails, capacity, FIFO wraps, reset)
+query_queue_128 submitted=33 skipped=37
+groups_128=passed (empty, tails, capacity, FIFO wraps, reset)
+query_queue_256 submitted=33 skipped=37
+groups_256=passed (empty, tails, capacity, FIFO wraps, reset)
+in_place_blast_equivalence=passed
+reference_blast_edit=passed
+optimized_blast_edit=passed
+status=passed

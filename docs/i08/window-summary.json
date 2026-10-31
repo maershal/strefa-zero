@@ -1,0 +1,194 @@
+[
+  {
+    "mode": "off",
+    "repeat": 1,
+    "rows": 10000,
+    "retained_frames": 9880,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.46875,
+      "p95": 3.0328,
+      "p99": 3.9515,
+      "maximum": 4.5447
+    },
+    "interval_ms": {
+      "samples": 16474,
+      "median": 0.4785,
+      "p95": 3.3567,
+      "p99": 3.9729,
+      "maximum": 5.3418
+    },
+    "width": 1600,
+    "height": 920,
+    "frame_limit": 0,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00833276467849,
+    "rows_dropped": 6594,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 16594,
+    "steps": 1700,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.17408,
+    "gpu_step_last_ms": 4.02563
+  },
+  {
+    "mode": "on",
+    "repeat": 1,
+    "rows": 900,
+    "retained_frames": 779,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6603,
+      "p95": 17.2648,
+      "p99": 17.8847,
+      "maximum": 18.1608
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.66055,
+      "p95": 17.265,
+      "p99": 17.885,
+      "maximum": 18.161
+    },
+    "width": 1600,
+    "height": 920,
+    "frame_limit": 60,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00490303091863,
+    "rows_dropped": 0,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 900,
+    "steps": 1794,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.169984,
+    "gpu_step_last_ms": 3.85322
+  },
+  {
+    "mode": "off",
+    "repeat": 2,
+    "rows": 10000,
+    "retained_frames": 9880,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.5215,
+      "p95": 3.2933,
+      "p99": 3.9295,
+      "maximum": 7.4735
+    },
+    "interval_ms": {
+      "samples": 15043,
+      "median": 0.533,
+      "p95": 3.3886,
+      "p99": 3.9987,
+      "maximum": 7.474
+    },
+    "width": 1840,
+    "height": 920,
+    "frame_limit": 0,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00833329859037,
+    "rows_dropped": 5163,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 15163,
+    "steps": 1700,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.17408,
+    "gpu_step_last_ms": 3.96963
+  },
+  {
+    "mode": "on",
+    "repeat": 2,
+    "rows": 900,
+    "retained_frames": 779,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6627,
+      "p95": 17.3017,
+      "p99": 17.7118,
+      "maximum": 18.3427
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.6605,
+      "p95": 17.3019,
+      "p99": 17.7121,
+      "maximum": 18.3429
+    },
+    "width": 1840,
+    "height": 920,
+    "frame_limit": 60,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00832716154049,
+    "rows_dropped": 0,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 900,
+    "steps": 1793,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.171968,
+    "gpu_step_last_ms": 4.28707
+  },
+  {
+    "mode": "off",
+    "repeat": 3,
+    "rows": 10000,
+    "retained_frames": 9880,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.48185,
+      "p95": 3.0727,
+      "p99": 3.5002,
+      "maximum": 4.249
+    },
+    "interval_ms": {
+      "samples": 16235,
+      "median": 0.4934,
+      "p95": 3.2221,
+      "p99": 3.8594,
+      "maximum": 4.7554
+    },
+    "width": 1600,
+    "height": 920,
+    "frame_limit": 0,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00833159930835,
+    "rows_dropped": 6355,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 16355,
+    "steps": 1700,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.179008,
+    "gpu_step_last_ms": 3.97597
+  },
+  {
+    "mode": "on",
+    "repeat": 3,
+    "rows": 900,
+    "retained_frames": 779,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6633,
+      "p95": 16.7249,
+      "p99": 16.8869,
+      "maximum": 30.8865
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.663649999999997,
+      "p95": 16.7253,
+      "p99": 16.8872,
+      "maximum": 30.8869
+    },
+    "width": 1600,
+    "height": 920,
+    "frame_limit": 60,
+    "focus_fraction": 1,
+    "max_pending_seconds": 0.00794206825892,
+    "rows_dropped": 0,
+    "interval_source": "mission-frames.csv (all frames)",
+    "interval_rows": 900,
+    "steps": 1796,
+    "dropped_seconds": 0.0,
+    "gpu_render_last_ms": 0.172032,
+    "gpu_step_last_ms": 3.96822
+  }
+]

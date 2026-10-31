@@ -1,0 +1,37 @@
+[
+  {
+    "case": "complete",
+    "accepted": true,
+    "identical_to_original_summary": true
+  },
+  {
+    "case": "missing_sample",
+    "rejected": true,
+    "reason": "Incomplete or mislabeled ABBA matrix"
+  },
+  {
+    "case": "duplicate_frame",
+    "rejected": true,
+    "reason": "Duplicate render frame"
+  },
+  {
+    "case": "nonfinite",
+    "rejected": true,
+    "reason": "Nonfinite or negative timing"
+  },
+  {
+    "case": "negative_time",
+    "rejected": true,
+    "reason": "Nonfinite or negative timing"
+  },
+  {
+    "case": "missing_quality_with_same_row_count",
+    "rejected": true,
+    "reason": "Incomplete or mislabeled ABBA matrix"
+  },
+  {
+    "case": "bad_order",
+    "rejected": true,
+    "reason": "Incomplete or mislabeled ABBA matrix"
+  }
+]

@@ -1,0 +1,984 @@
+[
+  {
+    "order": 1,
+    "name": "game.clock",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_clock_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_clock_tests.exe"
+    ]
+  },
+  {
+    "order": 2,
+    "name": "core.settings",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_core_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_core_tests.exe"
+    ]
+  },
+  {
+    "order": 3,
+    "name": "sim.materials",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_sim_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_sim_tests.exe"
+    ]
+  },
+  {
+    "order": 4,
+    "name": "sim.numerics_parallel",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_numerics_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_numerics_tests.exe"
+    ]
+  },
+  {
+    "order": 5,
+    "name": "game.training",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_game_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_game_tests.exe"
+    ]
+  },
+  {
+    "order": 6,
+    "name": "sim.laboratory_worker",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_laboratory_tests.exe"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/strefa_laboratory_tests.exe"
+    ]
+  },
+  {
+    "order": 7,
+    "name": "app.opengl_smoke",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--smoke-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/smoke-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--smoke-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/app.opengl_smoke"
+    ]
+  },
+  {
+    "order": 8,
+    "name": "app.laboratory_responsiveness",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--lab-smoke-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/laboratory-smoke-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--lab-smoke-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/app.laboratory_responsiveness"
+    ]
+  },
+  {
+    "order": 9,
+    "name": "app.laboratory_four_threads",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--lab-smoke-test",
+      "--physics-threads",
+      "4",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/laboratory-four-thread-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--lab-smoke-test",
+      "--physics-threads",
+      "4",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/app.laboratory_four_threads"
+    ]
+  },
+  {
+    "order": 10,
+    "name": "gpu.mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.mission"
+    ]
+  },
+  {
+    "order": 11,
+    "name": "gpu.pbf_64_liquid",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_64_liquid-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_64_liquid"
+    ]
+  },
+  {
+    "order": 12,
+    "name": "gpu.pbf_64_mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_64_mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_64_mission"
+    ]
+  },
+  {
+    "order": 13,
+    "name": "gpu.pbf_64_coupling",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_64_coupling-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-size",
+      "64",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_64_coupling"
+    ]
+  },
+  {
+    "order": 14,
+    "name": "gpu.pbf_128_liquid",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_128_liquid-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_128_liquid"
+    ]
+  },
+  {
+    "order": 15,
+    "name": "gpu.pbf_128_mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_128_mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_128_mission"
+    ]
+  },
+  {
+    "order": 16,
+    "name": "gpu.pbf_128_coupling",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_128_coupling-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-size",
+      "128",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_128_coupling"
+    ]
+  },
+  {
+    "order": 17,
+    "name": "gpu.pbf_restrict_bindings",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-pbf-restrict-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/pbf-restrict-bindings-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-pbf-restrict-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_bindings"
+    ]
+  },
+  {
+    "order": 18,
+    "name": "gpu.pbf_restrict_liquid",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/pbf-restrict-liquid-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_liquid"
+    ]
+  },
+  {
+    "order": 19,
+    "name": "gpu.pbf_restrict_mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/pbf-restrict-mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_mission"
+    ]
+  },
+  {
+    "order": 20,
+    "name": "gpu.pbf_restrict_coupling",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/pbf-restrict-coupling-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_coupling"
+    ]
+  },
+  {
+    "order": 21,
+    "name": "gpu.pbf_restrict_hot_aos_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_restrict_hot_aos_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_hot_aos_sorted"
+    ]
+  },
+  {
+    "order": 22,
+    "name": "gpu.pbf_restrict_hot_aos_reused",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_restrict_hot_aos_reused-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_hot_aos_reused"
+    ]
+  },
+  {
+    "order": 23,
+    "name": "gpu.pbf_restrict_hot_soa_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_restrict_hot_soa_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_hot_soa_sorted"
+    ]
+  },
+  {
+    "order": 24,
+    "name": "gpu.pbf_restrict_hot_soa_reused",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.pbf_restrict_hot_soa_reused-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-pbf-restrict",
+      "on",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.pbf_restrict_hot_soa_reused"
+    ]
+  },
+  {
+    "order": 25,
+    "name": "gpu.instrumentation",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-profile-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/instrumentation-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-profile-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.instrumentation"
+    ]
+  },
+  {
+    "order": 26,
+    "name": "gpu.hot_aos_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.hot_aos_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_aos_sorted"
+    ]
+  },
+  {
+    "order": 27,
+    "name": "gpu.hot_aos_reused",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.hot_aos_reused-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_aos_reused"
+    ]
+  },
+  {
+    "order": 28,
+    "name": "gpu.hot_soa_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.hot_soa_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_soa_sorted"
+    ]
+  },
+  {
+    "order": 29,
+    "name": "gpu.hot_soa_reused",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.hot_soa_reused-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_soa_reused"
+    ]
+  },
+  {
+    "order": 30,
+    "name": "gpu.hot_mission_narrow",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-neighbor-reads",
+      "narrow",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/hot-mission-narrow-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-neighbor-reads",
+      "narrow",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_mission_narrow"
+    ]
+  },
+  {
+    "order": 31,
+    "name": "gpu.hot_mission_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-neighbor-reads",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/hot-mission-sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-neighbor-reads",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_mission_sorted"
+    ]
+  },
+  {
+    "order": 32,
+    "name": "gpu.hot_immutable",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/hot-immutable-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-hot-check",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.hot_immutable"
+    ]
+  },
+  {
+    "order": 33,
+    "name": "gpu.cost_aos",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-layout",
+      "aos",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/cost-aos-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-layout",
+      "aos",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.cost_aos"
+    ]
+  },
+  {
+    "order": 34,
+    "name": "gpu.cost_soa",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-layout",
+      "soa",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/cost-soa-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-layout",
+      "soa",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.cost_soa"
+    ]
+  },
+  {
+    "order": 35,
+    "name": "gpu.cost_immutable",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/cost-immutable-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-cost-check",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.cost_immutable"
+    ]
+  },
+  {
+    "order": 36,
+    "name": "gpu.transport",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-transport-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/transport-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-transport-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.transport"
+    ]
+  },
+  {
+    "order": 37,
+    "name": "gpu.transport_mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/transport-mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-storage",
+      "auto",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.transport_mission"
+    ]
+  },
+  {
+    "order": 38,
+    "name": "gpu.work_gating",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/work-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.work_gating"
+    ]
+  },
+  {
+    "order": 39,
+    "name": "gpu.work_mission",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-phase-gating",
+      "on",
+      "--gpu-zero-projection",
+      "on",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/work-mission-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-test",
+      "--gpu-phase-gating",
+      "on",
+      "--gpu-zero-projection",
+      "on",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.work_mission"
+    ]
+  },
+  {
+    "order": 40,
+    "name": "gpu.work_gating_aos_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.work_gating_aos_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.work_gating_aos_sorted"
+    ]
+  },
+  {
+    "order": 41,
+    "name": "gpu.work_gating_aos_reused",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.work_gating_aos_reused-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "aos",
+      "--gpu-neighbors",
+      "reused",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.work_gating_aos_reused"
+    ]
+  },
+  {
+    "order": 42,
+    "name": "gpu.work_gating_soa_sorted",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu.work_gating_soa_sorted-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-work-check",
+      "--gpu-layout",
+      "soa",
+      "--gpu-neighbors",
+      "sorted",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.work_gating_soa_sorted"
+    ]
+  },
+  {
+    "order": 43,
+    "name": "gpu.coupling",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/coupling-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-coupling-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.coupling"
+    ]
+  },
+  {
+    "order": 44,
+    "name": "gpu.neighbors",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-neighbor-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/neighbor-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-neighbor-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.neighbors"
+    ]
+  },
+  {
+    "order": 45,
+    "name": "gpu.execution",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-execution-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/execution-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-execution-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.execution"
+    ]
+  },
+  {
+    "order": 46,
+    "name": "gpu.readback_ring",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-readback-check",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/readback-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-readback-check",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.readback_ring"
+    ]
+  },
+  {
+    "order": 47,
+    "name": "gpu.mission_ui",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-smoke-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/mission-ui-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--mission-smoke-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.mission_ui"
+    ]
+  },
+  {
+    "order": 48,
+    "name": "gpu.granular_physics",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-test-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.granular_physics"
+    ]
+  },
+  {
+    "order": 49,
+    "name": "gpu.liquid_physics",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-liquid-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-liquid-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.liquid_physics"
+    ]
+  },
+  {
+    "order": 50,
+    "name": "gpu.flow_behaviour",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-flow-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-flow-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-flow-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.flow_behaviour"
+    ]
+  },
+  {
+    "order": 51,
+    "name": "gpu.laboratory_ui",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-smoke-test",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/gpu-ui-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--gpu-smoke-test",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/gpu.laboratory_ui"
+    ]
+  },
+  {
+    "order": 52,
+    "name": "app.opengl33_smoke",
+    "original_command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--smoke-test",
+      "--opengl33",
+      "--profile",
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/legacy-smoke-profile"
+    ],
+    "command": [
+      "C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release/runtime-070/StrefaZero.exe",
+      "--smoke-test",
+      "--opengl33",
+      "--profile",
+      "C:/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/i04-5g3b-results/qa/app.opengl33_smoke"
+    ]
+  }
+]

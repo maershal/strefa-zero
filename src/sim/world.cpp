@@ -67,13 +67,15 @@ bool World::set(Point p, Material material, double kelvin, double fill) {
         s.liquid.volume[channel][i] = fill;
         s.liquid.energy[channel][i] = fill * props.density * specific_enthalpy(material, kelvin);
         if (material == Material::acid) s.acid_capacity[i] = fill * .8;
-        if (fill > .99) { for (auto& a : s.air.mass) a[i] = 0; s.air.energy[i] = 0; }
+        if (fill > .99) { for (auto& a : s.air.mass) a[i] = 0;
+        s.air.energy[i] = 0; }
     } else if (definition(material).phase == Phase::solid || definition(material).phase == Phase::powder) {
         s.material[i] = material; s.mass[i] = props.density * fill;
         s.energy[i] = s.mass[i] * specific_enthalpy(material, kelvin);
         s.fuel[i] = s.mass[i] * (1 - props.residue);
         if (props.ignition == 0) s.fuel[i] = 0;
-        for (auto& a : s.air.mass) a[i] = 0; s.air.energy[i] = 0;
+        for (auto& a : s.air.mass) a[i] = 0;
+        s.air.energy[i] = 0;
     } else if (material != Material::empty) {
         const auto gas = material == Material::steam ? Gas::steam : material == Material::smoke ? Gas::smoke
             : material == Material::gas ? Gas::fuel : Gas::products;
@@ -92,6 +94,12 @@ bool World::set(Point p, Material material, double kelvin, double fill) {
 Cell World::at(Point p) const noexcept {
     if (!contains(p)) return {Material::metal, 0};
     const int i = cell_index(p); return {dominant(state_, i), state_.shade[i]};
+}
+FluidSample World::sample_fluid(Point p)const noexcept {
+    FluidSample result;if(!contains(p)){result.material=Material::metal;return result;}
+    const auto& s=state_;const int i=cell_index(p);result.material=dominant(s,i);
+    result.water=static_cast<float>(s.liquid.volume[liquid_index(Material::water)][i]);result.oil=static_cast<float>(s.liquid.volume[liquid_index(Material::oil)][i]);
+    result.velocity={(s.liquid.u[u_index(p.x,p.y)]+s.liquid.u[u_index(p.x+1,p.y)])*.5F,(s.liquid.v[v_index(p.x,p.y)]+s.liquid.v[v_index(p.x,p.y+1)])*.5F};return result;
 }
 PhysicalSample World::sample(Point p) const noexcept {
     PhysicalSample sample;
@@ -246,9 +254,12 @@ void World::step(ScanMode mode) {
     }
     s.report.reaction_ms = elapsed();
     const bool air=s.config.air&&s.air_awake;
-    if (air) solve_air(s, tick_duration); s.report.air_ms=elapsed();
-    if (s.config.motion) move_powders(s, tick_duration, mode == ScanMode::full_grid); s.report.motion_ms=elapsed();
-    if (s.config.fluids) solve_liquids(s, tick_duration); s.report.liquid_ms=elapsed();
+    if (air) solve_air(s, tick_duration);
+    s.report.air_ms=elapsed();
+    if (s.config.motion) move_powders(s, tick_duration, mode == ScanMode::full_grid);
+    s.report.motion_ms=elapsed();
+    if (s.config.fluids) solve_liquids(s, tick_duration);
+    s.report.liquid_ms=elapsed();
     const bool conducted=s.config.thermal&&s.heat_awake;
     if (conducted) conduct_heat(s, tick_duration);
     else s.thermal_awake.fill(false);

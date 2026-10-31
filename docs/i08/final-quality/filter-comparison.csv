@@ -1,0 +1,13 @@
+scene,spatial_phase_error,bilateral_phase_error
+tank,0,0
+dam,0,0
+phases,0.0029301,0.000436779
+sand,0,0
+drop,0,0
+stream,0,0
+thin-wall,0,0
+corner,0,0
+segments,0,0
+edges,0,0
+immersion,0.00233479,0.000354073
+mission,0.00196595,0.000297296

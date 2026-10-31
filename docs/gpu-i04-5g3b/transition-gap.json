@@ -1,0 +1,10 @@
+{
+  "last_slow_end_utc": "2026-10-30T15:38:17.4665257+00:00",
+  "first_followup_start_utc": "2026-10-30T15:40:40.1602421+00:00",
+  "gap_seconds": 142.693717,
+  "confounders": [
+    "New PowerShell supervisor",
+    "Elapsed idle/analysis/preparation time"
+  ],
+  "observation": "First follow-up hidden OFF was already fast before any visible intervention; no attribution to window visibility or supervisor lifetime."
+}

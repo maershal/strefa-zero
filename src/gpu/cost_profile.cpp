@@ -175,6 +175,7 @@ std::expected<void,std::string> profile_cost(const std::filesystem::path& output
         std::ofstream environment{output/"environment.txt"},summary{output/"summary.csv"},validation{output/"validation.csv"};
         environment<<"renderer="<<reinterpret_cast<const char*>(glGetString(GL_RENDERER))<<"\nversion="<<reinterpret_cast<const char*>(glGetString(GL_VERSION))
             <<"\ncost_mode="<<cost_mode_name(mode)<<"\nmode=unpaced\nwarmup_ticks=120\nmeasured_ticks=240\ngpu_timer_mode=elapsed\nreadback_period=2\ncounters=1\ngroup_timers=0\nsoa="<<layout.soa
+            <<"\nlocal_size="<<layout.local_size<<"\nreduction_size="<<layout.reduction_size<<"\npbf_size_requested="<<layout.pbf_size<<"\npbf_size_effective="<<layout.effective_pbf_size()<<"\npbf_restrict_requested="<<layout.pbf_restrict<<"\npbf_restrict_effective="<<layout.effective_pbf_restrict()
             <<"\nneighbor_mode=2\nneighbor_reads_requested="<<neighbor_reads_name(layout.neighbor_reads)<<"\nphase_gating="<<layout.phase_gating<<"\nskip_zero_projection="<<layout.skip_zero_projection<<'\n';
         summary<<"scene,metric,samples,median,p95,p99,max\n"<<std::setprecision(10);validation<<"scene,initial_active,final_active,finite,steps,trace_events,timestamp_pairs,header_copies,snapshots,staging_bytes\n";
         for(unsigned scenario=0;scenario<4;++scenario){

@@ -1,0 +1,21 @@
+{
+  "base_commit": "7e85553109c35d390a151454011fa8836db44045",
+  "base_stage": "G1; working-tree changes preserved",
+  "base_sha256": {
+    "CMakeLists.txt": "2724aa4758fd5f7a92da204a4ad4844bee68014e241822295f3819f66bcac506",
+    "src/gpu/world.cpp": "0b2987b2ee77938232259574a311645132324e987d1516db615676aa450a453d",
+    "src/gpu/world.hpp": "9c8f8d4add5d407847fa6b2333b2c5b8b7c9f49f792d05477cea1772d31d0ee3",
+    "src/gpu/profiling.hpp": "26d03486360cc0d3742b077660a687a2ad660dac4f4f829fbd9b9eff4b2f8074",
+    "src/gpu/coupling_replay.cpp": "e3ef1d005ec8e4124c8719d277e4c5dd5106e610e3eddcb95684a3231516e36d",
+    "src/gpu/coupling_validation.cpp": "4a30395a39cdefa6f764802ce570ae196f515e67504f0789a521a8d249353fe8",
+    "src/gpu/cost_profile.cpp": "9e6ea1ed748e52b0577e4791184390f43c69d51e3e40b696002a496068385c68",
+    "src/gpu/profiling.cpp": "3c36f63456a693a94b8d1fc2e728a7d44dc073f17fcec7c0fdea84ac34f77814",
+    "src/gpu/stabilization_profile.cpp": "69cc2174fa403a288dda800dad8f436d976ffc6693bdbc65b9b6352f63ffa07f",
+    "src/app/application.cpp": "e797438763202136333db78b21acf1bcaa0901b72a9a29b7d9c2394b8663288e",
+    "scripts/profile-stabilization.ps1": "15a93f753c522d1f8cbca981d2ad00c657f89ebdece476bbcb5086c225c2461f",
+    "README.md": "a5236085ee8b5895d7ba96da21d6a7e28ee91879d01d9a2744f321755149ea74",
+    "docs/PLAN_ROZWOJU_GPU.md": "bce7b72b7089edadaa10b04a856d8d46a7e5f0745da21b2bc70fbe29c18a6316",
+    "docs/REVIEW_I04_ROZSTRZYGNIECIA.md": "9104ecde1be128a8ac1756ab1fe4979fb2a392e4a36d32a9daca2f51d814030c"
+  },
+  "baseline_exe_sha256": "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+}

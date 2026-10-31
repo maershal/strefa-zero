@@ -1,0 +1,8 @@
+persistent_supported=1
+legacy=passed (GPU payload, full ring, wraps, stale generations/edits, pending reconfigure)
+stream=passed (GPU payload, full ring, wraps, stale generations/edits, pending reconfigure)
+staging=passed (GPU payload, full ring, wraps, stale generations/edits, pending reconfigure)
+persistent=passed (GPU payload, full ring, wraps, stale generations/edits, pending reconfigure)
+capability_fallback=passed (forced capability-off)
+world_reset_scene_edit=passed
+status=passed

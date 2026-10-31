@@ -1,0 +1,4 @@
+fps_30=PASS; authoritative checksum unchanged, muzzle=20, jet=120
+fps_60=PASS; authoritative checksum unchanged, muzzle=20, jet=120
+fps_144=PASS; authoritative checksum unchanged, muzzle=20, jet=120
+result=PASS

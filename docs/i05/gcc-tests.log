@@ -1,0 +1,114 @@
+Start testing: Oct 30 17:44 CET
+----------------------------------------------------------
+1/6 Testing: game.clock
+1/6 Test: game.clock
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_clock_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"game.clock" start time: Oct 30 17:44 CET
+Output:
+----------------------------------------------------------
+PASS: bounded backlog, overflow accounting, pause, 30/60/144 FPS, single-shot input
+<end of output>
+Test time =   0.02 sec
+----------------------------------------------------------
+Test Passed.
+"game.clock" end time: Oct 30 17:44 CET
+"game.clock" time elapsed: 00:00:00
+----------------------------------------------------------
+
+2/6 Testing: core.settings
+2/6 Test: core.settings
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_core_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"core.settings" start time: Oct 30 17:44 CET
+Output:
+----------------------------------------------------------
+PASS: round-trip, invalid inputs, atomic replacement and corruption handling
+<end of output>
+Test time =   0.14 sec
+----------------------------------------------------------
+Test Passed.
+"core.settings" end time: Oct 30 17:44 CET
+"core.settings" time elapsed: 00:00:00
+----------------------------------------------------------
+
+3/6 Testing: sim.materials
+3/6 Test: sim.materials
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_sim_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"sim.materials" start time: Oct 30 17:44 CET
+Output:
+----------------------------------------------------------
+PASS thermal and latent heat
+Hydrostatic p(top/bottom)=1594/4456.38 residual=9.95415e-05
+Connected vessels transfer=1382.01
+PASS liquid mass, walls, density and hydrostatics
+PASS reactions, oxygen, acid, acoustics and shielding
+PASS reference, compact PCG and fixed clock
+<end of output>
+Test time =  59.17 sec
+----------------------------------------------------------
+Test Passed.
+"sim.materials" end time: Oct 30 17:45 CET
+"sim.materials" time elapsed: 00:00:59
+----------------------------------------------------------
+
+4/6 Testing: sim.numerics_parallel
+4/6 Test: sim.numerics_parallel
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_numerics_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"sim.numerics_parallel" start time: Oct 30 17:45 CET
+Output:
+----------------------------------------------------------
+IC iterations=88 error=3.31624e-11 true residual=9.17698e-11
+MIC iterations=43 error=1.03846e-11 true residual=5.85015e-11
+MIC+coarse iterations=39 error=7.00195e-12 true residual=5.15185e-11
+PASS manufactured pressure and MIC
+PASS bitwise 1/2/4-thread equivalence
+PASS aggregate heat-flux stability
+PASS sealed Neumann compatibility/gauges
+PASS species-based fuel activation
+Centers 77.6434 / 77.4592
+CFL .9/.45 falling-water center difference=0.184164 cells
+PASS timestep refinement/configuration
+<end of output>
+Test time =  32.68 sec
+----------------------------------------------------------
+Test Passed.
+"sim.numerics_parallel" end time: Oct 30 17:46 CET
+"sim.numerics_parallel" time elapsed: 00:00:32
+----------------------------------------------------------
+
+5/6 Testing: game.training
+5/6 Test: game.training
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_game_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"game.training" start time: Oct 30 17:46 CET
+Output:
+----------------------------------------------------------
+PASS: input edges, movement/collision, jump, jet fuel, weapons/occlusion, targets, reload, grenade, reset, 30/60/144 FPS determinism
+<end of output>
+Test time =  84.44 sec
+----------------------------------------------------------
+Test Passed.
+"game.training" end time: Oct 30 17:47 CET
+"game.training" time elapsed: 00:01:24
+----------------------------------------------------------
+
+6/6 Testing: sim.laboratory_worker
+6/6 Test: sim.laboratory_worker
+Command: "/mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc/strefa_laboratory_tests"
+Directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+"sim.laboratory_worker" start time: Oct 30 17:47 CET
+Output:
+----------------------------------------------------------
+PASS: worker, immutable snapshots, inspector, pause, steps, commands and shutdown
+<end of output>
+Test time =   0.18 sec
+----------------------------------------------------------
+Test Passed.
+"sim.laboratory_worker" end time: Oct 30 17:47 CET
+"sim.laboratory_worker" time elapsed: 00:00:00
+----------------------------------------------------------
+
+End testing: Oct 30 17:47 CET

@@ -1,0 +1,28 @@
+#version 430 core
+layout(local_size_x=1) in;
+#include "lighting_common.glsl"
+layout(std430,binding=2) readonly buffer MaterialSources {PointLight candidates[960];};
+#define MISSION_READ_ONLY 1
+#include "mission_state.glsl"
+layout(binding=1) uniform sampler2D heatField;
+layout(binding=3) uniform usampler2D terrainMap;
+uniform int sourceGeneration,sourceTick,missionEnabled,heatEnabled;
+void insertLight(PointLight p){
+ if(any(isnan(p.position))||any(isinf(p.position))||any(isnan(p.color))||any(isinf(p.color)))return;
+ uint n=lightCounts.x,at=n;for(uint j=0u;j<n;++j)if(p.history.y>lights[j].history.y){at=j;break;}
+ if(at>=32u){lightCounts.y++;return;}if(n==32u)lightCounts.y++;else lightCounts.x++;
+ for(uint j=min(n,31u);j>at;--j)lights[j]=lights[j-1u];lights[at]=p;
+}
+void main(){uint gen=uint(sourceGeneration),tick=uint(sourceTick);if(lightClock.x==gen&&tick<=lightClock.y)return;
+ if(lightClock.x!=gen){lightCounts=uvec4(0);lightClock=uvec4(gen,0,0,0);}
+ uint old=lightCounts.x;lightCounts.x=0u;for(uint j=0u;j<old;++j){PointLight p=lights[j];p.history.x-=1./120.;if(p.history.z>0.&&p.history.x>0.)lights[lightCounts.x++]=p;}
+ if(missionEnabled!=0&&eventBatch.header.z==gen&&eventBatch.header.y==tick&&eventBatch.header.x<=144u&&eventBatch.header.w==0u){
+  for(uint j=0u;j<eventBatch.header.x;++j){WorldEvent e=eventBatch.events[j];if(e.identity.x!=gen||e.identity.y!=tick||e.identity.z!=j+1u){lightClock.w++;continue;}
+   if(e.identity.w==4u)insertLight(PointLight(vec4(e.payload.xy,max(12.,e.payload.z*3.),1),vec4(5.,2.4,.6,1),vec4(.16,4,.16,float(e.identity.z))));
+   else if(e.identity.w==1u&&e.detail.w==1u)insertLight(PointLight(vec4(e.payload.xy,18.,1),vec4(3.,1.9,.7,1),vec4(.055,3,.055,float(e.identity.z))));
+  }
+ }
+ for(uint j=0u;j<min(lampHeader.x,8u);++j)insertLight(lamps[j]);
+ if(heatEnabled!=0)for(uint i=0u;i<960u;++i)if(candidates[i].position.z>0.)insertLight(candidates[i]);
+ lightClock.xy=uvec2(gen,tick);
+}

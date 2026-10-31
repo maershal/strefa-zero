@@ -1,0 +1,13 @@
+{
+  "executable": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+  "flags": [
+    "--gpu-cost-profile",
+    "--gpu-cost-mode",
+    "passes",
+    "--gpu-fluid-profile",
+    "balanced"
+  ],
+  "profile": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i07-results\\candidate-pass-costs",
+  "timeout_ms": 600000,
+  "result": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i07-results\\candidate-pass-costs\\native-result.json"
+}

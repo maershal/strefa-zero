@@ -1,0 +1,32 @@
+{
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "flags":  [
+                  "--mission-smoke-test",
+                  "--show-test-window",
+                  "--gpu-counters",
+                  "--gl-debug",
+                  "--gpu-render-quality",
+                  "basic",
+                  "--test-vsync",
+                  "on",
+                  "--test-window-size",
+                  "1600",
+                  "960"
+              ],
+    "profile":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i08-results\\windows\\on-2",
+    "timeout_ms":  120000,
+    "result":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i08-results\\windows\\on-2\\native-result.json",
+    "requested_flags":  [
+                            "--mission-smoke-test",
+                            "--show-test-window",
+                            "--gpu-profiling",
+                            "--gl-debug",
+                            "--gpu-render-quality",
+                            "basic",
+                            "--test-vsync",
+                            "on",
+                            "--test-window-size",
+                            "1600",
+                            "960"
+                        ]
+}

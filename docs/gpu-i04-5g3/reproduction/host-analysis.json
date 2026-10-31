@@ -1,0 +1,671 @@
+[
+  {
+    "run": "validation",
+    "kind": "validation",
+    "samples": 5,
+    "samples_with_window": 4,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 5.9835,
+    "observer_ms_max": 7.3627,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-before-1",
+    "kind": "cost",
+    "samples": 19,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.8877,
+    "observer_ms_max": 7.8485,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-before-2",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.28675,
+    "observer_ms_max": 6.6984,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "q-trigger-64",
+    "kind": "trigger64",
+    "samples": 28,
+    "samples_with_window": 28,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.7727,
+    "observer_ms_max": 5.6193,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-q64",
+    "kind": "cost",
+    "samples": 19,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.6997,
+    "observer_ms_max": 5.1225,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "q-trigger-128",
+    "kind": "trigger128",
+    "samples": 28,
+    "samples_with_window": 27,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 4.0169,
+    "observer_ms_max": 5.9742,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-q128",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.6721,
+    "observer_ms_max": 4.6467,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "bounds",
+    "kind": "cost",
+    "samples": 22,
+    "samples_with_window": 21,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.2363999999999997,
+    "observer_ms_max": 8.7842,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-bounds",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.2279,
+    "observer_ms_max": 4.149,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "snapshots-1",
+    "kind": "cost",
+    "samples": 28,
+    "samples_with_window": 28,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.50225,
+    "observer_ms_max": 5.7525,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-snapshots",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.58885,
+    "observer_ms_max": 4.3718,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "passes",
+    "kind": "cost",
+    "samples": 20,
+    "samples_with_window": 19,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.30435,
+    "observer_ms_max": 5.4188,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-before-visible",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 4.0514,
+    "observer_ms_max": 5.2418,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "visible-1",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 17,
+    "samples_minimized": 0,
+    "samples_native_foreground": 17,
+    "foreground_pids": [
+      10852,
+      21320
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.7133000000000003,
+    "observer_ms_max": 4.6874,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "visible-2",
+    "kind": "cost",
+    "samples": 19,
+    "samples_with_window": 18,
+    "samples_visible": 17,
+    "samples_minimized": 0,
+    "samples_native_foreground": 17,
+    "foreground_pids": [
+      10852,
+      13868
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 4.6176,
+    "observer_ms_max": 8.6596,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-visible",
+    "kind": "cost",
+    "samples": 19,
+    "samples_with_window": 19,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 4.869,
+    "observer_ms_max": 6.4196,
+    "outer_dimensions": [
+      [
+        8,
+        8
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "window-control",
+    "kind": "window",
+    "samples": 61,
+    "samples_with_window": 60,
+    "samples_visible": 58,
+    "samples_minimized": 0,
+    "samples_native_foreground": 58,
+    "foreground_pids": [
+      10852,
+      11568
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.6614,
+    "observer_ms_max": 6.1623,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        8,
+        8
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-window",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.65775,
+    "observer_ms_max": 4.5116,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-after-idle",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.2321999999999997,
+    "observer_ms_max": 4.488,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "snapshots-2",
+    "kind": "cost",
+    "samples": 27,
+    "samples_with_window": 27,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.3164,
+    "observer_ms_max": 4.6661,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "hidden-closing",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.8512500000000003,
+    "observer_ms_max": 5.9334,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  }
+]

@@ -5,7 +5,7 @@
 
 namespace strefa::ui {
 
-struct ArenaInput { game::TickInput controls; bool reset{}; };
+struct ArenaInput { game::TickInput controls; bool reset{},toggle_pause{}; };
 // Read-only presentation DTO. No UI dependency on the simulation owner/backend.
 struct ArenaView {
     game::PlayerState actor;
@@ -35,7 +35,8 @@ struct ArenaFrame {
     Image world, soldier, background, parts, weapons;
     ArenaView game;
     ArenaInput& input;
-    bool focused{};
+    bool focused{},scene_mission{true},paused{};
+    Image vfx_front;bool shared_vfx{},effects_enabled{true};int* vfx_quality{};int* lighting_quality{};std::array<float,2> camera{};
 };
 [[nodiscard]] Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts);
 

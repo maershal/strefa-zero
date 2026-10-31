@@ -1,0 +1,16 @@
+{
+  "stage": "G3-B",
+  "runtime_modified": false,
+  "baseline_sha256": "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e",
+  "g2_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
+  "root_manifest_sha256_before": "f8240ba4ca0825d0f8ee2ade33bfa3d1f517a2df70d2381a0ba9bda503c1793e",
+  "native_binary_sha256": {
+    "runtime-070/strefa_clock_tests.exe": "b47d75c750d133c82588fcf97b6b9138d46bc2d5081b3d919f8bbf61a9d5445c",
+    "runtime-070/strefa_core_tests.exe": "5577a811609f3cb28180b92968764a0b299bd79b834a729b64f9576eaf63c19d",
+    "runtime-070/strefa_sim_tests.exe": "d77731be5845bb3c06c47080909ab740245402a19433c4059f03969c44f2f721",
+    "runtime-070/strefa_numerics_tests.exe": "47420d1a56789778c3aa52624ff19b1b14051705c260bb56c1f519e03f77ea86",
+    "runtime-070/strefa_game_tests.exe": "e34d530f81a67e9cef5a103b2606d225f6fd3daf876ebb8bc4400d1594d9937c",
+    "runtime-070/strefa_laboratory_tests.exe": "0a563eb96395a1bb327ecaf7cc14f0ffde37908f2b2f8279f22b8ffb8755088e",
+    "runtime-070/StrefaZero.exe": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8"
+  }
+}

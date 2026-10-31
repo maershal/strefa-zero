@@ -1,0 +1,30 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start 10: app.opengl_smoke
+ 1/10 Test #10: app.opengl_smoke .................   Passed   12.86 sec
+      Start 13: app.shared_session
+ 2/10 Test #13: app.shared_session ...............   Passed    7.10 sec
+      Start 15: gpu.vfx
+ 3/10 Test #15: gpu.vfx ..........................   Passed   28.63 sec
+      Start 16: gpu.renderer
+ 4/10 Test #16: gpu.renderer .....................   Passed    2.45 sec
+      Start 18: gpu.gameplay
+ 5/10 Test #18: gpu.gameplay .....................   Passed    4.78 sec
+      Start 19: gpu.mission
+ 6/10 Test #19: gpu.mission ......................   Passed   30.73 sec
+      Start 34: gpu.instrumentation
+ 7/10 Test #34: gpu.instrumentation ..............   Passed    1.08 sec
+      Start 56: gpu.mission_ui
+ 8/10 Test #56: gpu.mission_ui ...................   Passed   15.78 sec
+      Start 60: gpu.laboratory_ui
+ 9/10 Test #60: gpu.laboratory_ui ................   Passed    4.71 sec
+      Start 61: app.opengl33_smoke
+10/10 Test #61: app.opengl33_smoke ...............   Passed    8.36 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Label Time Summary:
+gpu            =  95.27 sec*proc (8 tests)
+graphics       = 116.49 sec*proc (10 tests)
+integration    = 116.49 sec*proc (10 tests)
+
+Total Test time (real) = 116.55 sec

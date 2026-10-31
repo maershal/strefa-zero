@@ -1,0 +1,29 @@
+﻿{
+    "schema":  1,
+    "iteration":  "I09",
+    "suite":  "legacy",
+    "quality":  "low",
+    "capacity":  16384,
+    "render_size":  [
+                        960,
+                        576
+                    ],
+    "diagnostic_size":  [
+                            1600,
+                            960
+                        ],
+    "warmup":  120,
+    "samples":  240,
+    "blocks":  3,
+    "order":  [
+                  "off",
+                  "candidate",
+                  "candidate",
+                  "off"
+              ],
+    "additional_gpu_budget_ms":  0.25,
+    "gpu_updates_per_frame":  2,
+    "physics_profile":  "legacy",
+    "render_quality":  "basic",
+    "automatic_quality_switching":  false
+}

@@ -44,13 +44,14 @@ template<class Visitor> bool trace(Vec2 from, Vec2 to, Visitor&& visit) {
 }
 
 void InputBuffer::submit(const TickInput& input) noexcept {
+    pending_fire_=pending_fire_||input.fire;
     const bool jump = state_.jump || input.jump, reload = state_.reload || input.reload,
         grenade = state_.grenade || input.grenade;
     state_ = input;
     state_.jump = jump; state_.reload = reload; state_.grenade = grenade;
 }
 TickInput InputBuffer::consume() noexcept {
-    const auto result = state_;
+    auto result = state_;result.fire=result.fire||pending_fire_;pending_fire_=false;
     state_.jump = state_.reload = state_.grenade = false;
     return result;
 }
@@ -84,7 +85,7 @@ void GameSession::reset() {
     ammunition_ = weapon_.magazine; grenade_stock_ = 3;
     cooldown_ = reload_ = 0;
     ticks_ = shots_fired_ = explosions_ = 0; recovery_resets_ = 0;
-    bullets_.clear(); grenades_.clear(); effects_.clear();
+    bullets_.clear(); grenades_.clear(); effects_.clear();visual_events_.clear();visual_id_=0;
     last_blast_ = 0;
 }
 int GameSession::score() const noexcept {
@@ -164,6 +165,7 @@ void GameSession::update_player(const TickInput& input) {
     if (player_.grounded) player_.stride = std::fmod(player_.stride + std::abs(player_.feet.x - old_feet.x) * .32F, 6.2831853F);
 }
 void GameSession::effect(Vec2 p, EffectKind kind) {
+    visual_events_.push_back({++visual_id_,p,player_.aim*weapon_.bullet_speed,kind});
     if (effects_.size() < effect_limit) effects_.push_back({p, kind == EffectKind::blast ? .45F : kind == EffectKind::muzzle ? .06F : .18F, kind});
 }
 void GameSession::update_weapons(const TickInput& input) {
@@ -242,7 +244,7 @@ void GameSession::update_grenades() {
     std::erase_if(grenades_, [](const auto& grenade) { return grenade.remaining <= epsilon; });
 }
 void GameSession::tick(const TickInput& input) {
-    ++ticks_;
+    ++ticks_;visual_events_.clear();
     for (auto& target : targets_) target.flash = std::max(0.F, target.flash - tick_seconds);
     for (auto& visual : effects_) visual.remaining -= tick_seconds;
     std::erase_if(effects_, [](const auto& visual) { return visual.remaining <= 0; });

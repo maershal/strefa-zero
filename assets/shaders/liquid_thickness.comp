@@ -1,0 +1,11 @@
+#version 430 core
+layout(local_size_x=64) in;
+#include "render_terrain.glsl"
+layout(binding=2) uniform sampler2D rawField;
+layout(r16f,binding=1) writeonly uniform image2D thicknessMap;
+void main(){int x=int(gl_GlobalInvocationID.x);ivec2 size=textureSize(rawField,0);if(x>=size.x)return;
+    float depth=0.;for(int y=0;y<size.y;++y){ivec2 c=ivec2(x,y);vec2 d=texelFetch(rawField,c,0).rg;
+        if(d.x+d.y<.18||solidAt(ivec2((vec2(c)+.5)/vec2(size)*vec2(320,192))))depth=0.;else depth=min(32.,depth+192./float(size.y));
+        imageStore(thicknessMap,c,vec4(depth));
+    }
+}

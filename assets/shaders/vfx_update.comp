@@ -1,0 +1,20 @@
+#version 430 core
+layout(local_size_x=128) in;
+#include "vfx_common.glsl"
+void main(){uint i=gl_GlobalInvocationID.x;if(i>=counts.x)return;uint id=aliveIn[i];VfxParticle p=particles[id];
+    uint kind=p.appearance.x;float dt=stepData.z;p.history.xy=p.motion.xy;p.history.z+=dt;bool alive=p.history.z<p.history.w;
+    if(kind>=5u&&kind<=7u){vec4 f=fluidAt(p.motion.xy);float d=f.x;
+        if(f.y>d){alive=false;}else{
+            if(kind==5u&&d>.20)kind=d>.80?7u:6u;
+            else if(kind==6u){if(d<.10)kind=5u;else if(d>.80)kind=7u;}
+            else if(kind==7u&&d<.70)kind=d<.10?5u:6u;
+            if(kind==5u){p.motion.w+=180*dt;p.motion.zw*=exp(-.4*dt);}
+            else if(kind==6u){p.motion.zw=f.zw;vec2 gradient=vec2(fluidAt(p.motion.xy+vec2(1,0)).x-fluidAt(p.motion.xy-vec2(1,0)).x,fluidAt(p.motion.xy+vec2(0,1)).x-fluidAt(p.motion.xy-vec2(0,1)).x);if(length(gradient)>.01)p.motion.zw-=normalize(gradient)*clamp((d-.45)*12,-3,3);}
+            else{p.motion.zw=mix(p.motion.zw,f.zw+vec2(0,-12),1-exp(-8*dt));}
+        }
+    }else if(kind==8u||kind==9u){p.motion.w+=180*dt;p.motion.zw*=exp(-1.2*dt);}
+    if(kind==10u){alive=alive&&vfxSolid(ivec2(floor(p.motion.xy)));}
+    else if(kind!=1u&&kind!=3u&&kind!=11u){vec2 next=p.motion.xy+p.motion.zw*dt;alive=alive&&vfxClear(p.motion.xy,next);if(alive)p.motion.xy=next;}
+    alive=alive&&all(greaterThanEqual(p.motion.xy,vec2(0)))&&all(lessThan(p.motion.xy,vec2(320,192)))&&!any(isnan(p.motion))&&!any(isinf(p.motion));p.appearance.x=kind;particles[id]=p;
+    if(alive){uint index=atomicAdd(counts.z,1u);aliveOut[index]=id;appendVfxDraw(id,kind);}else{uint index=atomicAdd(counts.y,1u);freeSlots[index]=id;}
+}

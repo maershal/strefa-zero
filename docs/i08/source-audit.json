@@ -1,0 +1,31 @@
+{
+  "regular_renderer_state_queries": [],
+  "uniform_locations_cached_at_initialization": true,
+  "physics_shaders": [
+    {
+      "shader": "liquids.comp",
+      "unchanged_vs_I07": true
+    },
+    {
+      "shader": "mission.comp",
+      "unchanged_vs_I07": true
+    },
+    {
+      "shader": "particle_common.glsl",
+      "unchanged_vs_I07": true
+    },
+    {
+      "shader": "particle_storage.glsl",
+      "unchanged_vs_I07": true
+    },
+    {
+      "shader": "coupling.comp",
+      "unchanged_vs_I07": true
+    },
+    {
+      "shader": "neighbors.comp",
+      "unchanged_vs_I07": true
+    }
+  ],
+  "granular_change": "R16UI imageStore in operation 9; no numerical equations changed"
+}

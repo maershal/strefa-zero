@@ -2,3 +2,6 @@
 docs/gpu-*/** -text linguist-generated=true
 # Preserve the original supplied review documents.
 docs/reviews/** -text
+
+# Keep I05-I11 measurement bytes intact and collapse generated evidence.
+docs/i*/** -text linguist-generated=true

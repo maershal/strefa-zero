@@ -40,17 +40,23 @@ struct Ledger {
 };
 Grain particle(float x,float y,unsigned kind){Grain p;p.position={x,y,x,y};p.motion={0,0,kind==5?2.65F:1.F,static_cast<float>(kind)};return p;}
 }
-void validate_coupling_replay(const std::filesystem::path& output,std::ostream& checks){
+void validate_coupling_replay(const std::filesystem::path& output,std::ostream& checks,const ExecutionOptions& layout){
     std::ofstream cases{output/"coupling-replay.csv"},summary{output/"coupling-replay-summary.csv"};
     require(cases&&summary,"Cannot create coupling replay reports");
     cases<<"tick,role,mean,center_dx,center_dy,center,actor_dx,actor_dy,actor,mean_sum,center_bias,actor_bias,reactions,queue_pending,queue_overflow\n"<<std::setprecision(12);
     summary<<"role,cases,mean_max,center_max,actor_max,mean_sum,center_bias,actor_bias,reactions,accepted,scope\n"<<std::setprecision(12);
     const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets/shaders";
-    const auto create=[&](CouplingMode mode,bool coupling=true){
-        ExecutionOptions execution;execution.coupling=mode;ProfileOptions quiet;quiet.gpu_timers=false;quiet.readback_period=0;quiet.body_coupling=coupling;
+    const auto create=[&](CouplingMode mode,bool coupling=true,bool baseline=false){
+        auto execution=layout;execution.coupling=mode;
+        // A fixed 256-lane source also checks the selected PBF size against
+        // the pre-G arithmetic, rather than comparing only matching variants.
+        if(baseline){execution.pbf_size=256;execution.pbf_restrict=false;}
+        ProfileOptions quiet;quiet.gpu_timers=false;quiet.readback_period=0;quiet.body_coupling=coupling;
         auto made=ParticleWorld::create(shaders,execution,quiet);require(made.has_value(),made?"":made.error().c_str());return std::move(*made);
     };
-    auto source=create(CouplingMode::reference);
+    auto source=create(CouplingMode::reference,true,true);
+    checks<<"paired_source_pbf_size=256 replica_pbf_size="<<layout.effective_pbf_size()<<std::endl;
+    checks<<"paired_source_pbf_restrict=0 replica_pbf_restrict="<<layout.effective_pbf_restrict()<<std::endl;
     std::array replicas{create(CouplingMode::reference),create(CouplingMode::local),create(CouplingMode::combined),create(CouplingMode::local,false)};
     constexpr std::array<std::string_view,4> roles{"reference_repeat","local","combined","disabled_fault"};
     std::array<Ledger,4> ledgers;std::array<std::uint64_t,4> reaction_counts{};

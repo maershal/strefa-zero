@@ -1,0 +1,10 @@
+{
+  "missing": "PASS",
+  "duplicate": "PASS",
+  "bad_tick": "PASS",
+  "bad_variant": "PASS",
+  "nan_time": "PASS",
+  "negative_time": "PASS",
+  "bad_cadence": "PASS",
+  "missing_frame": "PASS"
+}

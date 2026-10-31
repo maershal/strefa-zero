@@ -1,0 +1,10 @@
+{
+  "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I08\\StrefaZero.exe",
+  "flags": [
+    "--gpu-render-check",
+    "--gl-debug"
+  ],
+  "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i08-results\\package-quality",
+  "timeout_ms": 240000,
+  "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i08-results\\package-quality\\native-result.json"
+}

@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "baseline": "I06 frozen source/executable; I07 legacy controls use unchanged settings",
+  "quality_ticks": 1200,
+  "checkpoint_period": 60,
+  "settling_window_ticks": [
+    600,
+    1200
+  ],
+  "density_limit": 0.05,
+  "mass_identity": "exact per stable ID, finite all state",
+  "boundary_reference_absolute_tolerance": 1e-05,
+  "surface_impulse_reference_absolute_tolerance": 2e-05,
+  "momentum_absolute_tolerance": 1e-06,
+  "vorticity_impulse_cap_fraction": 0.25,
+  "vorticity_rest_tolerance": 1e-06,
+  "new_quality_comparison": "envelope of two legacy repeats, published before evaluating candidates; no tightening/loosening of historical test gates",
+  "selection": "legacy stays default unless full integration, improved quality beyond legacy envelope, and median mission GPU delta <=0.25ms; no automatic promotion from one metric",
+  "benchmark": {
+    "warmup": 120,
+    "samples": 240,
+    "blocks": 3,
+    "order": [
+      "legacy",
+      "candidate",
+      "candidate",
+      "legacy"
+    ],
+    "scenes": [
+      "mission",
+      "stress_16k",
+      "stress_32k"
+    ],
+    "synchronization": "glFinish outside CPU step timing, actual GL4.3, no GPU concurrency"
+  },
+  "experiment_budget": "bounded candidate matrix; preserve failures and regime changes; do not reopen I04.5"
+}

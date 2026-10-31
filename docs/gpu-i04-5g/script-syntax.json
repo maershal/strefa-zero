@@ -1,0 +1,21 @@
+{
+  "powershell": "5.1.26100.9711",
+  "scripts": [
+    {
+      "errors": 0,
+      "path": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\strefa-zero\\scripts\\profile-pbf.ps1"
+    },
+    {
+      "errors": 0,
+      "path": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\strefa-zero\\scripts\\profile-stabilization.ps1"
+    },
+    {
+      "errors": 0,
+      "path": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\run-i04-5g-matrix.ps1"
+    },
+    {
+      "errors": 0,
+      "path": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\run-i04-5g-windows.ps1"
+    }
+  ]
+}

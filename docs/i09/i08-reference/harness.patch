@@ -1,0 +1,49 @@
+--- a/src/gpu/render_validation.inl
++++ b/src/gpu/render_validation.inl
+@@ -19,30 +19,24 @@
+                 timing<<','<<water<<','<<cpu[i]<<','<<renderer.memory_bytes()<<','<<x.terrain_ms<<'\n';}};
+         const auto original_options=render_options();
+         if(benchmark){
+-            // Each ABBA block reuses one exact GPU snapshot. CPU readback/capture
+-            // and all physics are outside the measured render loop.
+-            for(int scale:{3,5})for(unsigned scene=0;scene<3;++scene){
+-                renderer.resize_for_test(scale);
+-                if(scene==0)reset_mission();else reset(scene==1?Scene::sand_water:Scene::oil_water);
+-                const auto frozen=renderer.freeze(input());
+-                const std::array<std::string_view,3> names{"mission","sand_water","oil_water"};
+-                const std::array<RenderQuality,3> qualities{RenderQuality::basic,RenderQuality::standard,RenderQuality::high};
+-                for(unsigned block=1;block<=3;++block)for(unsigned quality=0;quality<3;++quality)for(unsigned order=0;order<4;++order){
+-                    const bool candidate=order==1||order==2;renderer.stage=candidate?RenderStage::complete:RenderStage::reference;
+-                    renderer.set_options({qualities[quality],false});for(unsigned n=0;n<120;++n){renderer.render(frozen,1);if(n%16==15)glFinish();}drain();renderer.reset_profiles();
+-                    renderer.set_options({qualities[quality],true});std::vector<double> cpu;
+-                    for(unsigned n=0;n<240;++n){const auto began=SDL_GetTicksNS();renderer.render(frozen,1);cpu.push_back(static_cast<double>(SDL_GetTicksNS()-began)/1e6);if(n%16==15)glFinish();}
+-                    std::string variant=candidate?std::string{render_quality_name(qualities[quality])}:"reference_for_"+std::string{render_quality_name(qualities[quality])};
+-                    write_samples(block,order,names[scene],scale,variant,cpu);
++            std::ofstream csv{output/"i08-reference.csv"};csv<<std::setprecision(12)<<"scene,scale,block,order,frame,total_gpu_ms,cpu_submit_ms\n";
++            for(int scale:{3,5})for(unsigned scene=0;scene<4;++scene){
++                renderer.resize_for_test(scale);renderer.stage=RenderStage::complete;renderer.set_options({RenderQuality::basic,false});
++                if(scene==0)reset_mission();else if(scene==1)reset(Scene::dam_break);else if(scene==2)reset(Scene::sand_water);else{
++                    std::vector<Grain> water;std::vector<unsigned> walls(width*height);for(int y=80;y<186;++y)for(int x=20;x<300;++x){Grain g;g.position={x+.5F,y+.5F,x+.5F,y+.5F};g.contact={0,0,x+.5F,y+.5F};g.motion={0,0,1,5};water.push_back(g);}load(water,walls);
++                }
++                if(scene==1||scene==2)for(unsigned warmup=0;warmup<120;++warmup){while(!step())glFinish();if(warmup%16==15){glFinish();poll();}}
++                const auto frozen=renderer.freeze(input());const std::array<std::string_view,4> names{"mission","dam_break","sand_water","saturated"};
++                for(unsigned block=1;block<=3;++block)for(unsigned order=0;order<4;++order){
++                    for(unsigned frame=0;frame<120;++frame){renderer.render(frozen,1);if(frame%16==15)glFinish();}glFinish();
++                    struct Frame {std::array<GLuint,2> q{};double cpu{};};std::array<Frame,240> frames{};
++                    for(auto& frame:frames)gl.GenQueries(2,frame.q.data());
++                    for(auto& row:frames){const auto began=SDL_GetTicksNS();gl.QueryCounter(row.q[0],GL_TIMESTAMP);renderer.render(frozen,1);gl.QueryCounter(row.q[1],GL_TIMESTAMP);row.cpu=static_cast<double>(SDL_GetTicksNS()-began)/1e6;if((&row-frames.data())%16==15)glFinish();}glFinish();
++                    for(unsigned frame=0;frame<frames.size();++frame){const auto& row=frames[frame];std::array<GLuint64,2> t{};for(unsigned i=0;i<2;++i)gl.GetQueryObjectui64v(row.q[i],GL_QUERY_RESULT,&t[i]);csv<<names[scene]<<','<<scale<<','<<block<<','<<order<<','<<frame<<','<<static_cast<double>(t[1]-t[0])/1e6<<','<<row.cpu<<'\n';gl.DeleteQueries(2,row.q.data());}csv.flush();
++                    if(block==1&&order==1)renderer.save_image(output/(std::string{names[scene]}+"-"+std::to_string(scale)+"-i08.bmp"));
+                 }renderer.release_frozen();
+             }
+-            renderer.resize_for_test(3);renderer.set_options({RenderQuality::basic,true});reset(Scene::empty);
+-            renderer.reset_profiles();std::ofstream terrain_csv{output/"terrain-update.csv"};terrain_csv<<"sample,full_dirty_preprocess_ms\n";
+-            for(unsigned n=0;n<120;++n){paint({40.F+static_cast<float>(n%20),40,40.F+static_cast<float>(n%20),40,2,n%2?Material::erase:Material::wall});if(n%16==15)drain();}
+-            drain();const auto terrain_samples=renderer.take_terrain_samples();require(!terrain_samples.empty(),"No terrain-update timestamps");
+-            for(std::size_t n=0;n<terrain_samples.size();++n)terrain_csv<<n<<','<<terrain_samples[n]<<'\n';
+-            renderer.stage=RenderStage::complete;renderer.set_options(original_options);renderer.resize_for_test(3);
+-            report<<"benchmark=passed (3 ABBA blocks, 3 qualities, 3 scenes, 2 extents; 240 samples per process segment)\n";return {};
++            report<<"i08_reference=PASS; I08 source snapshot; measurement harness only; 23040 samples\n";return {};
+         }
+         const auto probe= s.shader_library.program({{GL_COMPUTE_SHADER,s.shader_folder/"render_probe.comp"}});
+         const auto probe_count=gl.GetUniformLocation(probe,"probeCount");

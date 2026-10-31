@@ -1,0 +1,10 @@
+﻿{
+    "iteration":  "I11",
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "sha256":  "A5D986B59D77364006FF993C90DB4DDABAB6DAC93875A0974504F40E925AE1AF",
+    "flags":  [
+                  "--gpu-lighting-check",
+                  "--gl-debug"
+              ],
+    "started_utc":  "2026-10-31T16:38:45.1285741Z"
+}

@@ -69,7 +69,7 @@ void actors(ArenaFrame& arena, ImVec2 start, float zoom) {
     const float aw=static_cast<float>(arena.weapons.width),ah=static_cast<float>(arena.weapons.height);
     draw->AddImageQuad(texture(arena.weapons),a,b,c,d,{0,10/ah},{32/aw,10/ah},{32/aw,23/ah},{0,23/ah});
     limb(rig.near_arm,4,5,2,IM_COL32_WHITE);
-    if (player.jetting) {
+    if (player.jetting&&!arena.shared_vfx&&arena.effects_enabled) {
         const auto nozzle = point(player.feet + game::Vec2{-player.aim.x * 3, -8});
         const float flame = (4 + static_cast<int>(arena.game.ticks() % 4)) * zoom;
         draw->AddTriangleFilled({nozzle.x - zoom, nozzle.y}, {nozzle.x + zoom, nozzle.y},
@@ -82,7 +82,7 @@ void actors(ArenaFrame& arena, ImVec2 start, float zoom) {
         const auto p = point(grenade.position);
         draw->AddRectFilled({p.x - zoom, p.y - zoom}, {p.x + zoom, p.y + zoom}, IM_COL32(155, 175, 77, 255));
     }
-    for (const auto& visual : arena.game.effects()) {
+    if(!arena.shared_vfx&&arena.effects_enabled)for (const auto& visual : arena.game.effects()) {
         const auto p = point(visual.position);
         if (visual.kind == game::EffectKind::muzzle) {
             draw->AddCircleFilled(p, 1.6F * zoom, IM_COL32(255, 234, 151, 255), 8); continue;
@@ -111,8 +111,13 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     // Space belongs to jumping in this screen, not to activating a focused menu button.
     ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
     const bool back = ImGui::Button("Menu [Esc]");
+    bool tools=false;
+    if(arena.game.gpu){
+        ImGui::SameLine();tools=ImGui::Button("Narzędzia świata");
+        ImGui::SameLine();arena.input.toggle_pause=ImGui::Button(arena.paused?"Wznów":"Pauza");
+    }
     ImGui::SameLine();
-    arena.input.reset = ImGui::Button("Od nowa [F5]");
+    arena.input.reset = ImGui::Button(arena.scene_mission?"Od nowa [F5]":"Nowa misja [F5]");
     ImGui::SameLine();
     ImGui::Text("Tarcze %d/3  |  %d/30  |  Granaty %d", arena.game.score(), arena.game.ammunition(), arena.game.grenade_stock());
     if (viewport->WorkSize.x / frame.scale >= 700) ImGui::SameLine();
@@ -121,12 +126,14 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::ProgressBar(fuel, {90 * frame.scale, 0}, "Paliwo");
     ImGui::PopStyleColor();
     if (arena.game.reload_remaining() > 0) ImGui::Text("Przeładowanie %.1f s", static_cast<double>(arena.game.reload_remaining()));
-    else ImGui::TextDisabled("%s",arena.game.gpu?"MISJA: 3 tarcze + zielone wyjście. Pomarańczowe przegrody są zniszczalne.":"POLIGON CPU / żołnierz niewrażliwy na obrażenia");
+    else ImGui::TextDisabled("%s",arena.game.gpu&&!arena.scene_mission?"SCENA LABORATORYJNA / F5 rozpoczyna nową misję":arena.game.gpu?"MISJA: 3 tarcze + zielone wyjście. Pomarańczowe przegrody są zniszczalne.":"POLIGON CPU / żołnierz niewrażliwy na obrażenia");
     if (arena.game.finished) {
         ImGui::PushFont(fonts.heading, 22);
         ImGui::TextWrapped("POLIGON UKOŃCZONY  /  F5 — kolejna próba");
         ImGui::PopFont();
     }
+    if(arena.lighting_quality){ImGui::SetNextItemWidth(120*frame.scale);ImGui::Combo("Światło",arena.lighting_quality,"Wyłączone\0Niskie\0Wysokie\0");}
+    if(arena.vfx_quality){ImGui::SetNextItemWidth(140*frame.scale);ImGui::Combo("Efekty",arena.vfx_quality,"Wyłączone\0Niskie\0Wysokie\0");}
     const auto room = ImGui::GetContentRegionAvail();
     const float fit = std::min(room.x / sim::World::width,
         (room.y - 2 * ImGui::GetTextLineHeightWithSpacing()) / sim::World::height);
@@ -135,14 +142,15 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.F, (room.x - size.x) * .5F));
     const auto start = ImGui::GetCursorScreenPos();
     ImGui::InvisibleButton("ArenaCanvas", size, ImGuiButtonFlags_MouseButtonLeft | ImGuiButtonFlags_MouseButtonRight);
-    const bool hover = ImGui::IsItemHovered();
+    const bool hover = ImGui::IsItemHovered(),canvas_active=ImGui::IsItemActive();
     auto* draw = ImGui::GetWindowDrawList();
     const ImVec2 end{start.x + size.x, start.y + size.y};
     draw->PushClipRect(start, end, true);
-    draw->AddImage(texture(arena.background), start, end);
-    draw->AddRectFilled(start, end, IM_COL32(7, 14, 17, 165));
+    if(!arena.game.gpu&&(!arena.shared_vfx||!arena.vfx_front.handle)){draw->AddImage(texture(arena.background), start, end);
+        draw->AddRectFilled(start, end, IM_COL32(7, 14, 17, 165));}
     draw->AddImage(texture(arena.world), start, end);
     if(!arena.game.gpu)actors(arena, start, zoom);
+    if(arena.shared_vfx&&arena.vfx_front.handle)draw->AddImage(texture(arena.vfx_front),start,end);
     arena.input.controls.aim = arena.game.player().feet + arena.game.player().aim * 40 + game::Vec2{0, -12};
     if (arena.focused && !ImGui::GetIO().WantTextInput && ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows)) {
         auto& input = arena.input.controls;
@@ -151,12 +159,16 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
         input.jump = ImGui::IsKeyPressed(ImGuiKey_Space, false);
         input.reload = ImGui::IsKeyPressed(ImGuiKey_R, false);
         arena.input.reset = arena.input.reset || ImGui::IsKeyPressed(ImGuiKey_F5, false);
-        if (hover) {
-            const auto mouse = ImGui::GetIO().MousePos;
-            input.aim = {(mouse.x - start.x) / zoom, (mouse.y - start.y) / zoom};
+        input.grenade = ImGui::IsKeyPressed(ImGuiKey_G, false);
+        const auto mouse = ImGui::GetIO().MousePos;
+        // Retain the direction outside the arena; clamp the target to world bounds.
+        // Active/hovered controls in this window continue to own mouse input.
+        const bool pointer_controls=hover || canvas_active || (!ImGui::IsAnyItemHovered()&&!ImGui::IsAnyItemActive());
+        if (pointer_controls) {
+            input.aim = {std::clamp((mouse.x-start.x)/zoom+arena.camera[0],0.F,320.F),std::clamp((mouse.y-start.y)/zoom+arena.camera[1],0.F,192.F)};
             input.fire = ImGui::IsMouseDown(ImGuiMouseButton_Left);
             input.jet = ImGui::IsMouseDown(ImGuiMouseButton_Right);
-            input.grenade = ImGui::IsKeyPressed(ImGuiKey_G, false);
+
             draw->AddCircle(mouse, 3 * zoom, IM_COL32(226, 237, 170, 240), 16, std::max(1.F, zoom * .5F));
             draw->AddLine({mouse.x - 5 * zoom, mouse.y}, {mouse.x + 5 * zoom, mouse.y}, IM_COL32(226, 237, 170, 160));
             draw->AddLine({mouse.x, mouse.y - 5 * zoom}, {mouse.x, mouse.y + 5 * zoom}, IM_COL32(226, 237, 170, 160));
@@ -169,7 +181,7 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::PopStyleColor();
     ImGui::PopItemFlag();
     ImGui::End();
-    return back || ImGui::IsKeyPressed(ImGuiKey_Escape,false) ? Action::back : Action::none;
+    return back || ImGui::IsKeyPressed(ImGuiKey_Escape,false) ? Action::back : tools?Action::open_gpu:Action::none;
 }
 
 } // namespace strefa::ui

@@ -62,6 +62,7 @@ struct Statistics {
     double heat_ms{}, air_ms{}, liquid_ms{}, reaction_ms{}, motion_ms{}, bookkeeping_ms{};
     double pressure_ms{}, transport_ms{},air_wave_ms{},air_transport_ms{},thermal_refresh_ms{};
 };
+struct FluidSample {Material material{Material::empty};Vector velocity{};float water{},oil{};};
 struct PhysicalSample {
     Material material{Material::empty};
     double temperature{ambient_temperature}, air_temperature{ambient_temperature};

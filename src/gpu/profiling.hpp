@@ -1,4 +1,5 @@
 #pragma once
+#include "gpu/fluid_options.hpp"
 #include <array>
 #include <cstdint>
 #include <string_view>
@@ -41,6 +42,12 @@ struct ExecutionOptions {
     bool phase_gating{false},skip_zero_projection{false};
     DeviceStorageMode storage{DeviceStorageMode::direct};
     NeighborReads neighbor_reads{NeighborReads::full};
+    // Zero inherits the general particle group size (including legacy probes).
+    unsigned pbf_size{};
+    unsigned effective_pbf_size() const noexcept{return pbf_size?pbf_size:local_size;}
+    bool pbf_restrict{};
+    bool effective_pbf_restrict() const noexcept{return pbf_restrict&&specialized;}
+    FluidOptions fluid{};
     static ExecutionOptions reference(){return {false,false,false,false,256,256,NeighborMode::linked,false,CouplingMode::reference};}
 };
 enum class ReadbackMode { automatic, legacy, stream, staging, persistent };
@@ -84,12 +91,12 @@ inline constexpr TimerMode effective_timer_mode(const ProfileOptions& options){
 }
 
 #define STREFA_GPU_COUNTERS(X) \
-    X(api_calls) X(dispatches) X(barriers) X(bins) X(active_rebuilds) \
+    X(event_copies) X(event_packets) X(api_calls) X(dispatches) X(barriers) X(bins) X(active_rebuilds) \
     X(body_reductions) X(buffer_binds) X(base_binds) X(program_uses) \
     X(query_polls) X(query_results) X(fence_polls) X(upload_bytes) \
     X(copy_bytes) X(read_bytes) X(read_calls) X(stage_requests) X(stage_copies) \
     X(render_state_queries) X(stage_drops) X(stale_readbacks) X(mapped_read_bytes) \
-    X(indirect_dispatches) X(uniform_updates) X(timer_submissions) X(timer_skips) X(timer_stale)
+    X(indirect_dispatches) X(uniform_updates) X(timer_submissions) X(timer_skips) X(timer_stale) X(presentation_dispatches)
 
 struct CallCounters {
 #define STREFA_DECLARE_COUNTER(name) std::uint64_t name{};

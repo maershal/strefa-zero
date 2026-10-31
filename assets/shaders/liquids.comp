@@ -11,20 +11,31 @@ vec2 pressureGradient(vec2 d){
     float r=length(d);
     return r>.000001&&r<2?-30*(2-r)*(2-r)*d/(32*3.141592653589793*r):vec2(0);
 }
+// 2D radial cohesion spline: its signed area integral is ONE (not zero).
+// The h=2 normalization is 35840/(209*pi*2^8). See independent quadrature tests.
+float cohesion2D(float r){
+    if(r<=0||r>=support)return 0;
+    float a=pow(support-r,3.0)*r*r*r;
+    return (35840.0/(209.0*3.141592653589793*256.0))*(r<=1.0?2.0*a-1.0:a);
+}
+float adhesion2D(float r){
+    if(r<=1.0||r>=support)return 0;
+    return .144366160386*pow(max(0.0,-2.0*r*r+6.0*r-4.0),.25);
+}
 void main(){
     uint id=gl_GlobalInvocationID.x;
     if(operation==3){if(id==0)maxCompression=0u;return;}
     if(id>=aliveCount)return;id=slots[N+id];Grain p=readParticle(uint(id));
     if(p.motion.w<.5){if(operation==1||operation==4)storeParticle(uint(id),p);else terms[id]=vec4(0);return;}
     ivec2 c=ivec2(floor(p.position.xy));
-    if(operation==0||operation==2){
-        if(!liquid(p)){terms[id]=vec4(0);return;}
+    if(operation==0||operation==2||operation==5){
+        if(!liquid(p)){if(operation==5)terms[FLUID_SCRATCH+id]=vec4(0);else terms[id]=vec4(0);return;}
         float density=kernel(vec2(0)),denominator=0;vec2 grad_i=vec2(0),bodyGrad=vec2(0);
         if(bodyFluidCandidate(p.position.xy)){
             ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
             for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
                 vec2 b=bodySamplePosition(local+ivec2(x,y));if(!bodySample(b))continue;
-                vec2 d=p.position.xy-b;density+=kernel(d);bodyGrad+=pressureGradient(d)/referenceDensity;
+                vec2 d=p.position.xy-b;float volume=capsuleVolume(b);density+=volume*kernel(d);bodyGrad+=volume*pressureGradient(d)/referenceDensity;
             }
             grad_i+=bodyGrad;denominator+=game.body.x*dot(bodyGrad,bodyGrad);
         }
@@ -32,7 +43,7 @@ void main(){
             ivec2 b=c+ivec2(x,y);
             if(solid(b)){
                 // Unit-volume stationary boundary samples. Inverse mass is zero.
-                vec2 d=(p.position.xy-(vec2(b)+.5))+p.residual.xy;density+=kernel(d);grad_i+=pressureGradient(d)/referenceDensity;continue;
+                vec2 d=(p.position.xy-(vec2(b)+.5))+p.residual.xy;float volume=boundaryVolume(b);density+=volume*kernel(d);grad_i+=volume*pressureGradient(d)/referenceDensity;continue;
             }
         }
         FOR_NEIGHBOR(p,2.0,j)
@@ -52,6 +63,7 @@ void main(){
 #endif
             }
         END_NEIGHBOR
+        if(operation==5){terms[FLUID_SCRATCH+id]=vec4(density,0,0,0);return;}
         float compression=max(0,density/referenceDensity-1);
         float lambda=-compression/(denominator+p.motion.z*dot(grad_i,grad_i)+.0001);
         terms[id]=vec4(lambda,density/referenceDensity,grad_i);
@@ -62,7 +74,7 @@ void main(){
         if(liquid(p)&&bodyFluidCandidate(p.position.xy)){
             ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
             for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
-                vec2 b=bodySamplePosition(local+ivec2(x,y));if(bodySample(b))bodyCorrection+=own*pressureGradient(p.position.xy-b);
+                vec2 b=bodySamplePosition(local+ivec2(x,y));if(bodySample(b))bodyCorrection+=capsuleVolume(b)*own*pressureGradient(p.position.xy-b);
             }
             correction+=bodyCorrection;
         }
@@ -72,7 +84,7 @@ void main(){
         for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
             ivec2 b=c+ivec2(x,y);
             if(solid(b)){
-                if(liquid(p))correction+=own*pressureGradient((p.position.xy-(vec2(b)+.5))+p.residual.xy);continue;
+                if(liquid(p))correction+=boundaryVolume(b)*own*pressureGradient((p.position.xy-(vec2(b)+.5))+p.residual.xy);continue;
             }
         }
         // A dry carrier can only receive PBF correction from liquid neighbors.
@@ -88,7 +100,7 @@ void main(){
                     // pair. Negative density constraints are not enforced.
                     float repel=0;
                     if(liquid(p)&&liquid(q)){
-                        float ratio=kernel(d)/kernel(vec2(.6,0));repel=-.0001*ratio*ratio*ratio*ratio;
+                        float ratio=kernel(d)/kernel(vec2(.6,0));repel=-FLUID_SCORR*ratio*ratio*ratio*ratio;
                     }
                     correction+=(own+other+repel)*pressureGradient(d);
                 }
@@ -114,8 +126,27 @@ void main(){
 #endif
         storeParticle(uint(id),p);return;
     }
+    if(operation==6){
+        vec2 normal=vec2(0);float omega=0,rms=0,weight=0;
+        if(liquid(p)){
+            FOR_NEIGHBOR(p,2.0,j)
+                if(j!=int(id)){
+                    NEIGHBOR_DATA q=READ_INTERACTION(j);vec2 d=separation(p,q);
+                    if(q.motion.w==p.motion.w&&dot(d,d)<4&&visible(p.position.xy,q.position.xy)){
+                        vec2 g=gradient(d),dv=q.motion.xy-p.motion.xy;
+                        float rho=max(fluidDensity(uint(j)).x,.1*referenceDensity);
+                        normal-=support*g/rho;
+                        omega+=(g.x*dv.y-g.y*dv.x)/rho;
+                        float w=kernel(d);rms+=dot(dv,dv)*w;weight+=w;
+                    }
+                }
+            END_NEIGHBOR
+        }
+        terms[FLUID_SCRATCH+uint(N)+id]=vec4(normal,omega,sqrt(rms/max(weight,1e-8)));return;
+    }
     if(operation==4){ // XSPH velocity smoothing, time-scaled and pairwise symmetric
-        if(!liquid(p)){storeParticle(uint(id),p);return;}vec2 change=vec2(0);
+        if(FLUID_ADHESION>0.0)writeBodyReaction(id,vec4(0),true);
+        if(!liquid(p)){storeParticle(uint(id),p);return;}vec2 change=vec2(0),eta=vec2(0);
         FOR_NEIGHBOR(p,2.0,j)
 #if HOT_READS > 0
             if(j!=int(id)){
@@ -132,13 +163,49 @@ void main(){
                     // Pair potential U=-k W(r), only inside each phase. The
                     // equal/opposite central forces conserve pair momentum;
                     // density projection supplies the short-range pressure.
-                    if(p.motion.w==q.motion.w)change+=p.motion.z*60*gradient(d)*dt;
+                    if(p.motion.w==q.motion.w){
+#if FLUID_SURFACE
+                        float r=length(d);vec2 direction=r>1e-6?d/r:vec2(0);
+                        float k=2.0*referenceDensity/max(.2*referenceDensity,fluidDensity(id).x+fluidDensity(uint(j)).x);
+                        vec2 pairForce=75.6*FLUID_TENSION*cohesion2D(r)*direction
+                            +.5*FLUID_CURVATURE*(fluidGeometry(id).xy-fluidGeometry(uint(j)).xy);
+                        change-=p.motion.z*k*pairForce*dt;
+#else
+                        change+=p.motion.z*60*gradient(d)*dt;
+#endif
+#if FLUID_FIELDS
+                        eta+=(abs(fluidGeometry(uint(j)).z)-abs(fluidGeometry(id).z))*gradient(d)/max(fluidDensity(uint(j)).x,.1*referenceDensity);
+#endif
+                    }
                 }
 #if HOT_READS > 0
                 }
 #endif
             }
         END_NEIGHBOR
+#if FLUID_FIELDS
+        vec4 field=fluidGeometry(id);vec2 normal=eta/(length(eta)+1e-5);
+        vec2 dv=FLUID_VORTICITY*field.z*vec2(normal.y,-normal.x)*dt;
+        dv*=min(1.0,.25*field.w/(length(dv)+1e-6));change+=dv;
+#endif
+        if(FLUID_ADHESION>0.0){
+            vec2 bodyChange=vec2(0);
+            for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+                ivec2 b=c+ivec2(x,y);if(!solid(b))continue;
+                vec2 d=(p.position.xy-(vec2(b)+.5))+p.residual.xy;float r=length(d);
+                if(r>1e-6)change-=p.motion.z*FLUID_ADHESION*boundaryVolume(b)*adhesion2D(r)*(d/r)*dt;
+            }
+            if(bodyFluidCandidate(p.position.xy)){
+                ivec2 local=ivec2(floor(p.position.xy-game.actor.xy));
+                for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+                    vec2 b=bodySamplePosition(local+ivec2(x,y));if(!bodySample(b))continue;
+                    vec2 d=p.position.xy-b;float r=length(d);
+                    if(r>1e-6)bodyChange-=p.motion.z*FLUID_ADHESION*capsuleVolume(b)*adhesion2D(r)*(d/r)*dt;
+                }
+            }
+            change+=bodyChange;
+            writeBodyReaction(id,vec4(-bodyChange*(game.body.x/p.motion.z)*dt,0,0),true);
+        }
         p.motion.xy+=change;storeParticle(uint(id),p);return;
     }
 }

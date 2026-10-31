@@ -1,0 +1,20 @@
+{
+  "reason": "Follow-up after four post-QA G1 OFF controls remained above 11 ms; separate from the preregistered replay.",
+  "blocks": 3,
+  "order_per_block": [
+    "hidden",
+    "visible",
+    "visible",
+    "hidden"
+  ],
+  "closing": [
+    "visible paced mission window",
+    "hidden cost OFF"
+  ],
+  "groups": 256,
+  "probes": "OFF",
+  "timeout_seconds": 180,
+  "no_retries": true,
+  "no_system_changes": true,
+  "window_note": "Only the existing show-test-window option changes; visible cost is unpaced without regular present/event polling. Focus is observed, not forced."
+}

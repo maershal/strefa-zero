@@ -1,0 +1,16 @@
+world_creations=1
+programs=48
+source_builds=48
+cache_hits=0
+cache_misses=0
+cache_rejected=0
+cache_write_failures=0
+cache_supported=0
+compile_ms=60.6836
+cache_load_ms=0
+first_world_ms=133.239
+view_switches=0
+view_switch_total_ms=0
+view_switch_max_ms=0
+cpu_game_created=0
+cpu_laboratory_created=0

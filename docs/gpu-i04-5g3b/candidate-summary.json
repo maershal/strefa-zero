@@ -1,0 +1,74 @@
+[
+  {
+    "scene": "mission",
+    "reach": "1",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.0733388289999999,
+    "candidate_ratio_max": 1.078469854
+  },
+  {
+    "scene": "mission",
+    "reach": "2",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.039472724,
+    "candidate_ratio_max": 1.043020363
+  },
+  {
+    "scene": "stress_16k",
+    "reach": "1",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.0,
+    "candidate_ratio_max": 1.043896001
+  },
+  {
+    "scene": "stress_16k",
+    "reach": "2",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.0,
+    "candidate_ratio_max": 1.026872135
+  },
+  {
+    "scene": "stress_32k",
+    "reach": "1",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.0,
+    "candidate_ratio_max": 1.0410271
+  },
+  {
+    "scene": "stress_32k",
+    "reach": "2",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.0625,
+    "candidate_ratio_median": 1.0,
+    "candidate_ratio_max": 1.030687781
+  },
+  {
+    "scene": "mission_blast",
+    "reach": "1",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.4375,
+    "candidate_ratio_median": 1.1508990639999999,
+    "candidate_ratio_max": 1.598605802
+  },
+  {
+    "scene": "mission_blast",
+    "reach": "2",
+    "captures": 24,
+    "missed": 0,
+    "dmax_max": 0.4375,
+    "candidate_ratio_median": 1.085963728,
+    "candidate_ratio_max": 1.354978199
+  }
+]

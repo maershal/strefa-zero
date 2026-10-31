@@ -1,0 +1,1862 @@
+{
+  "raw_cpu_counter_ticks": 15360,
+  "rows": [
+    {
+      "run": "q-1",
+      "variant": "q",
+      "scene": "mission",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-1",
+      "variant": "q",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-1",
+      "variant": "q",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-1",
+      "variant": "q",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-1",
+      "variant": "g256",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-1",
+      "variant": "g256",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-1",
+      "variant": "g256",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-1",
+      "variant": "g256",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-1",
+      "variant": "g64",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-1",
+      "variant": "g64",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-1",
+      "variant": "g64",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-1",
+      "variant": "g64",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-1",
+      "variant": "g128",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-1",
+      "variant": "g128",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-1",
+      "variant": "g128",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-1",
+      "variant": "g128",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-2",
+      "variant": "g256",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-2",
+      "variant": "g256",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-2",
+      "variant": "g256",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-2",
+      "variant": "g256",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-2",
+      "variant": "g128",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-2",
+      "variant": "g128",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-2",
+      "variant": "g128",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-2",
+      "variant": "g128",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-2",
+      "variant": "q",
+      "scene": "mission",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-2",
+      "variant": "q",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-2",
+      "variant": "q",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-2",
+      "variant": "q",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-2",
+      "variant": "g64",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-2",
+      "variant": "g64",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-2",
+      "variant": "g64",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-2",
+      "variant": "g64",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-3",
+      "variant": "g128",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-3",
+      "variant": "g128",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-3",
+      "variant": "g128",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-3",
+      "variant": "g128",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-3",
+      "variant": "g64",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-3",
+      "variant": "g64",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-3",
+      "variant": "g64",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-3",
+      "variant": "g64",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-3",
+      "variant": "g256",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-3",
+      "variant": "g256",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-3",
+      "variant": "g256",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-3",
+      "variant": "g256",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-3",
+      "variant": "q",
+      "scene": "mission",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-3",
+      "variant": "q",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-3",
+      "variant": "q",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-3",
+      "variant": "q",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-4",
+      "variant": "g64",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-4",
+      "variant": "g64",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-4",
+      "variant": "g64",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g64-4",
+      "variant": "g64",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-4",
+      "variant": "q",
+      "scene": "mission",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-4",
+      "variant": "q",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-4",
+      "variant": "q",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "q-4",
+      "variant": "q",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821464,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-4",
+      "variant": "g128",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-4",
+      "variant": "g128",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-4",
+      "variant": "g128",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g128-4",
+      "variant": "g128",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-4",
+      "variant": "g256",
+      "scene": "mission",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-4",
+      "variant": "g256",
+      "scene": "stress_16k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-4",
+      "variant": "g256",
+      "scene": "stress_32k",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 100.0,
+          "max": 100.0
+        },
+        "barriers": {
+          "median": 100.0,
+          "max": 102.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 24.0,
+          "max": 24.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    },
+    {
+      "run": "g256-4",
+      "variant": "g256",
+      "scene": "mission_blast",
+      "device_buffer_bytes": 8821476,
+      "ticks": 240,
+      "metrics": {
+        "dispatches": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "barriers": {
+          "median": 140.0,
+          "max": 142.0
+        },
+        "bins": {
+          "median": 2.0,
+          "max": 2.0
+        },
+        "body_reductions": {
+          "median": 26.0,
+          "max": 26.0
+        },
+        "readback_age_ticks": {
+          "median": 20.0,
+          "max": 28.0
+        }
+      }
+    }
+  ],
+  "scope": "Raw per-tick CPU/call/HUD-age data; GPU timing is preserved as per-process percentiles over 240 samples, not individual GPU tick times."
+}

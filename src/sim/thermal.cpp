@@ -44,7 +44,8 @@ void LiquidFields::allocate() {
     closed_cells.reserve(grid_cells);closed_ends.reserve(grid_cells);
     next_u.resize(horizontal_faces); next_v.resize(vertical_faces);
     velocity_valid.resize(std::max(horizontal_faces,vertical_faces));velocity_next_valid.resize(velocity_valid.size());
-    for (auto& a : volume) cells(a); for (auto& a : energy) cells(a);
+    for (auto& a : volume) cells(a);
+    for (auto& a : energy) cells(a);
     cells(u, horizontal_faces); cells(v, vertical_faces);
     for (auto* a : {&pressure, &density, &fill, &capacity, &viscosity, &diagonal, &right, &down, &rhs,
         &delta_volume, &delta_energy, &outflow}) cells(*a);

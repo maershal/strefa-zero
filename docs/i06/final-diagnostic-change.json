@@ -1,0 +1,7 @@
+{
+  "changed_source_since_full_regression": [
+    "src/gpu/execution_validation.cpp"
+  ],
+  "scope": "Retry refused admission in timer FIFO stress fixture; production engine and shaders unchanged",
+  "exe_sha256": "0cbee5a649202333d701da41d3f08477fcbbb396267f3a4cc54554e3586cad41"
+}

@@ -1,0 +1,11 @@
+﻿{
+    "name":  "block-1-4-legacy",
+    "executable":  "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "sha256":  "9e7d82dbf7d1ddf45bedaa40aee68de7b0e93b687cbbb3f9828da0c16af4f927",
+    "flags":  [
+                  "--gpu-fluid-benchmark",
+                  "--gpu-fluid-profile",
+                  "legacy"
+              ],
+    "started_utc":  "2026-10-30T21:24:59.3274698Z"
+}

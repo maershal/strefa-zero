@@ -1,0 +1,25 @@
+candidate-liquid {'pid': 13668, 'exit_code': 0, 'timed_out': False}
+candidate-flow {'pid': 23456, 'exit_code': 0, 'timed_out': False}
+candidate-coupling {'pid': 21516, 'exit_code': 0, 'timed_out': False}
+candidate-mission {'pid': 4200, 'exit_code': 0, 'timed_out': False}
+candidate-recording {'pid': 4684, 'exit_code': 0, 'timed_out': False}
+candidate-window {'pid': 18252, 'exit_code': 0, 'timed_out': False}
+four-liquid {'pid': 15072, 'exit_code': 0, 'timed_out': False}
+four-mission {'pid': 4372, 'exit_code': 0, 'timed_out': False}
+four-coupling {'pid': 13820, 'exit_code': 0, 'timed_out': False}
+candidate-pass-costs {'pid': 19244, 'exit_code': 0, 'timed_out': False}
+legacy-before {'pid': 9492, 'exit_code': 0, 'timed_out': False}
+boundary {'pid': 8008, 'exit_code': 0, 'timed_out': False}
+scorr-0005 {'pid': 9360, 'exit_code': 0, 'timed_out': False}
+scorr-002 {'pid': 13232, 'exit_code': 0, 'timed_out': False}
+scorr-008 {'pid': 21564, 'exit_code': 0, 'timed_out': False}
+four-substeps {'pid': 12912, 'exit_code': 0, 'timed_out': False}
+surface-quarter {'pid': 20980, 'exit_code': 0, 'timed_out': False}
+surface {'pid': 2560, 'exit_code': 0, 'timed_out': False}
+adhesion {'pid': 7404, 'exit_code': 0, 'timed_out': False}
+vorticity {'pid': 18040, 'exit_code': 0, 'timed_out': False}
+legacy-after {'pid': 12820, 'exit_code': 0, 'timed_out': False}
+Candidate integration and ABBA complete
+Full Windows regression complete
+frozen-i06-control {'pid': 12800, 'exit_code': 0, 'timed_out': False}
+Frozen I06 compatibility control complete

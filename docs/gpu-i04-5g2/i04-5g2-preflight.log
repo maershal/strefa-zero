@@ -1,0 +1,2 @@
+binding-source-check {'pid': 5376, 'exit_code': 0, 'timed_out': False}
+START full CTest

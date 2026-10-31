@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "baseline_sha256": "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e",
+  "trigger_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
+  "ctest": {
+    "executable": "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\ctest.exe",
+    "flags": [
+      "--test-dir",
+      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\ctest",
+      "--output-on-failure",
+      "--output-junit",
+      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\ctest.xml",
+      "--parallel",
+      "2"
+    ],
+    "sha256": "5fdf083bf670c0902984c133334a8d6e11543875d760d6a5dc898155bf6ebd9b",
+    "working_directory": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release",
+    "junit": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\ctest.xml"
+  },
+  "names": [
+    "pre-off-1",
+    "pre-off-2",
+    "full-qa",
+    "q-off-1",
+    "q-on-1",
+    "q-on-2",
+    "q-off-2",
+    "q-on-64",
+    "q-on-128",
+    "post-off-1",
+    "post-off-2",
+    "post-bounds",
+    "post-off-3",
+    "post-snapshots",
+    "post-off-4"
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "unchanged": true,
+  "runtime_rebuilt": false,
+  "native_binary_hashes_verified": {
+    "runtime-070/strefa_clock_tests.exe": "b47d75c750d133c82588fcf97b6b9138d46bc2d5081b3d919f8bbf61a9d5445c",
+    "runtime-070/strefa_core_tests.exe": "5577a811609f3cb28180b92968764a0b299bd79b834a729b64f9576eaf63c19d",
+    "runtime-070/strefa_sim_tests.exe": "d77731be5845bb3c06c47080909ab740245402a19433c4059f03969c44f2f721",
+    "runtime-070/strefa_numerics_tests.exe": "47420d1a56789778c3aa52624ff19b1b14051705c260bb56c1f519e03f77ea86",
+    "runtime-070/strefa_game_tests.exe": "e34d530f81a67e9cef5a103b2606d225f6fd3daf876ebb8bc4400d1594d9937c",
+    "runtime-070/strefa_laboratory_tests.exe": "0a563eb96395a1bb327ecaf7cc14f0ffde37908f2b2f8279f22b8ffb8755088e",
+    "runtime-070/StrefaZero.exe": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8"
+  },
+  "production_source_hashes_verified": 17,
+  "all_three_as_run_observer_sources_unchanged": true,
+  "as_run_observer_snapshots_verified": true,
+  "final_assets_equal_frozen_g2": true,
+  "observer_note": "The collector compared replay sources before later public visibility/one-shot additions. Distinct as-run and final versions are retained and hashed."
+}

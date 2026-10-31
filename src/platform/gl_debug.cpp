@@ -27,7 +27,7 @@ struct GlDebugLog::Impl {
     PFNGLDEBUGMESSAGECALLBACKPROC callback{};
     std::filesystem::path output;
     struct Entry {unsigned source{},type{},id{},severity{};std::uint64_t received_ns{};DebugPhase phase{};std::array<char,768> message{};};
-    std::array<Entry,256> entries{};
+    std::array<Entry,2048> entries{};
     std::size_t count{};
     std::atomic<unsigned> dropped{};
     std::atomic<DebugPhase> phase{DebugPhase::initialization};

@@ -1,0 +1,15 @@
+#version 430 core
+layout(local_size_x=8,local_size_y=8) in;
+#include "lighting_common.glsl"
+#include "lighting_visibility.glsl"
+layout(binding=2) uniform usampler2D seedMap;
+layout(rgba16f,binding=0) writeonly uniform image2D lightImage;
+uniform int quality;uniform float ambient;
+void main(){ivec2 c=ivec2(gl_GlobalInvocationID.xy);if(any(greaterThanEqual(c,ivec2(320,192))))return;vec2 p=vec2(c)+.5;vec3 value=vec3(ambient);
+uint limit=min(lightCounts.x,quality==1?16u:32u);
+for(uint j=0u;j<limit;++j){PointLight l=lights[j];vec2 d=l.position.xy-p;float r=length(d),radius=l.position.z;if(r>=radius||!lightVisible(p,l.position.xy))continue;
+float a=pow(max(0.,1.-r/radius),2.);if(l.history.z>0.)a*=clamp(l.history.x/l.history.z,0.,1.);
+if(quality==2){float soft=1.;for(int k=1;k<8;++k){vec2 q=mix(p,l.position.xy,float(k)/8.);ivec2 cell=clamp(ivec2(q),ivec2(0),ivec2(319,191));uvec2 seed=texelFetch(seedMap,cell,0).rg;
+if(seed.x!=65535u){float distance=max(0.,length(q-(vec2(seed)+.5))-.707107);soft=min(soft,clamp(8.*distance/max(length(q-p),1.),.35,1.));}}a*=soft;}
+value+=l.color.rgb*a;}
+imageStore(lightImage,c,vec4(value,1));}

@@ -60,7 +60,7 @@ std::expected<void,std::string> profile_stabilization(ParticleWorld& source,cons
             <<"\nperiodic_diagnostics="<<options.periodic_diagnostics<<"\nbody_coupling="<<options.body_coupling
             <<"\nreadback_period="<<options.readback_period<<"\nreadback_mode_requested="<<readback_mode_name(options.readback_mode)
             <<"\nspecialized="<<execution.specialized<<"\ncached_bindings="<<execution.cached_bindings<<"\nfifo_queries="<<execution.fifo_queries
-            <<"\nconditional_work="<<execution.conditional_work<<"\nlocal_size="<<execution.local_size<<"\nreduction_size="<<execution.reduction_size
+            <<"\nconditional_work="<<execution.conditional_work<<"\nlocal_size="<<execution.local_size<<"\nreduction_size="<<execution.reduction_size<<"\npbf_size_requested="<<execution.pbf_size<<"\npbf_size_effective="<<execution.effective_pbf_size()<<"\npbf_restrict_requested="<<execution.pbf_restrict<<"\npbf_restrict_effective="<<execution.effective_pbf_restrict()
             <<"\nneighbor_mode="<<static_cast<int>(execution.neighbors)<<"\ncoupling_mode="<<static_cast<int>(execution.coupling)<<"\nsoa="<<execution.soa
             <<"\nphase_gating="<<execution.phase_gating
             <<"\nphase_gating_effective="<<(execution.phase_gating&&execution.neighbors!=NeighborMode::linked)

@@ -30,53 +30,88 @@ void damageCell(int id,uint damage){
     wall[3*W*H+id]=hp>damage?hp-damage:0u;
     if(hp<=damage){atomicAdd(game.counts.y,1u);atomicAdd(game.counts.z,1u);}
 }
-void rifleImpact(int id){
-    if(id<0||wall[id]<2u)return;
+uint rifleImpact(int id){
+    if(id<0||wall[id]<2u)return 0u;uint before=game.counts.y;
     ivec2 center=ivec2(id%W,id/W);
     // A three-cell chip is wide enough to release carriers instead of
     // generating a one-cell plug made from the conserved debris itself.
     for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){ivec2 c=center+ivec2(x,y);
         if(c.x>=0&&c.x<W&&c.y>=0&&c.y<H)damageCell(c.y*W+c.x,1u);}
+    uint broken=game.counts.y-before;transportState.w+=broken;return broken;
 }
 bool targetHit(vec2 a,vec2 b,int target){
     vec2 d=b-a;float t=clamp(dot(game.targets[target].xy-a,d)/max(dot(d,d),1e-6),0,1);
-    return game.targets[target].z>0&&distance(a+d*t,game.targets[target].xy)<4;
+    return distance(a+d*t,game.targets[target].xy)<4;
+}
+// Scalar producer. A reserved packet can hold every possible event in a tick.
+// Overflow is fatal on consumption; it never becomes an accepted partial batch.
+void emitEvent(uint kind,uint command,uint subject,uint value,vec4 payload){
+    uint n=eventBatch.header.x;
+    if(n>=144u){eventBatch.header.w=1u;return;}
+    eventBatch.events[n].identity=uvec4(game.status.y,game.status.z,n+1u,kind);
+    eventBatch.events[n].detail=uvec4(command,subject,value,0);
+    eventBatch.events[n].payload=payload;eventBatch.events[n].extra=vec4(0);
+    eventBatch.header.x=n+1u;
+}
+void ack(uint command,bool accepted){emitEvent(accepted?1u:2u,command,0u,0u,vec4(0));}
+void tryJump(){
+    uint command=game.events.w;if(command==0u)return;
+    uint expiry=floatBitsToUint(game.body.w);
+    if(game.status.z>expiry||game.status.w!=0u){ack(command,false);game.events.w=0u;return;}
+    // Ten ticks = 83.3 ms coyote time. Only current GPU contact/air time authorizes.
+    if(game.locomotion.z>.5||game.timers.z<=10.0/120.0){
+        game.actor.w=-85;game.locomotion.z=0;game.timers.z=1e6;
+        ack(command,true);game.events.w=0u;
+    }
 }
 void beginTick(){
     game.control=inputControl;
-    game.status.z++;game.previous.xy=game.actor.xy;game.blast=vec4(0);
+    game.status.z++;game.previous.xy=game.actor.xy;game.blast=vec4(0);transportState.z=0u;
+    eventBatch.header=uvec4(0,game.status.z,game.status.y,0);transportState.w=game.counts.y;
+    // Command publication follows the ordered upload/barrier before this dispatch.
+    if(commandBatch.header.x!=game.status.y||commandBatch.header.y!=game.status.z||commandBatch.header.z>3u){eventBatch.header.w=1u;return;}
+    game.inventory=commandBatch.inventory;game.timers.xy=commandBatch.rules.xy;game.status.w=uint(commandBatch.rules.z);
+    for(int j=0;j<3;++j)game.targets[j].z=float(commandBatch.targets[j]);
+    if(commandBatch.header.w!=0u&&game.events.w!=0u){ack(game.events.w,false);game.events.w=0u;}
     if(requestedBlastId.x>game.events.z){
-        game.events.z=requestedBlastId.x;game.blast=requestedBlast;game.flash=vec4(game.blast.xyz,.3);
+        game.events.z=requestedBlastId.x;transportState.z=requestedBlastId.x;game.blast=requestedBlast;game.flash=vec4(game.blast.xyz,.3);
         game.events.x++;game.events.y=game.events.x;game.counts.x++;
+        emitEvent(4u,0u,requestedBlastId.x,1u,game.blast);
     }
     game.flash.w=max(0,game.flash.w-tickDt);game.aim.w=max(0,game.aim.w-8*tickDt);
     game.locomotion.y=max(0,game.locomotion.y-5*tickDt);
     vec2 d=game.control.yz-shoulder();if(length(d)>1e-4)game.aim.xy=normalize(d);
-    uint buttons=uint(game.control.w);if(game.status.w!=0u)buttons=0u;
-    if((buttons&1u)!=0u&&game.locomotion.z>.5){game.actor.w=-85;game.locomotion.z=0;}
-    game.timers.x=max(0,game.timers.x-tickDt);
-    if(game.timers.y>0){game.timers.y=max(0,game.timers.y-tickDt);if(game.timers.y==0)game.inventory.x=30u;}
-    if((buttons&8u)!=0u&&game.inventory.x<30u&&game.timers.y==0)game.timers.y=1.5;
-    if((buttons&4u)!=0u&&game.inventory.x>0u&&game.timers.x==0&&game.timers.y==0){
-        for(int i=0;i<128;++i)if(bullets[i].info.x<=0){
-            vec2 hit;int cell=trace(shoulder(),muzzlePosition(),hit);
-            if(cell==-1){bullets[i].motion=vec4(muzzlePosition(),game.aim.xy*600);bullets[i].info=vec4(1.2,0,0,0);}
-            else rifleImpact(cell);
-            game.inventory.x--;game.inventory.w++;game.timers.x=.1;game.aim.w=1;break;
-        }
+    for(uint c=0u;c<commandBatch.header.z;++c){
+        WorldCommand cmd=commandBatch.commands[c];uint kind=cmd.identity.w,id=cmd.identity.z;
+        if(cmd.identity.x!=game.status.y||cmd.identity.y!=game.status.z||game.status.w!=0u){ack(id,false);continue;}
+        if(id==0u||id<=transportState.x){ack(id,false);continue;}
+        transportState.x=id;
+        if(kind==1u){
+            bool accepted=false;vec2 shotMuzzle=vec2(0);
+            for(int i=0;i<128;++i)if(bullets[i].info.x<=0){
+                vec2 hit;int cell=trace(shoulder(),muzzlePosition(),hit);
+                if(cell==-1){bullets[i].motion=vec4(muzzlePosition(),game.aim.xy*cmd.payload.z);bullets[i].info=vec4(1.2,0,0,uintBitsToFloat(id));shotMuzzle=bullets[i].motion.xy;}
+                else{shotMuzzle=muzzlePosition();uint broken=rifleImpact(cell);emitEvent(7u,id,uint(max(cell,0)),broken,vec4(hit,0,0));}
+                game.aim.w=1;accepted=true;break;
+            }ack(id,accepted);if(accepted){uint e=eventBatch.header.x-1u;eventBatch.events[e].detail.w=1u;eventBatch.events[e].payload=vec4(shotMuzzle,0,0);eventBatch.events[e].extra=vec4(game.aim.xy*cmd.payload.z,0,0);}
+        }else if(kind==2u){
+            bool accepted=false;
+            for(int i=0;i<8;++i)if(grenades[i].info.x<=0){
+                grenades[i].motion=vec4(shoulder(),game.aim.xy*cmd.payload.z+game.actor.zw*.25);
+                grenades[i].info=vec4(2,0,0,uintBitsToFloat(id));accepted=true;break;
+            }ack(id,accepted);
+        }else if(kind==3u){
+            if(game.events.w!=0u)ack(game.events.w,false);
+            game.events.w=id;game.body.w=uintBitsToFloat(cmd.detail.y);
+        }else ack(id,false);
     }
-    if((buttons&16u)!=0u&&game.inventory.y>0u){
-        for(int i=0;i<8;++i)if(grenades[i].info.x<=0){
-            grenades[i].motion=vec4(shoulder(),game.aim.xy*90+game.actor.zw*.25);
-            grenades[i].info=vec4(2,0,0,0);game.inventory.y--;break;
-        }
-    }
+    tryJump();
     for(int i=0;i<128;++i)if(bullets[i].info.x>0){
         vec2 a=bullets[i].motion.xy,b=a+bullets[i].motion.zw*tickDt,hit;int cell=trace(a,b,hit);
         bool target=false;for(int j=0;j<3;++j)if(targetHit(a,hit,j)){
-            game.targets[j].z--;if(game.targets[j].z==0)game.inventory.z++;target=true;break;}
+            emitEvent(3u,floatBitsToUint(bullets[i].info.w),uint(j),1u,vec4(game.targets[j].xy,0,0));target=true;break;}
         bullets[i].info.yz=a;bullets[i].motion.xy=hit;bullets[i].info.x-=tickDt;
-        if(target||cell!=-1){bullets[i].info.x=0;if(!target)rifleImpact(cell);}
+        if(target||cell!=-1){bullets[i].info.x=0;if(!target){uint broken=rifleImpact(cell);emitEvent(7u,floatBitsToUint(bullets[i].info.w),uint(max(cell,0)),broken,vec4(hit,0,0));}}
     }
     for(int i=0;i<8;++i)if(grenades[i].info.x>0){
         vec2 a=grenades[i].motion.xy;grenades[i].info.yz=a;grenades[i].motion.w+=180*tickDt;
@@ -89,15 +124,16 @@ void beginTick(){
         if(grenades[i].info.x<=0){
             // Serialize simultaneous detonations, never overwrite/drop an event.
             if(game.blast.z>0){grenades[i].info.x=.00001;continue;}
-            game.blast=vec4(grenades[i].motion.xy,20,70);game.flash=vec4(game.blast.xyz,.3);
+            transportState.z=floatBitsToUint(grenades[i].info.w);game.blast=vec4(grenades[i].motion.xy,20,70);game.flash=vec4(game.blast.xyz,.3);
             game.events.x++;game.events.y=game.events.x;game.counts.x++;
+            emitEvent(4u,floatBitsToUint(grenades[i].info.w),uint(i),1u,game.blast);
         }
     }
     if(game.blast.z>0){
         vec2 delta=game.actor.xy+vec2(0,-9)-game.blast.xy;float r=length(delta);
         if(r<game.blast.z&&blastVisible(game.blast.xy,game.actor.xy+vec2(0,-9)))game.actor.zw+=normalize(delta+vec2(0,-.001))*game.blast.w*(1-r/game.blast.z);
-        for(int i=0;i<3;++i)if(game.targets[i].z>0&&distance(game.targets[i].xy,game.blast.xy)<20&&blastVisible(game.blast.xy,game.targets[i].xy)){
-            game.targets[i].z=0;game.inventory.z++;}
+        for(int i=0;i<3;++i)if(distance(game.targets[i].xy,game.blast.xy)<20&&blastVisible(game.blast.xy,game.targets[i].xy)){
+            emitEvent(3u,transportState.z,uint(i),3u,vec4(game.targets[i].xy,game.blast.xy));}
     }
 }
 void main(){
@@ -137,7 +173,13 @@ void main(){
         if(game.locomotion.z>.5){game.locomotion.x+=abs(game.actor.x-game.previous.z)*.45;game.timers.z=0;}
         else game.timers.z+=dt;
         game.locomotion.w=mix(game.locomotion.w,game.locomotion.z>.5?min(1,abs(v.x)/25):0,1-exp(-18*dt));
-        if(game.inventory.z==3u&&all(greaterThanEqual(game.actor.xy,game.exitZone.xy))&&all(lessThanEqual(game.actor.xy,game.exitZone.zw)))game.status.w=1u;
+        tryJump();
+        if(substep==FLUID_SUBSTEPS-1){
+            bool inside=all(greaterThanEqual(game.actor.xy,game.exitZone.xy))&&all(lessThanEqual(game.actor.xy,game.exitZone.zw));
+            emitEvent(6u,0u,0u,inside?1u:0u,vec4(game.actor.xy,0,0));
+            uint destroyed=game.counts.y-transportState.w;
+            if(destroyed>0u)emitEvent(5u,transportState.z,0u,destroyed,vec4(float(game.counts.z),float(game.counts.w),0,0));
+        }
         return;
     }
     if(operation==5){ // Occlusion is evaluated against pre-destruction terrain.

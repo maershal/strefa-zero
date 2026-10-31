@@ -1,0 +1,12 @@
+{
+  "positive": "PASS",
+  "rejected": [
+    "missing",
+    "duplicate",
+    "negative",
+    "nonfinite",
+    "label",
+    "order",
+    "memory"
+  ]
+}

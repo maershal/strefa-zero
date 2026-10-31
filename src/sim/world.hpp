@@ -36,6 +36,7 @@ public:
     std::uint64_t queue_explosion(Point center, int radius = 9);
     std::uint64_t queue_explosion(ExplosionCommand command);
     [[nodiscard]] Cell at(Point position) const noexcept;
+    [[nodiscard]] FluidSample sample_fluid(Point position)const noexcept;
     [[nodiscard]] PhysicalSample sample(Point position) const noexcept;
     [[nodiscard]] const Statistics& statistics() const noexcept { return state_.report; }
     [[nodiscard]] const Budget& budget() const noexcept { return state_.budget; }

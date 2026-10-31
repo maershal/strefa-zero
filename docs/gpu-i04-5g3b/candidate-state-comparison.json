@@ -1,0 +1,62 @@
+[
+  {
+    "scene": "mission",
+    "fast_source": "docs/gpu-i04-5g3/reproduction/snapshots-1/mission",
+    "fast_snapshot_csv_sha256": "56018ff07cfbdecb983ea5cca7e60fda50e6f6672e90c187a3b77cb81e795121",
+    "slow_source": "session/post-snapshots/mission",
+    "slow_snapshot_csv_sha256": "eb8e1d41a450a53018437fce66290e1fc5e74f7b48e0f1aecbbb696be93ee914",
+    "joined_rows": 48,
+    "candidate_count_slow_over_fast_median": 0.9991506818138298,
+    "candidate_count_slow_over_fast_min": 0.9926693179794622,
+    "candidate_count_slow_over_fast_max": 1.0018530141367046,
+    "histogram_bytes_equal": false,
+    "fast_histogram_sha256": "47b83835ac7e626443e7dcaa27c4e561d38bbbcb78446836b24843539d0fcde3",
+    "slow_histogram_sha256": "43dea5fea7022a856ce005f91e1f19278b1d8a6418e4a62df24aaee9f8dcdce6",
+    "scope": "Matched capture labels/ticks/ordinals/reach; distinct measured processes, not identical full raw states or uninstrumented OFF samples."
+  },
+  {
+    "scene": "stress_16k",
+    "fast_source": "docs/gpu-i04-5g3/reproduction/snapshots-1/stress_16k",
+    "fast_snapshot_csv_sha256": "96850961b4a2eb05ef7468ab208922c510ca15ddb5c7e709120a1f97996c7c27",
+    "slow_source": "session/post-snapshots/stress_16k",
+    "slow_snapshot_csv_sha256": "96850961b4a2eb05ef7468ab208922c510ca15ddb5c7e709120a1f97996c7c27",
+    "joined_rows": 48,
+    "candidate_count_slow_over_fast_median": 1.0,
+    "candidate_count_slow_over_fast_min": 1.0,
+    "candidate_count_slow_over_fast_max": 1.0,
+    "histogram_bytes_equal": true,
+    "fast_histogram_sha256": "97cdfa956f1739175085ab61ee5319bee74cbf567093bb5df10922f0ad7d0e18",
+    "slow_histogram_sha256": "97cdfa956f1739175085ab61ee5319bee74cbf567093bb5df10922f0ad7d0e18",
+    "scope": "Matched capture labels/ticks/ordinals/reach; distinct measured processes, not identical full raw states or uninstrumented OFF samples."
+  },
+  {
+    "scene": "stress_32k",
+    "fast_source": "docs/gpu-i04-5g3/reproduction/snapshots-1/stress_32k",
+    "fast_snapshot_csv_sha256": "7db7d033909db9d519e421a71d8c4193767d2c783e836d474e3c3f258570e88e",
+    "slow_source": "session/post-snapshots/stress_32k",
+    "slow_snapshot_csv_sha256": "7db7d033909db9d519e421a71d8c4193767d2c783e836d474e3c3f258570e88e",
+    "joined_rows": 48,
+    "candidate_count_slow_over_fast_median": 1.0,
+    "candidate_count_slow_over_fast_min": 1.0,
+    "candidate_count_slow_over_fast_max": 1.0,
+    "histogram_bytes_equal": true,
+    "fast_histogram_sha256": "1fcd9072a62b5ba58790fa7316299a064409744e64d98b906c8187ebedd89a45",
+    "slow_histogram_sha256": "1fcd9072a62b5ba58790fa7316299a064409744e64d98b906c8187ebedd89a45",
+    "scope": "Matched capture labels/ticks/ordinals/reach; distinct measured processes, not identical full raw states or uninstrumented OFF samples."
+  },
+  {
+    "scene": "mission_blast",
+    "fast_source": "docs/gpu-i04-5g3/reproduction/snapshots-1/mission_blast",
+    "fast_snapshot_csv_sha256": "3c1af423885df6e02c2a94773012351caf973f3fee986e9246e60031fd896db1",
+    "slow_source": "session/post-snapshots/mission_blast",
+    "slow_snapshot_csv_sha256": "ee3d53da04bff4480a3889569f6cf6d40e8ca5afb7aadfd09551cd305a32d249",
+    "joined_rows": 48,
+    "candidate_count_slow_over_fast_median": 1.000395057946673,
+    "candidate_count_slow_over_fast_min": 0.928508316008316,
+    "candidate_count_slow_over_fast_max": 1.1385222647095103,
+    "histogram_bytes_equal": false,
+    "fast_histogram_sha256": "f2834b5e7f6cbc02c62f42e15dad06eb7a63d81f4855c663f44fbafb8c1cca65",
+    "slow_histogram_sha256": "c151ae72df00af148e898d487094cc038dc8f637325beaa7a0188c36e03cdc4d",
+    "scope": "Matched capture labels/ticks/ordinals/reach; distinct measured processes, not identical full raw states or uninstrumented OFF samples."
+  }
+]

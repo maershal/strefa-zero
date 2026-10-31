@@ -1,0 +1,242 @@
+[
+  {
+    "stage": "pre",
+    "scene": "mission",
+    "metric": "gpu_step_ms",
+    "runs": 2,
+    "median_of_medians": 2.769968,
+    "min_median": 2.751008,
+    "max_median": 2.788928,
+    "median_of_p95": 2.832592
+  },
+  {
+    "stage": "pre",
+    "scene": "mission",
+    "metric": "cpu_submit_ms",
+    "runs": 2,
+    "median_of_medians": 0.00485,
+    "min_median": 0.0047,
+    "max_median": 0.005,
+    "median_of_p95": 0.01205
+  },
+  {
+    "stage": "pre",
+    "scene": "mission",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 2,
+    "median_of_medians": 2.793765,
+    "min_median": 2.772022917,
+    "max_median": 2.815507083,
+    "median_of_p95": 2.793765
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_16k",
+    "metric": "gpu_step_ms",
+    "runs": 2,
+    "median_of_medians": 1.767408,
+    "min_median": 1.765344,
+    "max_median": 1.769472,
+    "median_of_p95": 1.844384
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_16k",
+    "metric": "cpu_submit_ms",
+    "runs": 2,
+    "median_of_medians": 0.0036,
+    "min_median": 0.0035,
+    "max_median": 0.0037,
+    "median_of_p95": 0.0102
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_16k",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 2,
+    "median_of_medians": 1.7181950000000001,
+    "min_median": 1.715718333,
+    "max_median": 1.720671667,
+    "median_of_p95": 1.7181950000000001
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_32k",
+    "metric": "gpu_step_ms",
+    "runs": 2,
+    "median_of_medians": 3.114016,
+    "min_median": 3.099456,
+    "max_median": 3.128576,
+    "median_of_p95": 3.240144
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_32k",
+    "metric": "cpu_submit_ms",
+    "runs": 2,
+    "median_of_medians": 0.0036,
+    "min_median": 0.0035,
+    "max_median": 0.0037,
+    "median_of_p95": 0.0089
+  },
+  {
+    "stage": "pre",
+    "scene": "stress_32k",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 2,
+    "median_of_medians": 3.121924375,
+    "min_median": 3.107304583,
+    "max_median": 3.136544167,
+    "median_of_p95": 3.121924375
+  },
+  {
+    "stage": "pre",
+    "scene": "mission_blast",
+    "metric": "gpu_step_ms",
+    "runs": 2,
+    "median_of_medians": 2.923424,
+    "min_median": 2.889696,
+    "max_median": 2.957152,
+    "median_of_p95": 3.0560159999999996
+  },
+  {
+    "stage": "pre",
+    "scene": "mission_blast",
+    "metric": "cpu_submit_ms",
+    "runs": 2,
+    "median_of_medians": 0.0049,
+    "min_median": 0.0048,
+    "max_median": 0.005,
+    "median_of_p95": 0.029500000000000002
+  },
+  {
+    "stage": "pre",
+    "scene": "mission_blast",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 2,
+    "median_of_medians": 2.940905625,
+    "min_median": 2.920642083,
+    "max_median": 2.961169167,
+    "median_of_p95": 2.940905625
+  },
+  {
+    "stage": "post",
+    "scene": "mission",
+    "metric": "gpu_step_ms",
+    "runs": 4,
+    "median_of_medians": 11.342255999999999,
+    "min_median": 11.28752,
+    "max_median": 11.421536,
+    "median_of_p95": 11.667952
+  },
+  {
+    "stage": "post",
+    "scene": "mission",
+    "metric": "cpu_submit_ms",
+    "runs": 4,
+    "median_of_medians": 0.8093,
+    "min_median": 0.0235,
+    "max_median": 1.7838,
+    "median_of_p95": 1.5211000000000001
+  },
+  {
+    "stage": "post",
+    "scene": "mission",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 4,
+    "median_of_medians": 11.43936104,
+    "min_median": 11.37152708,
+    "max_median": 11.50946583,
+    "median_of_p95": 11.43936104
+  },
+  {
+    "stage": "post",
+    "scene": "stress_16k",
+    "metric": "gpu_step_ms",
+    "runs": 4,
+    "median_of_medians": 4.77768,
+    "min_median": 4.747232,
+    "max_median": 4.788608,
+    "median_of_p95": 5.28528
+  },
+  {
+    "stage": "post",
+    "scene": "stress_16k",
+    "metric": "cpu_submit_ms",
+    "runs": 4,
+    "median_of_medians": 0.51665,
+    "min_median": 0.0176,
+    "max_median": 1.0729,
+    "median_of_p95": 0.8843500000000001
+  },
+  {
+    "stage": "post",
+    "scene": "stress_16k",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 4,
+    "median_of_medians": 4.820532708,
+    "min_median": 4.806794167,
+    "max_median": 4.82765625,
+    "median_of_p95": 4.820532708
+  },
+  {
+    "stage": "post",
+    "scene": "stress_32k",
+    "metric": "gpu_step_ms",
+    "runs": 4,
+    "median_of_medians": 8.758400000000002,
+    "min_median": 8.726528,
+    "max_median": 8.78896,
+    "median_of_p95": 9.422992
+  },
+  {
+    "stage": "post",
+    "scene": "stress_32k",
+    "metric": "cpu_submit_ms",
+    "runs": 4,
+    "median_of_medians": 0.5199,
+    "min_median": 0.0205,
+    "max_median": 1.0639,
+    "median_of_p95": 0.9369999999999999
+  },
+  {
+    "stage": "post",
+    "scene": "stress_32k",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 4,
+    "median_of_medians": 8.77771625,
+    "min_median": 8.776027083,
+    "max_median": 8.790094583,
+    "median_of_p95": 8.77771625
+  },
+  {
+    "stage": "post",
+    "scene": "mission_blast",
+    "metric": "gpu_step_ms",
+    "runs": 4,
+    "median_of_medians": 12.231088,
+    "min_median": 12.20608,
+    "max_median": 12.379296,
+    "median_of_p95": 12.792528
+  },
+  {
+    "stage": "post",
+    "scene": "mission_blast",
+    "metric": "cpu_submit_ms",
+    "runs": 4,
+    "median_of_medians": 0.7348,
+    "min_median": 0.024,
+    "max_median": 1.446,
+    "median_of_p95": 1.0162
+  },
+  {
+    "stage": "post",
+    "scene": "mission_blast",
+    "metric": "batch_mean_step_wall_ms",
+    "runs": 4,
+    "median_of_medians": 12.277754375,
+    "min_median": 12.22942333,
+    "max_median": 12.48339583,
+    "median_of_p95": 12.277754375
+  }
+]

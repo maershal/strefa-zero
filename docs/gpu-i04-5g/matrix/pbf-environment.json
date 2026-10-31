@@ -1,0 +1,8 @@
+﻿{
+    "schema_version":  1,
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "baseline_executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I04_5-Q\\StrefaZero.exe",
+    "repetitions":  4,
+    "order_policy":  "Four-treatment Williams; general and reduction sizes remain 256; diagnostic probes OFF",
+    "correctness_precondition":  "Run execution, liquid, mission and protocol Q tests for each PBF size before interpreting measurements."
+}

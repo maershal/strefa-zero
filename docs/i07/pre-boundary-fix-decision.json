@@ -1,0 +1,5 @@
+{
+  "reason": "Added CPU oracle for implicit world exterior. Weighted virtual samples must normalize their actual neighborhood instead of clamping to an interior sample. Initial six completed candidate trials preserved; final matrix starts on rebuilt binary.",
+  "diagnostic_only": "main handler now logs new diagnostic failures instead of modal dialogs",
+  "harness_fix": "Export baseline envelope with PowerShell; no Windows Python dependency for trial runner."
+}

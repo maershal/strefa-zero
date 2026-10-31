@@ -1,0 +1,4 @@
+quality,mean_max,center_max,actor_max,mean_sum,center_bias,actor_bias,accepted
+off,2.09923e-07,5.04843e-08,1.52588e-05,4.56216e-06,1.18149e-07,1.52588e-05,1
+low,2.01128e-07,4.6476e-08,0,4.54215e-06,8.75461e-08,0,1
+high,2.00074e-07,4.63458e-08,0,4.40436e-06,5.05239e-08,0,1

@@ -1,0 +1,30 @@
+﻿{
+    "schema_version":  1,
+    "name":  "full-qa",
+    "order":  3,
+    "kind":  "qa",
+    "cost_mode":  "off",
+    "visible_requested":  false,
+    "window_observer":  false,
+    "executable":  "C:\\Program Files (x86)\\Microsoft Visual Studio\\18\\BuildTools\\Common7\\IDE\\CommonExtensions\\Microsoft\\CMake\\CMake\\bin\\ctest.exe",
+    "executable_sha256":  "5fdf083bf670c0902984c133334a8d6e11543875d760d6a5dc898155bf6ebd9b",
+    "arguments":  [
+                      "--test-dir",
+                      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\ctest",
+                      "--output-on-failure",
+                      "--output-junit",
+                      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\ctest.xml",
+                      "--parallel",
+                      "1"
+                  ],
+    "timeout_seconds":  1500,
+    "start_utc":  "2026-10-30T15:26:40.9254278+00:00",
+    "end_utc":  "2026-10-30T15:34:06.6462113+00:00",
+    "pid":  8744,
+    "exit_code":  0,
+    "timed_out":  false,
+    "launch_error":  null,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "observer_samples":  0
+}

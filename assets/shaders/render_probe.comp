@@ -1,0 +1,12 @@
+#version 430 core
+layout(local_size_x=64) in;
+#include "render_terrain.glsl"
+layout(binding=2) uniform sampler2D rawField;
+#include "liquid_sampling.glsl"
+layout(std430,binding=7) buffer Probes {vec4 rays[256];uvec4 result[256];};
+uniform int probeCount;
+void main(){uint i=gl_GlobalInvocationID.x;if(i>=uint(probeCount))return;
+    vec4 ray=rays[i];ivec2 size=textureSize(rawField,0);ivec2 a=clamp(ivec2(ray.xy*vec2(size)/vec2(320,192)),ivec2(0),size-1);
+    ivec2 b=clamp(ivec2(ray.zw*vec2(size)/vec2(320,192)),ivec2(0),size-1);
+    vec2 d=texelFetch(rawField,a,0).rg;result[i]=uvec4(clearTerrain(ray.xy,ray.zw)?1u:0u,clearLiquid(a,b,d.y>d.x?1:0)?1u:0u,0u,0u);
+}

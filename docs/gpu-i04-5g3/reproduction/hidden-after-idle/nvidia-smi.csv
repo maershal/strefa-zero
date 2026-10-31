@@ -1,0 +1,12 @@
+﻿timestamp, index, name, driver_version, pstate, temperature.gpu, utilization.gpu [%], utilization.memory [%], clocks.current.graphics [MHz], clocks.current.memory [MHz], power.draw [W], memory.used [MiB], memory.total [MiB]
+2026/10/30 15:49:25.084, 0, NVIDIA GeForce GTX 1650, 610.47, P8, 66, 7 %, 6 %, 300 MHz, 405 MHz, 8.54 W, 1009 MiB, 4096 MiB
+2026/10/30 15:49:25.600, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 67, 7 %, 6 %, 1395 MHz, 4001 MHz, 21.99 W, 1037 MiB, 4096 MiB
+2026/10/30 15:49:26.113, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 71, 17 %, 4 %, 1890 MHz, 4001 MHz, 40.42 W, 1033 MiB, 4096 MiB
+2026/10/30 15:49:26.627, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 71, 17 %, 4 %, 1890 MHz, 4001 MHz, 40.91 W, 1038 MiB, 4096 MiB
+2026/10/30 15:49:27.144, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 72, 90 %, 5 %, 1890 MHz, 4001 MHz, 48.50 W, 1040 MiB, 4096 MiB
+2026/10/30 15:49:27.659, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 72, 90 %, 5 %, 1875 MHz, 4001 MHz, 49.61 W, 1040 MiB, 4096 MiB
+2026/10/30 15:49:28.176, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 73, 76 %, 42 %, 1875 MHz, 4001 MHz, 50.58 W, 1041 MiB, 4096 MiB
+2026/10/30 15:49:28.692, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 72, 90 %, 59 %, 1875 MHz, 4001 MHz, 49.90 W, 1036 MiB, 4096 MiB
+2026/10/30 15:49:29.202, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 72, 90 %, 59 %, 1890 MHz, 4001 MHz, 40.81 W, 1041 MiB, 4096 MiB
+2026/10/30 15:49:29.717, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 72, 84 %, 4 %, 1890 MHz, 4001 MHz, 42.06 W, 1041 MiB, 4096 MiB
+

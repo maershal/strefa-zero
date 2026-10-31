@@ -1,0 +1,62 @@
+[
+  {
+    "block": 1,
+    "scenes": {
+      "mission": {
+        "legacy_mean_of_medians": 2.911296,
+        "balanced_mean_of_medians": 3.147872,
+        "delta_ms": 0.2365759999999999
+      },
+      "stress_16k": {
+        "legacy_mean_of_medians": 2.867344,
+        "balanced_mean_of_medians": 2.964528,
+        "delta_ms": 0.09718399999999994
+      },
+      "stress_32k": {
+        "legacy_mean_of_medians": 5.592992000000001,
+        "balanced_mean_of_medians": 5.557551999999999,
+        "delta_ms": -0.03544000000000125
+      }
+    }
+  },
+  {
+    "block": 2,
+    "scenes": {
+      "mission": {
+        "legacy_mean_of_medians": 2.866736,
+        "balanced_mean_of_medians": 3.1604799999999997,
+        "delta_ms": 0.2937439999999998
+      },
+      "stress_16k": {
+        "legacy_mean_of_medians": 2.838976,
+        "balanced_mean_of_medians": 2.858128,
+        "delta_ms": 0.019151999999999614
+      },
+      "stress_32k": {
+        "legacy_mean_of_medians": 5.604816,
+        "balanced_mean_of_medians": 5.576544,
+        "delta_ms": -0.02827199999999941
+      }
+    }
+  },
+  {
+    "block": 3,
+    "scenes": {
+      "mission": {
+        "legacy_mean_of_medians": 2.8460799999999997,
+        "balanced_mean_of_medians": 3.150016,
+        "delta_ms": 0.3039360000000002
+      },
+      "stress_16k": {
+        "legacy_mean_of_medians": 2.8377600000000003,
+        "balanced_mean_of_medians": 2.940992,
+        "delta_ms": 0.10323199999999977
+      },
+      "stress_32k": {
+        "legacy_mean_of_medians": 5.617232,
+        "balanced_mean_of_medians": 5.5781279999999995,
+        "delta_ms": -0.03910400000000003
+      }
+    }
+  }
+]
