@@ -1,0 +1,18 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+    Start  1: game.protocol
+1/4 Test  #1: game.protocol ....................   Passed    0.02 sec
+    Start 11: app.shared_session
+2/4 Test #11: app.shared_session ...............   Passed    3.32 sec
+    Start 13: gpu.gameplay
+3/4 Test #13: gpu.gameplay .....................   Passed    4.56 sec
+    Start 49: gpu.execution
+4/4 Test #49: gpu.execution ....................   Passed   15.02 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+gpu            =  22.90 sec*proc (3 tests)
+graphics       =  22.90 sec*proc (3 tests)
+integration    =  22.90 sec*proc (3 tests)
+
+Total Test time (real) =  23.01 sec

@@ -1,0 +1,254 @@
+[
+  {
+    "vsync": "off",
+    "repeat": 1,
+    "rows": 10000,
+    "rows_dropped": 4957,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.52935,
+      "p95": 2.7156,
+      "p99": 3.4158,
+      "maximum": 3.9939
+    },
+    "interval_ms": {
+      "samples": 14837,
+      "median": 0.5857,
+      "p95": 2.8975,
+      "p99": 3.4933,
+      "maximum": 19.9067
+    },
+    "cpu_submit_ms": {
+      "samples": 1580,
+      "median": 0.6718,
+      "p95": 1.0251,
+      "p99": 1.3688,
+      "maximum": 8.7844
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00833319873938,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1700,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": true
+  },
+  {
+    "vsync": "on",
+    "repeat": 1,
+    "rows": 900,
+    "rows_dropped": 0,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6646,
+      "p95": 17.4147,
+      "p99": 17.8744,
+      "maximum": 29.3719
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.665149999999997,
+      "p95": 17.4149,
+      "p99": 17.8751,
+      "maximum": 29.3722
+    },
+    "cpu_submit_ms": {
+      "samples": 1675,
+      "median": 0.8795,
+      "p95": 1.3298,
+      "p99": 1.799,
+      "maximum": 2.457
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00832584804624,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1795,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": false
+  },
+  {
+    "vsync": "off",
+    "repeat": 2,
+    "rows": 10000,
+    "rows_dropped": 2300,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.7906,
+      "p95": 2.6909,
+      "p99": 3.4542,
+      "maximum": 25.4261
+    },
+    "interval_ms": {
+      "samples": 12180,
+      "median": 0.82195,
+      "p95": 2.7932,
+      "p99": 3.5527,
+      "maximum": 25.4263
+    },
+    "cpu_submit_ms": {
+      "samples": 1580,
+      "median": 0.9135,
+      "p95": 1.3905,
+      "p99": 2.595,
+      "maximum": 22.2984
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00833303818434,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1700,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": true
+  },
+  {
+    "vsync": "on",
+    "repeat": 2,
+    "rows": 900,
+    "rows_dropped": 0,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6647,
+      "p95": 16.8555,
+      "p99": 17.6469,
+      "maximum": 30.5788
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.66505,
+      "p95": 16.8558,
+      "p99": 17.6472,
+      "maximum": 30.5791
+    },
+    "cpu_submit_ms": {
+      "samples": 1676,
+      "median": 0.99995,
+      "p95": 1.2979,
+      "p99": 1.7151,
+      "maximum": 5.0798
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00820503372281,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1796,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": false
+  },
+  {
+    "vsync": "off",
+    "repeat": 3,
+    "rows": 10000,
+    "rows_dropped": 4373,
+    "frame_ms": {
+      "samples": 9880,
+      "median": 0.59915,
+      "p95": 2.9859,
+      "p99": 3.9416,
+      "maximum": 15.1525
+    },
+    "interval_ms": {
+      "samples": 14253,
+      "median": 0.5809,
+      "p95": 3.2831,
+      "p99": 4.1617,
+      "maximum": 15.1527
+    },
+    "cpu_submit_ms": {
+      "samples": 1580,
+      "median": 0.6513,
+      "p95": 0.9889,
+      "p99": 1.4055,
+      "maximum": 10.662
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00833313250869,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1700,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": true
+  },
+  {
+    "vsync": "on",
+    "repeat": 3,
+    "rows": 900,
+    "rows_dropped": 0,
+    "frame_ms": {
+      "samples": 779,
+      "median": 16.6645,
+      "p95": 16.8004,
+      "p99": 16.9257,
+      "maximum": 17.1408
+    },
+    "interval_ms": {
+      "samples": 780,
+      "median": 16.664749999999998,
+      "p95": 16.8008,
+      "p99": 16.9261,
+      "maximum": 17.141
+    },
+    "cpu_submit_ms": {
+      "samples": 1677,
+      "median": 1.0304,
+      "p95": 1.3246,
+      "p99": 1.686,
+      "maximum": 2.3637
+    },
+    "interval_source": "mission-frames.csv, all frames after 120-frame warmup",
+    "focus_fraction": 0.0,
+    "max_pending_seconds": 0.00832971559295,
+    "render_size": [
+      960,
+      576
+    ],
+    "window_size": [
+      1600,
+      920
+    ],
+    "steps": 1797,
+    "score": 3,
+    "dropped_seconds": 0.0,
+    "unpaced_target_accepted": false
+  }
+]

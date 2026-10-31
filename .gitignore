@@ -14,3 +14,8 @@ imgui.ini
 *.p12
 *.pem
 *.key
+
+# Raw QA images are distributed as a release asset; keep generated caches local.
+__pycache__/
+*.py[cod]
+/docs/**/*.bmp

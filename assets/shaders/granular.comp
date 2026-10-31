@@ -1,6 +1,7 @@
 #version 430 core
 layout(local_size_x=LOCAL_SIZE) in;
 #include "particle_common.glsl"
+layout(r16ui,binding=0) writeonly uniform uimage2D renderTerrain;
 void main(){
     uint id=gl_GlobalInvocationID.x;
     if(operation==10){if(id==0u){
@@ -23,6 +24,7 @@ void main(){
         return;
     }
     if(operation==12){if(id==0u){uint count=min(aliveCount,uint(N));slots[2*N]=(count+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE;slots[2*N+1]=1u;slots[2*N+2]=1u;
+        dispatchCommand(PBF_COMMAND,(count+PBF_LOCAL_SIZE-1u)/PBF_LOCAL_SIZE);
         slots[2*N+3]=4u;slots[2*N+4]=count;slots[2*N+5]=0u;slots[2*N+6]=0u;
 #if GPU_CONDITIONAL_WORK
         dispatchCommand(REDUCTION_COMMAND,count>0u?1u:0u);
@@ -35,12 +37,21 @@ void main(){
     if(operation==9){
         if(id>=uint(W*H))return;ivec2 c=ivec2(id%W,id/W);uint nearWall=0u;
         bool inside=solid(c);float distance=3.5;
+        imageStore(renderTerrain,c,uvec4(wall[id],0,0,0));
         for(int y=-3;y<=3;++y)for(int x=-3;x<=3;++x){
             bool occupied=solid(c+ivec2(x,y));
             if(occupied)nearWall=1u;
             if(occupied!=inside)distance=min(distance,length(max(abs(vec2(x,y))-.5,vec2(0))));
         }
-        wall[W*H+id]=nearWall;wall[2*W*H+id]=floatBitsToUint(inside?-distance:distance);return;
+        wall[W*H+id]=nearWall;wall[2*W*H+id]=floatBitsToUint(inside?-distance:distance);
+#if FLUID_BOUNDARY_VOLUME
+        float sum=0;
+        if(inside)for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x){
+            if(solid(c+ivec2(x,y))){float q=max(0.0,4.0-float(x*x+y*y));sum+=q*q*q/(64.0*3.141592653589793);}
+        }
+        wall[4*W*H+id]=floatBitsToUint(inside?1.014612762210833/max(sum,1e-8):0.0);
+#endif
+        return;
     }
     if(operation==7){ // terrain painting, one writer per cell
         if(id>=uint(W*H))return;

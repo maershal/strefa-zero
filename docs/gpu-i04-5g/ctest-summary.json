@@ -1,0 +1,364 @@
+{
+  "start_utc": "2026-10-30T12:39:17.8069472Z",
+  "tests": 44,
+  "passed": 44,
+  "failed": [],
+  "cases": [
+    {
+      "name": "game.clock",
+      "classname": "game.clock",
+      "time": "0.0106726",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "core.settings",
+      "classname": "core.settings",
+      "time": "0.0272479",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "sim.materials",
+      "classname": "sim.materials",
+      "time": "10.4727",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "sim.numerics_parallel",
+      "classname": "sim.numerics_parallel",
+      "time": "7.20024",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "game.training",
+      "classname": "game.training",
+      "time": "22.7609",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "sim.laboratory_worker",
+      "classname": "sim.laboratory_worker",
+      "time": "0.061948",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "app.opengl_smoke",
+      "classname": "app.opengl_smoke",
+      "time": "7.4716",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "app.laboratory_responsiveness",
+      "classname": "app.laboratory_responsiveness",
+      "time": "5.89245",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "app.laboratory_four_threads",
+      "classname": "app.laboratory_four_threads",
+      "time": "5.75886",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.mission",
+      "classname": "gpu.mission",
+      "time": "42.1269",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_64_liquid",
+      "classname": "gpu.pbf_64_liquid",
+      "time": "22.0503",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_64_mission",
+      "classname": "gpu.pbf_64_mission",
+      "time": "30.7186",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_64_coupling",
+      "classname": "gpu.pbf_64_coupling",
+      "time": "58.5206",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_128_liquid",
+      "classname": "gpu.pbf_128_liquid",
+      "time": "21.8058",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_128_mission",
+      "classname": "gpu.pbf_128_mission",
+      "time": "30.655",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.pbf_128_coupling",
+      "classname": "gpu.pbf_128_coupling",
+      "time": "48.6359",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.instrumentation",
+      "classname": "gpu.instrumentation",
+      "time": "0.938086",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_aos_sorted",
+      "classname": "gpu.hot_aos_sorted",
+      "time": "197.078",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_aos_reused",
+      "classname": "gpu.hot_aos_reused",
+      "time": "168.143",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_soa_sorted",
+      "classname": "gpu.hot_soa_sorted",
+      "time": "198.353",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_soa_reused",
+      "classname": "gpu.hot_soa_reused",
+      "time": "171.251",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_mission_narrow",
+      "classname": "gpu.hot_mission_narrow",
+      "time": "30.0855",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_mission_sorted",
+      "classname": "gpu.hot_mission_sorted",
+      "time": "30.7613",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.hot_immutable",
+      "classname": "gpu.hot_immutable",
+      "time": "2.38219",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.cost_aos",
+      "classname": "gpu.cost_aos",
+      "time": "1.18274",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.cost_soa",
+      "classname": "gpu.cost_soa",
+      "time": "1.24891",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.cost_immutable",
+      "classname": "gpu.cost_immutable",
+      "time": "1.29621",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.transport",
+      "classname": "gpu.transport",
+      "time": "1.06696",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.transport_mission",
+      "classname": "gpu.transport_mission",
+      "time": "31.2665",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.work_gating",
+      "classname": "gpu.work_gating",
+      "time": "44.3296",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.work_mission",
+      "classname": "gpu.work_mission",
+      "time": "30.6722",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.work_gating_aos_sorted",
+      "classname": "gpu.work_gating_aos_sorted",
+      "time": "26.0321",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.work_gating_aos_reused",
+      "classname": "gpu.work_gating_aos_reused",
+      "time": "26.4073",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.work_gating_soa_sorted",
+      "classname": "gpu.work_gating_soa_sorted",
+      "time": "33.8654",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.coupling",
+      "classname": "gpu.coupling",
+      "time": "40.5443",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.neighbors",
+      "classname": "gpu.neighbors",
+      "time": "1.59228",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.execution",
+      "classname": "gpu.execution",
+      "time": "28.0456",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.readback_ring",
+      "classname": "gpu.readback_ring",
+      "time": "0.710446",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.mission_ui",
+      "classname": "gpu.mission_ui",
+      "time": "15.7184",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.granular_physics",
+      "classname": "gpu.granular_physics",
+      "time": "3.19656",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.liquid_physics",
+      "classname": "gpu.liquid_physics",
+      "time": "10.3695",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.flow_behaviour",
+      "classname": "gpu.flow_behaviour",
+      "time": "11.1235",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "gpu.laboratory_ui",
+      "classname": "gpu.laboratory_ui",
+      "time": "4.88285",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    },
+    {
+      "name": "app.opengl33_smoke",
+      "classname": "app.opengl33_smoke",
+      "time": "7.16229",
+      "status": "run",
+      "failed": false,
+      "skipped": false
+    }
+  ],
+  "log_summary": [
+    "100% tests passed, 0 tests failed out of 44",
+    "Total Test time (real) = 1434.50 sec"
+  ]
+}

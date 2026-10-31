@@ -1,0 +1,36 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start  1: graphics.lighting_contract
+ 1/67 Test  #1: graphics.lighting_contract ........   Passed    0.05 sec
+      Start  2: game.vfx_contract
+ 2/67 Test  #2: game.vfx_contract .................   Passed    0.08 sec
+      Start  3: physics.fluid_reference
+ 3/67 Test  #3: physics.fluid_reference ...........   Passed    0.13 sec
+      Start  4: game.protocol
+ 4/67 Test  #4: game.protocol .....................   Passed    0.01 sec
+      Start  5: game.clock
+ 5/67 Test  #5: game.clock ........................   Passed    0.01 sec
+      Start  6: core.settings
+ 6/67 Test  #6: core.settings .....................   Passed    0.08 sec
+      Start  7: sim.materials
+ 7/67 Test  #7: sim.materials .....................   Passed   12.23 sec
+      Start  8: sim.numerics_parallel
+ 8/67 Test  #8: sim.numerics_parallel .............   Passed    7.34 sec
+      Start  9: game.training
+ 9/67 Test  #9: game.training .....................   Passed   16.61 sec
+      Start 10: sim.laboratory_worker
+10/67 Test #10: sim.laboratory_worker .............   Passed    0.04 sec
+      Start 11: physics.thermal_contract
+11/67 Test #11: physics.thermal_contract ..........   Passed    0.01 sec
+      Start 12: app.opengl_smoke
+12/67 Test #12: app.opengl_smoke ..................   Passed    4.71 sec
+      Start 13: app.laboratory_responsiveness
+13/67 Test #13: app.laboratory_responsiveness .....   Passed    5.44 sec
+      Start 14: app.laboratory_four_threads
+14/67 Test #14: app.laboratory_four_threads .......   Passed    5.60 sec
+      Start 15: app.shared_session
+15/67 Test #15: app.shared_session ................   Passed    3.21 sec
+      Start 16: gpu.shader_cache
+16/67 Test #16: gpu.shader_cache ..................   Passed    0.61 sec
+      Start 17: gpu.thermal_edges
+17/67 Test #17: gpu.thermal_edges .................   Passed   42.01 sec
+      Start 18: gpu.thermal_ui

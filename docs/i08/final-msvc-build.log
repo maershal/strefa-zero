@@ -1,0 +1,13 @@
+[0/2] Re-checking globbed directories...
+[1/19] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[2/19] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\launch_options.cpp for CXX dependencies
+[3/19] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\tests\fluid_tests.cpp for CXX dependencies
+[4/19] Generating CXX dyndep file CMakeFiles\strefa_fluid_tests.dir\CXX.dd
+[5/18] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\application.cpp for CXX dependencies
+[6/18] Generating CXX dyndep file CMakeFiles\strefa_zero.dir\CXX.dd
+[7/13] Building CXX object CMakeFiles\strefa_zero.dir\src\app\launch_options.cpp.obj
+[8/13] Building CXX object CMakeFiles\strefa_fluid_tests.dir\tests\fluid_tests.cpp.obj
+[9/13] Building CXX object CMakeFiles\strefa_fluid_tests.dir\src\app\launch_options.cpp.obj
+[10/13] Building CXX object CMakeFiles\strefa_zero.dir\src\app\application.cpp.obj
+[11/13] Linking CXX executable runtime-070\strefa_fluid_tests.exe
+[12/13] Linking CXX executable runtime-070\StrefaZero.exe

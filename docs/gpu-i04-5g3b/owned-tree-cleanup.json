@@ -1,0 +1,7 @@
+{
+  "scope": "Only the synthetic test tree; no game or foreign process matching.",
+  "own_descendant_pid": 6380,
+  "result": "passed",
+  "own_parent_pid": 15456,
+  "terminated_owned_processes": 2
+}

@@ -1,0 +1,7 @@
+I11 uses coefficients from the ACES filmic fit by Krzysztof Narkowicz:
+https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/
+
+The author offers the fitted curve under public-domain CC0 or MIT terms.
+This project uses the CC0 option. I11 adds a 0.03 toe offset, subtraction and
+normalization to preserve dark pixel-art colors. This is a fitted artistic
+curve, not the complete ACES color-management system.

@@ -1,0 +1,6 @@
+START windows
+DONE windows
+START window-analysis
+DONE window-analysis
+START package-checks
+DONE package-checks

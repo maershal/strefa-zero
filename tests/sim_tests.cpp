@@ -120,7 +120,8 @@ void reactions_and_air() {
     check(wall_peak>free_peak*1.02,"Rigid wall reflects and amplifies incident pressure at the boundary");
     near(shield.sample({100,100}).pressure,0,1e-10,"Thin wall blocks direct pressure pulse"); ledger(shield);
     World extreme{4,c}; extreme.queue_explosion(ExplosionCommand{{40,40},4,100000,100000,100000});
-    for(int n=0;n<20;++n) extreme.step(); ledger(extreme);
+    for(int n=0;n<20;++n) extreme.step();
+    ledger(extreme);
     check(extreme.statistics().finite,"Strong source stays finite without discarding enthalpy");
     c.air=false; c.reactions=true;
     World chain{5,c};

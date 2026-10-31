@@ -42,7 +42,7 @@ void check_timer_modes(ParticleWorld& world,std::ostream& report){
         const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets/shaders";
         auto created=ParticleWorld::create(shaders,world.execution_options(),quiet);
         require(created.has_value(),"Cannot create a world with initial profiling policy");
-        auto& fresh=**created;
+        auto& fresh=**created;fresh.set_vfx_options({VfxQuality::off,false});
         require(fresh.readback_stats().submitted==0,"Readback-off performed copies during world creation");
         fresh.reset_mission();for(unsigned tick=0;tick<4;++tick){fresh.step();fresh.render(1);}drain(fresh);
         require(fresh.readback_stats().submitted==0,"Readback-off performed reset/runtime copies");
@@ -97,12 +97,13 @@ void check_instrumentation(ParticleWorld& world,std::ostream& report){
                 const unsigned reductions=coupling==CouplingMode::combined?26U:42U;
                 const unsigned passes=coupling==CouplingMode::reference?1U:2U;
                 const unsigned body_work=variant.options.body_coupling?2U+reductions*passes:0U;
-                require(p.calls.dispatches==76U+body_work+builds*bin_passes+(diagnostic_due?2U:0U),"Incorrect measured dispatch count");
+                require(p.calls.presentation_dispatches==4U,"Incorrect I11 presentation dispatch accounting");
+                require(p.calls.dispatches-p.calls.presentation_dispatches==76U+body_work+builds*bin_passes+(diagnostic_due?2U:0U),"Incorrect measured physical dispatch count");
                 require(p.calls.bins==builds,"Incorrect measured index rebuild count");
                 require(p.calls.body_reductions==(variant.options.body_coupling?reductions:0U),"Incorrect measured body reduction count");
                 require(p.calls.active_rebuilds==1,"Missing active-list dispatch accounting");
-                require(p.calls.copy_bytes==p.calls.stage_copies*(32+sizeof(MissionSnapshot)),"Incorrect staging byte accounting");
-                if(variant.options.readback_period==0)require(p.calls.copy_bytes==0&&p.calls.read_bytes==0,"Disabled readback still transfers data");
+                require(p.calls.copy_bytes==p.calls.stage_copies*(32+sizeof(MissionSnapshot))+p.calls.event_copies*sizeof(game::EventBatch),"Incorrect staging byte accounting");
+                if(variant.options.readback_period==0)require(p.calls.copy_bytes==p.calls.event_copies*sizeof(game::EventBatch)&&p.calls.read_bytes<=p.calls.event_packets*sizeof(game::EventBatch),"Disabled HUD still transfers telemetry (reliable events remain enabled)");
                 require(p.total_ms>=p.poll_ms&&p.total_ms>=p.solver_ms,"Invalid CPU phase timings");
             }
             drain(world);
@@ -136,8 +137,10 @@ void setup_scene(ParticleWorld& world,unsigned count){
 
 std::expected<void,std::string> profile_gpu(ParticleWorld& world,const std::filesystem::path& output,bool check_only){
     try{
+        const auto saved_vfx=world.vfx_options();struct RestoreVfx {ParticleWorld& world;VfxOptions options;~RestoreVfx(){world.set_vfx_options(options);}} restore{world,saved_vfx};
+        world.set_vfx_options({VfxQuality::off,false}); // This profiler counts physical solver/transport passes.
         std::filesystem::create_directories(output);
-        std::ofstream checks{output/"instrumentation-tests.txt"};check_instrumentation(world,checks);checks<<"status=passed\n";checks.close();
+        std::ofstream checks{output/"instrumentation-tests.txt"};checks<<"scope=physical dispatches = total minus explicit I11 presentation_dispatches; vfx=off; full submit time retained; VFX costs use --gpu-vfx-benchmark\n";check_instrumentation(world,checks);checks<<"status=passed\n";checks.close();
         if(check_only)return {};
         const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets"/"shaders";
         const auto fresh_world=[&](const ProfileOptions& options){auto fresh=ParticleWorld::create(shaders,world.execution_options(),options);if(!fresh)throw std::runtime_error{fresh.error()};return std::move(*fresh);};
@@ -228,7 +231,7 @@ void write_profile_samples(ParticleWorld& world,const std::filesystem::path& out
     const auto execution=world.execution_options();
     totals<<"specialized="<<execution.specialized<<"\ncached_bindings="<<execution.cached_bindings<<"\nfifo_queries="<<execution.fifo_queries
         <<"\ncoupling_mode="<<static_cast<int>(execution.coupling)<<"\nneighbor_mode="<<static_cast<int>(execution.neighbors)<<"\nsoa="<<execution.soa
-        <<"\nconditional_work="<<execution.conditional_work<<"\nlocal_size="<<execution.local_size<<"\nreduction_size="<<execution.reduction_size<<'\n';
+        <<"\nconditional_work="<<execution.conditional_work<<"\nlocal_size="<<execution.local_size<<"\nreduction_size="<<execution.reduction_size<<"\npbf_size_requested="<<execution.pbf_size<<"\npbf_size_effective="<<execution.effective_pbf_size()<<"\npbf_restrict_requested="<<execution.pbf_restrict<<"\npbf_restrict_effective="<<execution.effective_pbf_restrict()<<'\n';
     const auto stats=world.readback_stats();
     totals<<"readback_mode="<<readback_mode_name(stats.mode)<<"\nreadback_capacity="<<stats.capacity<<"\nreadback_pending="<<stats.pending
         <<"\nreadback_max_pending="<<stats.max_pending<<"\nreadback_submitted="<<stats.submitted<<"\nreadback_completed="<<stats.completed

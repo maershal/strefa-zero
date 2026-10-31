@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="Win32-ninja"
+	tests="1"
+	failures="0"
+	disabled="0"
+	skipped="0"
+	hostname="maershal"
+	time="46"
+	timestamp="2026-10-31T14:29:06"
+	>
+	<testcase name="gpu.thermal_edges" classname="gpu.thermal_edges" time="46.202" status="run">
+		<properties>
+			<property name="cmake_labels" value="gpu;graphics;integration"/>
+		</properties>
+		<system-out></system-out>
+	</testcase>
+</testsuite>

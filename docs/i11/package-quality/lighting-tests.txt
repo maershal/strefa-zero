@@ -1,0 +1,18 @@
+thin_wall_and_wall_behind_lamp=PASS
+jfa_exact_reference=PASS max_error_cells=0
+independent_visibility_oracle=PASS 1027 rays
+same_frame_destruction=PASS
+moisture_contact_drying_duplicate_tick_render=PASS
+slot_reuse=PASS
+hot_drying=PASS
+hdr_srgb_and_opaque_output=PASS
+events_without_vfx_and_dedup=PASS
+day_composition=PASS
+night_composition=PASS
+fire_composition=PASS
+explosion_composition=PASS
+water_composition=PASS
+sand_composition=PASS
+physical_trajectories_off_low_high=PASS
+destruction_profile=PASS
+quality=PASS

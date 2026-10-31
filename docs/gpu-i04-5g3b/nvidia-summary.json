@@ -1,0 +1,2293 @@
+[
+  {
+    "group": "session",
+    "run": "full-qa",
+    "samples": 861,
+    "pstates": [
+      "P0",
+      "P3",
+      "P5",
+      "P8",
+      "[Unknown Error]"
+    ],
+    "whole_process": {
+      "samples": 861,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1860.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 56.0,
+        "median": 79.0,
+        "max": 87.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 90.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 1.0,
+        "median": 41.03,
+        "max": 51.4
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1041.0,
+        "max": 1100.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 466,
+      "clocks.current.graphics": {
+        "min": 1590.0,
+        "median": 1860.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 64.0,
+        "median": 80.0,
+        "max": 87.0
+      },
+      "utilization.gpu": {
+        "min": 90.0,
+        "median": 93.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 26.73,
+        "median": 42.93,
+        "max": 51.4
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1041.0,
+        "max": 1066.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-bounds",
+    "samples": 36,
+    "pstates": [
+      "P0",
+      "P3",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 36,
+      "clocks.current.graphics": {
+        "min": 360.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 94.0,
+        "max": 98.0
+      },
+      "power.draw": {
+        "min": 6.57,
+        "median": 20.439999999999998,
+        "max": 23.96
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1041.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 19,
+      "clocks.current.graphics": {
+        "min": 570.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 97.0,
+        "max": 98.0
+      },
+      "power.draw": {
+        "min": 6.57,
+        "median": 20.54,
+        "max": 23.86
+      },
+      "memory.used": {
+        "min": 1041.0,
+        "median": 1041.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-off-1",
+    "samples": 31,
+    "pstates": [
+      "P0",
+      "P3",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 31,
+      "clocks.current.graphics": {
+        "min": 390.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 1.0,
+        "median": 98.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 6.66,
+        "median": 20.52,
+        "max": 24.12
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 19,
+      "clocks.current.graphics": {
+        "min": 450.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 3500.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 64.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 97.0,
+        "median": 99.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 17.87,
+        "median": 20.53,
+        "max": 24.12
+      },
+      "memory.used": {
+        "min": 1038.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-off-2",
+    "samples": 31,
+    "pstates": [
+      "P0",
+      "P3"
+    ],
+    "whole_process": {
+      "samples": 31,
+      "clocks.current.graphics": {
+        "min": 585.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 3500.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 98.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 17.24,
+        "median": 20.52,
+        "max": 23.97
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 20,
+      "clocks.current.graphics": {
+        "min": 585.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 3500.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 64.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 98.5,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 17.24,
+        "median": 20.52,
+        "max": 23.97
+      },
+      "memory.used": {
+        "min": 1013.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-off-3",
+    "samples": 31,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 31,
+      "clocks.current.graphics": {
+        "min": 570.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 63.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 98.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 6.6,
+        "median": 20.4,
+        "max": 24.02
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 20,
+      "clocks.current.graphics": {
+        "min": 1395.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 63.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 97.0,
+        "median": 98.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 20.0,
+        "median": 20.4,
+        "max": 24.02
+      },
+      "memory.used": {
+        "min": 1013.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-off-4",
+    "samples": 32,
+    "pstates": [
+      "P0",
+      "P3",
+      "P5",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 32,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 61.0,
+        "median": 63.0,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 98.0,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 6.64,
+        "median": 20.23,
+        "max": 23.73
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 20,
+      "clocks.current.graphics": {
+        "min": 525.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 810.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 63.0,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 97.0,
+        "median": 98.5,
+        "max": 99.0
+      },
+      "power.draw": {
+        "min": 12.83,
+        "median": 20.265,
+        "max": 23.73
+      },
+      "memory.used": {
+        "min": 1012.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "post-snapshots",
+    "samples": 46,
+    "pstates": [
+      "P0",
+      "P5",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 46,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 61.0,
+        "median": 63.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 70.0,
+        "max": 98.0
+      },
+      "power.draw": {
+        "min": 6.53,
+        "median": 20.21,
+        "max": 23.61
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1045.0,
+        "max": 1050.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 18,
+      "clocks.current.graphics": {
+        "min": 420.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 63.0,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 97.0,
+        "max": 98.0
+      },
+      "power.draw": {
+        "min": 19.99,
+        "median": 20.295,
+        "max": 23.61
+      },
+      "memory.used": {
+        "min": 1041.0,
+        "median": 1045.0,
+        "max": 1050.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "pre-off-1",
+    "samples": 9,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1935.0,
+        "max": 1950.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 50.0,
+        "median": 56.0,
+        "max": 58.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 81.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 5.09,
+        "median": 37.0,
+        "max": 50.24
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1935.0,
+        "median": 1935.0,
+        "max": 1935.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 57.0,
+        "median": 57.5,
+        "max": 58.0
+      },
+      "utilization.gpu": {
+        "min": 95.0,
+        "median": 95.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 37.0,
+        "median": 37.5,
+        "max": 38.0
+      },
+      "memory.used": {
+        "min": 1043.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "pre-off-2",
+    "samples": 9,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 1920.0,
+        "median": 1935.0,
+        "max": 1935.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 57.0,
+        "median": 59.0,
+        "max": 61.0
+      },
+      "utilization.gpu": {
+        "min": 48.0,
+        "median": 87.0,
+        "max": 89.0
+      },
+      "power.draw": {
+        "min": 24.74,
+        "median": 37.88,
+        "max": 50.17
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-off-1",
+    "samples": 49,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 49,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 72.0,
+        "median": 75.0,
+        "max": 77.0
+      },
+      "utilization.gpu": {
+        "min": 3.0,
+        "median": 46.0,
+        "max": 91.0
+      },
+      "power.draw": {
+        "min": 7.92,
+        "median": 22.3,
+        "max": 22.98
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1097.0,
+        "max": 1097.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1395.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 76.0,
+        "median": 76.0,
+        "max": 76.0
+      },
+      "utilization.gpu": {
+        "min": 91.0,
+        "median": 91.0,
+        "max": 91.0
+      },
+      "power.draw": {
+        "min": 22.85,
+        "median": 22.895000000000003,
+        "max": 22.94
+      },
+      "memory.used": {
+        "min": 1044.0,
+        "median": 1047.5,
+        "max": 1051.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-off-2",
+    "samples": 45,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 45,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 65.0,
+        "median": 67.0,
+        "max": 68.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 48.0,
+        "max": 92.0
+      },
+      "power.draw": {
+        "min": 6.72,
+        "median": 20.5,
+        "max": 21.37
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1096.0,
+        "max": 1096.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1395.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 67.0,
+        "max": 67.0
+      },
+      "utilization.gpu": {
+        "min": 92.0,
+        "median": 92.0,
+        "max": 92.0
+      },
+      "power.draw": {
+        "min": 21.02,
+        "median": 21.1,
+        "max": 21.18
+      },
+      "memory.used": {
+        "min": 1044.0,
+        "median": 1044.0,
+        "max": 1044.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-on-1",
+    "samples": 46,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 46,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 70.0,
+        "median": 71.0,
+        "max": 73.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 41.0,
+        "max": 91.0
+      },
+      "power.draw": {
+        "min": 8.0,
+        "median": 21.705,
+        "max": 22.31
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1097.0,
+        "max": 1101.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 4,
+      "clocks.current.graphics": {
+        "min": 450.0,
+        "median": 922.5,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 2203.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 71.0,
+        "median": 71.5,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 90.0,
+        "median": 90.5,
+        "max": 91.0
+      },
+      "power.draw": {
+        "min": 8.0,
+        "median": 16.505,
+        "max": 22.2
+      },
+      "memory.used": {
+        "min": 1046.0,
+        "median": 1056.0,
+        "max": 1077.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-on-128",
+    "samples": 45,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 45,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 64.0,
+        "max": 65.0
+      },
+      "utilization.gpu": {
+        "min": 2.0,
+        "median": 49.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 6.59,
+        "median": 20.21,
+        "max": 20.68
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1097.0,
+        "max": 1097.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 405.0,
+        "median": 412.5,
+        "max": 420.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 405.0,
+        "max": 405.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 63.5,
+        "max": 64.0
+      },
+      "utilization.gpu": {
+        "min": 90.0,
+        "median": 90.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 8.09,
+        "median": 9.985,
+        "max": 11.88
+      },
+      "memory.used": {
+        "min": 1046.0,
+        "median": 1056.0,
+        "max": 1066.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-on-2",
+    "samples": 49,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 49,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 69.0,
+        "max": 70.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 51.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 6.73,
+        "median": 20.78,
+        "max": 21.82
+      },
+      "memory.used": {
+        "min": 1014.0,
+        "median": 1097.0,
+        "max": 1101.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 1,
+      "clocks.current.graphics": {
+        "min": 1395.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 70.0,
+        "median": 70.0,
+        "max": 70.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 21.69,
+        "median": 21.69,
+        "max": 21.69
+      },
+      "memory.used": {
+        "min": 1043.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "session",
+    "run": "q-on-64",
+    "samples": 42,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 42,
+      "clocks.current.graphics": {
+        "min": 360.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 64.0,
+        "median": 65.0,
+        "max": 66.0
+      },
+      "utilization.gpu": {
+        "min": 1.0,
+        "median": 58.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 9.9,
+        "median": 20.275,
+        "max": 21.02
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1097.0,
+        "max": 1097.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1395.0,
+        "median": 1395.0,
+        "max": 1395.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 66.0,
+        "median": 66.0,
+        "max": 66.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 20.4,
+        "median": 20.71,
+        "max": 21.02
+      },
+      "memory.used": {
+        "min": 1044.0,
+        "median": 1047.5,
+        "max": 1051.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-1-a",
+    "samples": 9,
+    "pstates": [
+      "P0",
+      "P8"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 300.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 405.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 52.0,
+        "median": 59.0,
+        "max": 61.0
+      },
+      "utilization.gpu": {
+        "min": 0.0,
+        "median": 86.0,
+        "max": 89.0
+      },
+      "power.draw": {
+        "min": 5.86,
+        "median": 38.47,
+        "max": 48.79
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-1-b",
+    "samples": 9,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 65.0,
+        "max": 66.0
+      },
+      "utilization.gpu": {
+        "min": 31.0,
+        "median": 83.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 26.6,
+        "median": 40.07,
+        "max": 50.84
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1920.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 63.0,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 90.0,
+        "median": 90.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 26.6,
+        "median": 28.265,
+        "max": 29.93
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1026.0,
+        "max": 1041.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-2-a",
+    "samples": 9,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 66.0,
+        "max": 67.0
+      },
+      "utilization.gpu": {
+        "min": 53.0,
+        "median": 83.0,
+        "max": 86.0
+      },
+      "power.draw": {
+        "min": 26.97,
+        "median": 40.49,
+        "max": 51.43
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-2-b",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 68.5,
+        "max": 70.0
+      },
+      "utilization.gpu": {
+        "min": 26.0,
+        "median": 84.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 27.77,
+        "median": 39.5,
+        "max": 50.53
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1905.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 67.0,
+        "max": 67.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 27.77,
+        "median": 29.665,
+        "max": 31.56
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1026.0,
+        "max": 1041.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-3-a",
+    "samples": 9,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 1875.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 68.0,
+        "median": 70.0,
+        "max": 71.0
+      },
+      "utilization.gpu": {
+        "min": 46.0,
+        "median": 82.0,
+        "max": 86.0
+      },
+      "power.draw": {
+        "min": 28.01,
+        "median": 41.25,
+        "max": 50.35
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1043.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-3-b",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1875.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 71.0,
+        "median": 72.0,
+        "max": 73.0
+      },
+      "utilization.gpu": {
+        "min": 25.0,
+        "median": 84.5,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 28.38,
+        "median": 41.66,
+        "max": 50.96
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1042.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 1,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 72.0,
+        "median": 72.0,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 42.28,
+        "median": 42.28,
+        "max": 42.28
+      },
+      "memory.used": {
+        "min": 1013.0,
+        "median": 1013.0,
+        "max": 1013.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "hidden-closing",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1860.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 70.0,
+        "median": 73.0,
+        "max": 74.0
+      },
+      "utilization.gpu": {
+        "min": 32.0,
+        "median": 83.0,
+        "max": 85.0
+      },
+      "power.draw": {
+        "min": 28.4,
+        "median": 39.519999999999996,
+        "max": 50.99
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1042.0,
+        "max": 1043.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-1-a",
+    "samples": 9,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 9,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 58.0,
+        "median": 61.0,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 56.0,
+        "median": 85.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 25.31,
+        "median": 39.91,
+        "max": 50.95
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1049.0,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1920.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 62.0,
+        "median": 62.5,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 95.0,
+        "median": 95.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 39.1,
+        "median": 39.504999999999995,
+        "max": 39.91
+      },
+      "memory.used": {
+        "min": 1049.0,
+        "median": 1049.0,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-1-b",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1905.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 61.0,
+        "median": 63.0,
+        "max": 65.0
+      },
+      "utilization.gpu": {
+        "min": 23.0,
+        "median": 84.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 25.76,
+        "median": 39.335,
+        "max": 51.43
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1048.5,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 1,
+      "clocks.current.graphics": {
+        "min": 1920.0,
+        "median": 1920.0,
+        "max": 1920.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 63.0,
+        "median": 63.0,
+        "max": 63.0
+      },
+      "utilization.gpu": {
+        "min": 90.0,
+        "median": 90.0,
+        "max": 90.0
+      },
+      "power.draw": {
+        "min": 35.17,
+        "median": 35.17,
+        "max": 35.17
+      },
+      "memory.used": {
+        "min": 1013.0,
+        "median": 1013.0,
+        "max": 1013.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-2-a",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 64.0,
+        "median": 66.5,
+        "max": 68.0
+      },
+      "utilization.gpu": {
+        "min": 45.0,
+        "median": 79.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 26.98,
+        "median": 39.245000000000005,
+        "max": 51.08
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1049.0,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1905.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 67.0,
+        "max": 67.0
+      },
+      "utilization.gpu": {
+        "min": 95.0,
+        "median": 95.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 38.22,
+        "median": 39.47,
+        "max": 40.72
+      },
+      "memory.used": {
+        "min": 1049.0,
+        "median": 1049.0,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-2-b",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 66.0,
+        "median": 67.5,
+        "max": 69.0
+      },
+      "utilization.gpu": {
+        "min": 25.0,
+        "median": 84.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 27.49,
+        "median": 37.435,
+        "max": 50.64
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1048.5,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 1,
+      "clocks.current.graphics": {
+        "min": 1905.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 67.0,
+        "median": 67.0,
+        "max": 67.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 32.34,
+        "median": 32.34,
+        "max": 32.34
+      },
+      "memory.used": {
+        "min": 1013.0,
+        "median": 1013.0,
+        "max": 1013.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-3-a",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1875.0,
+        "median": 1905.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 69.0,
+        "median": 70.5,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 54.0,
+        "median": 82.0,
+        "max": 87.0
+      },
+      "power.draw": {
+        "min": 28.11,
+        "median": 40.165,
+        "max": 51.01
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1048.5,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 0,
+      "clocks.current.graphics": null,
+      "clocks.current.memory": null,
+      "temperature.gpu": null,
+      "utilization.gpu": null,
+      "power.draw": null,
+      "memory.used": null,
+      "memory.total": null
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "visible-3-b",
+    "samples": 10,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 10,
+      "clocks.current.graphics": {
+        "min": 1875.0,
+        "median": 1890.0,
+        "max": 1905.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 70.0,
+        "median": 71.0,
+        "max": 73.0
+      },
+      "utilization.gpu": {
+        "min": 34.0,
+        "median": 83.5,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 28.26,
+        "median": 41.72,
+        "max": 50.85
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1048.5,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 71.0,
+        "median": 71.5,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 95.0,
+        "median": 95.0,
+        "max": 95.0
+      },
+      "power.draw": {
+        "min": 36.65,
+        "median": 39.120000000000005,
+        "max": 41.59
+      },
+      "memory.used": {
+        "min": 1049.0,
+        "median": 1049.0,
+        "max": 1049.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  },
+  {
+    "group": "visibility",
+    "run": "window-control",
+    "samples": 31,
+    "pstates": [
+      "P0"
+    ],
+    "whole_process": {
+      "samples": 31,
+      "clocks.current.graphics": {
+        "min": 1590.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 69.0,
+        "median": 71.0,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 9.0,
+        "median": 42.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 24.89,
+        "median": 34.43,
+        "max": 35.86
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1052.0,
+        "max": 1052.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    },
+    "gpu_util_at_least_90": {
+      "samples": 2,
+      "clocks.current.graphics": {
+        "min": 1890.0,
+        "median": 1890.0,
+        "max": 1890.0
+      },
+      "clocks.current.memory": {
+        "min": 4001.0,
+        "median": 4001.0,
+        "max": 4001.0
+      },
+      "temperature.gpu": {
+        "min": 71.0,
+        "median": 71.5,
+        "max": 72.0
+      },
+      "utilization.gpu": {
+        "min": 93.0,
+        "median": 93.0,
+        "max": 93.0
+      },
+      "power.draw": {
+        "min": 28.37,
+        "median": 28.490000000000002,
+        "max": 28.61
+      },
+      "memory.used": {
+        "min": 1011.0,
+        "median": 1030.5,
+        "max": 1050.0
+      },
+      "memory.total": {
+        "min": 4096.0,
+        "median": 4096.0,
+        "max": 4096.0
+      }
+    }
+  }
+]

@@ -1,0 +1,31 @@
+{
+  "scope": "Read-only PATH discovery; no capture, install or system changes.",
+  "tools": [
+    {
+      "path": null,
+      "name": "nsys.exe",
+      "available": false
+    },
+    {
+      "path": null,
+      "name": "ncu.exe",
+      "available": false
+    },
+    {
+      "path": null,
+      "name": "renderdoccmd.exe",
+      "available": false
+    },
+    {
+      "path": null,
+      "name": "apitrace.exe",
+      "available": false
+    },
+    {
+      "path": "C:\\WINDOWS\\system32\\wpr.exe",
+      "name": "wpr.exe",
+      "available": true
+    }
+  ],
+  "administrator": false
+}

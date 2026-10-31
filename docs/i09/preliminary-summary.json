@@ -1,0 +1,32 @@
+[
+  {
+    "run": 1,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.66824
+  },
+  {
+    "run": 2,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.36476
+  },
+  {
+    "run": 3,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.48539200000000005
+  },
+  {
+    "run": 4,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.302408
+  },
+  {
+    "run": 5,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.284168
+  },
+  {
+    "run": 6,
+    "performance_accepted": false,
+    "worst_low_additional_gpu_ms": 0.34962399999999993
+  }
+]

@@ -1,0 +1,10 @@
+**6/6 widocznych prób okna**, G2 OFF/ON po trzy powtórzenia, kolejność OFF/ON, ON/OFF, OFF/ON, elapsed, VSync OFF, limit 60 FPS, debug/counters ON. Każda próba osiągnęła wynik 3, co najmniej 900 klatek i 1700 ticków, z działającą pauzą i bez odrzuconego czasu. To kontrole działającej gry na relokowanej paczce G2, z grupami 256 i pełnym sprzężeniem.
+
+| Wariant | Mediana / p95 całej klatki, ms | Fokus / analizowane klatki | Zminimalizowane |
+| --- | ---: | ---: | ---: |
+| g2off | 16.66840 / 16.66990 | 2610 / 2610 | 0 |
+| g2on | 16.66850 / 16.66910 | 2610 / 2610 | 0 |
+
+W tabeli mediana trzech median i mediana trzech p95; pierwsze 30 renderowanych klatek pominięto. Przechwytywanie obrazu jest wliczone, największa klatka 48.74280 ms. Limit 60 FPS i czas oczekiwania nie pozwalają przypisać podobnej klatki przyspieszeniu fizyki. Fokus i minimalizację raportujemy jawnie.
+
+KHR_debug id131186 według fazy odebrania callbacku: {'initialization': 0, 'runtime': 0, 'capture': 0, 'validation': 6, 'shutdown': 0}; zgubione komunikaty: 0. Faza odbioru asynchronicznego komunikatu nie jest dowodem przyczyny ani miejsca fizycznej pamięci. [Procesy](gpu-i04-5g2/windows/runs.csv), [pełne podsumowanie](gpu-i04-5g2/window-summary.json). Archiwum zachowuje CSV/logi; duże BMP z okien pominięto.

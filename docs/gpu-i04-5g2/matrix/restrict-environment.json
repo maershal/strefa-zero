@@ -1,0 +1,9 @@
+﻿{
+    "schema_version":  1,
+    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+    "baseline_executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I04_5-G\\StrefaZero.exe",
+    "repetitions":  6,
+    "order_policy":  "All six permutations; balanced positions and directed neighbors within each three-run block.",
+    "settings":  "general/PBF/reduction 256; cost probes OFF; full/direct; C OFF",
+    "correctness_precondition":  "Run binding faults, liquid, mission, hot variants and Q before interpreting measurements."
+}

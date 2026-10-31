@@ -1,0 +1,10 @@
+{
+  "protocol": "replay",
+  "valid_native_runs": 15,
+  "cost_runs": 8,
+  "raw_cpu_counter_ticks": 7680,
+  "snapshot_reconstruction_rows": 192,
+  "bounds_scenes": 8,
+  "engine_groups": 22,
+  "scope": "Per-process GPU percentiles, raw CPU/counters. Host and GPU-engine samples include initialization. Dmax/candidate probes are separate interventions; no simultaneous unprobed scene geometry or individual GPU times retained."
+}

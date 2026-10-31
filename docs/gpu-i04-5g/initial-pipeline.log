@@ -1,0 +1,16 @@
+START collect
+DONE collect
+START q-repeat
+DONE q-repeat
+START q-analysis
+DONE q-analysis
+START matrix
+Traceback (most recent call last):
+  File "/mnt/c/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/run-i04-5g-after-tests.py", line 17, in <module>
+    invoke('matrix',['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',win(r/'work/run-i04-5g-matrix.ps1')])
+  File "/mnt/c/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/run-i04-5g-after-tests.py", line 12, in invoke
+    with (d/(name+'.log')).open('w') as log:subprocess.run(command,cwd=r,stdout=log,stderr=subprocess.STDOUT,check=True)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', 'C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\run-i04-5g-matrix.ps1']' returned non-zero exit status 1.

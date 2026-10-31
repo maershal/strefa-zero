@@ -1,0 +1,15 @@
+{
+  "schema": 2,
+  "shipping_exe_sha256": "be5b0aa1445f234f01dc6a9227a7e10638be81083aa44b77bebabcb567e49340",
+  "full_windows_suite_exe_sha256": "04656b7e44e790bd728d4d7051427b4064348e783cdfc9420b0fe300a89ab6b0",
+  "final_ten_checks_and_benchmark_exe_sha256": "88636da2e426a7de4c59da37a040059f8aae67c96a122f29c6c80dc6b92fb371",
+  "difference_after_benchmark": "Only SDL_RaiseWindow inside existing testing && show_test_window path. GPU code, assets, benchmark and ordinary game paths unchanged. Packaged EXE tested separately.",
+  "gpu_runtime_files_verified_unchanged_since_benchmark": 90,
+  "shipping_build": "MSVC 19.51.36256.0; C++23; Release/LTO; warnings as errors",
+  "git_head": "7e85553109c35d390a151454011fa8836db44045",
+  "git_workspace": "dirty I08 source + I09; no new commit",
+  "initial_base": "Initial dirty source snapshot saved before I09, not HEAD",
+  "source_manifest": "source-sha256.json",
+  "source_patch": "I09-source.patch",
+  "all_shipping_assets_match_source": true
+}

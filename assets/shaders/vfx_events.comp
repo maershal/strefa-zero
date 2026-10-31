@@ -1,0 +1,36 @@
+#version 430 core
+layout(local_size_x=1) in;
+#include "vfx_common.glsl"
+#define MISSION_READ_ONLY 1
+#include "mission_state.glsl"
+uniform int cpuSource;
+void sourceEvent(uint kind,vec2 p,vec2 velocity,float strength,uint seed){
+    if(kind==2u&&vfxSolid(ivec2(floor(p)))){for(int i=0;i<8;++i){float a=float(i)*.785398;vec2 q=p+vec2(cos(a),sin(a))*.8;if(!vfxSolid(ivec2(floor(q)))){p=q;break;}}}
+    if(kind==1u){
+        emitVfx(1u,p,vec2(0),.16,max(3,strength*.65),0xff9cdcffu,seed,true);
+        emitVfx(11u,p,vec2(0),.36,max(8,strength*1.7),0xffffffffu,seed,true);
+        for(uint i=0u;i<(quality==2?112u:40u);++i){uint s=hashVfx(seed+i);float angle=randomVfx(s)*6.2831853;vec2 v=vec2(cos(angle),sin(angle))*(20+randomVfx(s+1u)*95);emitVfx(8u,p,v,.15+randomVfx(s+2u)*.65,.4+randomVfx(s+3u)*.7,0xff65bdffu,s,true);}
+        for(uint i=0u;i<(quality==2?24u:10u);++i){uint s=hashVfx(seed+300u+i);float angle=randomVfx(s)*6.2831853;emitVfx(9u,p,vec2(cos(angle),sin(angle))*(10+randomVfx(s+1u)*45),.3+randomVfx(s+2u)*.6,.5+randomVfx(s+3u),0xff6d8395u,s,true);}
+        for(uint i=0u;i<16u;++i){float angle=float(i)*6.2831853/16.;vec2 direction=vec2(cos(angle),sin(angle));for(int r=1;r<=32;++r){vec2 q=p+direction*float(r);ivec2 c=ivec2(floor(q));if(any(lessThan(c,ivec2(0)))||any(greaterThanEqual(c,ivec2(320,192))))break;if(vfxSolid(c)){emitVfx(10u,vec2(c)+.5,vec2(0),6.,2.5,0xb015171bu,seed+i,true);break;}}}
+    }else if(kind==2u){for(uint i=0u;i<(quality==2?12u:5u);++i){uint s=hashVfx(seed+i);float a=randomVfx(s)*6.2831853;emitVfx(8u,p,vec2(cos(a),sin(a))*(12+randomVfx(s+1u)*45),.12+randomVfx(s+2u)*.25,.45,0xff8ad6ffu,s,true);}}
+    else if(kind==3u){emitVfx(3u,p,vec2(0),.055,2.5,0xffa8edffu,seed,true);for(uint i=0u;i<3u;++i)emitVfx(8u,p,velocity*(.04+.02*float(i)),.08,.35,0xff9bdbffu,seed+i,true);}
+    else if(kind==4u){float expected=(quality==2?480.:240.)*stepData.z;uint n=uint(floor(expected));if(randomVfx(seed+999u)<fract(expected))n++;for(uint i=0u;i<n;++i){uint s=hashVfx(seed+i);emitVfx(4u,p+vec2((randomVfx(s)-.5)*1.5,0),velocity+vec2((randomVfx(s+1u)-.5)*10,20+randomVfx(s+2u)*20),.08+randomVfx(s+3u)*.1,.6,0xff62baffu,s,true);}}
+}
+void main(){uint gen=uint(sourceGeneration),tick=uint(sourceTick);
+    if(clockState.x==gen&&tick<=clockState.y)return;
+    if(cpuSource==2){clockState.xy=uvec2(gen,tick);return;}
+    if(cpuSource!=0){if(cpuHeader.x!=gen||cpuHeader.y!=tick||cpuHeader.z>256u){clockState.w++;return;}rejected[0]+=cpuHeader.w;
+        for(uint priority=0u;priority<2u;++priority)for(uint i=0u;i<cpuHeader.z;++i){VfxEvent e=cpuEvents[i];if((e.identity.w==2u?1u:0u)!=priority)continue;
+            if(e.identity.x!=gen||e.identity.y!=tick||any(isnan(e.source))||any(isinf(e.source))||any(isnan(e.velocity))||any(isinf(e.velocity))){clockState.w++;continue;}
+            bool duplicate=false;for(uint j=0u;j<i;++j)if(cpuEvents[j].identity.z==e.identity.z&&cpuEvents[j].identity.w==e.identity.w)duplicate=true;if(duplicate)continue;
+            sourceEvent(e.identity.w,e.source.xy,e.velocity.xy,e.source.z,hashVfx(e.identity.z^gen^tick));}}
+    else if(game.status.x!=0u){if(eventBatch.header.z!=gen||eventBatch.header.y!=tick||eventBatch.header.x>144u||eventBatch.header.w!=0u){clockState.w++;return;}
+        for(uint priority=0u;priority<2u;++priority)for(uint i=0u;i<eventBatch.header.x;++i){WorldEvent e=eventBatch.events[i];if(((e.identity.w==3u||e.identity.w==7u)?1u:0u)!=priority)continue;if(e.identity.x!=gen||e.identity.y!=tick||e.identity.z!=i+1u){clockState.w++;continue;}uint kind=e.identity.w,seed=hashVfx(gen^hashVfx(tick)^e.identity.z);
+            if(kind==4u)sourceEvent(1u,e.payload.xy,vec2(0),e.payload.z,seed);
+            else if(kind==3u||kind==7u)sourceEvent(2u,e.payload.xy,vec2(0),1.,seed);
+            else if(kind==1u&&e.detail.w==1u)sourceEvent(3u,e.payload.xy,e.extra.xy,1.,seed);
+        }
+        if(game.timers.w>.5)sourceEvent(4u,game.actor.xy+vec2(game.aim.x<0?3:-3,-8),game.actor.zw*.2,1.,hashVfx(gen^tick));
+    }
+    clockState.xy=uvec2(gen,tick);
+}

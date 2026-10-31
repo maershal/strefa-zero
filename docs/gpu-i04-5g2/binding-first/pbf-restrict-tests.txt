@@ -1,0 +1,4 @@
+layout=aos scope=liquids_1,liquids_4 faults=64 rejected_before_GL; state_unchanged; valid_step,blast,spawn,erase=passed
+layout=soa scope=liquids_1,liquids_4 faults=64 rejected_before_GL; state_unchanged; valid_step,blast,spawn,erase=passed
+rejected=128 default_off=passed ubershader_fallback=passed
+status=passed

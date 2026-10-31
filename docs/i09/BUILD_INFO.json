@@ -1,0 +1,60 @@
+{
+  "schema": 1,
+  "iteration": "I09",
+  "version": "0.7.0",
+  "created_utc": "2026-10-31T10:50:49.217383+00:00",
+  "compiler": "MSVC 19.51.36256.0",
+  "configuration": "Release/LTO, C++23, /W4 /WX",
+  "architecture": "Windows x64",
+  "dependencies": {
+    "SDL": "3.4.18",
+    "DearImGui": "1.93.0"
+  },
+  "physics": "I07.1 legacy",
+  "render_quality": "basic",
+  "vfx_quality": "low",
+  "vfx_capacity": 16384,
+  "vfx_particle_bytes": 48,
+  "vfx_budget_ms": 0.25,
+  "vfx_performance_accepted": false,
+  "worst_low_additional_gpu_ms": 0.678344,
+  "window_focus_qualified": false,
+  "window_limitation": "All visible trials reported focused=0; no active-window performance qualification.",
+  "bench_samples": 69120,
+  "bench_segments": 288,
+  "i08_reference_samples": 23040,
+  "validation": {
+    "windows_full": {
+      "passed": 61,
+      "total": 61
+    },
+    "windows_final_subset": {
+      "passed": 10,
+      "total": 10
+    },
+    "gcc_cpu": {
+      "passed": 9,
+      "total": 9
+    },
+    "shipping_package": [
+      "gpu-vfx-check GL4.3",
+      "CPU arena GL4.3, no GPU physics world",
+      "CPU fallback GL3.3"
+    ]
+  },
+  "exe_sha256": {
+    "StrefaZero.exe": "be5b0aa1445f234f01dc6a9227a7e10638be81083aa44b77bebabcb567e49340",
+    "StrefaPhysics.exe": "9c90bab292851bd2c1eee8da2ed5af46e3b76a4b53e66031dc053f584a41d88c",
+    "SDL3.dll": "ca4dc139c37b73ea5d676ce24897b1bf5760153a0e52429cc9418a7816f2c6b2"
+  },
+  "provenance": "docs/i09/build-provenance.json",
+  "source_manifest": "docs/i09/source-sha256.json",
+  "git_head": "7e85553109c35d390a151454011fa8836db44045",
+  "source_state": "initial dirty I08 workspace plus I09; not committed",
+  "open_items": [
+    "VFX 0.25 ms gate",
+    "active-window performance qualification",
+    "I04.5 remains deferred",
+    "64k requires separate experiment"
+  ]
+}

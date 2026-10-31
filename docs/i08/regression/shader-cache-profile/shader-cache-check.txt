@@ -1,0 +1,3 @@
+supported=1
+cases=8
+passed=1

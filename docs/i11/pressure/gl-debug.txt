@@ -1,0 +1,22 @@
+callback_available=1
+messages=2
+dropped=0
+started_sdl_ns=243884900
+phase_semantics=callback_receipt; asynchronous delivery may describe earlier work
+phase_initialization_messages=0
+phase_initialization_id131186=0
+phase_initialization_dropped=0
+phase_runtime_messages=0
+phase_runtime_id131186=0
+phase_runtime_dropped=0
+phase_capture_messages=0
+phase_capture_id131186=0
+phase_capture_dropped=0
+phase_validation_messages=2
+phase_validation_id131186=2
+phase_validation_dropped=0
+phase_shutdown_messages=0
+phase_shutdown_id131186=0
+phase_shutdown_dropped=0
+source=33350 type=33360 id=131186 severity=37191 received_ms=42.5187 phase=validation Buffer performance warning: Buffer object 5 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, usage hint is GL_DYNAMIC_COPY) is being copied/moved from VIDEO memory to HOST memory.
+source=33350 type=33360 id=131186 severity=37191 received_ms=49.6617 phase=validation Buffer performance warning: Buffer object 1 (bound to GL_COPY_READ_BUFFER_BINDING_EXT, and GL_SHADER_STORAGE_BUFFER (0), usage hint is GL_DYNAMIC_COPY) is being copied/moved from VIDEO memory to HOST memory.

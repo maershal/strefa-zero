@@ -1,0 +1,66 @@
+[
+  {
+    "run": "observer-on-1",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 17,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.3565,
+    "observer_ms_max": 32.0799,
+    "outer_dimensions": [
+      [
+        0,
+        0
+      ],
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  },
+  {
+    "run": "observer-on-2",
+    "kind": "cost",
+    "samples": 18,
+    "samples_with_window": 18,
+    "samples_visible": 0,
+    "samples_minimized": 0,
+    "samples_native_foreground": 0,
+    "foreground_pids": [
+      10852
+    ],
+    "ac_line_values": [
+      1
+    ],
+    "priorities": [
+      "Normal"
+    ],
+    "observer_ms_median": 3.6709500000000004,
+    "observer_ms_max": 6.3285,
+    "outer_dimensions": [
+      [
+        1152,
+        592
+      ],
+      [
+        1294,
+        774
+      ]
+    ]
+  }
+]

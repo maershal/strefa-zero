@@ -1,6 +1,10 @@
 #include "gpu/world.hpp"
-#include "gpu/gl_api.hpp"
+#include "gpu/render_device.hpp"
+#include "gpu/thermal_system.hpp"
+#include "gpu/shader_library.hpp"
+#include "gpu/scene_renderer.hpp"
 #include "gpu/readback_ring.hpp"
+#include "gpu/event_ring.hpp"
 #include "gpu/upload_ring.hpp"
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/diagnostic_trace.hpp"
@@ -17,38 +21,21 @@
 #include <stdexcept>
 #include <tuple>
 #include <utility>
+#include <limits>
+#include <sstream>
+#include <iomanip>
+#include <locale>
 
 namespace strefa::gpu {
 namespace {
 using detail::Api;
-std::string read_text(const std::filesystem::path& path){
-    std::ifstream input{path,std::ios::binary};if(!input)throw std::runtime_error{"Brak shadera: "+path.string()};
-    std::string text{std::istreambuf_iterator<char>{input},std::istreambuf_iterator<char>{}};
-    // Fixed, local shader dependencies; recursive expansion supports shared ABI.
-    for(const std::string name:{"particle_common.glsl","mission_state.glsl","particle_storage.glsl","body_terrain.glsl"}){
-        const std::string directive="#include \""+name+"\"";
-        if(const auto at=text.find(directive);at!=std::string::npos)
-            text.replace(at,directive.size(),read_text(path.parent_path()/name));
+struct ParticleAliasError:std::logic_error {using std::logic_error::logic_error;};
+void require_disjoint_particle_bases(const std::array<GLuint,8>& bases){
+    for(unsigned particle=0;particle<2;++particle){
+        if(!bases[particle])throw ParticleAliasError{"Restricted PBF has an unbound particle bank."};
+        for(unsigned other=0;other<bases.size();++other)
+            if(other!=particle&&bases[particle]==bases[other])throw ParticleAliasError{"Restricted PBF particle bank aliases another SSBO binding."};
     }
-    return text;
-}
-GLuint program(Api& gl,std::initializer_list<std::pair<GLenum,std::filesystem::path>> stages,const std::string& defines={}){
-    const auto result=gl.CreateProgram();std::vector<GLuint> shaders;
-    try {
-        for(const auto& [kind,path]:stages){
-            const auto shader=gl.CreateShader(kind);shaders.push_back(shader);
-            auto text=read_text(path);
-            if(!defines.empty())text.insert(text.find('\n')+1,defines);
-            const auto* pointer=text.c_str();
-            gl.ShaderSource(shader,1,&pointer,nullptr);gl.CompileShader(shader);
-            GLint valid{};gl.GetShaderiv(shader,GL_COMPILE_STATUS,&valid);
-            if(!valid){std::array<char,8192> log{};gl.GetShaderInfoLog(shader,static_cast<GLsizei>(log.size()),nullptr,log.data());throw std::runtime_error{path.string()+"\n"+defines+": "+log.data()};}
-            gl.AttachShader(result,shader);
-        }
-        gl.LinkProgram(result);GLint valid{};gl.GetProgramiv(result,GL_LINK_STATUS,&valid);
-        if(!valid){std::array<char,8192> log{};gl.GetProgramInfoLog(result,static_cast<GLsizei>(log.size()),nullptr,log.data());throw std::runtime_error{log.data()};}
-    }catch(...){for(auto shader:shaders)gl.DeleteShader(shader);gl.DeleteProgram(result);throw;}
-    for(auto shader:shaders)gl.DeleteShader(shader);return result;
 }
 std::uint32_t hash(std::uint32_t x){x^=x>>16;x*=0x7feb352dU;x^=x>>15;x*=0x846ca68bU;return x^(x>>16);}
 std::array<float,2> seeded_position(int x,int y){
@@ -58,11 +45,20 @@ std::array<float,2> seeded_position(int x,int y){
 }
 }
 struct ParticleWorld::Impl {
-    Api gl;
+    std::filesystem::path shader_folder;
+    std::shared_ptr<RenderDevice> resources;
+    explicit Impl(std::shared_ptr<RenderDevice> value):resources{std::move(value)}{}
+    detail::DeviceContext& device{resources->context};
+    Api& gl{device.gl};
+    detail::ShaderLibrary& shader_library{resources->library};
+    detail::SceneRenderer renderer{gl,device.state};
+    std::unique_ptr<detail::ThermalSystem> thermal;ThermalOptions thermal_config;ThermalBrush thermal_brush;
     detail::UploadRing uploads{gl};
     detail::ReadbackRing readbacks{gl};
+    detail::EventRing event_ring{gl};
+    game::GameplaySession gameplay;
     detail::DiagnosticTrace trace{gl};
-    bool trace_step{};
+    bool trace_step{},hold_events{}; // hold_events is validation-only fault injection
     std::uint64_t readback_revision{1};
     bool readback_refresh{};
     bool debug_groups{};
@@ -79,6 +75,7 @@ struct ParticleWorld::Impl {
     ExecutionOptions execution;
     struct Kernel {
         GLuint id{};unsigned local_size{};
+        bool particle_restrict{};
         GLint operation{-1},dirty{-1},substep{-1},stroke{-1},radius{-1},material{-1},input{-1},coupling{-1},test_count{-1};
         GLint hot_read{-1},hot_write{-1},hot_valid{-1};
         int hot_read_value{-2},hot_write_value{-2},hot_valid_value{-2};
@@ -86,21 +83,38 @@ struct ParticleWorld::Impl {
         int dirty_value{-1};
     };
     std::array<Kernel,21> granular;
-    std::array<Kernel,5> liquids;
+    std::array<Kernel,7> liquids;
     std::array<Kernel,8> neighbors;
     bool bins_valid{};
     NeighborReads read_mode()const{return effective_neighbor_reads(execution.neighbor_reads,execution.neighbors);}
-    std::string layout_defines()const{return std::string{"#define PARTICLE_SOA "}+(execution.soa?"1\n":"0\n")+"#define SORTED_NEIGHBORS "+(execution.neighbors!=NeighborMode::linked?"1\n":"0\n")+"#define REUSE_NEIGHBORS "+(execution.neighbors==NeighborMode::reused?"1\n":"0\n")+"#define COUPLING_MODE "+std::to_string(static_cast<int>(execution.coupling))+"\n#define REDUCTION_LOCAL_SIZE "+std::to_string(execution.reduction_size)+"u\n#define PHASE_GATING "+(execution.phase_gating?"1\n":"0\n")+"#define SKIP_ZERO_PROJECTION "+(execution.skip_zero_projection?"1\n":"0\n")+"#define HOT_READS "+std::to_string(static_cast<int>(read_mode()))+"\n";}
+    std::string fluid_defines()const{
+        const auto& f=execution.fluid;std::ostringstream out;out.imbue(std::locale::classic());
+        out<<std::scientific<<std::setprecision(std::numeric_limits<float>::max_digits10)
+            <<"#define FLUID_BOUNDARY_VOLUME "<<(f.boundary==FluidBoundary::volume?1:0)<<'\n'
+            <<"#define FLUID_SURFACE "<<(f.surface==FluidSurface::akinci2d?1:0)<<'\n'
+            <<"#define FLUID_FIELDS "<<(f.fields()?1:0)<<'\n'
+            <<"#define FLUID_SUBSTEPS "<<f.substeps<<'\n'
+            <<"#define FLUID_SCORR "<<f.s_corr<<'\n'
+            <<"#define FLUID_TENSION "<<f.tension_scale<<'\n'
+            <<"#define FLUID_CURVATURE "<<f.curvature_scale<<'\n'
+            <<"#define FLUID_ADHESION "<<f.adhesion<<'\n'
+            <<"#define FLUID_VORTICITY "<<f.vorticity<<'\n';
+        return out.str();
+    }
+    std::string layout_defines()const{return fluid_defines()+std::string{"#define PARTICLE_SOA "}+(execution.soa?"1\n":"0\n")+"#define SORTED_NEIGHBORS "+(execution.neighbors!=NeighborMode::linked?"1\n":"0\n")+"#define REUSE_NEIGHBORS "+(execution.neighbors==NeighborMode::reused?"1\n":"0\n")+"#define COUPLING_MODE "+std::to_string(static_cast<int>(execution.coupling))+"\n#define REDUCTION_LOCAL_SIZE "+std::to_string(execution.reduction_size)+"u\n#define PHASE_GATING "+(execution.phase_gating?"1\n":"0\n")+"#define SKIP_ZERO_PROJECTION "+(execution.skip_zero_projection?"1\n":"0\n")+"#define HOT_READS "+std::to_string(static_cast<int>(read_mode()))+"\n";}
     std::array<Kernel,9> mission_kernels;
     std::array<Kernel,3> coupling_kernels;
-    GLuint bound_program{},bound_indirect{};
-    std::array<GLuint,8> bound_bases{};
+    GLuint& bound_program{device.state.program};GLuint& bound_indirect{device.state.indirect};
+    std::array<GLuint,8>& bound_bases{device.state.bases};
+    std::array<unsigned,3> presented_hp{3,3,3};std::array<std::uint64_t,3> hit_started{};
+    unsigned pbf_fault_source{8},pbf_fault_binding{8}; // validation only; 8 means no fault
     Stroke brush;
     int half_step{};
-    void invalidate_bindings(){bound_program=0;bound_indirect=0;bound_bases.fill(0);}
+    void invalidate_bindings(){device.state.invalidate();}
     void compile_kernels(const std::filesystem::path& shaders){
         const auto compile=[&](auto& kernels,const char* file,std::initializer_list<unsigned> operations){
             for(unsigned op:operations){
+                if(std::string_view{file}=="liquids.comp"&&op>=5&&!execution.fluid.fields())continue;
                 const bool separate=execution.specialized||(std::string_view{file}=="neighbors.comp"||std::string_view{file}=="coupling.comp");
                 if(!separate&&op!=*operations.begin())continue;
                 auto& k=kernels[separate?op:0];
@@ -108,13 +122,16 @@ struct ParticleWorld::Impl {
                     ||(std::string_view{file}=="liquids.comp"&&op==3)
                     ||(std::string_view{file}=="mission.comp"&&(op==0||op==1||op==4));
                 k.local_size=execution.specialized&&scalar?1U:execution.local_size;
+                if(std::string_view{file}=="liquids.comp"&&!(execution.specialized&&scalar))k.local_size=execution.effective_pbf_size();
                 if(std::string_view{file}=="mission.comp"&&op==3&&execution.specialized)k.local_size=execution.reduction_size;
                 if(std::string_view{file}=="coupling.comp")k.local_size=execution.reduction_size;
                 auto defines="#define LOCAL_SIZE "+std::to_string(k.local_size)+"\n#define PARTICLE_LOCAL_SIZE "+std::to_string(execution.local_size)+"u\n#define GPU_CONDITIONAL_WORK "+(execution.conditional_work?"1\n":"0\n");
                 defines+=layout_defines();
+                defines+="#define PBF_LOCAL_SIZE "+std::to_string(execution.effective_pbf_size())+"u\n";
                 if(separate)defines+="#define PASS_OPERATION "+std::to_string(op)+"\n#define PASS_"+std::string{file}.substr(0,std::string{file}.find('.'))+"_"+std::to_string(op)+" 1\n";
                 if(std::string_view{file}=="neighbors.comp")k.local_size=256;
-                k.id=program(gl,{{GL_COMPUTE_SHADER,shaders/file}},defines);
+                k.particle_restrict=execution.effective_pbf_restrict()&&std::string_view{file}=="liquids.comp"&&(op==1||op==4);
+                k.id=shader_library.program({{GL_COMPUTE_SHADER,shaders/file}},defines,k.particle_restrict);
                 const auto location=[&](const char* name){return gl.GetUniformLocation(k.id,name);};
                 k.operation=location("operation");k.dirty=location("dirtyOnly");k.substep=location("substep");
                 k.stroke=location("stroke");k.radius=location("brushRadius");k.material=location("material");
@@ -125,7 +142,7 @@ struct ParticleWorld::Impl {
             }
         };
         compile(granular,"granular.comp",{0,1,2,3,4,5,7,8,9,10,11,12,19,20});
-        compile(liquids,"liquids.comp",{0,1,2,3,4});
+        compile(liquids,"liquids.comp",{0,1,2,3,4,5,6});
         if(execution.neighbors!=NeighborMode::linked)compile(neighbors,"neighbors.comp",{0,1,2,3,4,5,6,7});
         compile(mission_kernels,"mission.comp",{0,1,3,4,5,6,7,8});
         if(execution.coupling!=CouplingMode::reference)compile(coupling_kernels,"coupling.comp",{0,1,2});
@@ -142,10 +159,18 @@ struct ParticleWorld::Impl {
     Kernel& prepare(auto& kernels,int op,bool in_place=false,bool separate=false){
         auto& k=kernels[execution.specialized||separate?static_cast<unsigned>(op):0];
         if(!k.id)throw std::logic_error{"Missing compute pass"};
+        auto bases=buffers;bases[0]=buffers[current];bases[1]=buffers[in_place?current:1-current];
+        if(k.particle_restrict){
+            if(pbf_fault_binding<bases.size())bases[pbf_fault_binding]=pbf_fault_source<bases.size()?bases[pbf_fault_source]:0;
+            require_disjoint_particle_bases(bases);
+        }
+        // A regression in the guard must still never submit an invalid restrict
+        // program to the GPU. The test accepts only ParticleAliasError above.
+        if(pbf_fault_binding<bases.size())throw std::runtime_error{"PBF binding fault escaped the production preflight guard."};
         if(!execution.cached_bindings){gl.UseProgram(granular[0].id);if(k.id!=granular[0].id)gl.UseProgram(k.id);}
         else if(bound_program!=k.id){gl.UseProgram(k.id);bound_program=k.id;}
         for(unsigned i=0;i<buffers.size();++i){
-            const auto buffer=i==0?buffers[current]:(i==1?buffers[in_place?current:1-current]:buffers[i]);
+            const auto buffer=bases[i];
             if(!execution.cached_bindings||bound_bases[i]!=buffer){gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,i,buffer);bound_bases[i]=buffer;}
         }
         if(k.operation>=0)gl.Uniform1i(k.operation,op);
@@ -157,14 +182,9 @@ struct ParticleWorld::Impl {
         gl.DispatchComputeIndirect(detail::command_offset(command));
     }
     std::array<GLuint,8> buffers{}; // A/B, head, link, walls, free, counters, fluid terms
-    GLuint draw{},fbo{},image{},vao{},actor_program{};
-    GLint actor_alpha{},actor_parts{},actor_weapons{},actor_weapon_size{};
-    unsigned parts_texture{},weapons_texture{};int weapon_width{256},weapon_height{128};
     bool mission_enabled{};unsigned epoch{};MissionSnapshot snapshot{};std::deque<Explosion> explosions;MissionInput controls{};
-    GLuint splat{},surface{},fluid_fbo{},fluid_image{};
-    GLint splat_alpha{};
+    void next_generation(){if(epoch==std::numeric_limits<unsigned>::max())throw std::overflow_error{"World generation exhausted"};++epoch;resources->vfx.reset(epoch);renderer.lighting.reset(epoch);}
     bool fluids_enabled{},grains_enabled{};
-    GLint alpha{},terrain_pass{};
     struct Timer {
         GLuint id{},start{};
         bool pending{};unsigned generation{};
@@ -212,16 +232,11 @@ struct ParticleWorld::Impl {
             if(timer.start)gl.DeleteQueries(1,&timer.start);
         }
         for(const auto& timer:group_timers)if(timer.ids[0])gl.DeleteQueries(6,timer.ids.data());
-        for(auto& kernels:{std::span<Kernel>{granular},std::span<Kernel>{liquids},std::span<Kernel>{mission_kernels},std::span<Kernel>{neighbors},std::span<Kernel>{coupling_kernels}})for(const auto& k:kernels)if(k.id)gl.DeleteProgram(k.id);
-        if(actor_program)gl.DeleteProgram(actor_program);if(draw)gl.DeleteProgram(draw);
-        if(splat)gl.DeleteProgram(splat);if(surface)gl.DeleteProgram(surface);
-        if(fluid_fbo)gl.DeleteFramebuffers(1,&fluid_fbo);if(fluid_image)glDeleteTextures(1,&fluid_image);
-        if(vao)gl.DeleteVertexArrays(1,&vao);if(fbo)gl.DeleteFramebuffers(1,&fbo);
-        if(image)glDeleteTextures(1,&image);
         if(buffers[0])gl.DeleteBuffers(static_cast<GLsizei>(buffers.size()),buffers.data());
     }
     void dispatch(int op,unsigned count,bool swap=false,bool in_place=false,bool conditional=false){
         if(count==0)return;
+        if(op==8){renderer.lighting.prepare_birth(buffers,current);invalidate_bindings();}
         auto& k=prepare(granular,op,in_place);
         if(k.dirty>=0&&k.dirty_value!=static_cast<int>(conditional)){gl.Uniform1i(k.dirty,conditional?1:0);k.dirty_value=conditional?1:0;}
         if(op==1&&k.substep>=0)gl.Uniform1i(k.substep,half_step);
@@ -230,14 +245,18 @@ struct ParticleWorld::Impl {
             if(k.radius>=0)gl.Uniform1f(k.radius,std::clamp(brush.radius,1.F,16.F));
             if(k.material>=0)gl.Uniform1i(k.material,static_cast<int>(brush.material));
         }
+        if(op==9)gl.BindImageTexture(0,renderer.terrain_image,0,static_cast<GLboolean>(GL_FALSE),0,GL_WRITE_ONLY,GL_R16UI);
+        if(op==9)renderer.begin_terrain_update();
         const auto token=trace.begin(PassFamily::granular,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
         if(op>=1&&op<=4)indirect(detail::active_command);
         else if(execution.conditional_work&&conditional&&(op==11||op==19||op==9))
             indirect(op==11?detail::rebuild_command:op==19?detail::sync_command:detail::terrain_command);
         else gl.DispatchCompute((count+k.local_size-1)/k.local_size,1,1);
         GLbitfield barriers=GL_SHADER_STORAGE_BARRIER_BIT;
+        if(op==9)barriers|=GL_TEXTURE_FETCH_BARRIER_BIT|GL_SHADER_IMAGE_ACCESS_BARRIER_BIT;
         if(op==12||(op==10&&execution.conditional_work)||(op==3&&execution.coupling!=CouplingMode::reference))barriers|=GL_COMMAND_BARRIER_BIT;
         gl.MemoryBarrier(barriers);
+        if(op==9)renderer.end_terrain_update();
         if(swap)current=1-current;
         trace.end(token,bins_valid&&op!=5&&op!=8&&op!=19,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
@@ -266,8 +285,8 @@ struct ParticleWorld::Impl {
     void liquid_dispatch(int op,bool swap=false){
         prepare(liquids,op);
         const auto token=trace.begin(PassFamily::liquids,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
-        if(op==3)gl.DispatchCompute(1,1,1);else indirect(detail::active_command);
-        gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|((op==1&&execution.coupling!=CouplingMode::reference)?GL_COMMAND_BARRIER_BIT:0));if(swap)current=1-current;
+        if(op==3)gl.DispatchCompute(1,1,1);else indirect(detail::pbf_command);
+        gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|(((op==1||(op==4&&execution.fluid.velocity_reaction()))&&execution.coupling!=CouplingMode::reference)?GL_COMMAND_BARRIER_BIT:0));if(swap)current=1-current;
         trace.end(token,bins_valid,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
     void rebuild_active(bool conditional=false){
@@ -296,6 +315,7 @@ struct ParticleWorld::Impl {
         // without switching to a stale ping-pong copy when zero groups execute.
         if(execution.conditional_work&&op==7){in_place=true;swap=false;}
         auto& k=prepare(mission_kernels,op,in_place);
+        if(op==4&&k.substep>=0)gl.Uniform1i(k.substep,half_step);
         if(op==0)gl.Uniform4f(k.input,std::clamp(controls.move,-1.F,1.F),controls.aim_x,controls.aim_y,static_cast<float>(controls.buttons&31U));
         const auto token=trace.begin(PassFamily::mission,static_cast<unsigned>(op),epoch,metrics.steps+(trace_step?1:0));
         if(execution.conditional_work&&(op==3||op==5||op==6||op==7))
@@ -303,12 +323,13 @@ struct ParticleWorld::Impl {
         else if(active)indirect(detail::active_command);
         else gl.DispatchCompute((count+k.local_size-1)/k.local_size,1,1);
         gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|(((op==0&&execution.conditional_work)||(op==8&&execution.coupling!=CouplingMode::reference))?GL_COMMAND_BARRIER_BIT:0));
+        if(op==9)renderer.end_terrain_update();
         if(swap)current=1-current;
         trace.end(token,bins_valid&&op!=6,execution.soa,buffers[current],buffers[2],buffers[3]);
     }
     std::size_t body_offset()const{return execution.neighbors==NeighborMode::linked?capacity*4:capacity*24+(read_mode()==NeighborReads::sorted?capacity*64:0);}
     std::size_t index_buffer_size()const{return body_offset()+(execution.coupling==CouplingMode::reference?0:detail::body_metadata_size);}
-    std::size_t terms_buffer_size()const{return capacity*(execution.coupling==CouplingMode::reference?32U:48U);}
+    std::size_t terms_buffer_size()const{return capacity*((execution.coupling==CouplingMode::reference?32U:48U)+(execution.fluid.fields()?32U:0U));}
     void reset_body(){
         const std::array<GLuint,16> zero{};const std::array<GLuint,6> commands{0,1,1,0,1,1};
         gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -316,10 +337,6 @@ struct ParticleWorld::Impl {
         upload(5,detail::command_offset(detail::body_reduce_command),sizeof(commands),commands.data());
     }
     void upload(unsigned index,GLintptr offset,GLsizeiptr bytes,const void* data){uploads.write(buffers[index],offset,bytes,data);}
-    void active_draw(){
-        gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,5,buffers[5]);
-        gl.BindBuffer(GL_DRAW_INDIRECT_BUFFER,buffers[5]);gl.DrawArraysIndirect(GL_TRIANGLE_STRIP,reinterpret_cast<void*>(capacity*8+12));
-    }
     void stage_count(bool force=false){
         if(profile_options.collect)++calls.stage_requests;
         if(profile_options.readback_period==0)return;
@@ -328,54 +345,48 @@ struct ParticleWorld::Impl {
     }
 
 };
-ParticleWorld::ParticleWorld():impl_{std::make_unique<Impl>()}{}
+ParticleWorld::ParticleWorld(std::shared_ptr<RenderDevice> device):impl_{std::make_unique<Impl>(std::move(device))}{}
 ParticleWorld::~ParticleWorld()=default;
-std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(const std::filesystem::path& shaders,const ExecutionOptions& execution,const ProfileOptions& profiling){
+std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(const std::filesystem::path& shaders,const ExecutionOptions& execution,const ProfileOptions& profiling,const std::filesystem::path& shader_cache,std::shared_ptr<RenderDevice> device){
     GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
     if(major<4||(major==4&&minor<3))return std::unexpected{"Laboratorium GPU wymaga OpenGL 4.3. Laboratorium CPU jest dostępne."};
     try{
-        auto world=std::unique_ptr<ParticleWorld>{new ParticleWorld};auto& s=*world->impl_;s.gl.load();
+        const bool standalone=!device;auto resources=device?std::move(device):std::make_shared<RenderDevice>(shaders,shader_cache);
+        if(standalone)resources->vfx.set_options({VfxQuality::off,false}); // Legacy physics callers opt into presentation explicitly.
+        auto world=std::unique_ptr<ParticleWorld>{new ParticleWorld{std::move(resources)}};auto& s=*world->impl_;s.device.require_current();
         // Apply transport/timer policy before the first reset or staging copy.
         // Group query objects are allocated by set_profile_options below.
         s.profile_options=profiling;s.profile_options.group_timers=false;
         s.gl.observe(profiling.collect?&s.calls:nullptr);
         s.uploads.configure(execution.storage);
-        GLint flags{};glGetIntegerv(GL_CONTEXT_FLAGS,&flags);s.debug_groups=(flags&GL_CONTEXT_FLAG_DEBUG_BIT)!=0;
+        s.debug_groups=s.device.debug_groups;
         const auto valid_size=[](unsigned size){return size==64||size==128||size==256;};
-        if(!valid_size(execution.local_size)||!valid_size(execution.reduction_size)||(!execution.specialized&&execution.local_size!=execution.reduction_size))
+        if(!valid_size(execution.local_size)||!valid_size(execution.reduction_size)||!valid_size(execution.effective_pbf_size())||(!execution.specialized&&execution.local_size!=execution.reduction_size))
             throw std::invalid_argument{"Compute group sizes must be 64, 128 or 256; ubershaders require matching sizes."};
+        // The shared device configures its program cache before VFX and world programs.
+        if(!execution.fluid.valid())throw std::invalid_argument{"Invalid I07 fluid configuration."};
         s.execution=execution;s.compile_kernels(shaders);
-        s.actor_program=program(s.gl,{{GL_VERTEX_SHADER,shaders/"mission.vert"},{GL_FRAGMENT_SHADER,shaders/"mission.frag"}});
-        s.actor_alpha=s.gl.GetUniformLocation(s.actor_program,"alpha");s.actor_parts=s.gl.GetUniformLocation(s.actor_program,"partsTexture");
-        s.actor_weapons=s.gl.GetUniformLocation(s.actor_program,"weaponsTexture");s.actor_weapon_size=s.gl.GetUniformLocation(s.actor_program,"weaponSize");
-        s.splat=program(s.gl,{{GL_VERTEX_SHADER,shaders/"liquid_splat.vert"},{GL_FRAGMENT_SHADER,shaders/"liquid_splat.frag"}},s.layout_defines());
-        s.surface=program(s.gl,{{GL_VERTEX_SHADER,shaders/"liquid_surface.vert"},{GL_FRAGMENT_SHADER,shaders/"liquid_surface.frag"}});
-        s.splat_alpha=s.gl.GetUniformLocation(s.splat,"alpha");
-        s.draw=program(s.gl,{{GL_VERTEX_SHADER,shaders/"granular.vert"},{GL_FRAGMENT_SHADER,shaders/"granular.frag"}},s.layout_defines());
-        s.alpha=s.gl.GetUniformLocation(s.draw,"alpha");s.terrain_pass=s.gl.GetUniformLocation(s.draw,"terrainPass");
+        s.shader_folder=shaders;s.renderer.initialize(s.shader_library,shaders,s.layout_defines());s.renderer.vfx=&s.resources->vfx;
         s.gl.GenBuffers(static_cast<GLsizei>(s.buffers.size()),s.buffers.data());
-        const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480+(s.execution.phase_gating?240:0))*4),s.index_buffer_size(),width*height*16,capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
+        const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480+(s.execution.phase_gating?240:0))*4),s.index_buffer_size(),static_cast<std::size_t>(width*height*(execution.fluid.boundary==FluidBoundary::volume?20:16)+(execution.fluid.boundary==FluidBoundary::volume?144*4:0)),capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
         for(unsigned i=0;i<s.buffers.size();++i)s.uploads.allocate(s.buffers[i],static_cast<GLsizeiptr>(sizes[i]));
         if(s.debug_groups){
             constexpr std::array names{"particles A","particles B","cell counts and prefixes","sorted IDs, reverse mapping and anchors","terrain","active/free IDs","mission state","fluid terms"};
             for(std::size_t i=0;i<names.size();++i)s.gl.ObjectLabel(GL_BUFFER,s.buffers[i],-1,names[i]);
         }
-        s.readbacks.configure(profiling.readback_mode,s.debug_groups);
-        glGenTextures(1,&s.image);glBindTexture(GL_TEXTURE_2D,s.image);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,width*3,height*3,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-        s.gl.GenFramebuffers(1,&s.fbo);s.gl.BindFramebuffer(GL_FRAMEBUFFER,s.fbo);
-        s.gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,s.image,0);
-        if(s.gl.CheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)throw std::runtime_error{"Niekompletny framebuffer GPU."};
-        glGenTextures(1,&s.fluid_image);glBindTexture(GL_TEXTURE_2D,s.fluid_image);
-        glTexImage2D(GL_TEXTURE_2D,0,GL_RG16F,width*3,height*3,0,GL_RG,GL_FLOAT,nullptr);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S,GL_CLAMP_TO_EDGE);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T,GL_CLAMP_TO_EDGE);
-        s.gl.GenFramebuffers(1,&s.fluid_fbo);s.gl.BindFramebuffer(GL_FRAMEBUFFER,s.fluid_fbo);
-        s.gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,s.fluid_image,0);
-        if(s.gl.CheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)throw std::runtime_error{"Niekompletny framebuffer cieczy."};
-        s.gl.BindFramebuffer(GL_FRAMEBUFFER,0);s.gl.GenVertexArrays(1,&s.vao);
+        // Capsule samples translate with the actor. Their shape/volumes are fixed.
+        if(execution.fluid.boundary==FluidBoundary::volume){
+            std::array<float,144> weights{};
+            const auto inside=[](int x,int y){const double px=x+.5,py=y+.5;const double dy=py-std::clamp(py,-14.0,-4.0);return px*px+dy*dy<16;};
+            for(int y=-18;y<0;++y)for(int x=-4;x<4;++x)if(inside(x,y)){
+                double sum=0;for(int dy=-2;dy<=2;++dy)for(int dx=-2;dx<=2;++dx)if(inside(x+dx,y+dy)){
+                    const double q=std::max(0.0,4.0-dx*dx-dy*dy);sum+=q*q*q/(64*3.141592653589793);
+                }
+                weights[(y+18)*8+x+4]=static_cast<float>(1.014612762210833/sum);
+            }
+            s.upload(4,width*height*20,sizeof(weights),weights.data());
+        }
+        s.readbacks.configure(profiling.readback_mode,s.debug_groups);s.event_ring.initialize();
         s.reset_timer_queries(effective_timer_mode(s.profile_options));
         world->set_profile_options(profiling);
         world->reset(Scene::hourglass);return world;
@@ -385,11 +396,12 @@ void ParticleWorld::load(std::span<const Grain> grains,std::span<const std::uint
     if(grains.size()>capacity||walls.size()!=width*height)throw std::invalid_argument{"Nieprawidłowy rozmiar sceny GPU."};
     std::vector<Grain> all(capacity);std::ranges::copy(grains,all.begin());auto& s=*impl_;s.invalidate_bindings();
     for(auto& p:all){p.contact[2]=p.position[0];p.contact[3]=p.position[1];}
-    ++s.readback_revision;s.readback_refresh=false;s.mission_enabled=false;s.snapshot={};s.explosions.clear();++s.epoch;
+    ++s.readback_revision;s.readback_refresh=false;s.mission_enabled=false;s.snapshot={};s.explosions.clear();s.next_generation();s.gameplay.reset(s.epoch);
     const std::vector<std::byte> empty(mission_buffer_size);
     s.upload(6,0,mission_buffer_size,empty.data());
     s.reset_body();s.current=0;s.bins_valid=false;
     const std::array<GLuint,16> neighbor_zero{};s.upload(2,0,sizeof(neighbor_zero),neighbor_zero.data());
+    s.renderer.reset_profiles();s.presented_hp={3,3,3};s.hit_started={};
     s.metrics.steps=0;s.readback_age=0;s.metrics.grains=static_cast<unsigned>(std::ranges::count_if(all,[](const Grain& p){return p.motion[3]>.5F;}));
     s.metrics.gpu_ms=0;s.metrics.render_ms=0;s.metrics.timing_samples=0;
     s.metrics.water=static_cast<unsigned>(std::ranges::count_if(all,[](const Grain& p){return p.motion[3]==5;}));
@@ -405,6 +417,7 @@ void ParticleWorld::load(std::span<const Grain> grains,std::span<const std::uint
     std::vector<std::uint32_t> strength(walls.size());for(std::size_t i=0;i<walls.size();++i)strength[i]=walls[i]>=2?3U:0U;
     s.upload(4,width*height*12,static_cast<GLsizeiptr>(strength.size()*4),strength.data());
     s.dispatch(9,width*height);s.rebuild_active();
+    if(s.thermal)s.thermal->reset(s.buffers,s.current,s.epoch);
     render(1);
 }
 void ParticleWorld::reset(Scene scene){
@@ -465,7 +478,9 @@ void ParticleWorld::reset(Scene scene){
     load(grains,walls);
 }
 void ParticleWorld::paint(const Stroke& stroke){
-    auto& s=*impl_;s.invalidate_bindings();s.bins_valid=false;++s.readback_revision;s.brush=stroke;
+    auto& s=*impl_;
+    if(s.thermal&&s.thermal_config.enabled&&(stroke.material==Material::erase||stroke.material==Material::wall))s.thermal->erase(s.buffers,s.current,{{stroke.x0,stroke.y0,stroke.x1,stroke.y1},stroke.radius,0,ThermalTool::none});
+    s.invalidate_bindings();s.bins_valid=false;++s.readback_revision;s.brush=stroke;
     const std::array<GLuint,8> zero{};s.upload(6,0,32,zero.data());
     // Conservative flags: an asynchronous counter must never disable a solver
     // after a newer edit. Reset/load can clear them from known scene state.
@@ -478,12 +493,22 @@ void ParticleWorld::paint(const Stroke& stroke){
     }
     s.rebuild_active();s.bins_valid=false;s.stage_count(true);
 }
-void ParticleWorld::step(const MissionInput& input){
-    impl_->controls=input;step();
+bool ParticleWorld::ready_for_step(){
+    auto& s=*impl_;if(!s.hold_events)s.event_ring.poll(s.gameplay);if(!s.mission_enabled||s.event_ring.available())return true;glFlush();return false;
 }
-void ParticleWorld::step(){
-    const auto started=SDL_GetTicksNS();
-    auto& s=*impl_;s.invalidate_bindings();const auto initial_calls=s.calls;
+void ParticleWorld::cancel_mission_input(){impl_->controls={};impl_->gameplay.cancel_input();}
+const game::GameplaySession& ParticleWorld::gameplay()const noexcept{return impl_->gameplay;}
+std::array<std::uint64_t,7> ParticleWorld::event_stats()const noexcept{
+    const auto& s=impl_->event_ring.stats();return {s.submitted,s.acknowledged,s.stale,s.pending,s.max_pending,s.backpressure,s.max_age_ticks};
+}
+bool ParticleWorld::step(const MissionInput& input){
+    impl_->controls=input;return step();
+}
+bool ParticleWorld::step(){
+    const auto started=SDL_GetTicksNS();auto& s=*impl_;const auto initial_calls=s.calls;
+    const auto logic_before=s.event_ring.stats().logic_ms;
+    if(!ready_for_step())return false;
+    s.metrics.gameplay_ms=0;s.invalidate_bindings();
     s.trace_step=true;s.trace.begin_step(s.metrics.steps+1);
     if(s.debug_groups)s.gl.PushDebugGroup(GL_DEBUG_SOURCE_APPLICATION,1,-1,"Physics tick");
     const auto stamp=[&](){return s.profile_options.collect?SDL_GetTicksNS():std::uint64_t{0};};
@@ -501,53 +526,78 @@ void ParticleWorld::step(){
     double upload_ms=0;
     const auto prepare_start=stamp();
     if(s.mission_enabled){
+        const auto logic_started=SDL_GetTicksNS();
+        const auto commands=s.gameplay.prepare({s.controls.move,s.controls.aim_x,s.controls.aim_y,s.controls.buttons});
+        s.metrics.gameplay_ms=static_cast<double>(SDL_GetTicksNS()-logic_started)/1e6;
+        s.upload(6,command_offset,sizeof(commands),&commands);
         if(!s.explosions.empty()){
             const auto upload_start=stamp();
             const auto e=s.explosions.front();s.explosions.pop_front();const std::array<float,4> payload{e.x,e.y,e.radius,e.impulse};
             const std::array<std::uint32_t,4> id{e.id,0,0,0};
-            s.upload(6,mission_buffer_size-32,16,payload.data());
-            s.upload(6,mission_buffer_size-16,16,id.data());
+            s.upload(6,explosion_offset,16,payload.data());
+            s.upload(6,explosion_offset+16,16,id.data());
             upload_ms=elapsed(upload_start,stamp());
         }
         s.mission_dispatch(0);s.mission_dispatch(7,capacity,true,true);s.mission_dispatch(5,width*height);
         // Pending cells keep the material until a free slot is available.
-        s.mission_dispatch(6,width*height,false,false,true);
+        s.renderer.lighting.prepare_birth(s.buffers,s.current,s.execution.conditional_work);s.invalidate_bindings();s.mission_dispatch(6,width*height,false,false,true);
         s.rebuild_active(true);
     }
     const auto prepare_end=stamp();
     if(grouped)s.gl.QueryCounter(group.ids[1],GL_TIMESTAMP);
     // At |v|<=80 each half-tick travels <=1/3 cell. Two approaching,
     // nonoverlapping radius-.46 grains cannot exchange centers undetected.
-    for(int half=0;half<2;++half){
+    for(int half=0;half<static_cast<int>(s.execution.fluid.substeps);++half){
         s.trace.context(half+1,-1);
-        s.bins_valid=false;
+        s.bins_valid=false;s.half_step=half;
         if(s.mission_enabled)s.mission_dispatch(1);
-        s.half_step=half;s.dispatch(1,capacity,true);
-        const int iterations=s.grains_enabled?12:8;
+        s.dispatch(1,capacity,true);
+        const int iterations=static_cast<int>(s.grains_enabled?s.execution.fluid.contact_iterations:s.execution.fluid.pbf_iterations);
         for(int iteration=0;iteration<iterations;++iteration){
             s.trace.context(half+1,iteration);
             s.bins();
-            if(s.fluids_enabled&&iteration<8){s.liquid_dispatch(0);s.liquid_dispatch(1,true);if(s.mission_enabled&&(s.execution.coupling!=CouplingMode::combined||!s.grains_enabled))s.mission_dispatch(3);}
-            if(s.grains_enabled){if(s.fluids_enabled&&iteration<8)s.bins();s.dispatch(3,capacity,true);}
+            if(s.fluids_enabled&&iteration<static_cast<int>(s.execution.fluid.pbf_iterations)){s.liquid_dispatch(0);s.liquid_dispatch(1,true);if(s.mission_enabled&&(s.execution.coupling!=CouplingMode::combined||!s.grains_enabled))s.mission_dispatch(3);}
+            if(s.grains_enabled){if(s.fluids_enabled&&iteration<static_cast<int>(s.execution.fluid.pbf_iterations))s.bins();s.dispatch(3,capacity,true);}
             if(s.mission_enabled)s.mission_dispatch(3);
         }
         s.trace.context(half+1,iterations);s.bins();s.dispatch(4,capacity,true);
-        if(s.fluids_enabled)s.liquid_dispatch(4,true);
+        if(s.fluids_enabled){
+            if(s.execution.fluid.fields()){s.liquid_dispatch(5);s.liquid_dispatch(6);}
+            s.liquid_dispatch(4,true);
+            // Apply adhesion before contact drag. The reference reducer shares
+            // one reaction channel; consuming here prevents it being overwritten.
+            if(s.mission_enabled&&s.execution.fluid.velocity_reaction())s.mission_dispatch(3);
+        }
         if(s.mission_enabled){if(s.fluids_enabled){s.mission_dispatch(8,capacity,true,true);s.mission_dispatch(3);}s.mission_dispatch(4);}
-        if(grouped)s.gl.QueryCounter(group.ids[2+half],GL_TIMESTAMP);
+        if(grouped&&(half==0||half==static_cast<int>(s.execution.fluid.substeps)-1))s.gl.QueryCounter(group.ids[half==0?2:3],GL_TIMESTAMP);
     }
     const auto solver_end=stamp();
     s.trace.context(3,-1);
     const bool diagnostic_due=s.profile_options.periodic_diagnostics&&s.fluids_enabled&&s.metrics.steps%30==0;
     if(diagnostic_due){s.bins();s.liquid_dispatch(3);s.liquid_dispatch(2);}
+    if(s.thermal&&s.thermal_config.enabled){
+        if(s.mission_enabled)s.thermal->consume_events(s.buffers,s.epoch,s.gameplay.tick());
+        s.thermal->tick(s.buffers,s.current,static_cast<unsigned>(s.metrics.steps+1),s.thermal_brush);s.invalidate_bindings();
+        s.rebuild_active();s.renderer.lighting.prepare_birth(s.buffers,s.current);s.invalidate_bindings();s.thermal->condense(s.buffers,s.current);s.invalidate_bindings();s.rebuild_active();s.dispatch(9,width*height);
+        s.bins_valid=false;s.grains_enabled=s.fluids_enabled=true;
+    }
     const auto diagnostics_end=stamp();
     if(grouped)s.gl.QueryCounter(group.ids[4],GL_TIMESTAMP);
     if(measure){s.end_timer(timer);s.timer_cursor=(s.timer_cursor+1)%static_cast<unsigned>(s.timers.size());}
     const auto timer_closed=stamp();
+    if(s.thermal&&s.thermal_config.enabled)s.thermal->presentation(s.renderer.lighting.thermal_image);
+    s.gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);s.renderer.lighting.tick(s.buffers,s.current,s.epoch,s.mission_enabled?s.gameplay.tick():static_cast<unsigned>(s.metrics.steps+1),s.mission_enabled,s.renderer.terrain_image,s.thermal&&s.thermal_config.enabled?s.renderer.lighting.thermal_image:0,s.thermal&&s.thermal_config.enabled?s.thermal->presentation_particles():0);s.invalidate_bindings();
+    if(s.resources->vfx.enabled()){
+        auto& vfx=s.resources->vfx;vfx.begin_tick(s.renderer.terrain_image,s.epoch,s.mission_enabled?s.gameplay.tick():static_cast<unsigned>(s.metrics.steps+1),1.F/120.F);
+        s.renderer.build_vfx_field({s.buffers,s.current,s.fluids_enabled,s.mission_enabled});
+        vfx.sand_sources(s.renderer.get_options().lighting.quality!=LightingQuality::off?s.renderer.lighting.field:0);vfx.end_tick(s.mission_enabled?s.buffers[6]:0,{},s.fluids_enabled);s.invalidate_bindings();
+    }
+    if(s.mission_enabled)s.event_ring.submit(s.buffers[6],event_offset,s.epoch,s.gameplay.tick());
     ++s.metrics.steps;if(s.mission_enabled||diagnostic_due)s.stage_count(!s.mission_enabled);
     if(grouped){s.gl.QueryCounter(group.ids[5],GL_TIMESTAMP);group.pending=true;s.group_cursor=(s.group_cursor+1)%static_cast<unsigned>(s.group_timers.size());}
     const auto finished=SDL_GetTicksNS();
     if(s.debug_groups)s.gl.PopDebugGroup();
+    s.metrics.gameplay_ms+=s.event_ring.stats().logic_ms-logic_before;
     s.metrics.cpu_submit_ms=static_cast<double>(finished-started)/1e6;
     if(s.cpu_timings.size()<10000)s.cpu_timings.push_back(s.metrics.cpu_submit_ms);
     if(s.profile_options.collect){
@@ -560,11 +610,12 @@ void ParticleWorld::step(){
         p.timer_poll_ms=s.poll_timer_ms;p.fence_poll_ms=s.poll_fence_ms;p.read_ms=s.poll_read_ms;p.readback_age_ticks=s.mission_enabled?s.metrics.steps-s.snapshot.status[2]:s.readback_age;
         if(s.profiles.size()<10000)s.profiles.push_back(p);
     }
-    s.trace_step=false;s.trace.end_step();
+    s.trace_step=false;s.trace.end_step();return true;
 }
 void ParticleWorld::poll(bool collect_hud){
     auto& s=*impl_;
     const auto stamp=[&](){return s.profile_options.collect?SDL_GetTicksNS():std::uint64_t{0};};
+    if(collect_hud&&!s.hold_events)s.event_ring.poll(s.gameplay);
     const auto timer_start=stamp();s.poll_fence_ms=0;s.poll_read_ms=0;
     const auto collect=[&](auto& queue,unsigned& head,auto consume){
         const auto ready=[&](auto& timer,GLuint id){
@@ -612,63 +663,58 @@ void ParticleWorld::poll(bool collect_hud){
     if(s.readback_refresh)s.stage_count(true);
 }
 void ParticleWorld::render(float alpha){
-    auto& s=*impl_;auto& render_timer=s.render_timers[s.render_cursor];
+    auto& s=*impl_;s.device.require_current();s.resources->vfx.poll();if(s.thermal)s.thermal->poll();
+    auto& timer=s.render_timers[s.render_cursor];
     const bool timers_enabled=effective_timer_mode(s.profile_options)!=TimerMode::off;
-    const bool measure_render=timers_enabled&&!render_timer.pending;
-    if(s.profile_options.collect&&timers_enabled&&!measure_render)++s.calls.timer_skips;
-    if(s.profile_options.collect)s.calls.render_state_queries+=18;
-    if(measure_render)s.begin_timer(render_timer);s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    GLint previous_fbo{},previous_vao{},previous_program{},viewport[4]{};
-    glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING,&previous_fbo);glGetIntegerv(GL_VERTEX_ARRAY_BINDING,&previous_vao);
-    glGetIntegerv(GL_CURRENT_PROGRAM,&previous_program);glGetIntegerv(GL_VIEWPORT,viewport);
-    GLint saved_active{};glGetIntegerv(GL_ACTIVE_TEXTURE,&saved_active);
-    GLint texture1{};s.gl.ActiveTexture(GL_TEXTURE1);glGetIntegerv(GL_TEXTURE_BINDING_2D,&texture1);s.gl.ActiveTexture(GL_TEXTURE0);
-    GLint active_texture{},texture{},blend_src{},blend_dst{},alpha_src{},alpha_dst{},eq_rgb{},eq_alpha{};
-    glGetIntegerv(GL_ACTIVE_TEXTURE,&active_texture);s.gl.ActiveTexture(GL_TEXTURE0);glGetIntegerv(GL_TEXTURE_BINDING_2D,&texture);
-    glGetIntegerv(GL_BLEND_SRC_RGB,&blend_src);glGetIntegerv(GL_BLEND_DST_RGB,&blend_dst);
-    glGetIntegerv(GL_BLEND_SRC_ALPHA,&alpha_src);glGetIntegerv(GL_BLEND_DST_ALPHA,&alpha_dst);
-    glGetIntegerv(GL_BLEND_EQUATION_RGB,&eq_rgb);glGetIntegerv(GL_BLEND_EQUATION_ALPHA,&eq_alpha);
-    const auto blend=glIsEnabled(GL_BLEND),scissor=glIsEnabled(GL_SCISSOR_TEST),depth=glIsEnabled(GL_DEPTH_TEST),cull=glIsEnabled(GL_CULL_FACE);
-    glDisable(GL_BLEND);glDisable(GL_SCISSOR_TEST);glDisable(GL_DEPTH_TEST);glDisable(GL_CULL_FACE);
-    s.gl.BindVertexArray(s.vao);s.gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,0,s.buffers[s.current]);
-    if(s.fluids_enabled){
-        s.gl.BindFramebuffer(GL_DRAW_FRAMEBUFFER,s.fluid_fbo);glViewport(0,0,width*3,height*3);
-        glClearColor(0,0,0,0);glClear(GL_COLOR_BUFFER_BIT);glEnable(GL_BLEND);
-        s.gl.BlendFuncSeparate(GL_ONE,GL_ONE,GL_ONE,GL_ONE);s.gl.BlendEquationSeparate(GL_FUNC_ADD,GL_FUNC_ADD);
-        s.gl.UseProgram(s.splat);s.gl.Uniform1f(s.splat_alpha,std::clamp(alpha,0.F,1.F));
-        s.active_draw();glDisable(GL_BLEND);
+    const bool measure=timers_enabled&&!timer.pending;
+    if(s.profile_options.collect&&timers_enabled&&!measure)++s.calls.timer_skips;
+    const auto now=SDL_GetTicksNS();const auto& hp=s.gameplay.state().hp;
+    for(unsigned i=0;i<3;++i){if(hp[i]<s.presented_hp[i])s.hit_started[i]=now;s.presented_hp[i]=hp[i];
+        s.renderer.targets.hp[i]=hp[i];s.renderer.targets.hit[i]=s.hit_started[i]?std::max(0.F,1.F-static_cast<float>(now-s.hit_started[i])/150000000.F):0.F;}
+
+    if(measure)s.begin_timer(timer);
+    s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    s.renderer.lighting.impulse=s.mission_enabled?std::clamp(s.snapshot.flash[3]/.3F,0.F,1.F):0.F;
+    s.renderer.render({s.buffers,s.current,s.fluids_enabled,s.mission_enabled},alpha);
+    s.invalidate_bindings();
+    if(measure){
+        s.end_timer(timer);
+        if(s.profile_options.collect)++s.calls.timer_submissions;
+        s.render_cursor=(s.render_cursor+1)%static_cast<unsigned>(s.render_timers.size());
     }
-    s.gl.BindFramebuffer(GL_DRAW_FRAMEBUFFER,s.fbo);glViewport(0,0,width*3,height*3);glClearColor(.035F,.055F,.065F,s.mission_enabled?0.F:1.F);glClear(GL_COLOR_BUFFER_BIT);
-    if(s.fluids_enabled){
-        s.gl.UseProgram(s.surface);glBindTexture(GL_TEXTURE_2D,s.fluid_image);glDrawArrays(GL_TRIANGLES,0,3);
-    }
-    s.gl.UseProgram(s.draw);s.gl.BindVertexArray(s.vao);
-    s.gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,0,s.buffers[s.current]);s.gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,4,s.buffers[4]);
-    s.gl.Uniform1f(s.alpha,std::clamp(alpha,0.F,1.F));s.gl.Uniform1i(s.terrain_pass,1);
-    s.gl.DrawArraysInstanced(GL_TRIANGLE_STRIP,0,4,width*height);
-    s.gl.Uniform1i(s.terrain_pass,0);s.active_draw();
-    if(s.mission_enabled){
-        s.gl.BindBufferBase(GL_SHADER_STORAGE_BUFFER,6,s.buffers[6]);s.gl.UseProgram(s.actor_program);
-        s.gl.Uniform1f(s.actor_alpha,std::clamp(alpha,0.F,1.F));s.gl.Uniform1i(s.actor_parts,0);s.gl.Uniform1i(s.actor_weapons,1);
-        s.gl.Uniform4f(s.actor_weapon_size,static_cast<float>(s.weapon_width),static_cast<float>(s.weapon_height),0.F,0.F);
-        s.gl.ActiveTexture(GL_TEXTURE0);glBindTexture(GL_TEXTURE_2D,s.parts_texture);s.gl.ActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,s.weapons_texture);
-        glEnable(GL_BLEND);s.gl.BlendFuncSeparate(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA,GL_ONE,GL_ONE_MINUS_SRC_ALPHA);
-        s.gl.DrawArraysInstanced(GL_TRIANGLE_STRIP,0,4,159);s.gl.ActiveTexture(GL_TEXTURE1);glBindTexture(GL_TEXTURE_2D,static_cast<GLuint>(texture1));s.gl.ActiveTexture(GL_TEXTURE0);
-    }
-    s.gl.BindFramebuffer(GL_DRAW_FRAMEBUFFER,static_cast<GLuint>(previous_fbo));s.gl.BindVertexArray(static_cast<GLuint>(previous_vao));s.gl.UseProgram(static_cast<GLuint>(previous_program));
-    glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
-    glBindTexture(GL_TEXTURE_2D,static_cast<GLuint>(texture));s.gl.ActiveTexture(static_cast<GLenum>(saved_active));
-    s.gl.BlendFuncSeparate(static_cast<GLenum>(blend_src),static_cast<GLenum>(blend_dst),static_cast<GLenum>(alpha_src),static_cast<GLenum>(alpha_dst));
-    s.gl.BlendEquationSeparate(static_cast<GLenum>(eq_rgb),static_cast<GLenum>(eq_alpha));
-    if(!blend)glDisable(GL_BLEND);
-    if(measure_render){s.end_timer(render_timer);if(s.profile_options.collect)++s.calls.timer_submissions;s.render_cursor=(s.render_cursor+1)%static_cast<unsigned>(s.render_timers.size());}
-    if(blend)glEnable(GL_BLEND);if(scissor)glEnable(GL_SCISSOR_TEST);if(depth)glEnable(GL_DEPTH_TEST);if(cull)glEnable(GL_CULL_FACE);
 }
-unsigned ParticleWorld::texture()const noexcept{return impl_->image;}
+std::shared_ptr<RenderDevice> ParticleWorld::render_device()const{return impl_->resources;}
+void ParticleWorld::set_thermal_options(ThermalOptions value){
+    if(value.pressure_iterations==0||value.pressure_iterations>128)throw std::invalid_argument{"Thermal pressure iterations: 1..128"};
+    auto& s=*impl_;if(value.enabled&&!s.thermal){s.thermal=std::make_unique<detail::ThermalSystem>(s.gl,s.device.state);s.thermal->initialize(s.shader_library,s.shader_folder,s.layout_defines());s.thermal->reset(s.buffers,s.current,s.epoch);s.renderer.thermal=s.thermal.get();}
+    s.thermal_config=value;if(s.thermal)s.thermal->options=value;s.thermal_brush={};s.invalidate_bindings();
+}
+ThermalOptions ParticleWorld::thermal_options()const{return impl_->thermal_config;}
+void ParticleWorld::set_thermal_view(ThermalView view){if(impl_->thermal)impl_->thermal->view=view;}
+void ParticleWorld::set_thermal_brush(const ThermalBrush& brush){
+    if(!std::ranges::all_of(brush.segment,[](float v){return std::isfinite(v);})||!std::isfinite(brush.radius)||brush.radius<1||brush.radius>16||!std::isfinite(brush.rate)||brush.rate<0||brush.rate>10000||brush.tool>ThermalTool::steam)throw std::invalid_argument{"Invalid thermal brush"};impl_->thermal_brush=brush;
+}
+const ThermalTotals& ParticleWorld::thermal_totals()const{static const ThermalTotals empty;return impl_->thermal?impl_->thermal->totals():empty;}
+ThermalSnapshot ParticleWorld::read_thermal(){return impl_->thermal?impl_->thermal->snapshot():ThermalSnapshot{};}
+void ParticleWorld::request_thermal_inspection(int x,int y){if(impl_->thermal&&impl_->thermal_config.enabled)impl_->thermal->request_inspection(x,y);}
+const ThermalInspection& ParticleWorld::thermal_inspection()const{static const ThermalInspection empty;return impl_->thermal?impl_->thermal->inspection():empty;}
+std::uint64_t ParticleWorld::thermal_memory()const{return impl_->thermal?impl_->thermal->memory_bytes():0;}
+void ParticleWorld::set_vfx_options(VfxOptions value){impl_->resources->vfx.set_options(value);}
+VfxOptions ParticleWorld::vfx_options()const noexcept{return impl_->resources->vfx.options();}
+const VfxCounters& ParticleWorld::vfx_stats()const{return impl_->resources->vfx.stats();}
+void ParticleWorld::set_render_options(RenderOptions value){impl_->renderer.set_options(value);}
+std::array<float,2> ParticleWorld::camera_offset()const{const auto& r=impl_->renderer;const auto c=r.lighting.camera(r.get_options().lighting);return r.get_options().lighting.quality==LightingQuality::off?std::array<float,2>{}:std::array<float,2>{c[0]/static_cast<float>(r.render_width())*320.F,c[1]/static_cast<float>(r.render_height())*192.F};}
+RenderOptions ParticleWorld::render_options()const noexcept{return impl_->renderer.get_options();}
+void ParticleWorld::set_background_texture(unsigned texture){impl_->renderer.background_texture=texture;}
+void ParticleWorld::invalidate_gl_state(){impl_->invalidate_bindings();}
+std::vector<RenderSample> ParticleWorld::take_render_samples(){return impl_->renderer.take_samples();}
+unsigned ParticleWorld::texture()const noexcept{return impl_->renderer.image;}
 std::vector<double> ParticleWorld::take_render_timings(){return std::exchange(impl_->render_timings,{});}
 std::vector<double> ParticleWorld::take_cpu_timings(){return std::exchange(impl_->cpu_timings,{});}
 const Metrics& ParticleWorld::metrics()const noexcept{return impl_->metrics;}
-const MissionSnapshot& ParticleWorld::mission()const noexcept{return impl_->snapshot;}
+const MissionSnapshot& ParticleWorld::mission()const noexcept{
+    auto& s=*impl_;if(s.mission_enabled)s.gameplay.present(s.snapshot.inventory,s.snapshot.timers,s.snapshot.targets,s.snapshot.status[3]);return s.snapshot;
+}
 void ParticleWorld::set_profile_options(const ProfileOptions& options){
     auto& s=*impl_;
     const auto previous_mode=effective_timer_mode(s.profile_options),next_mode=effective_timer_mode(options);
@@ -688,9 +734,44 @@ const StepProfile& ParticleWorld::step_profile()const noexcept{return impl_->las
 PollTimings ParticleWorld::poll_timings()const noexcept{return {impl_->poll_timer_ms,impl_->poll_fence_ms,impl_->poll_read_ms};}
 ReadbackStats ParticleWorld::readback_stats()const noexcept{return impl_->readbacks.stats();}
 UploadStats ParticleWorld::upload_stats()const noexcept{return impl_->uploads.stats();}
+ShaderCacheStats ParticleWorld::shader_cache_stats()const noexcept{return impl_->shader_library.stats();}
 ExecutionOptions ParticleWorld::execution_options()const noexcept{return impl_->execution;}
-std::array<std::uint32_t,28> ParticleWorld::read_dispatch_commands()const{
-    auto& s=*impl_;std::array<std::uint32_t,28> result{};s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+std::array<bool,5> ParticleWorld::pbf_restrict_programs()const{
+    for(const auto kernels:{std::span<const Impl::Kernel>{impl_->granular},std::span<const Impl::Kernel>{impl_->mission_kernels},
+                            std::span<const Impl::Kernel>{impl_->neighbors},std::span<const Impl::Kernel>{impl_->coupling_kernels}})
+        for(const auto& kernel:kernels)if(kernel.particle_restrict)throw std::logic_error{"PBF qualifiers escaped their two-program scope."};
+    std::array<bool,5> result{};for(unsigned i=0;i<result.size();++i)result[i]=impl_->liquids[i].particle_restrict;return result;
+}
+std::array<std::string,5> ParticleWorld::pbf_program_sources_for_test()const{
+    auto& s=*impl_;std::array<std::string,5> result;
+    for(unsigned i=0;i<result.size();++i){
+        if(!s.liquids[i].id)continue;
+        GLuint shader{};GLsizei attached{};s.gl.GetAttachedShaders(s.liquids[i].id,1,&attached,&shader);
+        if(attached!=1)throw std::logic_error{"PBF program must have one attached compute shader."};
+        GLint length{};s.gl.GetShaderiv(shader,GL_SHADER_SOURCE_LENGTH,&length);
+        if(length<=1)throw std::logic_error{"PBF program has no retrievable shader source."};
+        result[i].resize(static_cast<std::size_t>(length));GLsizei written{};
+        s.gl.GetShaderSource(shader,length,&written,result[i].data());result[i].resize(static_cast<std::size_t>(written));
+    }
+    return result;
+}
+void ParticleWorld::probe_pbf_alias_for_test(unsigned operation,unsigned source,unsigned binding){
+    auto& s=*impl_;
+    if((operation!=1&&operation!=4)||!s.liquids[operation].particle_restrict||source>8||binding>=8||source==binding)
+        throw std::invalid_argument{"Invalid PBF binding fault probe."};
+    const auto before=s.calls;const auto current=s.current;
+    s.pbf_fault_source=source;s.pbf_fault_binding=binding;
+    try{s.liquid_dispatch(static_cast<int>(operation),true);}
+    catch(const ParticleAliasError&){
+        s.pbf_fault_source=s.pbf_fault_binding=8;
+        if(s.calls.api_calls!=before.api_calls||s.current!=current)throw std::logic_error{"PBF alias rejection changed GL state or the current bank."};
+        return;
+    }catch(...){s.pbf_fault_source=s.pbf_fault_binding=8;throw;}
+    s.pbf_fault_source=s.pbf_fault_binding=8;
+    throw std::logic_error{"PBF alias probe was not rejected."};
+}
+std::array<std::uint32_t,37> ParticleWorld::read_dispatch_commands()const{
+    auto& s=*impl_;std::array<std::uint32_t,37> result{};s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[5]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,detail::command_offset(0),sizeof(result),result.data());return result;
 }
 CallCounters ParticleWorld::counters()const noexcept{return impl_->calls;}
@@ -698,14 +779,15 @@ std::vector<StepProfile> ParticleWorld::take_step_profiles(){return std::exchang
 std::vector<GroupProfile> ParticleWorld::take_group_profiles(){return std::exchange(impl_->group_profiles,{});}
 MissionSnapshot ParticleWorld::read_mission()const{
     auto& s=*impl_;MissionSnapshot result{};s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,32,sizeof(result),&result);return result;
+    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,32,sizeof(result),&result);
+    if(!s.hold_events)s.event_ring.poll(s.gameplay);if(s.mission_enabled)s.gameplay.present(result.inventory,result.timers,result.targets,result.status[3]);return result;
 }
 std::vector<std::uint32_t> ParticleWorld::read_terrain()const{
     auto& s=*impl_;std::vector<std::uint32_t> result(width*height*4);s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[4]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,0,result.size()*4,result.data());return result;
 }
 void ParticleWorld::set_actor_textures(unsigned parts,unsigned weapons,int w,int h){
-    impl_->parts_texture=parts;impl_->weapons_texture=weapons;impl_->weapon_width=w;impl_->weapon_height=h;
+    impl_->renderer.parts_texture=parts;impl_->renderer.weapons_texture=weapons;impl_->renderer.weapon_width=w;impl_->renderer.weapon_height=h;
 }
 void ParticleWorld::queue_explosion(const Explosion& e){
     if(e.id==0||!std::isfinite(e.x)||!std::isfinite(e.y)||!std::isfinite(e.radius)||!std::isfinite(e.impulse)
@@ -719,10 +801,12 @@ void ParticleWorld::configure_mission(const MissionConfig& config){
         ||config.spawn_x<4||config.spawn_x>width-4||config.spawn_y<18||config.spawn_y>height||config.relative_density<=0)
         throw std::invalid_argument{"Invalid GPU player configuration"};
     auto& s=*impl_;s.reset_body();MissionSnapshot g{};s.explosions.clear();
-    ++s.epoch;++s.readback_revision;s.readback_refresh=false;
+    s.next_generation();++s.readback_revision;s.readback_refresh=false;
     g.actor={config.spawn_x,config.spawn_y,0,0};g.previous={config.spawn_x,config.spawn_y,config.spawn_x,config.spawn_y};
     g.aim={1,0,1.5F,0};g.status={1,s.epoch,0,0};g.inventory={30,3,0,0};g.control={0,config.spawn_x+40,config.spawn_y-14,0};
     g.exit=config.exit;g.targets=config.targets;
+    s.gameplay.reset(s.epoch,{static_cast<unsigned>(config.targets[0][2]),static_cast<unsigned>(config.targets[1][2]),static_cast<unsigned>(config.targets[2][2])});
+    s.presented_hp=s.gameplay.state().hp;s.hit_started={};
     constexpr float area=80+16*3.14159265358979323846F;
     g.body={2.65F/(area*config.relative_density),config.relative_density,area,0};
     const std::vector<std::byte> empty(mission_buffer_size-32);
@@ -733,9 +817,160 @@ void ParticleWorld::restore_coupling_checkpoint(const MissionSnapshot& checkpoin
     if(checkpoint.status[0]==0||checkpoint.events[0]!=0||checkpoint.counts[2]!=0)
         throw std::invalid_argument{"Coupling checkpoint requires an active scene without projectile/destruction events"};
     for(float value:checkpoint.actor)if(!std::isfinite(value))throw std::invalid_argument{"Nonfinite coupling checkpoint"};
-    auto& s=*impl_;s.reset_body();s.explosions.clear();++s.epoch;++s.readback_revision;s.readback_refresh=false;
+    auto& s=*impl_;s.reset_body();s.explosions.clear();s.next_generation();s.gameplay.reset(s.epoch);++s.readback_revision;s.readback_refresh=false;
     auto state=checkpoint;state.status[1]=s.epoch;s.upload(6,32,sizeof(state),&state);s.snapshot=state;
+    s.gameplay.reset(s.epoch,{static_cast<unsigned>(state.targets[0][2]),static_cast<unsigned>(state.targets[1][2]),static_cast<unsigned>(state.targets[2][2])},state.status[2]);
+    s.presented_hp=s.gameplay.state().hp;s.hit_started={};
     s.metrics.steps=tick;s.controls={0,state.control[1],state.control[2],0};s.mission_enabled=true;s.grains_enabled=true;
+}
+std::expected<void,std::string> ParticleWorld::validate_gameplay_protocol(const std::filesystem::path& output){
+    try{
+        std::filesystem::create_directories(output);std::ofstream report{output/"gameplay-tests.txt"};
+        std::ofstream timing{output/"gameplay-timing.csv"};timing<<"tick,cpu_submit_ms,cpu_logic_ms,pending_events,ack_tick\n";
+        auto& s=*impl_;
+        const auto require=[](bool ok,const char* text){if(!ok)throw std::runtime_error{text};};
+        const auto drain=[&](){glFinish();poll();}; // diagnostic only
+        const auto tick=[&](MissionInput input=MissionInput{}){require(step(input),"Unexpected event backpressure in bounded fixture");};
+        // Check actual driver std430 offsets of fields used by the kernels.
+        const auto resource=reinterpret_cast<PFNGLGETPROGRAMRESOURCEINDEXPROC>(SDL_GL_GetProcAddress("glGetProgramResourceIndex"));
+        const auto properties=reinterpret_cast<PFNGLGETPROGRAMRESOURCEIVPROC>(SDL_GL_GetProcAddress("glGetProgramResourceiv"));
+        require(resource&&properties,"GL 4.3 reflection unavailable");
+        const auto program=s.mission_kernels[0].id;
+        const std::array<std::pair<const char*,std::size_t>,8> offsets{{
+            {"commandBatch.header",command_offset},{"commandBatch.commands[0].identity",command_offset+64},
+            {"commandBatch.commands[0].detail",command_offset+80},{"commandBatch.commands[0].payload",command_offset+96},
+            {"eventBatch.header",event_offset},{"eventBatch.events[0].identity",event_offset+16},
+            {"eventBatch.events[0].detail",event_offset+32},{"eventBatch.events[0].payload",event_offset+48}}};
+        for(const auto& [name,offset]:offsets){
+            const auto id=resource(program,GL_BUFFER_VARIABLE,name);require(id!=GL_INVALID_INDEX,"Protocol reflection field missing");
+            constexpr GLenum property=GL_OFFSET;GLint value{};properties(program,GL_BUFFER_VARIABLE,id,1,&property,1,nullptr,&value);
+            report<<name<<"="<<value<<'\n';require(value==static_cast<GLint>(offset),"C++/GLSL protocol offset mismatch");
+        }
+        report<<"abi_reflection=PASS\n";
+        report<<"renderer="<<reinterpret_cast<const char*>(glGetString(GL_RENDERER))<<"\nversion="<<reinterpret_cast<const char*>(glGetString(GL_VERSION))<<'\n';
+        // The GL 4.3 fallback transports the same real payload without mapping.
+        {
+            const auto supported=s.gl.persistent_storage;s.gl.persistent_storage=false;
+            detail::EventRing fallback{s.gl};fallback.initialize();s.gl.persistent_storage=supported;
+            game::GameplaySession session;session.reset(42);const auto commands=session.prepare({0,54,177,fire});
+            game::EventBatch batch;batch.header={1,1,42,0};batch.events[0]={42,1,1,1,commands.commands[0].id,0,0,0,{},{}};
+            s.upload(6,event_offset,sizeof(batch),&batch);fallback.submit(s.buffers[6],event_offset,42,1);
+            glFinish();fallback.poll(session);
+            require(session.state().shots==1&&session.pending()==0&&fallback.stats().acknowledged==1,"GL 4.3 reliable fallback payload lost");
+        }
+        report<<"event_gl43_fallback=PASS\n";
+        // Retransmitted command IDs never create another physical projectile.
+        reset(Scene::empty);configure_mission({});s.controls={0,54,177,0};
+        auto first=s.gameplay.prepare({0,54,177,fire});s.upload(6,command_offset,sizeof(first),&first);s.mission_dispatch(0);
+        s.event_ring.submit(s.buffers[6],event_offset,s.epoch,1);
+        auto duplicate=s.gameplay.prepare({});duplicate.header[2]=1;duplicate.commands[0]=first.commands[0];duplicate.commands[0].tick=2;
+        s.upload(6,command_offset,sizeof(duplicate),&duplicate);s.mission_dispatch(0);s.event_ring.submit(s.buffers[6],event_offset,s.epoch,2);drain();
+        std::array<std::array<float,8>,bullet_capacity> duplicate_bullets{};
+        s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,32+sizeof(MissionSnapshot),sizeof(duplicate_bullets),duplicate_bullets.data());
+        require(std::ranges::count_if(duplicate_bullets,[](const auto& b){return b[4]>0;})==1&&gameplay().state().shots==1,"Duplicate command executed twice");
+        report<<"gpu_command_dedup=PASS\n";
+        // All 128 bullets can report a hit in one tick, plus command acks.
+        reset(Scene::empty);configure_mission({});
+        std::array<std::array<float,8>,bullet_capacity> simultaneous{};
+        for(auto& bullet:simultaneous){bullet[0]=50;bullet[1]=177;bullet[2]=600;bullet[4]=1;}
+        s.upload(6,32+sizeof(MissionSnapshot),sizeof(simultaneous),simultaneous.data());tick({0,54,177,fire|grenade|jump});drain();
+        require(gameplay().state().score==1&&gameplay().state().ammunition==30&&gameplay().pending()==0,"Maximum hit batch lost events/reservations");
+        report<<"128_simultaneous_hits_and_acks=PASS\n";
+
+        // Refuse admission with a full staging queue. Leave actual GPU fences
+        // unsignalled to the consumer using a validation-only hold flag.
+        reset(Scene::empty);configure_mission({});s.hold_events=true;
+        for(unsigned i=0;i<game::event_slots;++i)tick({0,54,177,i==0?fire|grenade:0U});
+        const auto before=metrics().steps;const auto ammo=gameplay().state().ammunition;
+        require(!step({0,54,177,fire})&&metrics().steps==before&&gameplay().state().ammunition==ammo,"Full ring consumed tick or ammo");
+        s.hold_events=false;drain();require(gameplay().acknowledged_tick()==game::event_slots,"Batched events incomplete");
+        require(gameplay().state().shots==1&&gameplay().pending()==0,"Command acknowledgement incomplete");
+        report<<"full_ring_admission_and_batched_ack=PASS\n";
+        // Projectile pool rejection refunds the exact reservation.
+        reset(Scene::empty);configure_mission({});
+        std::array<std::array<float,8>,bullet_capacity> full{};
+        for(auto& p:full){p[0]=100;p[1]=100;p[4]=1;}
+        s.upload(6,32+sizeof(MissionSnapshot),sizeof(full),full.data());tick({0,54,177,fire});drain();
+        require(gameplay().state().ammunition==30&&gameplay().state().shots==0&&gameplay().pending()==0,"Rejected rifle did not refund");
+        report<<"projectile_rejection_refund=PASS\n";
+        // Pending old-generation commands cannot affect a new mission.
+        s.hold_events=true;tick({0,54,177,grenade});configure_mission({});s.hold_events=false;drain();
+        require(gameplay().state().grenades==3&&gameplay().state().score==0&&gameplay().pending()==0,"Reset leaked reservation/event");
+        report<<"reset_in_flight=PASS\n";
+        // Simultaneous fuses are serialized, every detonation reaches the CPU.
+        std::array<std::array<float,8>,grenade_capacity> grenades{};
+        for(unsigned i=0;i<grenades.size();++i){grenades[i][0]=100+static_cast<float>(i);grenades[i][1]=100;grenades[i][4]=.001F;}
+        s.upload(6,32+sizeof(MissionSnapshot)+bullet_capacity*32,sizeof(grenades),grenades.data());
+        for(unsigned i=0;i<grenade_capacity+2;++i)tick();drain();
+        require(gameplay().state().explosions==grenade_capacity,"Simultaneous detonations lost/duplicated");
+        report<<"simultaneous_detonations=PASS\n";
+        // Coyote jump on current GPU state; no HUD poll is used for admission.
+        reset(Scene::empty);MissionConfig airborne;airborne.spawn_y=100;configure_mission(airborne);
+        float air_time=.05F;s.upload(6,32+offsetof(MissionSnapshot,timers)+8,4,&air_time);
+        tick({0,54,100,jump});drain();require(read_mission().actor[3]<-60,"Coyote jump failed");
+        tick({0,54,100,jump});drain();require(gameplay().pending()==1,"Jump reused coyote allowance");
+        cancel_mission_input();tick();drain();require(gameplay().pending()==0,"Focus cancellation left buffered jump");
+        report<<"coyote_and_focus_cancel=PASS\n";
+        // Press shortly before landing: contact from terrain/sand is consumed
+        // once on the GPU, within the 12-tick input window.
+        reset(Scene::empty);airborne.spawn_y=186;configure_mission(airborne);
+        air_time=1;s.upload(6,32+offsetof(MissionSnapshot,timers)+8,4,&air_time);
+        std::array<float,4> falling{24,186,0,50};s.upload(6,32+offsetof(MissionSnapshot,actor),16,falling.data());
+        tick({0,54,177,jump});for(unsigned i=0;i<10;++i)tick();drain();
+        require(read_mission().actor[3]<-30&&gameplay().pending()==0,"Landing jump buffer failed");
+        report<<"landing_buffer=PASS\n";
+        reset(Scene::empty);airborne.spawn_y=100;configure_mission(airborne);
+        air_time=1;s.upload(6,32+offsetof(MissionSnapshot,timers)+8,4,&air_time);
+        tick({0,54,177,jump});for(unsigned i=0;i<14;++i)tick();drain();
+        require(gameplay().pending()==0&&read_mission().actor[3]>0,"Expired jump was executed in the air");
+        report<<"airborne_buffer_expiry=PASS\n";
+
+        // Three render frames of delayed consumption; same tick-indexed physical
+        // script at 30/60/144 Hz. World trajectory must not authorize CPU rules.
+        MissionSnapshot reference{};
+        for(unsigned fps:{30U,60U,144U}){
+            reset(Scene::empty);configure_mission({});
+            unsigned submitted=0,frame=0;s.hold_events=true;
+            double accumulator=0;
+            while(submitted<240){
+                accumulator+=120.0/fps;unsigned count=static_cast<unsigned>(accumulator+1e-9);accumulator-=count;
+                for(unsigned j=0;j<count&&submitted<240;++j){
+                    tick({0,54,177,submitted<60?fire:0U});++submitted;
+                    const auto stats=event_stats();timing<<submitted<<','<<metrics().cpu_submit_ms<<','<<metrics().gameplay_ms<<','<<stats[3]<<','<<gameplay().acknowledged_tick()<<'\n';
+                }
+                if(++frame%3==0){s.hold_events=false;drain();s.hold_events=true;}
+            }
+            s.hold_events=false;drain();const auto result=read_mission();
+            require(result.inventory[2]==1&&gameplay().pending()==0,"Delayed frame route score/ack");
+            if(fps==30)reference=result;else require(result.inventory==reference.inventory&&std::hypot(result.actor[0]-reference.actor[0],result.actor[1]-reference.actor[1])<.01,"Frame-dependent physical route");
+            report<<"delayed_"<<fps<<"_fps=PASS\n";
+        }
+
+        // Stair slopes and a moving granular support use live GPU contacts.
+        std::vector<std::uint32_t> slope(width*height);
+        for(int x=0;x<width;++x)for(int y=187-std::min(12,x/8);y<height;++y)slope[y*width+x]=1;
+        load({},slope);MissionConfig on_slope;on_slope.spawn_x=72;on_slope.spawn_y=170;configure_mission(on_slope);
+        for(unsigned i=0;i<80;++i){tick();if(i%8==7)drain();}drain();require(read_mission().locomotion[2]>.5F,"Slope support missing");
+        tick({0,100,150,jump});drain();require(read_mission().actor[3]<-60,"Slope jump failed");report<<"slope_jump=PASS\n";
+        std::vector<Grain> support;
+        for(int y=174;y<187;++y)for(int x=15;x<60;++x){Grain grain;grain.position={x+.5F,y+.5F,x+.5F,y+.5F};grain.motion={0,0,1,1};support.push_back(grain);}
+        std::vector<std::uint32_t> floor(width*height);for(int y=187;y<height;++y)for(int x=0;x<width;++x)floor[y*width+x]=1;
+        load(support,floor);MissionConfig on_sand;on_sand.spawn_x=35;on_sand.spawn_y=165;configure_mission(on_sand);
+        for(unsigned i=0;i<160;++i){tick({i>100?.3F:0.F,80,150,0});if(i%8==7)drain();}drain();require(read_mission().locomotion[2]>.5F,"Moving sand support missing");
+        tick({.3F,80,150,jump});drain();require(read_mission().actor[3]<-40,"Moving sand jump failed");report<<"moving_sand_jump=PASS\n";
+        // Completed previous GPU work is drained outside CPU timing. Each measured
+        // step includes the previous packet's consumption, new commands and submit.
+        std::ofstream contract_csv{output/"full-mission-contract.csv"};contract_csv<<"trial,tick,cpu_contract_ms,cpu_logic_ms,gpu_ms,event_depth\n";
+        for(unsigned trial=1;trial<=3;++trial){
+            reset_mission();
+            for(unsigned i=0;i<120;++i){glFinish();tick();}glFinish();poll(false);static_cast<void>(take_timings());
+            for(unsigned i=0;i<240;++i){
+                glFinish();tick();contract_csv<<trial<<','<<i+1<<','<<metrics().cpu_submit_ms<<','<<metrics().gameplay_ms<<','<<metrics().gpu_ms<<','<<event_stats()[3]<<'\n';
+            }drain();
+        }
+        report<<"full_mission_contract_trials=3\n";
+        report.flush();return {};
+    }catch(const std::exception& e){impl_->hold_events=false;return std::unexpected{e.what()};}
 }
 void ParticleWorld::reset_mission(){
     std::vector<std::uint32_t> walls(width*height);std::vector<Grain> grains;
@@ -860,20 +1095,49 @@ void ParticleWorld::inject_body_for_test(std::span<const std::array<float,4>> re
     s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);
     if(apply)s.mission_dispatch(3);
 }
-void ParticleWorld::save_image(const std::filesystem::path& path)const{
-    auto& s=*impl_;std::vector<std::uint32_t> pixels(width*height*9);GLint old{};glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING,&old);
-    s.gl.BindFramebuffer(GL_READ_FRAMEBUFFER,s.fbo);glReadPixels(0,0,width*3,height*3,GL_RGBA,GL_UNSIGNED_BYTE,pixels.data());s.gl.BindFramebuffer(GL_READ_FRAMEBUFFER,static_cast<GLuint>(old));
-    auto* surface=SDL_CreateSurfaceFrom(width*3,height*3,SDL_PIXELFORMAT_RGBA32,pixels.data(),width*3*4);
-    if(!surface)throw std::runtime_error{SDL_GetError()};const auto utf8=path.u8string();const bool saved=SDL_SaveBMP(surface,reinterpret_cast<const char*>(utf8.c_str()));SDL_DestroySurface(surface);
-    if(!saved)throw std::runtime_error{SDL_GetError()};
-}
+#include "gpu/render_validation.inl"
+#include "gpu/vfx_replay.inl"
+#include "gpu/vfx_benchmark.inl"
+#include "gpu/vfx_validation.inl"
+
+void ParticleWorld::save_image(const std::filesystem::path& path)const{impl_->renderer.save_image(path);}
 std::vector<double> ParticleWorld::take_timings(){return std::exchange(impl_->timings,{});}
 std::vector<std::array<float,4>> ParticleWorld::read_fluid_terms(){
     auto& s=*impl_;s.invalidate_bindings();s.bins();s.liquid_dispatch(3);s.liquid_dispatch(2);
     std::vector<std::array<float,4>> result(capacity);s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,0,capacity*16,result.data());return result;
 }
+std::vector<float> ParticleWorld::read_boundary_weights()const{
+    auto& s=*impl_;std::vector<float> result(width*height,1);
+    if(s.execution.fluid.boundary==FluidBoundary::volume){
+        s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[4]);
+        s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,width*height*16,static_cast<GLsizeiptr>(result.size()*sizeof(float)),result.data());s.invalidate_bindings();
+    }
+    return result;
+}
+std::vector<std::array<float,4>> ParticleWorld::fluid_fields_for_test(){
+    auto& s=*impl_;if(!s.execution.fluid.fields())throw std::logic_error{"Fluid fields disabled."};
+    s.invalidate_bindings();s.bins();s.liquid_dispatch(5);s.liquid_dispatch(6);
+    std::vector<std::array<float,4>> result(capacity*2);
+    const auto offset=capacity*(s.execution.coupling==CouplingMode::reference?32U:48U);
+    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[7]);
+    s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,offset,static_cast<GLsizeiptr>(result.size()*sizeof(result[0])),result.data());s.invalidate_bindings();return result;
+}
+void ParticleWorld::apply_fluid_velocities_for_test(){
+    auto& s=*impl_;s.invalidate_bindings();s.bins();
+    if(s.execution.fluid.fields()){s.liquid_dispatch(5);s.liquid_dispatch(6);}
+    s.liquid_dispatch(4,true);if(s.mission_enabled&&s.execution.fluid.velocity_reaction())s.mission_dispatch(3);
+}
 void ParticleWorld::project_liquids_for_test(unsigned iterations){
     auto& s=*impl_;s.invalidate_bindings();for(unsigned i=0;i<iterations;++i){s.bins();s.liquid_dispatch(0);s.liquid_dispatch(1,true);if(s.mission_enabled)s.mission_dispatch(3);}
 }
 }
+
+
+#include "gpu/thermal_validation.inl"
+
+#include "gpu/thermal_scenes.inl"
+
+#include "gpu/thermal_benchmark.inl"
+
+#include "gpu/lighting_validation.inl"

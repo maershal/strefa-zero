@@ -1,0 +1,15 @@
+{
+  "positive": "PASS",
+  "rejected": [
+    "unfocused",
+    "minimized",
+    "hidden",
+    "occluded",
+    "unrendered_frame",
+    "wrong_vsync",
+    "dropped_time",
+    "backlog",
+    "missing_rows",
+    "process_failure"
+  ]
+}

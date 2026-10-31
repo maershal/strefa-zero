@@ -1,0 +1,31 @@
+[0/2] Re-checking globbed directories...
+[1/42] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\gpu\world.cpp for CXX dependencies
+[2/42] Generating CXX dyndep file CMakeFiles\strefa_gpu.dir\CXX.dd
+[3/34] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\arena.cpp.obj
+[4/34] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\gpu_laboratory.cpp.obj
+[5/34] Building CXX object CMakeFiles\strefa_ui.dir\src\ui\menu.cpp.obj
+[6/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\profiling.cpp.obj
+[7/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\world.cpp.obj
+[8/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\stabilization_profile.cpp.obj
+[9/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\cost_profile.cpp.obj
+[10/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\work_validation.cpp.obj
+[11/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\readback_ring.cpp.obj
+[12/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\hot_validation.cpp.obj
+[13/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\transport_validation.cpp.obj
+[14/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\readback_validation.cpp.obj
+[15/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\execution_validation.cpp.obj
+[16/34] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\neighbor_validation.cpp.obj
+[17/34] Generating CXX dyndep file CMakeFiles\strefa_zero.dir\CXX.dd
+[18/31] Generating CXX dyndep file CMakeFiles\strefa_gameplay_tests.dir\CXX.dd
+[19/31] Linking CXX static library strefa_ui.lib
+[20/31] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\coupling_validation.cpp.obj
+[21/31] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\coupling_replay.cpp.obj
+[22/31] Building CXX object CMakeFiles\strefa_gpu.dir\src\gpu\pbf_access_validation.cpp.obj
+[23/31] Linking CXX static library strefa_gpu.lib
+[24/31] Building CXX object CMakeFiles\strefa_zero.dir\src\app\simulation_world.cpp.obj
+[25/31] Building CXX object CMakeFiles\strefa_zero.dir\src\app\diagnostic_scenarios.cpp.obj
+[26/31] Building CXX object CMakeFiles\strefa_zero.dir\src\app\application.cpp.obj
+[27/31] Building CXX object CMakeFiles\strefa_zero.dir\src\app\session_recording.cpp.obj
+[28/31] Building CXX object CMakeFiles\strefa_gameplay_tests.dir\tests\gameplay_tests.cpp.obj
+[29/31] Linking CXX executable runtime-070\strefa_gameplay_tests.exe
+[30/31] Linking CXX executable runtime-070\StrefaZero.exe

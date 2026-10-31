@@ -1,0 +1,14 @@
+{
+  "date": "2026-10-30",
+  "gcc": "g++ (Ubuntu 13.3.0-6ubuntu2~24.04.1) 13.3.0",
+  "clang": "Ubuntu clang version 18.1.3 (1ubuntu1)",
+  "msvc_build": "19.51.36256.0",
+  "headless_gcc": {
+    "warnings_as_errors": true,
+    "passed": 6,
+    "total": 6
+  },
+  "clang_limitation": "Clang 18 with the installed libstdc++ 13 does not expose std::expected; build fails in existing core/settings.hpp; no warning suppression.",
+  "windows_regression_executable_sha256": "1e4c824a9549194b761e58a5cb0794ca01680a4b808581b3629580686e131a89",
+  "windows_final_executable_sha256": "29f913bce6f1eafff478dea90ba1719cff7778233c0ef83a37b8c7a752703edc"
+}

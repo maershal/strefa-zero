@@ -1,0 +1,15 @@
+Variance 1: pre-off-1
+Variance 2: pre-off-2
+Variance 3: full-qa
+Variance 4: q-off-1
+Variance 5: q-on-1
+Variance 6: q-on-2
+Variance 7: q-off-2
+Variance 8: q-on-64
+Variance 9: q-on-128
+Variance 10: post-off-1
+Variance 11: post-off-2
+Variance 12: post-bounds
+Variance 13: post-off-3
+Variance 14: post-snapshots
+Variance 15: post-off-4

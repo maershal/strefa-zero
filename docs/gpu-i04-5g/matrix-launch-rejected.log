@@ -1,0 +1,16 @@
+Measuring throughput-q-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5g-results\matrix\q-1"
+Measuring throughput-q-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5g-results\matrix\q-2"
+Measuring throughput-q-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5g-results\matrix\q-3"
+Measuring throughput-q-elapsed-1
+Analyze recorded runtime data with: python scripts/analyze-stabilization.py --input "C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\work\i04-5g-results\matrix\q-4"
+Some PBF runs failed; partial records are preserved.
+At C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\scripts\profile-pbf
+.ps1:50 char:173
++ ... or}).Count){throw 'Some PBF runs failed; partial records are preserve ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : OperationStopped: (Some PBF runs f... are preserved.:String) [], RuntimeException
+    + FullyQualifiedErrorId : Some PBF runs failed; partial records are preserved.
+ 

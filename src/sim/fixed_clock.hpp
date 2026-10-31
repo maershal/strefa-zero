@@ -25,6 +25,8 @@ public:
         accumulator_ = std::max(0.0, accumulator_ - consumed);
         return steps;
     }
+    // Return unsubmitted ticks after transport backpressure; no input was consumed.
+    void defer(int steps) noexcept { accumulator_ += std::max(0,steps)*tick_seconds; }
     void reset() noexcept { accumulator_ = 0; dropped_seconds_ = 0; }
     [[nodiscard]] double dropped_seconds() const noexcept { return dropped_seconds_; }
     // Includes retained whole ticks and the fractional next tick; observation only.

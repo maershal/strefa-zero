@@ -52,6 +52,8 @@ $taskExtraValues=@{
     '--gpu-layout'=@('aos','soa')
     '--gpu-local-size'=@('64','128','256')
     '--gpu-reduction-size'=@('64','128','256')
+    '--gpu-pbf-size'=@('64','128','256')
+    '--gpu-pbf-restrict'=@('off','on')
 }
 $taskSeenExtras=@{}
 for($taskExtraIndex=0;$taskExtraIndex -lt $ExtraArguments.Count;++$taskExtraIndex){
@@ -189,6 +191,13 @@ function Invoke-StabilizationRun($Run) {
     $taskRunOutput=Join-Path $Output $Run.Name
     if(Test-Path -LiteralPath $taskRunOutput){throw "Run directory already exists: $taskRunOutput"}
     New-Item -ItemType Directory -Path $taskRunOutput | Out-Null
+    if($Run.Phase -eq 'throughput' -and $ThroughputScenario -eq 'cost'){
+        # Older cost binaries export tick data before creating scene folders.
+        # Prepare them for both the frozen baseline and the current candidate.
+        foreach($taskScene in @('mission','stress_16k','stress_32k','mission_blast')){
+            New-Item -ItemType Directory -Path (Join-Path $taskRunOutput $taskScene) | Out-Null
+        }
+    }
     $taskFlags=@($(if($Run.Phase -eq 'window'){'--mission-smoke-test'}else{'--gpu-stabilization-profile'}),'--gpu-timer-mode',$Run.Mode)
     if($Run.Phase -eq 'throughput' -and $ThroughputScenario -eq 'cost'){$taskFlags=@('--gpu-cost-profile','--gpu-cost-mode',$CostMode,'--gpu-timer-mode',$Run.Mode)}
     $taskFlags+=@('--gpu-phase-gating',$PhaseGating,'--gpu-zero-projection',$ZeroProjection)

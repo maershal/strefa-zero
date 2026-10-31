@@ -1,0 +1,13 @@
+#version 430 core
+layout(local_size_x=128) in;
+#include "vfx_common.glsl"
+uniform int layer;layout(binding=1) uniform sampler2D sandField;
+void main(){uint id=gl_GlobalInvocationID.x;if(counts.y<=2458u){if(id==0u)atomicAdd(clockState.z,1u);return;}uint stride=quality==1?2u:1u,columns=320u/stride;if(id>=(320u*192u)/(stride*stride))return;ivec2 c=ivec2((id%columns)*stride,(id/columns)*stride);if(vfxSolid(c))return;vec2 p=vec2(c)+.5;if(layer==9){vec4 sand=texelFetch(sandField,c,0);if(sand.b<.15)return;float speed=80.*sand.a/max(sand.b,1e-6);if(speed<16.||!vfxSolid(c+ivec2(0,1)))return;uint seed=hashVfx(id^hashVfx(uint(sourceTick))^uint(sourceGeneration));if(randomVfx(seed)<min(speed/80.,1.)*8.*stepData.z*float(stride*stride)){emitVfx(9u,p,vec2((randomVfx(seed+1u)-.5)*speed*.3,-min(12.,speed*.2)),.22,.45,0x90a1bbd9u,seed,false);}return;}vec4 f=fluidAt(p);float d=f.x;if(d<.15||f.y>d)return;
+    vec4 left=fluidAt(p-vec2(1,0)),right=fluidAt(p+vec2(1,0)),up=fluidAt(p-vec2(0,1)),down=fluidAt(p+vec2(0,1));
+    vec2 gradient=vec2(right.x-left.x,down.x-up.x);float g=length(gradient);if(g<.06||d>.9)return;
+    vec2 normal=-gradient/g,mean=(left.zw*left.x+right.zw*right.x+up.zw*up.x+down.zw*down.x)/max(left.x+right.x+up.x+down.x,1e-6);float relative=length(f.zw-mean),curvature=max(0,4*d-left.x-right.x-up.x-down.x);
+    float crest=clamp(dot(f.zw,normal)/30.,0,1)*clamp(curvature,0,1),air=clamp(relative/35.,0,1);float energy=clamp(relative*relative/900.,0,1);
+    float rate=energy*(crest*5+air*8)*(quality==2?1.:.35);uint seed=hashVfx(id^hashVfx(uint(sourceTick))^uint(sourceGeneration));
+    uint kind=d>.75?7u:d<.3?5u:6u;if(kind!=uint(layer))return;
+    if(randomVfx(seed)<rate*stepData.z*float(stride*stride)){vec2 velocity=f.zw+normal*(kind==5u?relative*.4:0);emitVfx(kind,p,velocity,.4+randomVfx(seed+1u)*1.1,.35+randomVfx(seed+2u)*.35,0xe6e9f7f0u,seed,false);}
+}

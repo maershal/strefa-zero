@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "valid_runs": 16,
+  "rows": 192,
+  "executable_hashes": {
+    "q": [
+      "50dd13f0f4999f1aca209c1fc4783483aba0454a31995dc36578949335c7fdb4"
+    ],
+    "g256": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ],
+    "g64": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ],
+    "g128": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ]
+  },
+  "scope": "Medians of per-process percentiles and within-repeat median changes; no pooled percentile or significance claim."
+}

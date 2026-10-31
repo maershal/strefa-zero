@@ -1,0 +1,33 @@
+﻿{
+    "schema_version":  1,
+    "name":  "window-control",
+    "order":  13,
+    "kind":  "window",
+    "cost_mode":  "off",
+    "visible_requested":  true,
+    "window_observer":  true,
+    "executable":  "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I04_5-G\\StrefaZero.exe",
+    "executable_sha256":  "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e",
+    "arguments":  [
+                      "--mission-smoke-test",
+                      "--gpu-counters",
+                      "--gl-debug",
+                      "--test-vsync",
+                      "off",
+                      "--test-frame-limit",
+                      "60",
+                      "--show-test-window",
+                      "--profile",
+                      "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5g3b-results\\visibility\\window-control"
+                  ],
+    "timeout_seconds":  180,
+    "start_utc":  "2026-10-30T15:41:37.4486250+00:00",
+    "end_utc":  "2026-10-30T15:41:53.3050502+00:00",
+    "pid":  8156,
+    "exit_code":  0,
+    "timed_out":  false,
+    "launch_error":  null,
+    "telemetry_available":  true,
+    "telemetry_error":  null,
+    "observer_samples":  61
+}

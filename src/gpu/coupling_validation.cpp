@@ -29,17 +29,19 @@ void scene(ParticleWorld& world,unsigned count){
     world.load(particles,floor_at(187));MissionConfig config;config.spawn_x=310;world.configure_mission(config);
 }
 }
-std::expected<void,std::string> validate_coupling(const std::filesystem::path& output,bool benchmark,bool reference_control,bool legacy_check){
+std::expected<void,std::string> validate_coupling(const std::filesystem::path& output,bool benchmark,bool reference_control,bool legacy_check,const ExecutionOptions& layout){
     try {
         std::filesystem::create_directories(output);
         const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets/shaders";
         const auto create=[&](const ExecutionOptions& options){auto made=ParticleWorld::create(shaders,options);if(!made)throw std::runtime_error{made.error()};return std::move(*made);};
         if(!benchmark){
         std::ofstream checks{output/"coupling-tests.txt"};
+        checks<<"pbf_size="<<layout.effective_pbf_size()<<" particle_size="<<layout.local_size<<" reduction_size="<<layout.reduction_size<<std::endl;
+        checks<<"pbf_restrict_requested="<<layout.pbf_restrict<<" pbf_restrict_effective="<<layout.effective_pbf_restrict()<<std::endl;
         std::unique_ptr<ParticleWorld> retained;
         for(auto mode:{CouplingMode::local,CouplingMode::combined})for(unsigned local:{64U,128U,256U}){
             if(mode==CouplingMode::local&&local!=256)continue;
-            const auto started=SDL_GetTicksNS();ExecutionOptions options;options.coupling=mode;options.reduction_size=local;auto world=create(options);
+            const auto started=SDL_GetTicksNS();auto options=layout;options.coupling=mode;options.reduction_size=local;auto world=create(options);
             checks<<"world_ready mode="<<static_cast<int>(mode)<<" group="<<local<<" seconds="<<static_cast<double>(SDL_GetTicksNS()-started)/1e9<<std::endl;
             for(unsigned count:{0U,1U,local-1,local,local+1,static_cast<unsigned>(capacity),static_cast<unsigned>(2*capacity)}){
                 world->load({},floor_at(187));MissionConfig config;config.spawn_x=160;config.spawn_y=100;world->configure_mission(config);
@@ -81,7 +83,7 @@ std::expected<void,std::string> validate_coupling(const std::filesystem::path& o
         checks<<"geometry_target="<<(reference_control?"identical_reference_control":"local")<<std::endl;
         checks<<"geometry_acceptance="<<(reference_control||legacy_check?"legacy_ratio":"paired_checkpoint_replay; legacy90 metrics diagnostic")<<std::endl;
         for(unsigned run=0;run<3;++run){
-            const bool local=run==2&&!reference_control;ExecutionOptions options;options.coupling=local?CouplingMode::local:CouplingMode::reference;
+            const bool local=run==2&&!reference_control;auto options=layout;options.coupling=local?CouplingMode::local:CouplingMode::reference;
             auto world=local?std::move(retained):create(options);
             std::vector<Grain> particles;for(int y=140;y<179;++y)for(int x=112;x<149;++x)particles.push_back(particle(x+.53F,y+.47F,y<160?5U:1U));
             world->load(particles,floor_at(180));MissionConfig config;config.spawn_x=130;config.spawn_y=145;world->configure_mission(config);
@@ -115,7 +117,7 @@ std::expected<void,std::string> validate_coupling(const std::filesystem::path& o
                 }
             }
         }
-        if(!reference_control&&!legacy_check)validate_coupling_replay(output,checks);
+        if(!reference_control&&!legacy_check)validate_coupling_replay(output,checks,layout);
         require(glGetError()==GL_NO_ERROR,"OpenGL error during coupling validation");checks<<"status=passed\n";checks.close();
         return {};
         }
@@ -138,7 +140,7 @@ std::expected<void,std::string> validate_coupling(const std::filesystem::path& o
             if(repeat%2==0)std::ranges::reverse(variants);
             for(const auto& variant:variants)for(const auto& test:cases){
                 progress<<"repeat="<<repeat<<" variant="<<variant.name<<" scene="<<test.name<<'\n';progress.flush();
-                const auto create_started=SDL_GetTicksNS();ExecutionOptions options;options.coupling=variant.mode;auto world=create(options);progress<<"world_ready_seconds="<<static_cast<double>(SDL_GetTicksNS()-create_started)/1e9<<std::endl;ProfileOptions profile;profile.collect=true;profile.group_timers=true;world->set_profile_options(profile);scene(*world,test.count);
+                const auto create_started=SDL_GetTicksNS();auto options=layout;options.coupling=variant.mode;auto world=create(options);progress<<"world_ready_seconds="<<static_cast<double>(SDL_GetTicksNS()-create_started)/1e9<<std::endl;ProfileOptions profile;profile.collect=true;profile.group_timers=true;world->set_profile_options(profile);scene(*world,test.count);
                 std::vector<double> external;
                 const auto run=[&](unsigned ticks){for(unsigned i=0;i<ticks;++i){world->step(test.route?scripted_mission_input(static_cast<unsigned>(world->metrics().steps)):MissionInput{});if(i%16==15){glFinish();const auto began=SDL_GetTicksNS();world->poll();external.push_back(static_cast<double>(SDL_GetTicksNS()-began)/1e6);}}drain(*world);};
                 run(120);BodySnapshot initial_body;if(variant.mode!=CouplingMode::reference)initial_body=world->read_body();clear(*world);external.clear();const auto began=SDL_GetTicksNS();run(240);

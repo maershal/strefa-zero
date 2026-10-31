@@ -1,0 +1,18 @@
+{
+  "checks": [
+    {
+      "name": "package-quality",
+      "pid": 20868,
+      "exit_code": 0,
+      "timed_out": false
+    },
+    {
+      "name": "package-mission",
+      "pid": 25008,
+      "exit_code": 0,
+      "timed_out": false
+    }
+  ],
+  "exe_sha256": "8aa6b07f2270cb0c6a49f522d6261f1168133697d24a4d6689165f10c50db3ac",
+  "assets_equal_to_validated_build": true
+}

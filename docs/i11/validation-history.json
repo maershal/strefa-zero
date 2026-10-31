@@ -1,0 +1,200 @@
+[
+  {
+    "name": "quality-initial",
+    "run-result.json": {
+      "exit_code": 1,
+      "timed_out": false,
+      "pid": 12512,
+      "finished_utc": "2026-10-31T16:22:59.3318980Z"
+    },
+    "run-spec.json": {
+      "iteration": "I11",
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "366726BA0A40EBB2E0B417EBA9792C8251318207D87E2D93692674DD510AF57B",
+      "flags": [
+        "--gpu-lighting-check",
+        "--gl-debug"
+      ],
+      "started_utc": "2026-10-31T16:22:57.8763426Z"
+    }
+  },
+  {
+    "name": "quality-2",
+    "run-result.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 9188,
+      "finished_utc": "2026-10-31T16:26:39.0937495Z"
+    },
+    "run-spec.json": {
+      "iteration": "I11",
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "84941EDF86559253FF7F8022EA63209B67C8B9BDEF4AFEA4ED829A7CFC98166F",
+      "flags": [
+        "--gpu-lighting-check",
+        "--gl-debug"
+      ],
+      "started_utc": "2026-10-31T16:26:28.2759867Z"
+    }
+  },
+  {
+    "name": "quality-final",
+    "run-result.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 19992,
+      "finished_utc": "2026-10-31T16:38:47.7617948Z"
+    },
+    "run-spec.json": {
+      "iteration": "I11",
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "A5D986B59D77364006FF993C90DB4DDABAB6DAC93875A0974504F40E925AE1AF",
+      "flags": [
+        "--gpu-lighting-check",
+        "--gl-debug"
+      ],
+      "started_utc": "2026-10-31T16:38:45.1285741Z"
+    }
+  },
+  {
+    "name": "quality-final2",
+    "run-result.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 26308,
+      "finished_utc": "2026-10-31T16:45:35.4845104Z"
+    },
+    "run-spec.json": {
+      "iteration": "I11",
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "09A879025AEA20C6285A2201533068AEDD5FE10BEBBDAB0EDDD5620CAC1D2DFA",
+      "flags": [
+        "--gpu-lighting-check",
+        "--gl-debug"
+      ],
+      "started_utc": "2026-10-31T16:45:32.9490452Z"
+    }
+  },
+  {
+    "name": "ctest-final",
+    "interruption.json": {
+      "intentional_interruption": true,
+      "reason": "Visual inspection found missing restoration of particle SSBO before fluid splat in HDR. Corrected; added equality check of the fluid field across all lighting qualities. A new complete CTest run follows."
+    },
+    "run-result.json": {
+      "exit_code": -1,
+      "timed_out": false,
+      "finished_utc": "2026-10-31T16:42:31.9586640Z",
+      "junit_present": false
+    },
+    "run-spec.json": {
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "a5d986b59d77364006ff993c90db4ddabab6dac93875a0974504f40e925ae1af",
+      "filter": "",
+      "started_utc": "2026-10-31T16:40:50.2883887Z"
+    }
+  },
+  {
+    "name": "ctest-complete",
+    "interruption.json": {
+      "intentional_interruption": true,
+      "reason": "gpu.pbf_restrict_hot_aos_sorted exceeded 600 seconds at creation of sorted compatibility_C=1 programs; the reused case reached the same stage. Comparing I10 and limiting presentation image declarations to birth kernels. Restart full regression on corrected shader set."
+    },
+    "run-result.json": {
+      "exit_code": -1,
+      "timed_out": false,
+      "finished_utc": "2026-10-31T17:11:59.9555995Z",
+      "junit_present": false
+    },
+    "run-spec.json": {
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "09a879025aea20c6285a2201533068aedd5fe10bebbdab0eddd5620cac1d2dfa",
+      "filter": "",
+      "started_utc": "2026-10-31T16:47:07.8238587Z"
+    }
+  },
+  {
+    "name": "ctest-release",
+    "run-result.json": {
+      "exit_code": 8,
+      "timed_out": false,
+      "finished_utc": "2026-10-31T17:50:38.2428447Z",
+      "junit_present": true
+    },
+    "run-spec.json": {
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "d7f3a742958695b84d9642b0bde8d4e4902380507c010fc664e15b1a307899aa",
+      "filter": "",
+      "started_utc": "2026-10-31T17:27:39.0441633Z"
+    }
+  },
+  {
+    "name": "benchmark-inclusive-bloom",
+    "run-result.json": {
+      "exit_code": 0,
+      "timed_out": false,
+      "pid": 7704,
+      "finished_utc": "2026-10-31T18:40:29.2987632Z"
+    },
+    "run-spec.json": {
+      "iteration": "I11",
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "sha256": "CF80AF83B1867192D4B4A7D562CCBAF26ABBAE3B473A27A8CAEE362FBD608709",
+      "flags": "--gpu-lighting-benchmark",
+      "started_utc": "2026-10-31T18:37:53.6773702Z"
+    },
+    "timing-scope-note.json": {
+      "outer_pair_valid": true,
+      "bloom_includes_composition": true,
+      "reason_for_repeat": "Add separate composition boundary, then collect the same complete matrix with separately timed bloom."
+    }
+  },
+  {
+    "name": "mission-after-full-i10",
+    "invalid.json": {
+      "valid": false,
+      "reason": "Nested PowerShell launcher returned before child control processes completed; overlapped with repeated probes, invalid comparison. Both versions must be rerun sequentially."
+    },
+    "run-result.json": {
+      "exit_code": -1,
+      "timed_out": true,
+      "pid": 14000,
+      "finished_utc": "2026-10-31T18:32:09.4551195Z"
+    },
+    "run-spec.json": {
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I10\\StrefaZero.exe",
+      "flags": [
+        "--mission-smoke-test"
+      ],
+      "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\mission-after-full-i10",
+      "timeout_ms": 60000,
+      "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\mission-after-full-i10\\run-result.json",
+      "sha256": "8AE32BE1C809A7022ECAAC6B37E67439CE815DFAB38E0C7F1B4C5389A85FD0C4",
+      "started_utc": "2026-10-31T18:31:08.6951983Z"
+    }
+  },
+  {
+    "name": "mission-after-full-i11",
+    "invalid.json": {
+      "valid": false,
+      "reason": "Nested PowerShell launcher returned before child control processes completed; overlapped with repeated probes, invalid comparison. Both versions must be rerun sequentially."
+    },
+    "run-result.json": {
+      "exit_code": -1,
+      "timed_out": true,
+      "pid": 20144,
+      "finished_utc": "2026-10-31T18:32:56.0620638Z"
+    },
+    "run-spec.json": {
+      "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
+      "flags": [
+        "--mission-smoke-test"
+      ],
+      "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\mission-after-full-i11",
+      "timeout_ms": 60000,
+      "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\mission-after-full-i11\\run-result.json",
+      "sha256": "CF80AF83B1867192D4B4A7D562CCBAF26ABBAE3B473A27A8CAEE362FBD608709",
+      "started_utc": "2026-10-31T18:31:55.4203719Z"
+    }
+  }
+]

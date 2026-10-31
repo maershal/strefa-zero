@@ -1,0 +1,502 @@
+{
+  "schema_version": 1,
+  "valid_runs": 16,
+  "rows": 192,
+  "executable_hashes": {
+    "q": [
+      "50dd13f0f4999f1aca209c1fc4783483aba0454a31995dc36578949335c7fdb4"
+    ],
+    "g256": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ],
+    "g64": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ],
+    "g128": [
+      "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e"
+    ]
+  },
+  "scope": "Medians of per-process percentiles and within-repeat median changes; no pooled percentile or significance claim.",
+  "aggregates": [
+    {
+      "scene": "mission",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 2.9312031249999997,
+      "median_of_p95": 2.9312031249999997,
+      "median_paired_change_vs_q_pct": 0.10289049632019598,
+      "median_paired_change_vs_g256_pct": 0.7731729709035795
+    },
+    {
+      "scene": "mission",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 2.9204729165,
+      "median_of_p95": 2.9204729165,
+      "median_paired_change_vs_q_pct": -0.25912881558358136,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 2.8906043749999997,
+      "median_of_p95": 2.8906043749999997,
+      "median_paired_change_vs_q_pct": -1.2323241795067386,
+      "median_paired_change_vs_g256_pct": -0.9329196104950255
+    },
+    {
+      "scene": "mission",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 2.9281024999999996,
+      "median_of_p95": 2.9281024999999996,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 0.26076873680238033
+    },
+    {
+      "scene": "mission",
+      "metric": "cpu_submit_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 0.008,
+      "median_of_p95": 0.0287,
+      "median_paired_change_vs_q_pct": -1.2347560975609795,
+      "median_paired_change_vs_g256_pct": 0.6329113924050556
+    },
+    {
+      "scene": "mission",
+      "metric": "cpu_submit_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 0.0079,
+      "median_of_p95": 0.022949999999999998,
+      "median_paired_change_vs_q_pct": -2.4542682926829262,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission",
+      "metric": "cpu_submit_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 0.008,
+      "median_of_p95": 0.04115,
+      "median_paired_change_vs_q_pct": -1.84451219512195,
+      "median_paired_change_vs_g256_pct": 1.2658227848101111
+    },
+    {
+      "scene": "mission",
+      "metric": "cpu_submit_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 0.0081,
+      "median_of_p95": 0.03895,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 2.5316455696202445
+    },
+    {
+      "scene": "mission",
+      "metric": "gpu_step_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 2.857648,
+      "median_of_p95": 3.263904,
+      "median_paired_change_vs_q_pct": 0.02324480310095245,
+      "median_paired_change_vs_g256_pct": 0.9693004674392491
+    },
+    {
+      "scene": "mission",
+      "metric": "gpu_step_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 2.8424319999999996,
+      "median_of_p95": 3.245168,
+      "median_paired_change_vs_q_pct": -0.10271411966204513,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission",
+      "metric": "gpu_step_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 2.813744,
+      "median_of_p95": 3.242096,
+      "median_paired_change_vs_q_pct": -1.3441324963487933,
+      "median_paired_change_vs_g256_pct": -1.193007896529824
+    },
+    {
+      "scene": "mission",
+      "metric": "gpu_step_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 2.852272,
+      "median_of_p95": 3.3203199999999997,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 0.1068852899554884
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 3.099951875,
+      "median_of_p95": 3.099951875,
+      "median_paired_change_vs_q_pct": -0.8103069224513482,
+      "median_paired_change_vs_g256_pct": -1.7653223645080316
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 3.1423625,
+      "median_of_p95": 3.1423625,
+      "median_paired_change_vs_q_pct": 1.3445436696911395,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 3.0665539585,
+      "median_of_p95": 3.0665539585,
+      "median_paired_change_vs_q_pct": -1.9003655380588402,
+      "median_paired_change_vs_g256_pct": -1.8657462927459068
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 3.114645417,
+      "median_of_p95": 3.114645417,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": -1.3070302292266078
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "cpu_submit_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 0.008,
+      "median_of_p95": 0.05905,
+      "median_paired_change_vs_q_pct": -2.409638554216864,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "cpu_submit_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 0.008,
+      "median_of_p95": 0.04865,
+      "median_paired_change_vs_q_pct": -1.8072289156626509,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "cpu_submit_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 0.008,
+      "median_of_p95": 0.0421,
+      "median_paired_change_vs_q_pct": -1.8072289156626509,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "cpu_submit_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 0.008150000000000001,
+      "median_of_p95": 0.06225,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 1.8750000000000044
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "gpu_step_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 3.032336,
+      "median_of_p95": 3.478528,
+      "median_paired_change_vs_q_pct": -0.3151120791435702,
+      "median_paired_change_vs_g256_pct": -1.025433593757763
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "gpu_step_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 3.0562240000000003,
+      "median_of_p95": 3.589248,
+      "median_paired_change_vs_q_pct": 0.500571320425458,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "gpu_step_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 3.004288,
+      "median_of_p95": 3.448992,
+      "median_paired_change_vs_q_pct": -1.693530828432005,
+      "median_paired_change_vs_g256_pct": -1.7180427312481317
+    },
+    {
+      "scene": "mission_blast",
+      "metric": "gpu_step_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 3.0452,
+      "median_of_p95": 3.5235519999999996,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": -0.49192020910805434
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 1.774898125,
+      "median_of_p95": 1.774898125,
+      "median_paired_change_vs_q_pct": -0.2832125285176956,
+      "median_paired_change_vs_g256_pct": 0.2715193450174458
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 1.7727914585,
+      "median_of_p95": 1.7727914585,
+      "median_paired_change_vs_q_pct": -0.5691361238704062,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 1.7800614585,
+      "median_of_p95": 1.7800614585,
+      "median_paired_change_vs_q_pct": 0.18885451418237942,
+      "median_paired_change_vs_g256_pct": 0.7636029410364009
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 1.7827233329999999,
+      "median_of_p95": 1.7827233329999999,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 0.5727756167304254
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "cpu_submit_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 0.0059,
+      "median_of_p95": 0.01725,
+      "median_paired_change_vs_q_pct": -1.6666666666666718,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "cpu_submit_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 0.0059,
+      "median_of_p95": 0.0225,
+      "median_paired_change_vs_q_pct": -1.6666666666666718,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "cpu_submit_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 0.0059,
+      "median_of_p95": 0.0176,
+      "median_paired_change_vs_q_pct": -1.6666666666666718,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "cpu_submit_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 0.006,
+      "median_of_p95": 0.03285,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 1.6949152542372836
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "gpu_step_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 1.7948,
+      "median_of_p95": 2.001824,
+      "median_paired_change_vs_q_pct": 0.12975101462276428,
+      "median_paired_change_vs_g256_pct": 0.2810186511204238
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "gpu_step_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 1.78672,
+      "median_of_p95": 2.014128,
+      "median_paired_change_vs_q_pct": -0.5156157560582519,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "gpu_step_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 1.79096,
+      "median_of_p95": 2.077792,
+      "median_paired_change_vs_q_pct": -0.1281903912397575,
+      "median_paired_change_vs_g256_pct": 0.4491154834799671
+    },
+    {
+      "scene": "stress_16k",
+      "metric": "gpu_step_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 1.791312,
+      "median_of_p95": 1.984272,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 0.518573949762835
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 3.264716875,
+      "median_of_p95": 3.264716875,
+      "median_paired_change_vs_q_pct": 0.9320643922965388,
+      "median_paired_change_vs_g256_pct": -0.4929703820031994
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 3.2602445835,
+      "median_of_p95": 3.2602445835,
+      "median_paired_change_vs_q_pct": 0.12952493284997812,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 3.236794375,
+      "median_of_p95": 3.236794375,
+      "median_paired_change_vs_q_pct": -0.2323174448598364,
+      "median_paired_change_vs_g256_pct": -0.7192502566346959
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "batch_mean_step_wall_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 3.252171458,
+      "median_of_p95": 3.252171458,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": -0.12425103944371241
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "cpu_submit_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 0.00605,
+      "median_of_p95": 0.017349999999999997,
+      "median_paired_change_vs_q_pct": 0.027322404371576958,
+      "median_paired_change_vs_g256_pct": 1.6666666666666607
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "cpu_submit_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 0.00595,
+      "median_of_p95": 0.02325,
+      "median_paired_change_vs_q_pct": -1.6393442622950838,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "cpu_submit_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 0.0059,
+      "median_of_p95": 0.01935,
+      "median_paired_change_vs_q_pct": -2.4726775956284195,
+      "median_paired_change_vs_g256_pct": -0.8333333333333359
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "cpu_submit_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 0.00605,
+      "median_of_p95": 0.0215,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": 1.6949152542372947
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "gpu_step_ms",
+      "variant": "g128",
+      "runs": 4,
+      "median_of_medians": 3.2081600000000003,
+      "median_of_p95": 3.73384,
+      "median_paired_change_vs_q_pct": 0.3428653664183656,
+      "median_paired_change_vs_g256_pct": 0.06892034254792345
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "gpu_step_ms",
+      "variant": "g256",
+      "runs": 4,
+      "median_of_medians": 3.205952,
+      "median_of_p95": 3.6961120000000003,
+      "median_paired_change_vs_q_pct": 0.01257622096131894,
+      "median_paired_change_vs_g256_pct": 0.0
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "gpu_step_ms",
+      "variant": "g64",
+      "runs": 4,
+      "median_of_medians": 3.195856,
+      "median_of_p95": 3.6432640000000003,
+      "median_paired_change_vs_q_pct": 0.19563370012933845,
+      "median_paired_change_vs_g256_pct": -0.44197792076591247
+    },
+    {
+      "scene": "stress_32k",
+      "metric": "gpu_step_ms",
+      "variant": "q",
+      "runs": 4,
+      "median_of_medians": 3.20456,
+      "median_of_p95": 3.62648,
+      "median_paired_change_vs_q_pct": 0.0,
+      "median_paired_change_vs_g256_pct": -0.008078806589739695
+    }
+  ]
+}

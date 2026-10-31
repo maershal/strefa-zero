@@ -1,0 +1,24 @@
+Internal ctest changing into directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+Test project /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
+    Start 1: game.vfx_contract
+1/9 Test #1: game.vfx_contract ................   Passed    0.21 sec
+    Start 2: physics.fluid_reference
+2/9 Test #2: physics.fluid_reference ..........   Passed    0.07 sec
+    Start 3: game.protocol
+3/9 Test #3: game.protocol ....................   Passed    0.02 sec
+    Start 4: game.clock
+4/9 Test #4: game.clock .......................   Passed    0.02 sec
+    Start 5: core.settings
+5/9 Test #5: core.settings ....................   Passed    0.12 sec
+    Start 6: sim.materials
+6/9 Test #6: sim.materials ....................   Passed   57.62 sec
+    Start 7: sim.numerics_parallel
+7/9 Test #7: sim.numerics_parallel ............   Passed   39.17 sec
+    Start 8: game.training
+8/9 Test #8: game.training ....................   Passed   80.87 sec
+    Start 9: sim.laboratory_worker
+9/9 Test #9: sim.laboratory_worker ............   Passed    0.19 sec
+
+100% tests passed, 0 tests failed out of 9
+
+Total Test time (real) = 178.85 sec

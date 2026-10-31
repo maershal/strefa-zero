@@ -1,0 +1,2090 @@
+[
+  {
+    "run": "g1-1",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-1",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-1",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-1",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-1",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-1",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-1",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-1",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-1",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-1",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-1",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-1",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-2",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-2",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-2",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-2",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-2",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-2",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-2",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-2",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-2",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-2",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-2",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-2",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-3",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-3",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-3",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-3",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-3",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-3",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-3",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-3",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-3",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-3",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-3",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-3",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-4",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-4",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-4",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-4",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-4",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-4",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-4",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-4",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-4",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-4",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-4",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-4",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-5",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-5",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-5",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-5",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-5",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-5",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-5",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-5",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-5",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-5",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-5",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-5",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-6",
+    "variant": "g1",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-6",
+    "variant": "g1",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-6",
+    "variant": "g1",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g1-6",
+    "variant": "g1",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-6",
+    "variant": "g2on",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-6",
+    "variant": "g2on",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-6",
+    "variant": "g2on",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2on-6",
+    "variant": "g2on",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-6",
+    "variant": "g2off",
+    "scene": "mission",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-6",
+    "variant": "g2off",
+    "scene": "stress_16k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-6",
+    "variant": "g2off",
+    "scene": "stress_32k",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 100.0,
+        "max": 100.0
+      },
+      "barriers": {
+        "median": 100.0,
+        "max": 102.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 24.0,
+        "max": 24.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  },
+  {
+    "run": "g2off-6",
+    "variant": "g2off",
+    "scene": "mission_blast",
+    "ticks": 240,
+    "device_buffer_bytes": 8821476,
+    "metrics": {
+      "dispatches": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "barriers": {
+        "median": 140.0,
+        "max": 142.0
+      },
+      "bins": {
+        "median": 2.0,
+        "max": 2.0
+      },
+      "body_reductions": {
+        "median": 26.0,
+        "max": 26.0
+      },
+      "readback_age_ticks": {
+        "median": 20.0,
+        "max": 28.0
+      }
+    }
+  }
+]

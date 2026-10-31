@@ -1,0 +1,10 @@
+#version 430 core
+layout(local_size_x=128) in;
+#include "lighting_common.glsl"
+layout(binding=3) uniform usampler2D terrainMap;
+layout(r16ui,binding=0) uniform uimage2D oldMask;
+layout(rg16ui,binding=1) writeonly uniform uimage2D seeds;
+uniform int mode;
+void main(){uint i=gl_GlobalInvocationID.x;if(mode==3){if(i==0u)lightCounts.z=1u;return;}if(mode==0){if(i==0u)lightCounts.z=0u;return;}if(i>=61440u)return;ivec2 c=ivec2(i%320u,i/320u);uint v=texelFetch(terrainMap,c,0).r!=0u?1u:0u;
+if(mode==1){if(imageLoad(oldMask,c).r!=v)atomicOr(lightCounts.z,1u);return;}
+if(lightCounts.z==0u)return;imageStore(oldMask,c,uvec4(v));imageStore(seeds,c,v!=0u?uvec4(c,0,0):uvec4(65535u));}

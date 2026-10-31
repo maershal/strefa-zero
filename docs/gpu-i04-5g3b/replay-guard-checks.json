@@ -1,0 +1,20 @@
+{
+  "passed": 3,
+  "checks": [
+    {
+      "case": "reused_plan",
+      "result": "rejected before native launch and output creation",
+      "reason": "already produced QA data"
+    },
+    {
+      "case": "parallel_command",
+      "result": "rejected before native launch and output creation",
+      "reason": "recorded serial CTest"
+    },
+    {
+      "case": "existing_qa_profiles",
+      "result": "rejected before native launch and output creation",
+      "reason": "QA profile directory already exists"
+    }
+  ]
+}

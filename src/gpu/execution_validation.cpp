@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <fstream>
+#include <numbers>
 #include <stdexcept>
 
 namespace strefa::gpu {
@@ -36,6 +37,40 @@ std::vector<Variant> variants(){
     return {{"reference",reference},{"bindings",bindings},{"passes",passes},{"fifo",fifo},{"optimized_256",optimized},
         {"optimized_128",size128},{"optimized_64",size64},{"reduction_128",reduction128},{"reduction_64",reduction64}};
 }
+void pbf_dispatch_checks(const std::filesystem::path& shaders,std::ostream& checks){
+    ProfileOptions quiet;quiet.gpu_timers=false;quiet.readback_period=0;
+    const std::vector<std::uint32_t> walls(width*height);
+    for(unsigned size:{64U,128U,256U}){
+        ExecutionOptions options;options.pbf_size=size;
+        auto made=ParticleWorld::create(shaders,options,quiet);require(made.has_value(),made?"":made.error().c_str());auto& world=**made;
+        double max_error=0;
+        for(unsigned count:{0U,1U,size-1,size,size+1,255U,256U,257U,static_cast<unsigned>(capacity)}){
+            // The final active lane is not the largest ID. An odd permutation
+            // covers sparse stable slots, including the complete capacity.
+            std::vector<Grain> initial(capacity);
+            for(unsigned i=0;i<count;++i){auto& p=initial[(i*2053U)%capacity];const float x=2.5F+static_cast<float>(i%300),y=2.5F+static_cast<float>(i/300);
+                p.position={x,y,x,y};p.motion={0,0,2.65F,5};}
+            world.load(initial,walls);const auto commands=world.read_dispatch_commands();
+            require(commands[detail::active_command]==(count+255)/256,"PBF size changed the granular launch");
+            require(commands[detail::pbf_command]==(count+size-1)/size&&commands[detail::pbf_command+1]==1&&commands[detail::pbf_command+2]==1,"PBF indirect launch misses empty/tail lanes");
+            const auto terms=world.read_fluid_terms();
+            for(unsigned i=0;i<count;++i){
+                // Independent double Poly6 sum over the known regular fixture.
+                double rho=0;const int x=static_cast<int>(i%300),y=static_cast<int>(i/300);
+                for(int dy=-1;dy<=1;++dy)for(int dx=-1;dx<=1;++dx){
+                    const int qx=x+dx,qy=y+dy;if(qx<0||qx>=300||qy<0||static_cast<unsigned>(qy*300+qx)>=count)continue;
+                    rho+=std::pow(4.0-dx*dx-dy*dy,3)/(64*std::numbers::pi);
+                }
+                const double error=std::abs(terms[(i*2053U)%capacity][1]-rho/1.014612762210833);
+                require(std::isfinite(error)&&error<.00001,"PBF density missed a stable ID or disagrees with CPU sum");max_error=std::max(max_error,error);
+            }
+            world.step();const auto after=world.readback();
+            for(unsigned id=0;id<capacity;++id){require(after[id].motion[3]==initial[id].motion[3]&&after[id].motion[2]==initial[id].motion[2],"PBF tail changed identity/mass");
+                if(initial[id].motion[3]>.5F)for(float value:after[id].position)require(std::isfinite(value),"Nonfinite PBF tail state");}
+        }
+        checks<<"pbf_"<<size<<"=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error="<<max_error<<std::endl;
+    }
+}
 }
 
 std::expected<void,std::string> validate_execution(const std::filesystem::path& output,bool benchmark){
@@ -43,6 +78,7 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
         std::filesystem::create_directories(output);std::ofstream checks{output/"execution-tests.txt"};
         const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets/shaders";
         const auto create=[&](const ExecutionOptions& options){auto made=ParticleWorld::create(shaders,options);if(!made)throw std::runtime_error{made.error()};return std::move(*made);};
+        pbf_dispatch_checks(shaders,checks);
         for(unsigned local:{64U,128U,256U}){
             ExecutionOptions options;options.local_size=local;options.reduction_size=local;
             auto world=create(options);ProfileOptions profile;profile.collect=true;profile.group_timers=true;world->set_profile_options(profile);
@@ -61,11 +97,16 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
             }
             // Both query queues wrap and may fill without overwriting pending results.
             scene(*world,65);drain(*world);clear(*world);profile.group_timers=false;world->set_profile_options(profile);
-            const auto before=world->counters();for(unsigned i=0;i<70;++i)world->step();drain(*world);
+            const auto before=world->counters();unsigned admission_retries=0;
+            for(unsigned i=0;i<70;++i){
+                // This fixture tests timer FIFO wrap. Reliable events have their
+                // own bounded admission; a refused tick has submitted no query.
+                while(!world->step()){++admission_retries;drain(*world);}
+            }drain(*world);
             const auto calls=world->counters()-before;
             require(calls.timer_submissions+calls.timer_skips==70,"Query queue did not account for full slots");
             require(world->take_timings().size()==calls.timer_submissions,"Query queue overwrote a pending sample");
-            checks<<"query_queue_"<<local<<" submitted="<<calls.timer_submissions<<" skipped="<<calls.timer_skips<<'\n';
+            checks<<"query_queue_"<<local<<" submitted="<<calls.timer_submissions<<" skipped="<<calls.timer_skips<<" admission_retries="<<admission_retries<<'\n';
             for(unsigned i=0;i<12;++i)world->step();clear(*world);scene(*world,0);drain(*world);
             require(world->take_timings().empty(),"Old-generation timing updated a new world");
             checks<<"groups_"<<local<<"=passed (empty, tails, capacity, FIFO wraps, reset)\n";checks.flush();

@@ -1,0 +1,124 @@
+Test project C:/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-strefa-zero-release
+      Start  1: game.clock
+ 1/54 Test  #1: game.clock ........................   Passed    0.06 sec
+      Start  2: core.settings
+ 2/54 Test  #2: core.settings .....................   Passed    0.02 sec
+      Start  3: sim.materials
+ 3/54 Test  #3: sim.materials .....................   Passed   10.31 sec
+      Start  4: sim.numerics_parallel
+ 4/54 Test  #4: sim.numerics_parallel .............   Passed    7.26 sec
+      Start  5: game.training
+ 5/54 Test  #5: game.training .....................   Passed   21.17 sec
+      Start  6: sim.laboratory_worker
+ 6/54 Test  #6: sim.laboratory_worker .............   Passed    0.15 sec
+      Start  7: app.opengl_smoke
+ 7/54 Test  #7: app.opengl_smoke ..................   Passed    6.96 sec
+      Start  8: app.laboratory_responsiveness
+ 8/54 Test  #8: app.laboratory_responsiveness .....   Passed    5.59 sec
+      Start  9: app.laboratory_four_threads
+ 9/54 Test  #9: app.laboratory_four_threads .......   Passed    5.74 sec
+      Start 10: app.shared_session
+10/54 Test #10: app.shared_session ................   Passed    3.22 sec
+      Start 11: gpu.shader_cache
+11/54 Test #11: gpu.shader_cache ..................   Passed    0.63 sec
+      Start 12: gpu.mission
+12/54 Test #12: gpu.mission .......................   Passed   30.72 sec
+      Start 13: gpu.pbf_64_liquid
+13/54 Test #13: gpu.pbf_64_liquid .................   Passed   10.28 sec
+      Start 14: gpu.pbf_64_mission
+14/54 Test #14: gpu.pbf_64_mission ................   Passed   30.66 sec
+      Start 15: gpu.pbf_64_coupling
+15/54 Test #15: gpu.pbf_64_coupling ...............   Passed    7.11 sec
+      Start 16: gpu.pbf_128_liquid
+16/54 Test #16: gpu.pbf_128_liquid ................   Passed   10.48 sec
+      Start 17: gpu.pbf_128_mission
+17/54 Test #17: gpu.pbf_128_mission ...............   Passed   30.89 sec
+      Start 18: gpu.pbf_128_coupling
+18/54 Test #18: gpu.pbf_128_coupling ..............   Passed    7.22 sec
+      Start 19: gpu.pbf_restrict_bindings
+19/54 Test #19: gpu.pbf_restrict_bindings .........   Passed    0.96 sec
+      Start 20: gpu.pbf_restrict_liquid
+20/54 Test #20: gpu.pbf_restrict_liquid ...........   Passed   10.60 sec
+      Start 21: gpu.pbf_restrict_mission
+21/54 Test #21: gpu.pbf_restrict_mission ..........   Passed   31.06 sec
+      Start 22: gpu.pbf_restrict_coupling
+22/54 Test #22: gpu.pbf_restrict_coupling .........   Passed    7.57 sec
+      Start 23: gpu.pbf_restrict_hot_aos_sorted
+23/54 Test #23: gpu.pbf_restrict_hot_aos_sorted ...   Passed    2.14 sec
+      Start 24: gpu.pbf_restrict_hot_aos_reused
+24/54 Test #24: gpu.pbf_restrict_hot_aos_reused ...   Passed    1.93 sec
+      Start 25: gpu.pbf_restrict_hot_soa_sorted
+25/54 Test #25: gpu.pbf_restrict_hot_soa_sorted ...   Passed    2.40 sec
+      Start 26: gpu.pbf_restrict_hot_soa_reused
+26/54 Test #26: gpu.pbf_restrict_hot_soa_reused ...   Passed    2.31 sec
+      Start 27: gpu.instrumentation
+27/54 Test #27: gpu.instrumentation ...............   Passed    0.95 sec
+      Start 28: gpu.hot_aos_sorted
+28/54 Test #28: gpu.hot_aos_sorted ................   Passed    2.03 sec
+      Start 29: gpu.hot_aos_reused
+29/54 Test #29: gpu.hot_aos_reused ................   Passed    1.95 sec
+      Start 30: gpu.hot_soa_sorted
+30/54 Test #30: gpu.hot_soa_sorted ................   Passed    2.43 sec
+      Start 31: gpu.hot_soa_reused
+31/54 Test #31: gpu.hot_soa_reused ................   Passed    2.31 sec
+      Start 32: gpu.hot_mission_narrow
+32/54 Test #32: gpu.hot_mission_narrow ............   Passed   30.73 sec
+      Start 33: gpu.hot_mission_sorted
+33/54 Test #33: gpu.hot_mission_sorted ............   Passed   31.63 sec
+      Start 34: gpu.hot_immutable
+34/54 Test #34: gpu.hot_immutable .................   Passed    2.35 sec
+      Start 35: gpu.cost_aos
+35/54 Test #35: gpu.cost_aos ......................   Passed    1.17 sec
+      Start 36: gpu.cost_soa
+36/54 Test #36: gpu.cost_soa ......................   Passed    1.23 sec
+      Start 37: gpu.cost_immutable
+37/54 Test #37: gpu.cost_immutable ................   Passed    1.27 sec
+      Start 38: gpu.transport
+38/54 Test #38: gpu.transport .....................   Passed    1.11 sec
+      Start 39: gpu.transport_mission
+39/54 Test #39: gpu.transport_mission .............   Passed   31.69 sec
+      Start 40: gpu.work_gating
+40/54 Test #40: gpu.work_gating ...................   Passed    1.41 sec
+      Start 41: gpu.work_mission
+41/54 Test #41: gpu.work_mission ..................   Passed  127.32 sec
+      Start 42: gpu.work_gating_aos_sorted
+42/54 Test #42: gpu.work_gating_aos_sorted ........   Passed    4.04 sec
+      Start 43: gpu.work_gating_aos_reused
+43/54 Test #43: gpu.work_gating_aos_reused ........   Passed    3.84 sec
+      Start 44: gpu.work_gating_soa_sorted
+44/54 Test #44: gpu.work_gating_soa_sorted ........   Passed    4.02 sec
+      Start 45: gpu.coupling
+45/54 Test #45: gpu.coupling ......................   Passed   25.77 sec
+      Start 46: gpu.neighbors
+46/54 Test #46: gpu.neighbors .....................   Passed    4.49 sec
+      Start 47: gpu.execution
+47/54 Test #47: gpu.execution .....................   Passed    8.31 sec
+      Start 48: gpu.readback_ring
+48/54 Test #48: gpu.readback_ring .................   Passed    2.08 sec
+      Start 49: gpu.mission_ui
+49/54 Test #49: gpu.mission_ui ....................***Timeout  60.23 sec
+
+      Start 50: gpu.granular_physics
+50/54 Test #50: gpu.granular_physics ..............   Passed   11.81 sec
+      Start 51: gpu.liquid_physics
+51/54 Test #51: gpu.liquid_physics ................   Passed   45.00 sec
+      Start 52: gpu.flow_behaviour
+52/54 Test #52: gpu.flow_behaviour ................   Passed   47.05 sec
+      Start 53: gpu.laboratory_ui
+53/54 Test #53: gpu.laboratory_ui .................   Passed   15.49 sec
+      Start 54: app.opengl33_smoke
+54/54 Test #54: app.opengl33_smoke ................   Passed   23.58 sec
+
+98% tests passed, 1 tests failed out of 54
+
+Label Time Summary:
+gpu            = 661.90 sec*proc (44 tests)
+graphics       = 703.77 sec*proc (48 tests)
+integration    = 703.77 sec*proc (48 tests)
+performance    =  11.33 sec*proc (2 tests)
+
+Total Test time (real) = 743.53 sec
+
+The following tests FAILED:
+	 49 - gpu.mission_ui (Timeout)                          gpu graphics integration
+Errors while running CTest

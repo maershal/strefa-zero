@@ -1,0 +1,22 @@
+{
+  "windows_tests": 58,
+  "windows_passed": 58,
+  "windows_failed": [],
+  "windows_skipped": [],
+  "quality_trials": 12,
+  "quality_checkpoints": 1680,
+  "abba_processes": 12,
+  "abba_timing_samples": 8640,
+  "additional_integration": 10,
+  "gpu_budget_limit_ms": 0.25,
+  "gpu_mission_block_deltas_ms": [
+    0.2365759999999999,
+    0.2937439999999998,
+    0.3039360000000002
+  ],
+  "default": "legacy",
+  "experimental": "balanced",
+  "performance_accepted": false,
+  "physical_sources_unchanged_since_matrix": true,
+  "exe_sha256": "9e7d82dbf7d1ddf45bedaa40aee68de7b0e93b687cbbb3f9828da0c16af4f927"
+}

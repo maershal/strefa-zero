@@ -1,0 +1,1 @@
+benchmark=passed (3 ABBA blocks, 3 qualities, 3 scenes, 2 extents; 240 samples per process segment)

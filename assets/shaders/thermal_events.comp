@@ -1,0 +1,11 @@
+#version 430 core
+layout(local_size_x=128) in;
+#include "thermal_common.glsl"
+#define MISSION_READ_ONLY 1
+#include "mission_state.glsl"
+layout(std430,binding=4) readonly buffer Terrain {uint walls[];};
+layout(std430,binding=5) buffer ThermalCells {ThermalCell cells[];};
+layout(std430,binding=7) buffer Cursor {uint padding[278528];uvec4 sourceState;uvec4 eventState;};
+uniform int mode,sourceGeneration,sourceTick;
+bool visible(vec2 a,ivec2 target){ivec2 c=ivec2(floor(a)),start=c;vec2 delta=vec2(target)+.5-a;ivec2 step=ivec2(sign(delta));vec2 inc=vec2(1e20),next=vec2(1e20);for(int k=0;k<2;++k)if(delta[k]!=0){inc[k]=abs(1./delta[k]);next[k]=(float(c[k]+(step[k]>0?1:0))-a[k])/delta[k];}for(int n=0;n<70;++n){if(all(equal(c,target)))return true;if(!validCell(c))return false;if(any(notEqual(c,start))&&walls[indexOf(c)]!=0u)return false;if(abs(next.x-next.y)<1e-6){ivec2 x=c+ivec2(step.x,0),y=c+ivec2(0,step.y);if(!validCell(x)||!validCell(y)||walls[indexOf(x)]!=0u||walls[indexOf(y)]!=0u)return false;c+=step;next+=inc;}else if(next.x<next.y){c.x+=step.x;next.x+=inc.x;}else{c.y+=step.y;next.y+=inc.y;}}return false;}
+void main(){uint i=gl_GlobalInvocationID.x;if(mode==0){if(i==0u){bool accept=eventBatch.header.z==uint(sourceGeneration)&&eventBatch.header.y==uint(sourceTick)&&eventBatch.header.x<=144u&&eventBatch.header.w==0u&&(eventState.x!=uint(sourceGeneration)||uint(sourceTick)>eventState.y);if(accept)eventState=uvec4(uint(sourceGeneration),uint(sourceTick),0,1);else eventState.w=0;}return;}if(i>=uint(TC)||eventState.w==0u)return;float heat=0;ivec2 cell=coordinate(int(i));vec2 p=vec2(cell)+.5;for(uint n=0u;n<eventBatch.header.x;++n){WorldEvent e=eventBatch.events[n];if(e.identity.x!=uint(sourceGeneration)||e.identity.y!=uint(sourceTick)||e.identity.z!=n+1u||any(isnan(e.payload))||any(isinf(e.payload)))continue;bool explosion=e.identity.w==4u;bool hit=e.identity.w==3u||e.identity.w==7u;if(!explosion&&!hit)continue;float radius=explosion?clamp(e.payload.z,1,32):1.5;float weight=max(0,1-length(p-e.payload.xy)/(radius+1));if(weight>0&&visible(e.payload.xy,cell))heat+=weight*(explosion?250.:.3);}if(heat>0&&(cells[i].matter.x>0||gasCapacity(cells[i])>1e-12)){if(cells[i].matter.x>0)cells[i].matter.y+=heat;else cells[i].gas1.z+=heat;cells[i].budget.y+=heat;}}

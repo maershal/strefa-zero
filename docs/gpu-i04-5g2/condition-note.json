@@ -1,0 +1,8 @@
+{
+  "observed_sequence": "Frozen G1 baseline ~2.846752 ms, entire first balanced series G1/G2 OFF/G2 ON ~12 ms, fresh G1 default/explicit controls 2.823328/2.830592 ms.",
+  "initial_matrix": "matrix-slow",
+  "repeat_matrix": "matrix",
+  "reason_for_repeat": "The same immutable baseline recovered without source or GPU-setting changes; one additional full balanced series probes the recovered condition. Both series retained and reported separately.",
+  "not_claimed": "No causal diagnosis of DWM, memory residency, thermal behavior, driver, or system settings; no direct attribution to G2 code.",
+  "gpu_settings_changed": false
+}

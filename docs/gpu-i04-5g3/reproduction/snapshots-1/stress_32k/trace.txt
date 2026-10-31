@@ -1,0 +1,10 @@
+mode=snapshots
+events=24000
+timestamp_pairs=0
+header_copies=19440
+snapshot_copies=72
+snapshots=24
+staging_bytes=87460352
+readback=after explicit glFinish outside the measured batch
+timestamp_scope=dispatch and following barrier, excluding later trace copies; diagnostic estimates include query effects
+candidate_scope=CPU reconstruction of captured index windows; fresh current-position grid is a diagnostic comparison, not a proposed solver

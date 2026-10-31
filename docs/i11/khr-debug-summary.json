@@ -1,0 +1,32 @@
+[
+  {
+    "path": "quality/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  },
+  {
+    "path": "pressure/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  },
+  {
+    "path": "hdr-vfx/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  },
+  {
+    "path": "package-quality/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  },
+  {
+    "path": "package-cpu/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  },
+  {
+    "path": "package-legacy/gl-debug.txt",
+    "error_or_undefined_behavior": 0,
+    "dropped": 0
+  }
+]

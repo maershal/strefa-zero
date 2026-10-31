@@ -1,0 +1,172 @@
+ M CMakeLists.txt
+ M README.md
+ M SHA256SUMS.txt
+ M assets/shaders/granular.comp
+ M assets/shaders/granular.frag
+ M assets/shaders/liquid_splat.frag
+ M assets/shaders/liquid_splat.vert
+ M assets/shaders/liquid_surface.frag
+ M assets/shaders/liquids.comp
+ M assets/shaders/mission.comp
+ M assets/shaders/mission.frag
+ M assets/shaders/mission.vert
+ M assets/shaders/mission_state.glsl
+ M assets/shaders/particle_common.glsl
+ M docs/ARCHITECTURE.md
+ M docs/PLAN_ROZWOJU_GPU.md
+ M docs/QUICKSTART.md
+ M docs/REVIEW_I04_ROZSTRZYGNIECIA.md
+ M scripts/profile-stabilization.ps1
+ M src/app/application.cpp
+ M src/app/application.hpp
+ M src/game/animation.hpp
+ M src/game/session.cpp
+ M src/game/session.hpp
+ M src/gpu/cost_profile.cpp
+ M src/gpu/coupling_replay.cpp
+ M src/gpu/coupling_validation.cpp
+ M src/gpu/dispatch_layout.hpp
+ M src/gpu/execution_validation.cpp
+ M src/gpu/gl_api.hpp
+ M src/gpu/mission.hpp
+ M src/gpu/profiling.cpp
+ M src/gpu/profiling.hpp
+ M src/gpu/stabilization_profile.cpp
+ M src/gpu/world.cpp
+ M src/gpu/world.hpp
+ M src/main.cpp
+ M src/platform/gl_debug.cpp
+ M src/sim/fixed_clock.hpp
+ M src/sim/physics.hpp
+ M src/sim/scenes.cpp
+ M src/sim/thermal.cpp
+ M src/sim/world.cpp
+ M src/sim/world.hpp
+ M src/ui/arena.cpp
+ M src/ui/arena.hpp
+ M src/ui/gpu_laboratory.cpp
+ M src/ui/gpu_laboratory.hpp
+ M src/ui/menu.cpp
+ M tests/sim_tests.cpp
+?? assets/shaders/liquid_filter.frag
+?? assets/shaders/liquid_sampling.glsl
+?? assets/shaders/liquid_thickness.comp
+?? assets/shaders/reference_liquid_splat.frag
+?? assets/shaders/reference_liquid_splat.vert
+?? assets/shaders/reference_liquid_surface.frag
+?? assets/shaders/render_probe.comp
+?? assets/shaders/render_terrain.glsl
+?? assets/shaders/scene_background.frag
+?? assets/shaders/scene_common.glsl
+?? assets/shaders/scene_terrain.frag
+?? assets/shaders/soldier_pose.glsl
+?? assets/shaders/thermal.comp
+?? assets/shaders/thermal_common.glsl
+?? assets/shaders/thermal_condense.comp
+?? assets/shaders/thermal_draw.frag
+?? assets/shaders/thermal_events.comp
+?? assets/shaders/thermal_reduce.comp
+?? assets/shaders/vfx_canvas.frag
+?? assets/shaders/vfx_common.glsl
+?? assets/shaders/vfx_draw.frag
+?? assets/shaders/vfx_draw.vert
+?? assets/shaders/vfx_events.comp
+?? assets/shaders/vfx_field.vert
+?? assets/shaders/vfx_field_command.comp
+?? assets/shaders/vfx_finish.comp
+?? assets/shaders/vfx_init.comp
+?? assets/shaders/vfx_prepare.comp
+?? assets/shaders/vfx_update.comp
+?? assets/shaders/vfx_water.comp
+?? assets/shaders/world_protocol.glsl
+?? docs/I04_5G2_GPU_PBF_RESTRICT.md
+?? docs/I04_5G3B_GPU_REPLAY.md
+?? docs/I04_5G3_GPU_VARIANCE.md
+?? docs/I04_5G_GPU_PBF_GROUPS.md
+?? docs/I05_SHARED_WORLD.md
+?? docs/I06_GAMEPLAY_PROTOCOL.md
+?? docs/I07_FLUID_QUALITY.md
+?? docs/I08_SCENE_RENDERER.md
+?? docs/I09_GPU_VFX.md
+?? docs/I10_GPU_THERMAL.md
+?? docs/PLAN_I10_DOMKNIECIE.md
+?? docs/gpu-i04-5g/
+?? docs/gpu-i04-5g2/
+?? docs/gpu-i04-5g3/
+?? docs/gpu-i04-5g3b/
+?? docs/i05/
+?? docs/i06/
+?? docs/i07/
+?? docs/i08/
+?? docs/i09/
+?? docs/i10/
+?? scripts/__pycache__/
+?? scripts/analyze-fluids.py
+?? scripts/analyze-pbf-restrict.py
+?? scripts/analyze-pbf.py
+?? scripts/analyze-render.py
+?? scripts/analyze-thermal.py
+?? scripts/analyze-variance.py
+?? scripts/analyze-vfx-windows.py
+?? scripts/analyze-vfx.py
+?? scripts/check-thermal-topology.py
+?? scripts/plot-fluids.ps1
+?? scripts/plot-render.ps1
+?? scripts/plot-thermal.ps1
+?? scripts/plot-vfx.ps1
+?? scripts/profile-fluids.ps1
+?? scripts/profile-pbf-restrict.ps1
+?? scripts/profile-pbf.ps1
+?? scripts/profile-render.ps1
+?? scripts/profile-thermal.ps1
+?? scripts/profile-variance.ps1
+?? scripts/profile-vfx.ps1
+?? scripts/variance-gpu-observer.ps1
+?? scripts/variance-window-observer.cs
+?? src/app/cpu_vfx.hpp
+?? src/app/cpu_vfx_validation.cpp
+?? src/app/diagnostic_scenarios.cpp
+?? src/app/diagnostic_scenarios.hpp
+?? src/app/launch_options.cpp
+?? src/app/scenario_runner.hpp
+?? src/app/session_recording.cpp
+?? src/app/session_recording.hpp
+?? src/app/shader_cache_validation.cpp
+?? src/app/simulation_world.cpp
+?? src/app/simulation_world.hpp
+?? src/app/thermal_validation.cpp
+?? src/game/gameplay_session.cpp
+?? src/game/gameplay_session.hpp
+?? src/game/world_protocol.hpp
+?? src/gpu/device_context.hpp
+?? src/gpu/event_ring.cpp
+?? src/gpu/event_ring.hpp
+?? src/gpu/fluid_options.hpp
+?? src/gpu/fluid_quality.cpp
+?? src/gpu/gl_state.hpp
+?? src/gpu/pbf_access_validation.cpp
+?? src/gpu/render_device.hpp
+?? src/gpu/render_options.hpp
+?? src/gpu/render_validation.inl
+?? src/gpu/scene_renderer.cpp
+?? src/gpu/scene_renderer.hpp
+?? src/gpu/shader_cache.hpp
+?? src/gpu/shader_library.cpp
+?? src/gpu/shader_library.hpp
+?? src/gpu/thermal.hpp
+?? src/gpu/thermal_benchmark.inl
+?? src/gpu/thermal_scenes.inl
+?? src/gpu/thermal_system.cpp
+?? src/gpu/thermal_system.hpp
+?? src/gpu/thermal_validation.inl
+?? src/gpu/vfx.hpp
+?? src/gpu/vfx_benchmark.inl
+?? src/gpu/vfx_pool.cpp
+?? src/gpu/vfx_pool.hpp
+?? src/gpu/vfx_replay.inl
+?? src/gpu/vfx_validation.inl
+?? tests/fluid_tests.cpp
+?? tests/gameplay_tests.cpp
+?? tests/thermal_gpu_tests.cpp
+?? tests/thermal_tests.cpp
+?? tests/vfx_tests.cpp

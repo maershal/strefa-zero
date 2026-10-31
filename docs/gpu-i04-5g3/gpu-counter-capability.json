@@ -1,0 +1,30 @@
+{
+    "sample":  [
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_0_engtype_3D",
+                       "UtilizationPercentage":  0
+                   },
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_10_engtype_Copy",
+                       "UtilizationPercentage":  0
+                   },
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_11_engtype_Copy",
+                       "UtilizationPercentage":  0
+                   },
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_12_engtype_Copy",
+                       "UtilizationPercentage":  0
+                   },
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_1_engtype_LegacyOverlay",
+                       "UtilizationPercentage":  0
+                   },
+                   {
+                       "Name":  "pid_10204_luid_0x00000000_0x0000B78D_phys_0_eng_2_engtype_VideoDecode",
+                       "UtilizationPercentage":  0
+                   }
+               ],
+    "count":  283,
+    "available":  true
+}

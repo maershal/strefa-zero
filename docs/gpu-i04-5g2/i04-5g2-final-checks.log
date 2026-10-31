@@ -1,0 +1,8 @@
+START analyzer-fixtures
+Traceback (most recent call last):
+  File "/mnt/c/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/run-i04-5g2-final-checks.py", line 8, in <module>
+    with (d/(name+'.log')).open('w') as log:subprocess.run(args,cwd=r,stdout=log,stderr=subprocess.STDOUT,check=True)
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/subprocess.py", line 571, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['python3', 'work/check-i04-5g2-analyzer.py']' returned non-zero exit status 1.

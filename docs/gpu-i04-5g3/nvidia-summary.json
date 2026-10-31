@@ -1,0 +1,954 @@
+[
+  {
+    "protocol": "controls",
+    "run": "observer-off-1",
+    "samples": 9,
+    "pstate": [
+      "P0",
+      "P8"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 54.0,
+      "max": 62.0
+    },
+    "utilization.gpu": {
+      "min": 10.0,
+      "max": 90.0
+    },
+    "clocks.current.graphics": {
+      "min": 300.0,
+      "max": 1935.0
+    },
+    "clocks.current.memory": {
+      "min": 405.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1049.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "controls",
+    "run": "observer-off-2",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 62.0,
+      "max": 66.0
+    },
+    "utilization.gpu": {
+      "min": 43.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1905.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1048.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "controls",
+    "run": "observer-on-1",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 59.0,
+      "max": 63.0
+    },
+    "utilization.gpu": {
+      "min": 33.0,
+      "max": 90.0
+    },
+    "clocks.current.graphics": {
+      "min": 1905.0,
+      "max": 1920.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1049.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "controls",
+    "run": "observer-on-2",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 61.0,
+      "max": 64.0
+    },
+    "utilization.gpu": {
+      "min": 42.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1905.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1053.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "bounds",
+    "samples": 12,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 67.0,
+      "max": 70.0
+    },
+    "utilization.gpu": {
+      "min": 49.0,
+      "max": 93.0
+    },
+    "clocks.current.graphics": {
+      "min": 1890.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1012.0,
+      "max": 1052.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-bounds",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 68.0,
+      "max": 71.0
+    },
+    "utilization.gpu": {
+      "min": 42.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1875.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1051.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-idle",
+    "samples": 10,
+    "pstate": [
+      "P0",
+      "P8"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 66.0,
+      "max": 73.0
+    },
+    "utilization.gpu": {
+      "min": 7.0,
+      "max": 90.0
+    },
+    "clocks.current.graphics": {
+      "min": 300.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 405.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1009.0,
+      "max": 1041.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-q128",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 64.0,
+      "max": 69.0
+    },
+    "utilization.gpu": {
+      "min": 29.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1470.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1012.0,
+      "max": 1052.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-q64",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 63.0,
+      "max": 68.0
+    },
+    "utilization.gpu": {
+      "min": 9.0,
+      "max": 95.0
+    },
+    "clocks.current.graphics": {
+      "min": 1425.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1015.0,
+      "max": 1051.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-snapshots",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 69.0,
+      "max": 72.0
+    },
+    "utilization.gpu": {
+      "min": 2.0,
+      "max": 95.0
+    },
+    "clocks.current.graphics": {
+      "min": 1860.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1049.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-visible",
+    "samples": 11,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 73.0,
+      "max": 77.0
+    },
+    "utilization.gpu": {
+      "min": 11.0,
+      "max": 94.0
+    },
+    "clocks.current.graphics": {
+      "min": 1830.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1018.0,
+      "max": 1053.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-after-window",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 75.0,
+      "max": 78.0
+    },
+    "utilization.gpu": {
+      "min": 18.0,
+      "max": 92.0
+    },
+    "clocks.current.graphics": {
+      "min": 1845.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1048.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-before-1",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 62.0,
+      "max": 67.0
+    },
+    "utilization.gpu": {
+      "min": 4.0,
+      "max": 93.0
+    },
+    "clocks.current.graphics": {
+      "min": 1395.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1053.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-before-2",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 64.0,
+      "max": 68.0
+    },
+    "utilization.gpu": {
+      "min": 33.0,
+      "max": 86.0
+    },
+    "clocks.current.graphics": {
+      "min": 1905.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1015.0,
+      "max": 1048.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-before-visible",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 71.0,
+      "max": 74.0
+    },
+    "utilization.gpu": {
+      "min": 52.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1860.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1044.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "hidden-closing",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 72.0,
+      "max": 75.0
+    },
+    "utilization.gpu": {
+      "min": 7.0,
+      "max": 90.0
+    },
+    "clocks.current.graphics": {
+      "min": 1845.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1003.0,
+      "max": 1043.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "passes",
+    "samples": 11,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 71.0,
+      "max": 73.0
+    },
+    "utilization.gpu": {
+      "min": 28.0,
+      "max": 92.0
+    },
+    "clocks.current.graphics": {
+      "min": 1860.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1049.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "q-trigger-128",
+    "samples": 15,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 64.0,
+      "max": 67.0
+    },
+    "utilization.gpu": {
+      "min": 24.0,
+      "max": 83.0
+    },
+    "clocks.current.graphics": {
+      "min": 1380.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1014.0,
+      "max": 1099.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "q-trigger-64",
+    "samples": 15,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 63.0,
+      "max": 67.0
+    },
+    "utilization.gpu": {
+      "min": 11.0,
+      "max": 84.0
+    },
+    "clocks.current.graphics": {
+      "min": 1365.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1016.0,
+      "max": 1101.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "snapshots-1",
+    "samples": 15,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 68.0,
+      "max": 72.0
+    },
+    "utilization.gpu": {
+      "min": 40.0,
+      "max": 84.0
+    },
+    "clocks.current.graphics": {
+      "min": 1875.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1051.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "snapshots-2",
+    "samples": 15,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 71.0,
+      "max": 74.0
+    },
+    "utilization.gpu": {
+      "min": 16.0,
+      "max": 93.0
+    },
+    "clocks.current.graphics": {
+      "min": 1860.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1005.0,
+      "max": 1048.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "validation",
+    "samples": 3,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 63.0,
+      "max": 63.0
+    },
+    "utilization.gpu": {
+      "min": 4.0,
+      "max": 72.0
+    },
+    "clocks.current.graphics": {
+      "min": 1905.0,
+      "max": 1905.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1061.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "visible-1",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 72.0,
+      "max": 75.0
+    },
+    "utilization.gpu": {
+      "min": 59.0,
+      "max": 85.0
+    },
+    "clocks.current.graphics": {
+      "min": 1860.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1013.0,
+      "max": 1055.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "visible-2",
+    "samples": 10,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 72.0,
+      "max": 76.0
+    },
+    "utilization.gpu": {
+      "min": 49.0,
+      "max": 84.0
+    },
+    "clocks.current.graphics": {
+      "min": 1845.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1018.0,
+      "max": 1060.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  },
+  {
+    "protocol": "reproduction",
+    "run": "window-control",
+    "samples": 32,
+    "pstate": [
+      "P0"
+    ],
+    "name": [
+      "NVIDIA GeForce GTX 1650"
+    ],
+    "driver_version": [
+      "610.47"
+    ],
+    "temperature.gpu": {
+      "min": 73.0,
+      "max": 76.0
+    },
+    "utilization.gpu": {
+      "min": 22.0,
+      "max": 80.0
+    },
+    "clocks.current.graphics": {
+      "min": 1710.0,
+      "max": 1890.0
+    },
+    "clocks.current.memory": {
+      "min": 4001.0,
+      "max": 4001.0
+    },
+    "memory.used": {
+      "min": 1015.0,
+      "max": 1060.0
+    },
+    "memory.total": {
+      "min": 4096.0,
+      "max": 4096.0
+    }
+  }
+]

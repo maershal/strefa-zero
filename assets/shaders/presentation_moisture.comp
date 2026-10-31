@@ -1,0 +1,13 @@
+#version 430 core
+layout(local_size_x=128) in;
+#define PARTICLE_RENDER 1
+#include "particle_storage.glsl"
+#include "presentation_birth.glsl"
+layout(binding=0) uniform sampler2D presentationField;
+layout(binding=1) uniform sampler2D heatField;
+uniform int heatEnabled;
+void main(){uint id=gl_GlobalInvocationID.x;if(id>=32768u)return;Grain p=readParticle(id);ivec2 slot=ivec2(id%256u,id/256u);
+if(p.motion.w!=1.){imageStore(presentationMoisture,slot,vec4(0));return;}
+ivec2 cell=clamp(ivec2(p.position.xy),ivec2(0),ivec2(319,191));float water=texelFetch(presentationField,cell,0).r;
+float t=heatEnabled!=0?texelFetch(heatField,cell,0).r:293.15;float rate=clamp(1.+max(0.,t-293.15)/100.,1.,8.);
+float wet=imageLoad(presentationMoisture,slot).r;wet=clamp(wet+(water>.12?4.:-rate/30.)/120.,0.,1.);imageStore(presentationMoisture,slot,vec4(wet));}

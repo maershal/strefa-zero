@@ -1,7 +1,7 @@
 # Review v0.7.0-i04 — przyjęte zadania i rozstrzygnięcia
 
 Data: 2026-10-29. Baza: lokalne źródła `6f318ea` (`v0.7.0-i04`). Aktualizacja: 2026-10-30.
-Status: **A/F wdrożone; B/C/D zbadane; E0 zakończone; Q zmieniło metodę odbioru sprzężenia po kontroli identycznych referencji (1/16 odrzuconych). 38/38 w nowym protokole Q, 12/12 powtórek i 12/12 wykrytych usterek. Dawna reguła nadal diagnostyczna, solver bez zmian. Domyślne full/direct, opcje C i sondy OFF. Następne PBF G; lokalny E i cel 1,5 ms otwarte**. [A/F](I04_5_GPU_STABILIZATION.md), [C](I04_5C_GPU_WORK.md), [B](I04_5B_GPU_TRANSPORT.md), [D](I04_5D_GPU_NEIGHBOR_READS.md), [E0](I04_5E0_GPU_COSTS.md), [Q i aktualne QA](I04_5Q_GPU_COUPLING_QA.md).
+Status: **2026-10-30 — użytkownik zdecydował o odłożeniu I04.5 i przejściu do I05. Cel 1,5 ms oraz przyczyna zmienności pozostają nieodebrane; G3-C odłożone. I05 wdrożone, regresja Windows 53/54; timeout okna misji także na poprzedniej I04.5.** [Raport I05](I05_SHARED_WORLD.md). Historia i dane G3-B pozostają bez zmian.
 
 Aktualne QA po B: **28/28 PASS**, bez zmiany limitów/tolerancji. Historyczny C 22/26 i powtórka 3/4 przed B są zachowane. B nie wykazało spójnej przewagi transportu; powrót szybszego reżimu nastąpił na identycznym EXE i nie jest dowodem naprawy historycznej zmienności.
 
@@ -33,7 +33,7 @@ Planem wykonawczym pozostaje [PLAN_ROZWOJU_GPU.md](PLAN_ROZWOJU_GPU.md). Ten pli
 | §4.10, TIP: dalsze eksperymenty | APIC/FLIP, ciecz 0,5 i Radiance Cascades po odbiorze I08–I11; shape matching pozostaje warunkowy po podstawowej destrukcji/VFX | Uzasadnienie potrzeby, budżet i osobne A/B; żadnej gwarancji, że obecny PBF rozwiąże każdy problem |
 | Część V: deklaracje QA autora | Zachować jako opis review, bez dopisywania do własnych PASS | Własne przyszłe raporty zawierają komendy, środowisko, wyniki i surowe artefakty |
 
-Priorytet wykonania: **P0 I04.5 → P1 I05/I06 → P2 I07–I10 → P3 I11**. Szczegółowe zależności i checklisty są w głównym planie. Zapisanie zadania nie oznacza zaliczenia jego bramki.
+Priorytet po decyzji użytkownika 2026-10-30: **I05 → I06 → I07–I10 → I11**; I04.5 odłożone bez odbioru celu. Szczegółowe zależności i checklisty są w głównym planie. Zapisanie zadania nie oznacza zaliczenia jego bramki.
 
 ## 2. Korekty i hipotezy wymagające sprawdzenia
 
@@ -82,3 +82,7 @@ Stan po D, przed E0: badanie D porównało full/narrow/sorted w 18 procesach. Ca
 Stan po E0, przed Q: E0 wykonało 16/16 pomiarów i 6/6 kontroli, z 384 snapshotami bez pominiętych geometrycznych par. Profil wskazał PBF i kontakty ziaren; lokalnego Dmax nie wdrożono. Pełne QA 37/38 zachowuje błąd sprzężenia: powtórka E0 przeszła, niezmienione D odtworzyło ten sam błąd. Nie zmieniono tolerancji. Najpierw baza QA, potem punktowy eksperyment PBF G. [Raport E0](I04_5E0_GPU_COSTS.md).
 
 Q wykazało fałszywe odrzucenie identycznych referencji przez dawną regułę (1/16). Metodę odbioru zmieniono jawnie na wspólne checkpointy i stałe budżety; 12/12 powtórek i wykryte wszystkie celowe wyłączenia sprzężenia. Pełne 38/38 dotyczy nowego protokołu. Nie jest to zaliczenie dawnego ilorazu ani naprawa deterministyczności fizyki; stare wyniki pozostają. [Raport Q](I04_5Q_GPU_COUPLING_QA.md).
+
+Stan po G3-A: dodano obserwację zewnętrzną i pojedynczą ustaloną serię bodźców, bez zmiany solvera. Własny narzut sond oddzielono kontrolami OFF; obserwator ma kontrolę OFF/ON/ON/OFF, koszt workera WMI nie jest osobno wyizolowany. Wysoki CPU wystąpił także przy GPU około 2,9 ms. Nie ma wolnego reżimu z przechwyconą geometrią, więc nie zamykamy hipotez DWM/VRAM/sterownika ani nie przypisujemy ich na podstawie samej telemetrii. Następne G3-B wymaga pełnego historycznego preludium i uchwycenia rzeczywistego spowolnienia. [Raport G3-A](I04_5G3_GPU_VARIANCE.md).
+
+Stan po G3-B: pełne wcześniejsze obciążenie raz odtworzyło wolną G1 i pozwoliło zebrać ślady Dmax/rekonstrukcje w tym reżimie. Mała zmienność kandydatów misji i identyczne badane histogramy 16k/32k nie uzasadniają lokalnego Dmax jako naprawy skoku. Nie rozpoznano limitu mocy/zegara ani błędu sterownika. Powrót wydajności nastąpił przed widoczną próbą; fokus w follow-up nie został uzyskany. G3-C rozdziela upływ czasu i nowy proces nadrzędny oraz uzupełnia stan wykonania. [Raport G3-B](I04_5G3B_GPU_REPLAY.md).

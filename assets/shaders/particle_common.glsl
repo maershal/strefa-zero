@@ -46,7 +46,7 @@ const int operation=PASS_OPERATION;
 uniform int operation;
 #endif
 const uint REBUILD_COMMAND=7u,SYNC_COMMAND=10u,TERRAIN_COMMAND=13u,
-    BLAST_COMMAND=16u,BLAST_TERRAIN_COMMAND=19u,DEBRIS_COMMAND=22u,REDUCTION_COMMAND=25u,BODY_REDUCE_COMMAND=28u,BODY_FINAL_COMMAND=31u;
+    BLAST_COMMAND=16u,BLAST_TERRAIN_COMMAND=19u,DEBRIS_COMMAND=22u,REDUCTION_COMMAND=25u,BODY_REDUCE_COMMAND=28u,BODY_FINAL_COMMAND=31u,PBF_COMMAND=34u;
 uniform int substep;
 #if HOT_READS == 2 && SORTED_NEIGHBORS
 uniform int hotReadBank,hotWriteBank,hotValid;
@@ -56,7 +56,35 @@ uniform float brushRadius;
 uniform int material;
 const int W=320,H=192,N=32768;
 void dispatchCommand(uint offset,uint groups){slots[uint(2*N)+offset]=groups;slots[uint(2*N)+offset+1u]=1u;slots[uint(2*N)+offset+2u]=1u;}
+#ifndef FLUID_SUBSTEPS
+#define FLUID_SUBSTEPS 2
+#endif
+#if FLUID_SUBSTEPS == 2
 const float dt=1.0/240.0,R=.46;
+#else
+const float dt=1.0/480.0,R=.46;
+#endif
+const uint FLUID_SCRATCH=uint(N)*(COUPLING_MODE==0?2u:3u);
+vec4 fluidDensity(uint id){return terms[FLUID_SCRATCH+id];}
+vec4 fluidGeometry(uint id){return terms[FLUID_SCRATCH+uint(N)+id];}
+bool solid(ivec2 p);
+float boundaryVolume(ivec2 c){
+#if FLUID_BOUNDARY_VOLUME
+    // The implicit exterior is solid too. Clamping to an empty interior cell
+    // would erase its density contribution; clamping to an edge cell would
+    // reuse the wrong sample volume. Normalize the virtual sample itself.
+    if(c.x<0||c.y<0||c.x>=W||c.y>=H){
+        float sum=0;
+        for(int y=-2;y<=2;++y)for(int x=-2;x<=2;++x)if(solid(c+ivec2(x,y))){
+            float q=max(0.0,4.0-float(x*x+y*y));sum+=q*q*q/(64.0*3.141592653589793);
+        }
+        return 1.014612762210833/max(sum,1e-8);
+    }
+    return uintBitsToFloat(wall[4*W*H+c.y*W+c.x]);
+#else
+    return 1.0;
+#endif
+}
 void appendBodyEntry(uint taggedId,vec4 reaction){
 #if COUPLING_MODE != 0
     if(!bodyCouplingEnabled()||all(equal(reaction.xyz,vec3(0))))return;
@@ -76,6 +104,15 @@ void writeBodyReaction(uint id,vec4 reaction,bool fluid){
     if(fluid)tagged+=uint(N);
 #endif
     terms[uint(N)+tagged]=reaction;appendBodyEntry(tagged,reaction);
+#endif
+}
+float capsuleVolume(vec2 samplePosition){
+#if FLUID_BOUNDARY_VOLUME
+    ivec2 local=ivec2(floor(samplePosition-game.actor.xy));
+    if(local.x< -4||local.x>=4||local.y< -18||local.y>=0)return 0;
+    return uintBitsToFloat(wall[5*W*H+(local.y+18)*8+local.x+4]);
+#else
+    return 1.0;
 #endif
 }
 bool bodyFluidCandidate(vec2 p){

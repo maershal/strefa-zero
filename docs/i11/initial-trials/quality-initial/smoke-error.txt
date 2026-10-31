@@ -1,0 +1,3 @@
+0(71) : error C7529: OpenGL does not allow #include directives
+0(72) : error C0109: Can't open include file "presentation_birth.glsl"
+0(547) : error C1503: undefined variable "presentationBirth"

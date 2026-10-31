@@ -1,0 +1,16 @@
+{
+  "date": "2026-10-30",
+  "timezone": "Europe/Warsaw",
+  "cpu": "Intel Core i5-9300HF @ 2.40 GHz",
+  "cores": 4,
+  "logical_processors": 8,
+  "gpu": "NVIDIA GeForce GTX 1650",
+  "driver": "610.47",
+  "context": "OpenGL 4.3",
+  "windows_compiler": "MSVC 14.51.36231 / Visual Studio 18.9.2",
+  "gcc": "13.3.0",
+  "build_type": "Release",
+  "warnings_as_errors": true,
+  "exe_sha256": "8ddcabfd117c58d2e7c688382ba8d399b3173ad7be68c33ce98ddff977cb8fe2",
+  "gpu_test_policy": "serial CTest; default 256/full/direct, restrict OFF, C OFF; diagnostic variant tests opt in explicitly"
+}

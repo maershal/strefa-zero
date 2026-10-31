@@ -1,0 +1,10 @@
+boundary_unit_volume_CPU,thin_line,isolated,corner,edit=passed
+thin_wall_pressure_occlusion=passed
+implicit_world_boundary_double_oracle=passed
+capsule_boundary_double_oracle=passed
+narrow_channel_transport=passed
+destruction_boundary_refresh=passed
+surface_2D_double_oracle,unequal_mass_pair_momentum=passed
+adhesion_2D_double_oracle,capsule_opposite_impulse=passed
+vorticity_rest,translation,shear,both_signs,RMS_cap=passed
+status=passed

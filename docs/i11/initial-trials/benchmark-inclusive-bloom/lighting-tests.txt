@@ -1,0 +1,7 @@
+day_benchmark=PASS
+night_benchmark=PASS
+fire_benchmark=PASS
+explosion_benchmark=PASS
+water_benchmark=PASS
+sand_benchmark=PASS
+benchmark=PASS; 6 scenes, 2 qualities, 3 ABBA, 240 frames; candidate pair contains 2 presentation ticks and render; off reference omits I11 ticks to include their full incremental cost, frozen physics

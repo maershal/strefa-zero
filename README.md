@@ -2,7 +2,7 @@
 
 ## Repozytorium
 
-Prywatne repozytorium: https://github.com/maershal/strefa-zero. Do pobrania i wysyłania zmian wymagany jest dostęp do repozytorium na GitHubie.
+Repozytorium projektu: [maershal/strefa-zero](https://github.com/maershal/strefa-zero).
 
 ```powershell
 git clone https://github.com/maershal/strefa-zero.git
@@ -83,7 +83,9 @@ Narzędzie `StrefaPhysics.exe` uruchamia sceny bez okna:
 
 ## Plan dalszych iteracji
 
-**Aktualizacja planu 2026-10-30:** [uwagi review I04 włączono do planu](docs/REVIEW_I04_ROZSTRZYGNIECIA.md). Kolejny etap to **I04.5 — diagnoza okna/pamięci, ograniczenie pustej pracy GPU i kolor gruzu**, przed I05. Rozszerzono również zakres I05–I11 o sterowanie, kontrakt zdarzeń, narzędzia i kryteria odbioru. Wdrożono już [I04.5-A/F](docs/I04_5_GPU_STABILIZATION.md): pełny pomiar klatki/present, trzy tryby timerów, telemetrię i kolor gruzu. Regresje 21/21 oraz końcowe kontrole 4/4 przeszły. Cały I04.5 pozostaje otwarty.
+**I06 (2026-10-30):** dodano jedną sesję reguł CPU, numerowane komendy i niezawodne zdarzenia, potwierdzenia i zwroty amunicji, tolerancję skoku, wejście poza areną oraz wspólną pozę/IK. [Raport I06](docs/I06_GAMEPLAY_PROTOCOL.md) zawiera walidację i jawne ograniczenia. Końcowe serie direct osiągają p95 CPU submit 0,029–0,042 ms/tick; wcześniejsze wyższe wyniki pozostają w raporcie, a stabilność wydajności jest nadal otwarta.
+
+**Aktualizacja 2026-10-30:** decyzją użytkownika **I04.5 odłożono** z niespełnionym celem 1,5 ms i nierozpoznaną przyczyną skoków GPU. G3-C nie jest kontynuowane. Wdrożono **[I05 — jeden świat gry i narzędzi](docs/I05_SHARED_WORLD.md)**: jeden komplet 42 programów, zachowanie sceny między widokami, leniwe tworzenie CPU, opcjonalny cache shaderów i nagrywanie/odtwarzanie wspólnej sesji. Regresja Windows: 53/54, timeout okna misji wystąpił także na poprzedniej I04.5; szczegóły w raporcie I05.
 
 **Eksperyment I04.5-C:** przeprowadzono 16 z 16 zaplanowanych pomiarów przepustowości [wariantów maski faz i lokalnego potwierdzenia projekcji](docs/I04_5C_GPU_WORK.md). Nie potwierdzono przyspieszenia. Opcje `phase_gating` i `skip_zero_projection` pozostają domyślnie OFF; wyniki QA są prowadzone w raporcie C. Poprawiono przekazywanie początkowej polityki odczytów do świata, także w starszych helperach. Badanie transportu opisuje [raport I04.5-B](docs/I04_5B_GPU_TRANSPORT.md); Wyniki późniejszego badania odczytów są w raporcie D poniżej.
 
@@ -93,9 +95,17 @@ Narzędzie `StrefaPhysics.exe` uruchamia sceny bez okna:
 
 **Stan po I04.5-E0, przed Q — profil kosztów i Dmax:** **16/16 pomiarów**, **6/6 kontroli**, 384 snapshoty. Profil wskazuje PBF w misji i kontakt ziaren w dużych scenach; lokalny Dmax odroczono, sondy pozostają OFF. Pełne QA **37/38**: zmienność wcześniejszego testu sprzężenia odtworzono także na niezmienionym D. Najpierw wymaga wyjaśnienia baza QA, potem punktowe strojenie PBF. [Raport E0](docs/I04_5E0_GPU_COSTS.md).
 
-**I04.5-Q — metoda QA sprzężenia:** stara reguła odrzuciła identyczne referencje 1/16. Nowe odtwarzanie wspólnych stanów i stałe budżety przeszły **12/12** powtórek, wykrywając każde celowe wyłączenie sprzężenia. **38/38 w nowym protokole Q**; dawna reguła pozostaje diagnostyką, solver nie został zmieniony. Następne jest punktowe PBF G. [Raport Q](docs/I04_5Q_GPU_COUPLING_QA.md).
+**I04.5-Q — metoda QA sprzężenia:** stara reguła odrzuciła identyczne referencje 1/16. Nowe odtwarzanie wspólnych stanów i stałe budżety przeszły **12/12** powtórek, wykrywając każde celowe wyłączenie sprzężenia. **38/38 w nowym protokole Q**; dawna reguła pozostaje diagnostyką, solver nie został zmieniony. Późniejsze badanie grup opisuje G1 poniżej. [Raport Q](docs/I04_5Q_GPU_COUPLING_QA.md).
 
-[Plan rozwoju GPU, wspólnego świata, wody i efektów](docs/PLAN_ROZWOJU_GPU.md) zawiera analizę review architektury z 2026-10-28, kolejność wdrożenia, zależności, cele pomiarowe i rejestr postępu. Wdrożono [instrumentację I00](docs/I00_GPU_PROFILING.md) i [pierścień odczytów I01](docs/I01_GPU_READBACK.md). Domyślny HUD korzysta z trzech slotów i odczytu na poziomie klatki, z trwałym mapowaniem lub fallbackiem GL 4.3. Wdrożono również [I02 — przebiegi, wiązania i FIFO](docs/I02_GPU_EXECUTION.md): 27 programów compute, około 72% mniej wywołań GL w porównywanym ticku i około 7% krótszy krok GPU misji w kontrolowanej serii. Wdrożono [I03 — dane i kompletne sąsiedztwo](docs/I03_GPU_NEIGHBORS.md): sortowane zakresy stabilnych ID, SoA, 42/43 → 2 budowy indeksu na tick i około 15% krótszy krok GPU misji względem ścieżki I02 w kontrolowanym A/B. Wdrożono [I04 — lokalne reakcje postaci](docs/I04_GPU_COUPLING.md): zwarta kolejka rzeczywistych reakcji, osobne kanały, redukcja hierarchiczna i ograniczenie próbek kapsuły do jej otoczenia. Domyślny combined łączy redukcję PBF i kontaktu, z osobnymi kanałami reakcji. Aktualny zakres po review: punktowy eksperyment PBF G po jawnej zmianie metody QA w Q. Lokalny E pozostaje warunkowy. B/D zakończono jako badania; full/direct pozostają domyślne. Obie opcje C pozostają OFF; następnie wymagany jest odbiór całego I04.5 przed I05 — wspólnym silnikiem i zasobami. Końcowa regresja I04: 21/21, okna combined 3/3; 16k/32k ziaren około 29%/33% krócej na GPU. Zysk małej misji nie jest potwierdzony, a cel 1,5 ms pozostaje otwarty. Historyczne spowolnienia opisano i zachowano w raportach.
+**I04.5-G1 — niezależne grupy PBF:** `--gpu-pbf-size 64|128|256`, przy zachowaniu ziaren i redukcji 256. **44/44 QA**, po trzy powtórki Q na konfigurację, **16/16** końcowych pomiarów i **8/8** widocznych okien z fokusem bez utraty czasu. Brak powtarzalnego zysku: misja G 256/64 **2,83006/2,82413 ms**, więc domyślne 256 pozostaje bez zmian. Cel GPU 1,5 ms otwarty. [Raport G1](docs/I04_5G_GPU_PBF_GROUPS.md) zawiera kompletne dane, próby wstępne i odrębną propozycję G2; `scripts/profile-pbf.ps1` i `scripts/analyze-pbf.py` odtwarzają porównanie z opublikowaną Q.
+
+**I04.5-G2 — kontrakt dostępu do banków PBF:** `--gpu-pbf-restrict on|off` obejmuje wyłącznie korektę i XSPH; domyślnie OFF. **52/52 QA**, 128/128 odrzuconych błędów wiązań, 8/8 Q i usterek, 6/6 widocznych okien z fokusem. Dwie serie po 18/18 procesów nie potwierdziły powtarzalnego przyspieszenia; w szybszej OFF/ON **2,81512/2,81293 ms**. Ta sama niezmieniona G1 miała około **2,8→12→2,8 ms**; przyczyna otwarta. [Raport G2](docs/I04_5G2_GPU_PBF_RESTRICT.md) zachowuje obie serie, faktyczne źródła GL, ograniczenia i punkt wyjścia do diagnozy G3.
+
+**I04.5-G3-A — obserwacja zmienności:** runtime bez zmian; nowy harness zapisuje stan okna/fokusu, CPU, AC, priorytet i liczniki silników GPU. **25/25 procesów + 2/2 kontrole**, 13/13 negatywnych kontroli analyzera, 384 rekonstrukcje bez pominiętych par. Ukryta misja G1 bez sond **2,785–2,898 ms**; skoku do 12 ms nie odtworzono. Przyczyna i cel 1,5 ms nadal otwarte. [Raport G3-A](docs/I04_5G3_GPU_VARIANCE.md) zachowuje narzut, dane i wynik pierwszej ograniczonej próby; dalsze odtworzenie opisuje G3-B poniżej.
+
+**I04.5-G3-B — wolny reżim odtworzony:** niezmieniona G1 po pełnym QA + Q zmieniła misję z **2,77 na 11,34 ms/tick**, a później wróciła do około 2,8 ms przed pokazaniem okna. **52/52 świeżego QA**, 6/6 dodatkowych Q, 192 rekonstrukcje w wolnym reżimie bez pominiętych par; histogramy i CSV 16k/32k identyczne z szybkimi próbami. To postęp diagnostyczny, bez nowej optymalizacji. Przyczyna pozostaje otwarta; następne G3-C rozdziela czas bezczynności i proces nadzorujący. [Raport G3-B](docs/I04_5G3B_GPU_REPLAY.md).
+
+[Plan rozwoju GPU, wspólnego świata, wody i efektów](docs/PLAN_ROZWOJU_GPU.md) zawiera analizę review architektury z 2026-10-28, kolejność wdrożenia, zależności, cele pomiarowe i rejestr postępu. Wdrożono [instrumentację I00](docs/I00_GPU_PROFILING.md) i [pierścień odczytów I01](docs/I01_GPU_READBACK.md). Domyślny HUD korzysta z trzech slotów i odczytu na poziomie klatki, z trwałym mapowaniem lub fallbackiem GL 4.3. Wdrożono również [I02 — przebiegi, wiązania i FIFO](docs/I02_GPU_EXECUTION.md): 27 programów compute, około 72% mniej wywołań GL w porównywanym ticku i około 7% krótszy krok GPU misji w kontrolowanej serii. Wdrożono [I03 — dane i kompletne sąsiedztwo](docs/I03_GPU_NEIGHBORS.md): sortowane zakresy stabilnych ID, SoA, 42/43 → 2 budowy indeksu na tick i około 15% krótszy krok GPU misji względem ścieżki I02 w kontrolowanym A/B. Wdrożono [I04 — lokalne reakcje postaci](docs/I04_GPU_COUPLING.md): zwarta kolejka rzeczywistych reakcji, osobne kanały, redukcja hierarchiczna i ograniczenie próbek kapsuły do jej otoczenia. Domyślny combined łączy redukcję PBF i kontaktu, z osobnymi kanałami reakcji. Historyczny zakres review obejmował eksperyment PBF G po jawnej zmianie metody QA w Q; dalsze strojenie odłożono. Lokalny E pozostaje warunkowy. B/D zakończono jako badania; full/direct pozostają domyślne. Obie opcje C pozostają OFF. Decyzja użytkownika z 2026-10-30 zdejmuje blokadę I05; nie stanowi odbioru wydajności I04.5. Końcowa regresja I04: 21/21, okna combined 3/3; 16k/32k ziaren około 29%/33% krócej na GPU. Zysk małej misji nie jest potwierdzony, a cel 1,5 ms pozostaje otwarty. Historyczne spowolnienia opisano i zachowano w raportach.
 
 ## Modele i ograniczenia
 
@@ -103,3 +113,39 @@ Narzędzie `StrefaPhysics.exe` uruchamia sceny bez okna:
 
 To przybliżenia do gry: transport udziałów cieczy jest dyfuzyjny, interfejsy mają grubość komórki, a niewidoczne udziały pozostają w bilansie. Ciśnienie i prędkość dźwięku mają skalę gry. Bilans energii obejmuje entalpię i źródła ciepła, a energia mechaniczna jest tłumiona — nie jest to pełna termodynamika przepływu ściśliwego. Luźne piksele metalu/drewna mają bezwładność; sztywne bryły, ragdolle, boty, multiplayer i zapis stanu świata pozostają poza tym wydaniem.
 
+
+## I07 — opcjonalna fizyka cieczy
+
+Domyślny profil `legacy` zachowuje ustawienia I06. Eksperymentalny profil `balanced` dodaje ważone granice, napięcie 2D, adhezję i ograniczoną wirowość: `StrefaZero.exe --mission --gpu-fluid-profile balanced`. Te same ustawienia działają w narzędziach świata. Nagrania v2 zawierają konfigurację fizyki; starsze nagrania v1 wymagają `legacy`.
+
+Walidacja: `StrefaZero.exe --gpu-fluid-check --gpu-fluid-profile balanced --profile wyniki-i07`. Wyniki, koszt i ograniczenia: [I07_FLUID_QUALITY.md](docs/I07_FLUID_QUALITY.md).
+
+## I08 — renderer i optyka cieczy
+
+Renderer gry i narzędzi składa tło, teren, materiały i postać przed wodą. Woda oraz olej podbarwiają zanurzone obiekty i korzystają z refrakcji sprawdzającej cały odcinek próbkowania. Tarcze mają czytelny znak, HP i potwierdzony błysk trafienia.
+
+`--gpu-render-quality basic|standard|high` zmienia wyłącznie obraz, także bez resetu w narzędziach. Domyślne `basic` wynika z pomiarów GTX 1650; `standard` dodaje filtr bilateralny, grubość segmentową i połysk, `high` także pianę i kaustyki. Rozdzielczość renderu pozostaje 960 × 576 niezależnie od rozmiaru okna. Fizyka nadal domyślnie `legacy`.
+
+Kontrole i pomiary: `--gpu-render-check --profile wyniki`, `--gpu-render-benchmark --profile pomiary`. [Raport I08](docs/I08_SCENE_RENDERER.md) opisuje kontrakt przebiegów, testy, budżet i ograniczenia.
+
+## I09 — wspólne efekty GPU
+
+`--gpu-vfx-quality off|low|high` steruje eksplozjami, trafieniami, plecakiem oraz wtórnymi cząstkami wody. Misja, laboratorium GPU i poligon CPU na GL 4.3 współdzielą pulę 16 384 slotów. Fizyka pozostaje domyślnie legacy, obraz wody basic. Na GL 3.3 działa uproszczony fallback.
+
+Kontrole: `--gpu-vfx-check --profile wyniki`, pomiary: `--gpu-vfx-benchmark --profile pomiary`. [Raport I09](docs/I09_GPU_VFX.md) opisuje architekturę, LOD low, testy, budżet i ograniczenia.
+
+Odbiór wydajności I09 pozostaje otwarty: końcowy najgorszy segment low dodał 0,678 ms przy limicie 0,25 ms. Szczegóły i warunki pomiarów są w raporcie I09.
+
+## I10 — termika, gazy i ogień GPU
+
+Opcjonalny moduł wspólnego świata GPU dodaje zachowawczy transport ciepła i gazów, spalanie drewna/oleju/gazu, parowanie/skraplanie oraz fazy lodu, lawy i metalu. Narzędzia pokazują temperaturę, tlen, paliwo, prędkość i ciśnienie projekcji. Sceny: `--gpu-thermal-scene fire|oil|quench|phases`; w misji: `--gpu-thermal on`. Nagrania v3 zapisują źródła energii; v1/v2 pozostają zgodne.
+
+Termika jest domyślnie wyłączona: końcowa macierz nie spełnia budżetu 0,70 ms/tick dla scen gorących ani 0,05 ms dla zimnej włączonej termiki. Funkcjonalny zakres, testy, koszty i ograniczenia materiałów opisuje [raport I10](docs/I10_GPU_THERMAL.md). Kontrola: `--gpu-thermal-check --profile wyniki`; pomiar: `--gpu-thermal-benchmark --profile pomiary`.
+
+## I11 — oświetlenie i styl
+
+Opcjonalne `--gpu-lighting-quality off|low|high` dodaje światła 2D, cienie reagujące na destrukcję, liniowy HDR, bloom oraz paletę i wizualną wilgoć piasku. Misja i narzędzia korzystają ze wspólnego stanu; ustawienia światła są niezależne od jakości wody. Windows 67/68, GCC 11/11. Low osiąga do +1.028 ms przy limicie 0,35 ms; domyślne `off` pozostaje, a odbiór aktywnego okna: otwarty. Wstrząs i aberracja są osobno wyłączalne. [Raport I11](docs/I11_LIGHTING.md) zawiera kontrakt, sposób uruchomienia i wyniki.
+
+## Wydanie I11 Preview
+
+Gotowy program dla Windows i pełne surowe obrazy QA znajdują się w [wydaniu I11 Preview](https://github.com/maershal/strefa-zero/releases/tag/v0.7.0-i11-preview.1). [Instrukcja pobrania i odtworzenia obrazów](docs/QA_IMAGES.md) opisuje układ archiwum. Kod oraz raporty obejmują etapy I05–I11; oświetlenie i termika pozostają domyślnie wyłączone z powodu niespełnionych budżetów.

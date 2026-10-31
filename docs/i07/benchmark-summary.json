@@ -1,0 +1,608 @@
+{
+  "schema": 1,
+  "scene_names": {
+    "4": "water_tank",
+    "5": "dam_break",
+    "6": "connected_vessels",
+    "7": "oil_water",
+    "8": "sand_water",
+    "10": "inverted_oil",
+    "11": "oil_drop"
+  },
+  "quality": {},
+  "benchmark": {
+    "block-1-1-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.901216",
+        "gpu_p95_ms": "2.949824",
+        "gpu_p99_ms": "3.045824",
+        "cpu_median_ms": "0.0264",
+        "cpu_p95_ms": "0.0366",
+        "cpu_p99_ms": "0.0413",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.95328",
+        "gpu_p95_ms": "3.356128",
+        "gpu_p99_ms": "3.42032",
+        "cpu_median_ms": "0.0234",
+        "cpu_p95_ms": "0.0333",
+        "cpu_p99_ms": "0.0376",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.61216",
+        "gpu_p95_ms": "6.07232",
+        "gpu_p99_ms": "6.152352",
+        "cpu_median_ms": "0.0273",
+        "cpu_p95_ms": "0.0388",
+        "cpu_p99_ms": "0.0435",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ],
+    "block-1-2-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.15936",
+        "gpu_p95_ms": "3.215168",
+        "gpu_p99_ms": "3.246112",
+        "cpu_median_ms": "0.0248",
+        "cpu_p95_ms": "0.0361",
+        "cpu_p99_ms": "0.042",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.957344",
+        "gpu_p95_ms": "3.387136",
+        "gpu_p99_ms": "3.434656",
+        "cpu_median_ms": "0.0212",
+        "cpu_p95_ms": "0.0347",
+        "cpu_p99_ms": "0.0415",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.586944",
+        "gpu_p95_ms": "6.074656",
+        "gpu_p99_ms": "6.114688",
+        "cpu_median_ms": "0.0268",
+        "cpu_p95_ms": "0.0357",
+        "cpu_p99_ms": "0.0416",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-1-3-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.136384",
+        "gpu_p95_ms": "3.197408",
+        "gpu_p99_ms": "3.249152",
+        "cpu_median_ms": "0.029",
+        "cpu_p95_ms": "0.0468",
+        "cpu_p99_ms": "0.0629",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.971712",
+        "gpu_p95_ms": "3.389376",
+        "gpu_p99_ms": "3.418624",
+        "cpu_median_ms": "0.021",
+        "cpu_p95_ms": "0.0317",
+        "cpu_p99_ms": "0.035",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.52816",
+        "gpu_p95_ms": "6.02112",
+        "gpu_p99_ms": "6.055936",
+        "cpu_median_ms": "0.0255",
+        "cpu_p95_ms": "0.0304",
+        "cpu_p99_ms": "0.034",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-1-4-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.921376",
+        "gpu_p95_ms": "3.03152",
+        "gpu_p99_ms": "3.053056",
+        "cpu_median_ms": "0.0262",
+        "cpu_p95_ms": "0.0353",
+        "cpu_p99_ms": "0.0414",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.781408",
+        "gpu_p95_ms": "3.394304",
+        "gpu_p99_ms": "3.45184",
+        "cpu_median_ms": "0.0214",
+        "cpu_p95_ms": "0.0313",
+        "cpu_p99_ms": "0.0353",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.573824",
+        "gpu_p95_ms": "6.049696",
+        "gpu_p99_ms": "6.104576",
+        "cpu_median_ms": "0.0267",
+        "cpu_p95_ms": "0.0328",
+        "cpu_p99_ms": "0.0431",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ],
+    "block-2-1-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.879264",
+        "gpu_p95_ms": "2.950848",
+        "gpu_p99_ms": "3.012032",
+        "cpu_median_ms": "0.024",
+        "cpu_p95_ms": "0.0335",
+        "cpu_p99_ms": "0.0379",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.747008",
+        "gpu_p95_ms": "3.358016",
+        "gpu_p99_ms": "3.393888",
+        "cpu_median_ms": "0.0211",
+        "cpu_p95_ms": "0.0265",
+        "cpu_p99_ms": "0.0306",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.563296",
+        "gpu_p95_ms": "6.0104",
+        "gpu_p99_ms": "6.068192",
+        "cpu_median_ms": "0.0264",
+        "cpu_p95_ms": "0.034",
+        "cpu_p99_ms": "0.0412",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ],
+    "block-2-2-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.16704",
+        "gpu_p95_ms": "3.219424",
+        "gpu_p99_ms": "3.244544",
+        "cpu_median_ms": "0.0241",
+        "cpu_p95_ms": "0.0348",
+        "cpu_p99_ms": "0.0379",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.937248",
+        "gpu_p95_ms": "3.386944",
+        "gpu_p99_ms": "3.422944",
+        "cpu_median_ms": "0.0218",
+        "cpu_p95_ms": "0.037",
+        "cpu_p99_ms": "0.0442",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.608288",
+        "gpu_p95_ms": "6.035456",
+        "gpu_p99_ms": "6.07376",
+        "cpu_median_ms": "0.0262",
+        "cpu_p95_ms": "0.0343",
+        "cpu_p99_ms": "0.0377",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-2-3-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.15392",
+        "gpu_p95_ms": "3.215104",
+        "gpu_p99_ms": "3.254304",
+        "cpu_median_ms": "0.0244",
+        "cpu_p95_ms": "0.0366",
+        "cpu_p99_ms": "0.0388",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.779008",
+        "gpu_p95_ms": "3.321952",
+        "gpu_p99_ms": "3.365216",
+        "cpu_median_ms": "0.0211",
+        "cpu_p95_ms": "0.0319",
+        "cpu_p99_ms": "0.0372",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.5448",
+        "gpu_p95_ms": "5.988704",
+        "gpu_p99_ms": "6.025184",
+        "cpu_median_ms": "0.0262",
+        "cpu_p95_ms": "0.0352",
+        "cpu_p99_ms": "0.0406",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-2-4-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.854208",
+        "gpu_p95_ms": "2.9016",
+        "gpu_p99_ms": "2.969824",
+        "cpu_median_ms": "0.0268",
+        "cpu_p95_ms": "0.0377",
+        "cpu_p99_ms": "0.043",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.930944",
+        "gpu_p95_ms": "3.311616",
+        "gpu_p99_ms": "3.350432",
+        "cpu_median_ms": "0.0231",
+        "cpu_p95_ms": "0.032",
+        "cpu_p99_ms": "0.0342",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.646336",
+        "gpu_p95_ms": "6.109568",
+        "gpu_p99_ms": "6.15024",
+        "cpu_median_ms": "0.0265",
+        "cpu_p95_ms": "0.0394",
+        "cpu_p99_ms": "0.0429",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ],
+    "block-3-1-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.824448",
+        "gpu_p95_ms": "2.883584",
+        "gpu_p99_ms": "2.943136",
+        "cpu_median_ms": "0.0234",
+        "cpu_p95_ms": "0.0364",
+        "cpu_p99_ms": "0.0411",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.912",
+        "gpu_p95_ms": "3.329536",
+        "gpu_p99_ms": "3.370656",
+        "cpu_median_ms": "0.022",
+        "cpu_p95_ms": "0.0323",
+        "cpu_p99_ms": "0.0395",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.615616",
+        "gpu_p95_ms": "6.07472",
+        "gpu_p99_ms": "6.117376",
+        "cpu_median_ms": "0.0263",
+        "cpu_p95_ms": "0.0329",
+        "cpu_p99_ms": "0.0392",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ],
+    "block-3-2-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.136832",
+        "gpu_p95_ms": "3.203072",
+        "gpu_p99_ms": "3.223104",
+        "cpu_median_ms": "0.0254",
+        "cpu_p95_ms": "0.0379",
+        "cpu_p99_ms": "0.0481",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.941056",
+        "gpu_p95_ms": "3.390176",
+        "gpu_p99_ms": "3.425344",
+        "cpu_median_ms": "0.0234",
+        "cpu_p95_ms": "0.0332",
+        "cpu_p99_ms": "0.036",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.566624",
+        "gpu_p95_ms": "6.037504",
+        "gpu_p99_ms": "6.074624",
+        "cpu_median_ms": "0.0284",
+        "cpu_p95_ms": "0.0421",
+        "cpu_p99_ms": "0.0508",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-3-3-balanced": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "3.1632",
+        "gpu_p95_ms": "3.231744",
+        "gpu_p99_ms": "3.25616",
+        "cpu_median_ms": "0.0266",
+        "cpu_p95_ms": "0.0379",
+        "cpu_p99_ms": "0.0438",
+        "dispatches": "148.066666667",
+        "barriers": "150.066666667",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.940928",
+        "gpu_p95_ms": "3.354368",
+        "gpu_p99_ms": "3.401728",
+        "cpu_median_ms": "0.023",
+        "cpu_p95_ms": "0.0289",
+        "cpu_p99_ms": "0.0317",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.589632",
+        "gpu_p95_ms": "6.063872",
+        "gpu_p99_ms": "6.149568",
+        "cpu_median_ms": "0.026",
+        "cpu_p95_ms": "0.031",
+        "cpu_p99_ms": "0.0375",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "10125892"
+      }
+    ],
+    "block-3-4-legacy": [
+      {
+        "scene": "mission",
+        "particles": "3096",
+        "gpu_median_ms": "2.867712",
+        "gpu_p95_ms": "2.927936",
+        "gpu_p99_ms": "2.951424",
+        "cpu_median_ms": "0.0239",
+        "cpu_p95_ms": "0.041",
+        "cpu_p99_ms": "0.0462",
+        "dispatches": "140.066666667",
+        "barriers": "142.066666667",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_16k",
+        "particles": "16000",
+        "gpu_median_ms": "2.76352",
+        "gpu_p95_ms": "3.364864",
+        "gpu_p99_ms": "3.413408",
+        "cpu_median_ms": "0.0212",
+        "cpu_p95_ms": "0.0311",
+        "cpu_p99_ms": "0.032",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      },
+      {
+        "scene": "stress_32k",
+        "particles": "32768",
+        "gpu_median_ms": "5.618848",
+        "gpu_p95_ms": "6.082048",
+        "gpu_p99_ms": "6.154464",
+        "cpu_median_ms": "0.0269",
+        "cpu_p95_ms": "0.0331",
+        "cpu_p99_ms": "0.042",
+        "dispatches": "100",
+        "barriers": "102",
+        "bins": "2",
+        "device_bytes": "8830980"
+      }
+    ]
+  },
+  "failures": [],
+  "abba_blocks": [
+    {
+      "block": 1,
+      "scenes": {
+        "mission": {
+          "legacy_mean_of_medians": 2.911296,
+          "balanced_mean_of_medians": 3.147872,
+          "delta_ms": 0.2365759999999999
+        },
+        "stress_16k": {
+          "legacy_mean_of_medians": 2.867344,
+          "balanced_mean_of_medians": 2.964528,
+          "delta_ms": 0.09718399999999994
+        },
+        "stress_32k": {
+          "legacy_mean_of_medians": 5.592992000000001,
+          "balanced_mean_of_medians": 5.557551999999999,
+          "delta_ms": -0.03544000000000125
+        }
+      }
+    },
+    {
+      "block": 2,
+      "scenes": {
+        "mission": {
+          "legacy_mean_of_medians": 2.866736,
+          "balanced_mean_of_medians": 3.1604799999999997,
+          "delta_ms": 0.2937439999999998
+        },
+        "stress_16k": {
+          "legacy_mean_of_medians": 2.838976,
+          "balanced_mean_of_medians": 2.858128,
+          "delta_ms": 0.019151999999999614
+        },
+        "stress_32k": {
+          "legacy_mean_of_medians": 5.604816,
+          "balanced_mean_of_medians": 5.576544,
+          "delta_ms": -0.02827199999999941
+        }
+      }
+    },
+    {
+      "block": 3,
+      "scenes": {
+        "mission": {
+          "legacy_mean_of_medians": 2.8460799999999997,
+          "balanced_mean_of_medians": 3.150016,
+          "delta_ms": 0.3039360000000002
+        },
+        "stress_16k": {
+          "legacy_mean_of_medians": 2.8377600000000003,
+          "balanced_mean_of_medians": 2.940992,
+          "delta_ms": 0.10323199999999977
+        },
+        "stress_32k": {
+          "legacy_mean_of_medians": 5.617232,
+          "balanced_mean_of_medians": 5.5781279999999995,
+          "delta_ms": -0.03910400000000003
+        }
+      }
+    }
+  ],
+  "legacy_envelope": {},
+  "default_selection": "manual gates required: full historical integration, improvement beyond legacy envelope and mission median delta <=0.25ms; raw regime changes retained"
+}

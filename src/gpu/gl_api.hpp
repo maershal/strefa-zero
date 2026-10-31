@@ -50,12 +50,14 @@ template<class Function,CallKind kind> struct ObservedFunction {
 #define GL_FUNCTIONS(X) \
  X(PFNGLOBJECTLABELPROC,ObjectLabel) X(PFNGLPUSHDEBUGGROUPPROC,PushDebugGroup) X(PFNGLPOPDEBUGGROUPPROC,PopDebugGroup) \
  X(PFNGLACTIVETEXTUREPROC,ActiveTexture) X(PFNGLBLENDFUNCSEPARATEPROC,BlendFuncSeparate) X(PFNGLBLENDEQUATIONSEPARATEPROC,BlendEquationSeparate) \
+ X(PFNGLBINDSAMPLERPROC,BindSampler) X(PFNGLBINDIMAGETEXTUREPROC,BindImageTexture) X(PFNGLDRAWBUFFERSPROC,DrawBuffers) X(PFNGLGETBUFFERPARAMETERIVPROC,GetBufferParameteriv) \
  X(PFNGLMAPBUFFERRANGEPROC,MapBufferRange) X(PFNGLUNMAPBUFFERPROC,UnmapBuffer) \
  X(PFNGLGENBUFFERSPROC,GenBuffers) X(PFNGLDELETEBUFFERSPROC,DeleteBuffers) \
  X(PFNGLBINDBUFFERPROC,BindBuffer) X(PFNGLBUFFERDATAPROC,BufferData) X(PFNGLBUFFERSUBDATAPROC,BufferSubData) \
  X(PFNGLBINDBUFFERBASEPROC,BindBufferBase) X(PFNGLGETBUFFERSUBDATAPROC,GetBufferSubData) X(PFNGLCOPYBUFFERSUBDATAPROC,CopyBufferSubData) \
  X(PFNGLCREATESHADERPROC,CreateShader) X(PFNGLSHADERSOURCEPROC,ShaderSource) X(PFNGLCOMPILESHADERPROC,CompileShader) \
  X(PFNGLGETSHADERIVPROC,GetShaderiv) X(PFNGLGETSHADERINFOLOGPROC,GetShaderInfoLog) X(PFNGLDELETESHADERPROC,DeleteShader) \
+ X(PFNGLGETATTACHEDSHADERSPROC,GetAttachedShaders) X(PFNGLGETSHADERSOURCEPROC,GetShaderSource) \
  X(PFNGLCREATEPROGRAMPROC,CreateProgram) X(PFNGLATTACHSHADERPROC,AttachShader) X(PFNGLLINKPROGRAMPROC,LinkProgram) \
  X(PFNGLGETPROGRAMIVPROC,GetProgramiv) X(PFNGLGETPROGRAMINFOLOGPROC,GetProgramInfoLog) X(PFNGLDELETEPROGRAMPROC,DeleteProgram) \
  X(PFNGLUSEPROGRAMPROC,UseProgram) X(PFNGLGETUNIFORMLOCATIONPROC,GetUniformLocation) \
@@ -89,6 +91,16 @@ struct Api {
         GL_FUNCTIONS(OBSERVE)
 #undef OBSERVE
     }
+};
+
+// Counts presentation work without hiding it from total API/dispatch counters.
+// The physical profiler can retain its numerical-kernel contract separately.
+class PresentationCounterScope {
+public:
+    explicit PresentationCounterScope(Api& api):counters{api.observation},before{counters?counters->dispatches:0}{}
+    ~PresentationCounterScope(){if(counters)counters->presentation_dispatches+=counters->dispatches-before;}
+private:
+    CallCounters* counters{};std::uint64_t before{};
 };
 
 } // namespace strefa::gpu::detail

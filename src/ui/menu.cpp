@@ -115,10 +115,10 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     ImGui::Dummy({0.0F, (tight ? 8.0F : compact ? 16.0F : 28.0F) * s});
     Action action = Action::none;
     const float button_height = (tight ? 29.0F : compact ? 34.0F : 40.0F) * s;
-    if (menu_button("Misja GPU — rozpocznij grę", button_height, true)) action = Action::open_mission;
+    if (menu_button("Gra — aktywna scena", button_height, true)) action = Action::open_mission;
     if (menu_button("Poligon CPU — tryb referencyjny", button_height)) action = Action::open_arena;
-    if (menu_button("02    Laboratorium materiałów", button_height)) action = Action::open_laboratory;
-    if (menu_button("03    Laboratorium GPU — ciecze i ziarna", button_height)) action = Action::open_gpu;
+    if (menu_button("02    Laboratorium CPU — referencja", button_height)) action = Action::open_laboratory;
+    if (menu_button("03    Narzędzia aktywnego świata", button_height)) action = Action::open_gpu;
     if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
     if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
     if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
@@ -157,7 +157,8 @@ void setting_widget(const meta::Field<core::Settings, T>& field, T& value) {
     if constexpr (std::is_same_v<T, bool>) {
         ImGui::Checkbox("##value", &value);
     } else if constexpr (std::is_same_v<T, int>) {
-        ImGui::SliderInt("##value", &value, field.minimum, field.maximum);
+        if(field.key=="lighting_quality")ImGui::Combo("##value",&value,"Wyłączone\0Niskie\0Wysokie\0");
+        else ImGui::SliderInt("##value", &value, field.minimum, field.maximum);
     } else if constexpr (std::is_same_v<T, float>) {
         ImGui::SliderFloat("##value", &value, field.minimum, field.maximum, "%.2f");
     } else if constexpr (std::is_same_v<T, core::MapTheme>) {

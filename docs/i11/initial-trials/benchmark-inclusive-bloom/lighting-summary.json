@@ -1,0 +1,2030 @@
+{
+  "schema": 1,
+  "frames": 34560,
+  "segments": 144,
+  "budget_ms": 0.35,
+  "measurement": "candidate: two presentation ticks and render; reference: compatible render with I11 ticks bypassed; frozen physics; no window or present",
+  "segments_detail": [
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.59888,
+      "p95_ms": 1.34522,
+      "p99_ms": 1.72381,
+      "cpu_median_ms": 0.566
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.34219,
+      "p95_ms": 5.47242,
+      "p99_ms": 6.7145,
+      "cpu_median_ms": 1.78455
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.33611,
+      "p95_ms": 5.39238,
+      "p99_ms": 5.67702,
+      "cpu_median_ms": 0.0505
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.5997600000000001,
+      "p95_ms": 2.71258,
+      "p99_ms": 4.12336,
+      "cpu_median_ms": 0.01925
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.595936,
+      "p95_ms": 1.75037,
+      "p99_ms": 3.12525,
+      "cpu_median_ms": 0.0187
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.3255999999999997,
+      "p95_ms": 4.81827,
+      "p99_ms": 5.70458,
+      "cpu_median_ms": 0.05255
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.33392,
+      "p95_ms": 5.27984,
+      "p99_ms": 5.73651,
+      "cpu_median_ms": 0.0504
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 1.191695,
+      "p95_ms": 2.58669,
+      "p99_ms": 3.82771,
+      "cpu_median_ms": 0.01895
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.59392,
+      "p95_ms": 1.4455,
+      "p99_ms": 2.71939,
+      "cpu_median_ms": 0.0117
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.326675,
+      "p95_ms": 4.94899,
+      "p99_ms": 5.44083,
+      "cpu_median_ms": 0.0302
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.3421950000000002,
+      "p95_ms": 5.26131,
+      "p99_ms": 6.02317,
+      "cpu_median_ms": 0.03415
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.59392,
+      "p95_ms": 1.63805,
+      "p99_ms": 3.02694,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.593696,
+      "p95_ms": 1.44058,
+      "p99_ms": 1.96608,
+      "cpu_median_ms": 0.011349999999999999
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.57765,
+      "p95_ms": 5.15258,
+      "p99_ms": 5.48707,
+      "cpu_median_ms": 0.034
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.588865,
+      "p95_ms": 5.32701,
+      "p99_ms": 5.9863,
+      "cpu_median_ms": 0.034
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.600128,
+      "p95_ms": 3.61978,
+      "p99_ms": 7.0719,
+      "cpu_median_ms": 0.0115
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.59392,
+      "p95_ms": 1.33325,
+      "p99_ms": 1.74099,
+      "cpu_median_ms": 0.0115
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.5815200000000003,
+      "p95_ms": 5.32358,
+      "p99_ms": 5.69549,
+      "cpu_median_ms": 0.05765
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.594,
+      "p95_ms": 6.16282,
+      "p99_ms": 9.1367,
+      "cpu_median_ms": 0.0595
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.604,
+      "p95_ms": 3.58064,
+      "p99_ms": 4.17712,
+      "cpu_median_ms": 0.01575
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.594032,
+      "p95_ms": 1.36602,
+      "p99_ms": 2.05603,
+      "cpu_median_ms": 0.0112
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.5817300000000003,
+      "p95_ms": 5.20806,
+      "p99_ms": 5.51731,
+      "cpu_median_ms": 0.0336
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.582865,
+      "p95_ms": 5.34477,
+      "p99_ms": 6.30058,
+      "cpu_median_ms": 0.0337
+    },
+    {
+      "scene": "day",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.5942080000000001,
+      "p95_ms": 1.46714,
+      "p99_ms": 1.51952,
+      "cpu_median_ms": 0.0113
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.596304,
+      "p95_ms": 1.6896,
+      "p99_ms": 2.2016,
+      "cpu_median_ms": 0.0113
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.3299700000000003,
+      "p95_ms": 4.8599,
+      "p99_ms": 5.24291,
+      "cpu_median_ms": 0.0299
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.3294249999999996,
+      "p95_ms": 5.088,
+      "p99_ms": 5.54362,
+      "cpu_median_ms": 0.0297
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 1.16256,
+      "p95_ms": 3.24403,
+      "p99_ms": 4.97482,
+      "cpu_median_ms": 0.0118
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.59512,
+      "p95_ms": 1.94195,
+      "p99_ms": 2.85901,
+      "cpu_median_ms": 0.01625
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.33587,
+      "p95_ms": 4.71443,
+      "p99_ms": 5.28029,
+      "cpu_median_ms": 0.0315
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.334045,
+      "p95_ms": 5.07866,
+      "p99_ms": 5.39008,
+      "cpu_median_ms": 0.0297
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.594528,
+      "p95_ms": 1.22314,
+      "p99_ms": 1.46317,
+      "cpu_median_ms": 0.0115
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.5953919999999999,
+      "p95_ms": 1.77997,
+      "p99_ms": 2.54093,
+      "cpu_median_ms": 0.0115
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.33414,
+      "p95_ms": 5.21011,
+      "p99_ms": 5.60269,
+      "cpu_median_ms": 0.033
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.3340300000000003,
+      "p95_ms": 4.8967,
+      "p99_ms": 5.41158,
+      "cpu_median_ms": 0.0351
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 1.204495,
+      "p95_ms": 3.21978,
+      "p99_ms": 4.40998,
+      "cpu_median_ms": 0.018750000000000003
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.600384,
+      "p95_ms": 2.92864,
+      "p99_ms": 3.90605,
+      "cpu_median_ms": 0.0116
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.58584,
+      "p95_ms": 5.33914,
+      "p99_ms": 5.74579,
+      "cpu_median_ms": 0.0346
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.579265,
+      "p95_ms": 5.09517,
+      "p99_ms": 5.59104,
+      "cpu_median_ms": 0.0343
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.595952,
+      "p95_ms": 1.67107,
+      "p99_ms": 2.97434,
+      "cpu_median_ms": 0.01795
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 1.4035199999999999,
+      "p95_ms": 3.2127,
+      "p99_ms": 3.97107,
+      "cpu_median_ms": 0.02
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.5831850000000003,
+      "p95_ms": 5.23827,
+      "p99_ms": 5.76512,
+      "cpu_median_ms": 0.0588
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.5838900000000002,
+      "p95_ms": 5.35046,
+      "p99_ms": 5.76106,
+      "cpu_median_ms": 0.046799999999999994
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.6335999999999999,
+      "p95_ms": 2.33805,
+      "p99_ms": 3.54928,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.594896,
+      "p95_ms": 2.02547,
+      "p99_ms": 2.98589,
+      "cpu_median_ms": 0.01165
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.578655,
+      "p95_ms": 5.45587,
+      "p99_ms": 6.70515,
+      "cpu_median_ms": 0.057050000000000003
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.59014,
+      "p95_ms": 5.57917,
+      "p99_ms": 6.33651,
+      "cpu_median_ms": 0.03455
+    },
+    {
+      "scene": "night",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.595152,
+      "p95_ms": 1.36982,
+      "p99_ms": 2.11149,
+      "cpu_median_ms": 0.0177
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.94648,
+      "p95_ms": 1.79638,
+      "p99_ms": 2.40077,
+      "cpu_median_ms": 0.012
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 4.81843,
+      "p95_ms": 6.49626,
+      "p99_ms": 6.89024,
+      "cpu_median_ms": 0.042050000000000004
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 4.82186,
+      "p95_ms": 6.63338,
+      "p99_ms": 7.07114,
+      "cpu_median_ms": 0.0436
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.947264,
+      "p95_ms": 2.92198,
+      "p99_ms": 5.46618,
+      "cpu_median_ms": 0.0108
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.946176,
+      "p95_ms": 1.87392,
+      "p99_ms": 2.80067,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 4.822100000000001,
+      "p95_ms": 6.41139,
+      "p99_ms": 6.84582,
+      "cpu_median_ms": 0.032799999999999996
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 4.8388349999999996,
+      "p95_ms": 6.75635,
+      "p99_ms": 7.3071,
+      "cpu_median_ms": 0.0253
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.9462079999999999,
+      "p95_ms": 1.56669,
+      "p99_ms": 2.17546,
+      "cpu_median_ms": 0.0071
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.947296,
+      "p95_ms": 1.5543,
+      "p99_ms": 1.82518,
+      "cpu_median_ms": 0.0078
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 4.820445,
+      "p95_ms": 6.57616,
+      "p99_ms": 6.80573,
+      "cpu_median_ms": 0.0258
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 4.81795,
+      "p95_ms": 6.58832,
+      "p99_ms": 6.96714,
+      "cpu_median_ms": 0.02635
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.946176,
+      "p95_ms": 1.57085,
+      "p99_ms": 1.84525,
+      "cpu_median_ms": 0.0073
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.946176,
+      "p95_ms": 1.6408,
+      "p99_ms": 2.4023,
+      "cpu_median_ms": 0.0074
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 5.081054999999999,
+      "p95_ms": 7.14746,
+      "p99_ms": 7.67555,
+      "cpu_median_ms": 0.0303
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 5.0771049999999995,
+      "p95_ms": 6.78096,
+      "p99_ms": 7.6151,
+      "cpu_median_ms": 0.0367
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.946448,
+      "p95_ms": 1.79171,
+      "p99_ms": 2.41059,
+      "cpu_median_ms": 0.01075
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.947296,
+      "p95_ms": 2.22378,
+      "p99_ms": 3.13178,
+      "cpu_median_ms": 0.011349999999999999
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 5.074975,
+      "p95_ms": 6.68602,
+      "p99_ms": 7.45699,
+      "cpu_median_ms": 0.04865
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 5.076835,
+      "p95_ms": 7.24166,
+      "p99_ms": 7.7271,
+      "cpu_median_ms": 0.0298
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.946176,
+      "p95_ms": 1.86038,
+      "p99_ms": 2.24768,
+      "cpu_median_ms": 0.0072
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.947776,
+      "p95_ms": 1.57082,
+      "p99_ms": 1.85965,
+      "cpu_median_ms": 0.0077
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 5.075635,
+      "p95_ms": 6.82832,
+      "p99_ms": 7.58858,
+      "cpu_median_ms": 0.043300000000000005
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 5.08152,
+      "p95_ms": 7.28861,
+      "p99_ms": 7.99773,
+      "cpu_median_ms": 0.0299
+    },
+    {
+      "scene": "fire",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.94704,
+      "p95_ms": 1.57453,
+      "p99_ms": 1.81248,
+      "cpu_median_ms": 0.0075
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.5993919999999999,
+      "p95_ms": 1.85344,
+      "p99_ms": 2.7809,
+      "cpu_median_ms": 0.0189
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.56112,
+      "p95_ms": 5.31661,
+      "p99_ms": 5.62611,
+      "cpu_median_ms": 0.0299
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.5592949999999997,
+      "p95_ms": 5.57792,
+      "p99_ms": 6.20426,
+      "cpu_median_ms": 0.0308
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.598464,
+      "p95_ms": 1.46842,
+      "p99_ms": 2.43894,
+      "cpu_median_ms": 0.01795
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.598752,
+      "p95_ms": 1.63274,
+      "p99_ms": 2.41862,
+      "cpu_median_ms": 0.0193
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.561775,
+      "p95_ms": 5.06054,
+      "p99_ms": 5.84518,
+      "cpu_median_ms": 0.038250000000000006
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.56776,
+      "p95_ms": 5.47734,
+      "p99_ms": 6.10781,
+      "cpu_median_ms": 0.03025
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.8799520000000001,
+      "p95_ms": 2.87933,
+      "p99_ms": 3.46723,
+      "cpu_median_ms": 0.01155
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.598384,
+      "p95_ms": 1.27341,
+      "p99_ms": 1.93126,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.5592449999999998,
+      "p95_ms": 5.2695,
+      "p99_ms": 5.5849,
+      "cpu_median_ms": 0.0298
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.57069,
+      "p95_ms": 5.63091,
+      "p99_ms": 6.48192,
+      "cpu_median_ms": 0.03
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.598464,
+      "p95_ms": 1.23802,
+      "p99_ms": 1.94179,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.5989439999999999,
+      "p95_ms": 1.32144,
+      "p99_ms": 1.8903,
+      "cpu_median_ms": 0.0114
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.797135,
+      "p95_ms": 5.76816,
+      "p99_ms": 6.42256,
+      "cpu_median_ms": 0.03505
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.813425,
+      "p95_ms": 5.97402,
+      "p99_ms": 6.97331,
+      "cpu_median_ms": 0.05175
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.5986400000000001,
+      "p95_ms": 2.25843,
+      "p99_ms": 3.82416,
+      "cpu_median_ms": 0.0195
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 1.2134900000000002,
+      "p95_ms": 3.09875,
+      "p99_ms": 4.66816,
+      "cpu_median_ms": 0.0203
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.803315,
+      "p95_ms": 5.76922,
+      "p99_ms": 6.78573,
+      "cpu_median_ms": 0.0598
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.8157449999999997,
+      "p95_ms": 5.95222,
+      "p99_ms": 7.2897,
+      "cpu_median_ms": 0.05875
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.600064,
+      "p95_ms": 1.49299,
+      "p99_ms": 3.51914,
+      "cpu_median_ms": 0.0186
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.598112,
+      "p95_ms": 1.47046,
+      "p99_ms": 2.78787,
+      "cpu_median_ms": 0.01735
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.805245,
+      "p95_ms": 5.67296,
+      "p99_ms": 6.51264,
+      "cpu_median_ms": 0.05575
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.816125,
+      "p95_ms": 6.01088,
+      "p99_ms": 8.52173,
+      "cpu_median_ms": 0.03695
+    },
+    {
+      "scene": "explosion",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.639232,
+      "p95_ms": 3.16621,
+      "p99_ms": 3.84285,
+      "cpu_median_ms": 0.0117
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.934496,
+      "p95_ms": 1.56269,
+      "p99_ms": 2.232,
+      "cpu_median_ms": 0.0061
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.907745,
+      "p95_ms": 5.8289,
+      "p99_ms": 6.1911,
+      "cpu_median_ms": 0.024050000000000002
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.9147350000000003,
+      "p95_ms": 6.04861,
+      "p99_ms": 6.90518,
+      "cpu_median_ms": 0.0393
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.935376,
+      "p95_ms": 4.19635,
+      "p99_ms": 4.85827,
+      "cpu_median_ms": 0.00915
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.933888,
+      "p95_ms": 1.54563,
+      "p99_ms": 1.81312,
+      "cpu_median_ms": 0.0088
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.910735,
+      "p95_ms": 5.64746,
+      "p99_ms": 6.85104,
+      "cpu_median_ms": 0.0402
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.908705,
+      "p95_ms": 5.71107,
+      "p99_ms": 6.12851,
+      "cpu_median_ms": 0.038349999999999995
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.93424,
+      "p95_ms": 1.56877,
+      "p99_ms": 1.81427,
+      "cpu_median_ms": 0.0059
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.93432,
+      "p95_ms": 1.55574,
+      "p99_ms": 1.80022,
+      "cpu_median_ms": 0.0059
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.92304,
+      "p95_ms": 5.99174,
+      "p99_ms": 6.49258,
+      "cpu_median_ms": 0.0233
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.90562,
+      "p95_ms": 5.82656,
+      "p99_ms": 6.10867,
+      "cpu_median_ms": 0.0229
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.933744,
+      "p95_ms": 1.78176,
+      "p99_ms": 2.15392,
+      "cpu_median_ms": 0.006
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.933888,
+      "p95_ms": 1.56058,
+      "p99_ms": 2.16944,
+      "cpu_median_ms": 0.0058
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 4.1692,
+      "p95_ms": 6.19101,
+      "p99_ms": 6.63434,
+      "cpu_median_ms": 0.0269
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 4.154059999999999,
+      "p95_ms": 6.03648,
+      "p99_ms": 6.54541,
+      "cpu_median_ms": 0.028450000000000003
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.936128,
+      "p95_ms": 4.17174,
+      "p99_ms": 4.83286,
+      "cpu_median_ms": 0.006
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.93784,
+      "p95_ms": 3.8031,
+      "p99_ms": 4.38806,
+      "cpu_median_ms": 0.0097
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 4.1636,
+      "p95_ms": 6.48934,
+      "p99_ms": 7.80064,
+      "cpu_median_ms": 0.03315
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 4.157665,
+      "p95_ms": 5.9392,
+      "p99_ms": 6.5761,
+      "cpu_median_ms": 0.03
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.934368,
+      "p95_ms": 1.79405,
+      "p99_ms": 2.16762,
+      "cpu_median_ms": 0.0092
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.933888,
+      "p95_ms": 2.23392,
+      "p99_ms": 3.11094,
+      "cpu_median_ms": 0.0092
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 4.1552,
+      "p95_ms": 6.28378,
+      "p99_ms": 6.81709,
+      "cpu_median_ms": 0.0286
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 4.1561900000000005,
+      "p95_ms": 5.9224,
+      "p99_ms": 6.5183,
+      "cpu_median_ms": 0.027749999999999997
+    },
+    {
+      "scene": "water",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.933632,
+      "p95_ms": 1.8392,
+      "p99_ms": 3.1191,
+      "cpu_median_ms": 0.00925
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.788192,
+      "p95_ms": 2.41472,
+      "p99_ms": 4.47658,
+      "cpu_median_ms": 0.0087
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.73146,
+      "p95_ms": 5.3928,
+      "p99_ms": 6.02074,
+      "cpu_median_ms": 0.03905
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.75197,
+      "p95_ms": 5.8545,
+      "p99_ms": 6.65747,
+      "cpu_median_ms": 0.03765
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.78672,
+      "p95_ms": 1.68346,
+      "p99_ms": 2.86477,
+      "cpu_median_ms": 0.0093
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.792576,
+      "p95_ms": 3.38531,
+      "p99_ms": 4.1159,
+      "cpu_median_ms": 0.0096
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.7460950000000004,
+      "p95_ms": 5.60333,
+      "p99_ms": 6.8591,
+      "cpu_median_ms": 0.0396
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.74837,
+      "p95_ms": 5.75731,
+      "p99_ms": 7.11123,
+      "cpu_median_ms": 0.0395
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.78848,
+      "p95_ms": 2.35229,
+      "p99_ms": 4.75536,
+      "cpu_median_ms": 0.0093
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.788352,
+      "p95_ms": 1.65264,
+      "p99_ms": 2.2528,
+      "cpu_median_ms": 0.0093
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.738335,
+      "p95_ms": 5.71626,
+      "p99_ms": 6.53107,
+      "cpu_median_ms": 0.02505
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.738125,
+      "p95_ms": 5.40858,
+      "p99_ms": 5.73574,
+      "cpu_median_ms": 0.0235
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_low",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.792608,
+      "p95_ms": 2.0761,
+      "p99_ms": 3.91926,
+      "cpu_median_ms": 0.0061
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 0,
+      "median_ms": 0.78824,
+      "p95_ms": 1.40493,
+      "p99_ms": 1.66365,
+      "cpu_median_ms": 0.0059
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "median_ms": 3.98446,
+      "p95_ms": 5.74998,
+      "p99_ms": 6.03546,
+      "cpu_median_ms": 0.027
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "median_ms": 3.98496,
+      "p95_ms": 5.76614,
+      "p99_ms": 6.39136,
+      "cpu_median_ms": 0.0269
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 1,
+      "order": 3,
+      "median_ms": 0.788288,
+      "p95_ms": 1.65117,
+      "p99_ms": 2.68288,
+      "cpu_median_ms": 0.0091
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 0,
+      "median_ms": 0.788272,
+      "p95_ms": 1.42211,
+      "p99_ms": 2.23165,
+      "cpu_median_ms": 0.0061
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "median_ms": 3.98746,
+      "p95_ms": 5.97645,
+      "p99_ms": 6.25882,
+      "cpu_median_ms": 0.045200000000000004
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "median_ms": 3.98816,
+      "p95_ms": 5.65386,
+      "p99_ms": 5.88896,
+      "cpu_median_ms": 0.027
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 2,
+      "order": 3,
+      "median_ms": 0.78784,
+      "p95_ms": 1.40998,
+      "p99_ms": 1.66707,
+      "cpu_median_ms": 0.0061
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 0,
+      "median_ms": 0.788384,
+      "p95_ms": 1.41722,
+      "p99_ms": 1.65568,
+      "cpu_median_ms": 0.0058
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "median_ms": 3.98336,
+      "p95_ms": 5.8368,
+      "p99_ms": 6.36928,
+      "cpu_median_ms": 0.027749999999999997
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "median_ms": 3.982275,
+      "p95_ms": 5.66448,
+      "p99_ms": 6.43891,
+      "cpu_median_ms": 0.04685
+    },
+    {
+      "scene": "sand",
+      "quality": "off_for_high",
+      "block": 3,
+      "order": 3,
+      "median_ms": 0.788128,
+      "p95_ms": 1.39523,
+      "p99_ms": 1.66061,
+      "cpu_median_ms": 0.00885
+    }
+  ],
+  "comparisons": [
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.74287,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.73679,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.4317844999999996,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.4401045,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.732755,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.7482750000000005,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.980738,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.991953,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.9825600000000003,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.99504,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.98761,
+      "pass": false
+    },
+    {
+      "scene": "day",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.9887449999999998,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.4505380000000003,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.4499929999999996,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.741046,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.739221,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.4341965,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.4340865000000003,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.987672,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.981097,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.5646250000000004,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.5653300000000003,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.983631,
+      "pass": false
+    },
+    {
+      "scene": "night",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.995116,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 3.8715580000000003,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 3.874988,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 3.875908000000001,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 3.8926429999999996,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 3.8737090000000003,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 3.8712139999999997,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 4.134742999999999,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 4.130793,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 4.128239000000001,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 4.1300989999999995,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 4.128227,
+      "pass": false
+    },
+    {
+      "scene": "fire",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 4.134112,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.962192,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.9603669999999997,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.8224229999999997,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.8284079999999996,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.9608209999999997,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.972266,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 3.198343,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 3.214633,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.8965379999999996,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.9089679999999998,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 3.186573,
+      "pass": false
+    },
+    {
+      "scene": "explosion",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 3.197453,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.972809,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.9797990000000003,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.9766709999999996,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.974641,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.989008,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.9715879999999997,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 3.234192,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 3.2190519999999996,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 3.2274959999999995,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 3.2215609999999995,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 3.22144,
+      "pass": false
+    },
+    {
+      "scene": "water",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 3.2224300000000006,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 2.9440040000000005,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 2.9645140000000003,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 2.9555670000000003,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 2.9578420000000003,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 2.947855,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "low",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 2.947645,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 1,
+      "order": 1,
+      "extra_ms": 3.1961959999999996,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 1,
+      "order": 2,
+      "extra_ms": 3.196696,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 2,
+      "order": 1,
+      "extra_ms": 3.199404,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 2,
+      "order": 2,
+      "extra_ms": 3.200104,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 3,
+      "order": 1,
+      "extra_ms": 3.1951039999999997,
+      "pass": false
+    },
+    {
+      "scene": "sand",
+      "quality": "high",
+      "block": 3,
+      "order": 2,
+      "extra_ms": 3.194019,
+      "pass": false
+    }
+  ],
+  "low_budget_pass": false,
+  "window_acceptance": "separate; requires focused visible windows, full frame timing and no dropped time",
+  "default": "off until both module and window acceptance pass"
+}
