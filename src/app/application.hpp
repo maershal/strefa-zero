@@ -12,6 +12,10 @@
 
 namespace strefa::app {
 
+// The parser allows at most one start mode and at most one test, so each maps to a single value.
+enum class StartMode { menu, cpu_laboratory, cpu_arena, gpu_laboratory, mission };
+enum class SmokeScenario { none, menu, cpu_laboratory, gpu_laboratory, mission, session };
+
 struct LaunchOptions {
     bool smoke_test{false};
     bool laboratory_smoke_test{false};
@@ -46,6 +50,21 @@ struct LaunchOptions {
     std::optional<bool> test_vsync;
     std::optional<unsigned> test_frame_limit;
     std::filesystem::path profile;
+
+    // Number of selected test modes (window smoke tests, checks, benchmarks and profiles).
+    [[nodiscard]] int test_count() const;
+    [[nodiscard]] bool is_test() const { return test_count() > 0; }
+    [[nodiscard]] bool is_window_smoke() const {
+        return smoke_test || laboratory_smoke_test || gpu_smoke_test || mission_smoke || session_smoke;
+    }
+    // Tests that run unsynchronised at 60 FPS; the menu smoke test and CPU-side GPU physics tests keep settings.
+    [[nodiscard]] bool forces_test_pacing() const {
+        return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test > 0;
+    }
+    // Tests skipped (exit 77) without OpenGL 4.3; both CPU-capable smoke tests also run on GL 3.3.
+    [[nodiscard]] bool requires_gl43() const { return test_count() - smoke_test - laboratory_smoke_test > 0; }
+    [[nodiscard]] StartMode start_mode() const;
+    [[nodiscard]] SmokeScenario smoke_scenario() const;
 };
 
 [[nodiscard]] std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv);

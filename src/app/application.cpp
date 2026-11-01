@@ -43,48 +43,75 @@ std::string gl_string(GLenum name) {
     return value ? reinterpret_cast<const char*>(value) : "unknown";
 }
 
+struct ApplicationAssets {
+    std::array<ui::Image, 3> backgrounds;
+    platform::Texture& canvas;
+    ui::Image soldier, parts, weapons;
+};
+
+struct LaunchConfig {
+    sim::PhysicsConfig physics;
+    gpu::ProfileOptions profiling;
+    gpu::ExecutionOptions execution;
+    platform::GlDebugLog* gl_debug{};
+    bool shader_cache{};
+    gpu::RenderOptions render;
+    gpu::VfxOptions vfx;
+    bool unpaced{};
+    gpu::ThermalOptions thermal;
+    unsigned thermal_scene{}, test_seconds{};
+    StartMode start{StartMode::menu};
+    SmokeScenario smoke{SmokeScenario::none};
+};
+
 class Application {
     friend class strefa::app::ScenarioRunner;
 
 public:
     Application(platform::Window& window, ui::Session& gui, const platform::SettingsStore& store,
-                core::Settings settings, std::array<ui::Image, 3> images, platform::Texture& canvas, ui::Image soldier,
-                ui::Image parts, ui::Image weapons, std::string message, sim::PhysicsConfig physics,
-                gpu::ProfileOptions gpu_profiling, gpu::ExecutionOptions execution, platform::GlDebugLog* gl_debug,
-                bool shader_cache, gpu::RenderOptions render_options, gpu::VfxOptions vfx_options, bool unpaced,
-                gpu::ThermalOptions thermal_options, unsigned thermal_scene, unsigned test_seconds)
+                core::Settings settings, const ApplicationAssets& assets, std::string message,
+                const LaunchConfig& config)
         : window_{window},
           gui_{gui},
           store_{store},
-          images_{images},
-          canvas_{canvas},
-          soldier_{soldier},
-          parts_{parts},
-          weapons_{weapons},
+          images_{assets.backgrounds},
+          canvas_{assets.canvas},
+          soldier_{assets.soldier},
+          parts_{assets.parts},
+          weapons_{assets.weapons},
           state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics},
           message_{std::move(message)},
           renderer_{gl_string(GL_RENDERER)},
           gl_version_{gl_string(GL_VERSION)},
-          physics_{physics},
-          gpu_profiling_{gpu_profiling},
-          execution_{execution},
-          gl_debug_{gl_debug},
-          shader_cache_{shader_cache} {
-        thermal_options_ = thermal_options;
-        initial_thermal_scene_ = thermal_scene;
-        window_seconds_ = test_seconds;
-        gpu_controls_.thermal_enabled = thermal_options.enabled;
-        vfx_options_ = vfx_options;
-        gpu_controls_.vfx_quality = static_cast<int>(vfx_options.quality);
-        unpaced_ = unpaced;
-        gpu_controls_.render_quality = static_cast<int>(render_options.quality);
-        gpu_controls_.lighting = render_options.lighting;
-        lighting_quality_ = static_cast<int>(render_options.lighting.quality);
+          physics_{config.physics},
+          gpu_profiling_{config.profiling},
+          execution_{config.execution},
+          gl_debug_{config.gl_debug},
+          shader_cache_{config.shader_cache},
+          start_{config.start},
+          smoke_{config.smoke} {
+        thermal_options_ = config.thermal;
+        initial_thermal_scene_ = config.thermal_scene;
+        window_seconds_ = config.test_seconds;
+        gpu_controls_.thermal_enabled = config.thermal.enabled;
+        vfx_options_ = config.vfx;
+        gpu_controls_.vfx_quality = static_cast<int>(config.vfx.quality);
+        unpaced_ = config.unpaced;
+        gpu_controls_.render_quality = static_cast<int>(config.render.quality);
+        gpu_controls_.lighting = config.render.lighting;
+        lighting_quality_ = static_cast<int>(config.render.lighting.quality);
     }
 
-    std::expected<int, std::string> run(bool smoke_test, bool start_in_laboratory, bool start_in_arena, bool lab_smoke,
-                                        bool start_gpu, bool gpu_smoke, bool start_mission, bool mission_smoke,
-                                        bool session_smoke) {
+    std::expected<int, std::string> run() {
+        const bool smoke_test = smoke_ == SmokeScenario::menu;
+        const bool lab_smoke = smoke_ == SmokeScenario::cpu_laboratory;
+        const bool gpu_smoke = smoke_ == SmokeScenario::gpu_laboratory;
+        const bool mission_smoke = smoke_ == SmokeScenario::mission;
+        const bool session_smoke = smoke_ == SmokeScenario::session;
+        const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
+        const bool start_in_arena = start_ == StartMode::cpu_arena;
+        const bool start_gpu = start_ == StartMode::gpu_laboratory;
+        const bool start_mission = start_ == StartMode::mission;
         if (smoke_test) {
             world_ = std::make_unique<sim::World>(0x57EF'A023U, physics_);
             world_->load_demo();
@@ -832,6 +859,8 @@ private:
     ui::GpuControls gpu_controls_;
     int lighting_quality_{};
     gpu::ThermalOptions thermal_options_;
+    StartMode start_{StartMode::menu};
+    SmokeScenario smoke_{SmokeScenario::none};
     unsigned initial_thermal_scene_{}, window_seconds_{};
 };
 
@@ -849,17 +878,7 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
         profile = utf8_path(path.get());
     }
     platform::SettingsStore store{profile / "settings.ini"};
-    const bool testing = options.smoke_test || options.laboratory_smoke_test || options.gpu_test
-                      || options.gpu_liquid_test || options.gpu_flow_test || options.gpu_smoke_test
-                      || options.mission_test || options.mission_smoke || options.gpu_profile
-                      || options.stabilization_profile || options.gpu_profile_check || options.readback_test
-                      || options.readback_profile || options.execution_test || options.execution_profile
-                      || options.neighbor_test || options.neighbor_profile || options.coupling_test
-                      || options.coupling_profile || options.work_test || options.transport_test || options.hot_test
-                      || options.cost_profile || options.thermal_check || options.thermal_benchmark || options.vfx_check
-                      || options.vfx_benchmark || options.lighting_check || options.lighting_benchmark
-                      || options.render_check || options.render_benchmark || options.fluid_check
-                      || options.fluid_benchmark || options.cost_check || options.session_smoke || options.cache_check;
+    const bool testing = options.is_test();
     if (testing) std::filesystem::create_directories(profile);
     auto loaded = store.load();
     std::string message = loaded ? std::string{} : loaded.error() + " Użyto ustawień domyślnych.";
@@ -872,14 +891,7 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     render_options.lighting.vignette = settings.vignette;
     render_options.lighting.shake = settings.camera_shake;
     render_options.lighting.aberration = settings.aberration;
-    if (options.laboratory_smoke_test || options.gpu_smoke_test || options.mission_test || options.mission_smoke
-        || options.gpu_profile || options.stabilization_profile || options.gpu_profile_check || options.readback_test
-        || options.readback_profile || options.execution_test || options.execution_profile || options.neighbor_test
-        || options.neighbor_profile || options.coupling_test || options.coupling_profile || options.work_test
-        || options.transport_test || options.hot_test || options.cost_profile || options.thermal_check
-        || options.thermal_benchmark || options.vfx_check || options.vfx_benchmark || options.lighting_check
-        || options.lighting_benchmark || options.render_check || options.render_benchmark || options.fluid_check
-        || options.fluid_benchmark || options.cost_check || options.session_smoke || options.cache_check) {
+    if (options.forces_test_pacing()) {
         settings.vsync = false;
         settings.frame_limit = 60;
     }
@@ -905,15 +917,7 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     const char* base = SDL_GetBasePath();
     if (!base) return std::unexpected{"Nie można ustalić katalogu aplikacji."};
     const auto assets = utf8_path(base) / "assets";
-    if (options.gpu_test || options.gpu_liquid_test || options.gpu_flow_test || options.gpu_smoke_test
-        || options.mission_test || options.mission_smoke || options.gpu_profile || options.stabilization_profile
-        || options.gpu_profile_check || options.readback_test || options.readback_profile || options.execution_test
-        || options.execution_profile || options.neighbor_test || options.neighbor_profile || options.coupling_test
-        || options.coupling_profile || options.work_test || options.transport_test || options.hot_test
-        || options.cost_profile || options.thermal_check || options.thermal_benchmark || options.vfx_check
-        || options.vfx_benchmark || options.lighting_check || options.lighting_benchmark || options.render_check
-        || options.render_benchmark || options.fluid_check || options.fluid_benchmark || options.cost_check
-        || options.session_smoke || options.cache_check) {
+    if (options.requires_gl43()) {
         GLint major{}, minor{};
         glGetIntegerv(GL_MAJOR_VERSION, &major);
         glGetIntegerv(GL_MINOR_VERSION, &minor);
@@ -923,11 +927,7 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
             return 77;
         }
     }
-    if (testing
-        && !(options.smoke_test || options.laboratory_smoke_test || options.gpu_smoke_test || options.mission_smoke
-             || options.session_smoke)
-        && gl_debug)
-        gl_debug->set_phase(platform::DebugPhase::validation);
+    if (testing && !options.is_window_smoke() && gl_debug) gl_debug->set_phase(platform::DebugPhase::validation);
     if (auto diagnostic = run_diagnostic_scenario(options, assets, profile)) return *diagnostic;
     auto gui = ui::Session::create(*window, assets);
     if (!gui) return std::unexpected{gui.error()};
@@ -956,30 +956,26 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
     if (!testing) window->show();
     sim::PhysicsConfig physics;
     physics.worker_threads = options.physics_threads;
-    Application application{*window,
-                            *gui,
-                            store,
-                            settings,
-                            images,
-                            *canvas,
-                            {soldier->id(), soldier->width(), soldier->height()},
-                            {parts->id(), parts->width(), parts->height()},
-                            {weapons->id(), weapons->width(), weapons->height()},
-                            std::move(message),
-                            physics,
-                            options.gpu_profiling,
-                            options.gpu_execution,
-                            gl_debug.get(),
-                            options.shader_cache,
-                            render_options,
-                            options.gpu_vfx,
-                            options.test_unpaced,
-                            options.gpu_thermal,
-                            options.thermal_scene,
-                            options.test_seconds};
-    auto result = application.run(options.smoke_test, options.start_in_laboratory, options.start_in_arena,
-                                  options.laboratory_smoke_test, options.start_in_gpu, options.gpu_smoke_test,
-                                  options.start_in_mission, options.mission_smoke, options.session_smoke);
+    const ApplicationAssets application_assets{images,
+                                               *canvas,
+                                               {soldier->id(), soldier->width(), soldier->height()},
+                                               {parts->id(), parts->width(), parts->height()},
+                                               {weapons->id(), weapons->width(), weapons->height()}};
+    const LaunchConfig config{.physics = physics,
+                              .profiling = options.gpu_profiling,
+                              .execution = options.gpu_execution,
+                              .gl_debug = gl_debug.get(),
+                              .shader_cache = options.shader_cache,
+                              .render = render_options,
+                              .vfx = options.gpu_vfx,
+                              .unpaced = options.test_unpaced,
+                              .thermal = options.gpu_thermal,
+                              .thermal_scene = options.thermal_scene,
+                              .test_seconds = options.test_seconds,
+                              .start = options.start_mode(),
+                              .smoke = options.smoke_scenario()};
+    Application application{*window, *gui, store, settings, application_assets, std::move(message), config};
+    auto result = application.run();
     if (gl_debug) gl_debug->set_phase(platform::DebugPhase::shutdown);
     return result;
 }

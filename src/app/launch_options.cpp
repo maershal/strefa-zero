@@ -9,6 +9,29 @@ std::filesystem::path utf8_path(const char* text) {
     return std::filesystem::path{reinterpret_cast<const char8_t*>(text)};
 }
 } // namespace
+int LaunchOptions::test_count() const {
+    return static_cast<int>(smoke_test) + laboratory_smoke_test + gpu_test + gpu_liquid_test + gpu_flow_test
+         + gpu_smoke_test + mission_test + mission_smoke + gpu_profile + stabilization_profile + gpu_profile_check
+         + readback_test + readback_profile + execution_test + execution_profile + neighbor_test + neighbor_profile
+         + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
+         + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
+         + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check;
+}
+StartMode LaunchOptions::start_mode() const {
+    if (start_in_laboratory) return StartMode::cpu_laboratory;
+    if (start_in_arena) return StartMode::cpu_arena;
+    if (start_in_gpu) return StartMode::gpu_laboratory;
+    if (start_in_mission) return StartMode::mission;
+    return StartMode::menu;
+}
+SmokeScenario LaunchOptions::smoke_scenario() const {
+    if (smoke_test) return SmokeScenario::menu;
+    if (laboratory_smoke_test) return SmokeScenario::cpu_laboratory;
+    if (gpu_smoke_test) return SmokeScenario::gpu_laboratory;
+    if (mission_smoke) return SmokeScenario::mission;
+    if (session_smoke) return SmokeScenario::session;
+    return SmokeScenario::none;
+}
 std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
     LaunchOptions result;
     for (int i = 1; i < argc; ++i) {
@@ -394,16 +417,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
             return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
     }
     if (!result.gpu_execution.fluid.valid()) return std::unexpected{"Konfiguracja cieczy poza zakresem I07."};
-    if ((result.smoke_test || result.laboratory_smoke_test || result.gpu_test || result.gpu_liquid_test
-         || result.gpu_flow_test || result.gpu_smoke_test || result.mission_test || result.mission_smoke
-         || result.gpu_profile || result.stabilization_profile || result.gpu_profile_check || result.readback_test
-         || result.readback_profile || result.execution_test || result.execution_profile || result.neighbor_test
-         || result.neighbor_profile || result.coupling_test || result.coupling_profile || result.work_test
-         || result.transport_test || result.hot_test || result.cost_profile || result.thermal_check
-         || result.thermal_benchmark || result.vfx_check || result.vfx_benchmark || result.lighting_check
-         || result.lighting_benchmark || result.render_check || result.render_benchmark || result.fluid_check
-         || result.fluid_benchmark || result.cost_check || result.session_smoke || result.cache_check)
-        && result.profile.empty())
+    if (result.is_test() && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
     if (static_cast<int>(result.start_in_arena) + result.start_in_laboratory + result.start_in_gpu
                 + result.start_in_mission
@@ -421,20 +435,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
             || result.gpu_profiling.readback_mode != gpu::ReadbackMode::automatic))
         return std::unexpected{
                 "Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
-    if (static_cast<int>(result.smoke_test) + result.laboratory_smoke_test + result.gpu_test + result.gpu_liquid_test
-                + result.gpu_flow_test + result.gpu_smoke_test + result.mission_test + result.mission_smoke
-                + result.gpu_profile + result.stabilization_profile + result.gpu_profile_check + result.readback_test
-                + result.readback_profile + result.execution_test + result.execution_profile + result.neighbor_test
-                + result.neighbor_profile + result.coupling_test + result.coupling_profile + result.work_test
-                + result.transport_test + result.hot_test + result.cost_profile + result.cost_check
-                + result.thermal_check + result.thermal_benchmark + result.vfx_check + result.vfx_benchmark
-                + result.lighting_check + result.lighting_benchmark + result.render_check + result.render_benchmark
-                + result.fluid_check + result.fluid_benchmark + result.session_smoke + result.cache_check
-        > 1)
-        return std::unexpected{"Wybierz jeden rodzaj testu."};
-    if ((result.test_vsync.has_value() || result.test_frame_limit.has_value())
-        && !(result.smoke_test || result.laboratory_smoke_test || result.gpu_smoke_test || result.mission_smoke
-             || result.session_smoke))
+    if (result.test_count() > 1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if ((result.test_vsync.has_value() || result.test_frame_limit.has_value()) && !result.is_window_smoke())
         return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;
 }
