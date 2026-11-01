@@ -73,12 +73,12 @@ jobs:
           sha256sum -c SHA256SUMS.txt
           env -u LD_LIBRARY_PATH xvfb-run -a ./StrefaZero --smoke-test --profile /tmp/strefa-installed-profile
           ./StrefaPhysics --scene arena --ticks 5 --output /tmp/strefa-installed-physics
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: StrefaZero-Linux-x86_64
           path: dist/StrefaZero-Linux-x86_64.tar.gz*
           if-no-files-found: error
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: Linux-test-logs
