@@ -75,14 +75,11 @@ sudo apt install build-essential cmake ninja-build git pkg-config \
   libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
   libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
   libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev
-git clone --branch codex/linux-wsl-port https://github.com/maershal/strefa-zero.git
+git clone https://github.com/maershal/strefa-zero.git
 cd strefa-zero
 ./scripts/build.sh
 ./scripts/run.sh --mission
 ```
-
-Port jest opublikowany na gałęzi `codex/linux-wsl-port`. Po jego scaleniu
-z `main` można korzystać z głównej gałęzi repozytorium.
 
 Pierwsza konfiguracja pobiera przypięte SDL 3.4.18 i ImGui 1.93.0 z kontrolą
 SHA-256. Można podać `--dependency-cache /ścieżka/do/archiwów` z plikami
@@ -147,7 +144,7 @@ GitHub Actions buduje Linuxa, wykonuje testy CPU i testy okna przez Mesa/Xvfb
 oraz udostępnia paczkę jako artefakt.
 
 Środowisko testowe, poprawki zgodności i jawne ograniczenia:
-[LINUX_WSL_QA.md](https://github.com/maershal/strefa-zero/blob/codex/linux-wsl-port/docs/LINUX_WSL_QA.md).
+[LINUX_WSL_QA.md](https://github.com/maershal/strefa-zero/blob/main/docs/reports/LINUX_WSL_QA.md).
 
 Sterowanie: A/D — ruch, Spacja — skok, PPM — plecak, LPM — strzał,
 R — przeładowanie, G — granat, F5 — reset, Esc — menu. Utrata fokusu pauzuje grę.
