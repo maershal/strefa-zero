@@ -24,6 +24,10 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 | I05–I11 | [I05](reports/I05_SHARED_WORLD.md), [I06](reports/I06_GAMEPLAY_PROTOCOL.md), [I07](reports/I07_FLUID_QUALITY.md), [I08](reports/I08_SCENE_RENDERER.md), [I09](reports/I09_GPU_VFX.md), [I10](reports/I10_GPU_THERMAL.md), [I11](reports/I11_LIGHTING.md) |
 | Linux | [LINUX_WSL_QA](reports/LINUX_WSL_QA.md) |
 
+## Utrzymanie — [maintenance/](maintenance/)
+
+- [INVENTORY.md](maintenance/INVENTORY.md) — flagi, kod QA i testy CTest przed podziałem StrefaZero / StrefaQA.
+
 ## Plany — [plans/](plans/)
 
 - [PLAN_ROZWOJU_GPU.md](plans/PLAN_ROZWOJU_GPU.md) — plan rozwoju i rejestr postępu.
