@@ -1,5 +1,6 @@
 #include "app/application.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <stdexcept>
 #include <string>
@@ -12,11 +13,11 @@ using strefa::app::StartMode;
 void check(bool ok, const std::string& text) {
     if (!ok) throw std::runtime_error{text};
 }
-auto parse(std::vector<const char*> args) {
+auto parse(std::vector<const char*> args, strefa::app::OptionScope scope = strefa::app::OptionScope::all) {
     args.insert(args.begin(), "game");
     std::vector<char*> argv;
     for (const auto* text : args) argv.push_back(const_cast<char*>(text));
-    return strefa::app::parse_options(static_cast<int>(argv.size()), argv.data());
+    return strefa::app::parse_options(static_cast<int>(argv.size()), argv.data(), scope);
 }
 
 // Expected values copied from the boolean lists that preceded the predicates.
@@ -104,6 +105,29 @@ int main() {
               "Start mode and smoke test are independent");
         check(!parse({"--arena", "--mission"}), "Two start modes accepted");
         check(!parse({"--smoke-test", "--mission-smoke-test", "--profile", "fixture"}), "Two tests accepted");
+        // StrefaZero: only player options, each still parsed exactly as in StrefaQA.
+        using strefa::app::OptionScope;
+        const auto player = OptionScope::player;
+        for (const auto* flag :
+             {"--mission", "--gpu-laboratory", "--laboratory", "--arena", "--opengl33", "--gl-debug"})
+            check(bool(parse({flag}, player)), std::string{flag} + " must stay a player option");
+        for (const auto* flag : {"--smoke-test", "--mission-smoke-test"}) {
+            const auto options = parse({flag, "--profile", "fixture"}, player);
+            check(options && options->test_count() == 1, std::string{flag} + " must stay in StrefaZero");
+            check(!parse({flag}, player), std::string{flag} + " must require --profile in StrefaZero");
+        }
+        for (const auto& mode : mode_cases)
+            if (mode.smoke != SmokeScenario::menu && mode.smoke != SmokeScenario::mission)
+                check(!parse({mode.flag, "--profile", "fixture"}, player),
+                      std::string{mode.flag} + " is StrefaQA only");
+        for (const auto* flag :
+             {"--gpu-layout", "--physics-threads", "--gpu-thermal", "--test-seconds", "--gpu-counters"})
+            check(!parse({flag}, player), std::string{flag} + " is StrefaQA only");
+        const auto help = parse({"--help"}, player);
+        check(help && help->help && parse({"--help"})->help, "--help in both executables");
+        const auto text = strefa::app::help_text(player);
+        const auto listed = std::count(text.begin(), text.end(), '\n') - 1;
+        check(listed < 15, "StrefaZero --help must list fewer than 15 options");
         std::cout << "Launch options contract PASS\n";
         return 0;
     } catch (const std::exception& error) {

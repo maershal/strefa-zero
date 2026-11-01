@@ -1,5 +1,5 @@
 #include "gpu/readback_ring.hpp"
-#include "gpu/world.hpp"
+#include "gpu/validation.hpp"
 
 #include <algorithm>
 #include <cstring>

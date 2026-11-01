@@ -1,4 +1,5 @@
-#include "gpu/world.hpp"
+#include "gpu/validation.hpp"
+
 #include "sim/fixed_clock.hpp"
 
 #include <SDL3/SDL_opengl.h>

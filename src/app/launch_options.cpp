@@ -1,5 +1,7 @@
 #include "app/application.hpp"
 
+#include <algorithm>
+#include <array>
 #include <charconv>
 #include <cmath>
 #include <string_view>
@@ -8,7 +10,37 @@ namespace {
 std::filesystem::path utf8_path(const char* text) {
     return std::filesystem::path{reinterpret_cast<const char8_t*>(text)};
 }
+struct PlayerOption {
+    std::string_view name, value, description;
+};
+// The only options StrefaZero accepts; StrefaQA additionally accepts every validation, benchmark and tuning option.
+constexpr std::array player_options{
+        PlayerOption{"--profile", "<katalog>", "katalog ustawień i raportów (domyślnie katalog użytkownika)"},
+        PlayerOption{"--mission", "", "start w misji GPU"},
+        PlayerOption{"--gpu-laboratory", "", "start w laboratorium GPU"},
+        PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
+        PlayerOption{"--arena", "", "start na poligonie CPU"},
+        PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
+        PlayerOption{"--gl-debug", "", "zapis komunikatów sterownika OpenGL do gl-debug.txt w katalogu profilu"},
+        PlayerOption{"--smoke-test", "", "test dymny menu (wymaga --profile)"},
+        PlayerOption{"--mission-smoke-test", "", "test dymny misji GPU (wymaga --profile)"},
+        PlayerOption{"--help", "", "ta pomoc"},
+};
 } // namespace
+std::string help_text(OptionScope scope) {
+    std::string text = scope == OptionScope::player
+                             ? "Strefa Zero — opcje uruchomienia:\n"
+                             : "StrefaQA — opcje gry (pełna lista w docs/maintenance/INVENTORY.md):\n";
+    for (const auto& option : player_options) {
+        std::string usage{option.name};
+        if (!option.value.empty()) usage += " " + std::string{option.value};
+        usage.resize(std::max<std::size_t>(usage.size() + 2, 24), ' ');
+        text += "  " + usage + std::string{option.description} + "\n";
+    }
+    if (scope == OptionScope::all)
+        text += "Walidacje, benchmarki, profile i pokrętła GPU: README.md, sekcja StrefaQA.\n";
+    return text;
+}
 int LaunchOptions::test_count() const {
     return static_cast<int>(smoke_test) + laboratory_smoke_test + gpu_test + gpu_liquid_test + gpu_flow_test
          + gpu_smoke_test + mission_test + mission_smoke + gpu_profile + stabilization_profile + gpu_profile_check
@@ -32,10 +64,17 @@ SmokeScenario LaunchOptions::smoke_scenario() const {
     if (session_smoke) return SmokeScenario::session;
     return SmokeScenario::none;
 }
-std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
+std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, OptionScope scope) {
     LaunchOptions result;
     for (int i = 1; i < argc; ++i) {
         const std::string_view argument{argv[i]};
+        if (scope == OptionScope::player
+            && std::ranges::none_of(player_options, [&](const auto& option) { return option.name == argument; }))
+            return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
+        if (argument == "--help") {
+            result.help = true;
+            return result;
+        }
         if (argument == "--gpu-lighting-check")
             result.lighting_check = true;
         else if (argument == "--gpu-lighting-benchmark")

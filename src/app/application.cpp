@@ -1,7 +1,6 @@
 #include "app/application.hpp"
 
 #include "app/cpu_vfx.hpp"
-#include "app/diagnostic_scenarios.hpp"
 #include "app/frame_profile.hpp"
 #include "app/scenario_runner.hpp"
 #include "app/simulation_world.hpp"
@@ -866,7 +865,7 @@ private:
 
 } // namespace
 
-std::expected<int, std::string> run(const LaunchOptions& options) {
+std::expected<int, std::string> run(const LaunchOptions& options, const DiagnosticRunner& diagnostics) {
     SDL_SetAppMetadata("Strefa Zero", build::version.data(), "local.strefazero.prototype");
     auto system = platform::SdlSystem::create();
     if (!system) return std::unexpected{system.error()};
@@ -928,7 +927,8 @@ std::expected<int, std::string> run(const LaunchOptions& options) {
         }
     }
     if (testing && !options.is_window_smoke() && gl_debug) gl_debug->set_phase(platform::DebugPhase::validation);
-    if (auto diagnostic = run_diagnostic_scenario(options, assets, profile)) return *diagnostic;
+    if (diagnostics)
+        if (auto diagnostic = diagnostics(options, assets, profile)) return *diagnostic;
     auto gui = ui::Session::create(*window, assets);
     if (!gui) return std::unexpected{gui.error()};
     std::array<std::optional<platform::Texture>, 3> textures;
