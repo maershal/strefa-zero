@@ -1,4 +1,4 @@
-# Strefa Zero 0.7 — iteracja I07
+# Strefa Zero 0.7 — iteracja I11
 
 Uruchom `StrefaZero.exe`. Zachowaj `SDL3.dll`, `assets/` oraz `licenses/` w tym samym folderze.
 
@@ -20,7 +20,7 @@ Piasek, popiół i metalowe drobiny poruszają się z ciągłymi pozycjami, zder
 
 GPU wykonuje fizykę i rysowanie; krok czasu wynosi 1/120 s z podkrokami kontaktów. Panel pokazuje czas GPU i ewentualny pominięty czas. Wymagane OpenGL 4.3. Przy starszym sterowniku nadal działają tryby CPU na OpenGL 3.3; można wymusić je parametrem `--opengl33`.
 
-**Woda i olej działają już na GPU. Ogień, gazy, temperatura i reakcje pozostają w Laboratorium materiałów na CPU.** Misja GPU używa nowego modelu; poligon CPU pozostaje osobnym trybem. Opis i wyniki: REPORT.md w paczce Windows.
+**Woda i olej działają na GPU. Ogień, gazy, temperatura i reakcje mają referencyjną wersję w Laboratorium materiałów na CPU, a od I10 także opcjonalną termikę GPU, domyślnie wyłączoną: włącz ją parametrem `--gpu-thermal on` (opis w sekcji o termice poniżej).** Misja GPU używa nowego modelu; poligon CPU pozostaje osobnym trybem. Opis i wyniki: REPORT.md w paczce Windows.
 
 ## Poligon
 

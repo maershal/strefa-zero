@@ -1,4 +1,4 @@
-# Architektura 0.7.0 / I06
+# Architektura 0.7.0 / I11
 
 ## Jeden aktywny świat i zasoby
 
