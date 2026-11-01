@@ -1,5 +1,0 @@
-{
-  "sha256": "dec2c4991fc1b23d5551e9283edb4c68d39db4937d770229a05e44ad1387526b",
-  "default_storage": "direct",
-  "matrix": "3 storage modes x 2 readback periods x 6 repetitions; cyclic Latin order"
-}

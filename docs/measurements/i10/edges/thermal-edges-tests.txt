@@ -1,7 +1,0 @@
-closed_thin_wall_blocks_smoke=PASS
-edited_door_admits_smoke=PASS
-edited_world_balances_sources_and_removal=PASS
-asynchronous_inspector_returns_requested_cell=PASS
-generation_reset_discards_old_inspection=PASS
-opengl_no_error=PASS
-result=PASS

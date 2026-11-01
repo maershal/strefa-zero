@@ -1,4 +1,0 @@
-{
-  "intentional_interruption": true,
-  "reason": "Visual inspection found missing restoration of particle SSBO before fluid splat in HDR. Corrected; added equality check of the fluid field across all lighting qualities. A new complete CTest run follows."
-}

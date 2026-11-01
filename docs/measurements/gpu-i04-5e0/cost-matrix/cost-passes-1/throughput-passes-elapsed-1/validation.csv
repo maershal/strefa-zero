@@ -1,5 +1,0 @@
-scene,initial_active,final_active,finite,steps,trace_events,timestamp_pairs,header_copies,snapshots,staging_bytes
-mission,3096,3096,1,360,33616,240,0,0,0
-stress_16k,16000,16000,1,360,24000,240,0,0,0
-stress_32k,32768,32768,1,360,24000,240,0,0,0
-mission_blast,3096,3114,1,360,33616,240,0,0,0

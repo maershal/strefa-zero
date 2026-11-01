@@ -1,7 +1,0 @@
-mode=off max_state_error=0 passed
-mode=passes max_state_error=0 passed
-mode=bounds max_state_error=0 passed
-mode=snapshots max_state_error=0 passed
-generation_reset=passed
-capacity_overflow=explicit_failure
-status=passed

@@ -1,3 +1,0 @@
-gpu_timer_mode=elapsed
-phase_gating_effective=0
-skip_zero_projection=0

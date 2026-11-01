@@ -1,5 +1,0 @@
-﻿timestamp, index, name, driver_version, pstate, temperature.gpu, utilization.gpu [%], utilization.memory [%], clocks.current.graphics [MHz], clocks.current.memory [MHz], power.draw [W], memory.used [MiB], memory.total [MiB]
-2026/10/30 15:47:17.185, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 63, 72 %, 3 %, 1905 MHz, 4001 MHz, 26.01 W, 1013 MiB, 4096 MiB
-2026/10/30 15:47:17.699, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 63, 72 %, 3 %, 1905 MHz, 4001 MHz, 26.02 W, 1044 MiB, 4096 MiB
-2026/10/30 15:47:18.214, 0, NVIDIA GeForce GTX 1650, 610.47, P0, 63, 4 %, 1 %, 1905 MHz, 4001 MHz, 26.78 W, 1061 MiB, 4096 MiB
-

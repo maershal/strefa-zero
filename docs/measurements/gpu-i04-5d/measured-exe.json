@@ -1,5 +1,0 @@
-{
-  "sha256": "cca9aba9e226d786b55e5da05ddbc14357b1f6556404fec097032d67d7f7ee7a",
-  "default_neighbor_reads": "full",
-  "default_storage": "direct"
-}

@@ -1,9 +1,0 @@
-{
-  "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-strefa-zero-release\\runtime-070\\StrefaZero.exe",
-  "flags": [
-    "--gpu-coupling-profile"
-  ],
-  "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-results\\optimized-benchmark",
-  "timeout_ms": 1800000,
-  "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-results\\optimized-benchmark\\native-result.json"
-}

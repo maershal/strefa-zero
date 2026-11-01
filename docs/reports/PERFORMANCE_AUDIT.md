@@ -49,7 +49,7 @@ Skalowanie tego samego nowego modelu (120 kroków, dwa przebiegi, bez zmiany sta
 | smoke-vent | 2 | 23.68–25.68 |
 | smoke-vent | 4 | 18.57–19.66 |
 
-15/15 scen zachowało skończony stan i zbieżność PCG. Maksymalny błąd masy: 3.49e-09; entalpii: 1.67e-06. Dane surowe: [benchmarks](../measurements/benchmarks/final/all/summary.csv).
+15/15 scen zachowało skończony stan i zbieżność PCG. Maksymalny błąd masy: 3.49e-09; entalpii: 1.67e-06. Dane surowe: [benchmarks](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/benchmarks/final/all/summary.csv).
 
 
 ## Wdrożone optymalizacje
@@ -96,7 +96,7 @@ Wdrożona korekcja ma dwa poziomy. Kolejnym kandydatem jest pełny cykl wielosia
 
 `sim.numerics_parallel` obejmuje rozwiązanie wzorcowe Poissona, bitowe porównanie 1/2/4 wątków, cykle tworzenia/zamykania puli, stabilność sumy kontaktów cieplnych, dwa szczelne zbiorniki, aktywację gorącego paliwa, zmianę CFL i odrzucanie błędnej konfiguracji. Istniejące testy obejmują fazy, bilanse, cienkie ściany, tlen, osłony, sterowanie i niezależność od FPS. Testy okna używają rzeczywistego SDL/OpenGL.
 
-Końcowy Release przeszedł **8/8 testów CTest** (84,53 s). Osobny build Debug bez SDL/GPU przeszedł test ustawień i test cyklu życia laboratorium. Po instalacji sprawdzono zgodność SHA-256 plików wykonywalnych z buildem oraz trzy uruchomienia przenośne: pełny test ekranów/renderera i laboratorium na dwóch oraz czterech wątkach. Wszystkie zakończyły się kodem 0. Log: [TEST_RESULTS.txt](../measurements/legacy/TEST_RESULTS-0.4.2.txt); szczegóły środowiska i wyniki: [QA.json](../measurements/legacy/QA-0.4.2.json).
+Końcowy Release przeszedł **8/8 testów CTest** (84,53 s). Osobny build Debug bez SDL/GPU przeszedł test ustawień i test cyklu życia laboratorium. Po instalacji sprawdzono zgodność SHA-256 plików wykonywalnych z buildem oraz trzy uruchomienia przenośne: pełny test ekranów/renderera i laboratorium na dwóch oraz czterech wątkach. Wszystkie zakończyły się kodem 0. Log: [TEST_RESULTS.txt](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/legacy/TEST_RESULTS-0.4.2.txt); szczegóły środowiska i wyniki: [QA.json](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/legacy/QA-0.4.2.json).
 
 Testy przenośnego laboratorium obejmują 300 klatek, pauzę, wznowienie i przejście przez menu, przy ograniczeniu okna do 60 FPS. Na dwóch wątkach mediana klatki wyniosła 16,67 ms, p95 20,19 ms, p99 41,43 ms, maksimum 56,20 ms; na czterech odpowiednio 16,67 / 16,67 / 17,11 / 17,16 ms. Tempo fizyki wyniosło 12,55 i 16,81 kroku/s. Są to krótkie testy integracyjne, bez naprzemiennego powtarzania; nie stanowią samodzielnego dowodu przewagi czterech wątków. Pomiary skalowania w tabeli wyżej dotyczą fizyki bez okna.
 

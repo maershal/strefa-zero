@@ -114,4 +114,4 @@ Długą serię okien przerwano po wykryciu spowolnienia. Zachowano nieudane wyni
 
 **Instrumentacja I00 jest wdrożona i sprawdzona funkcjonalnie. Baza wydajności okna pozostaje nieodebrana.** Nie deklarujemy 60 FPS ani osiągnięcia celu 1,5 ms. I01 ma już konkretny punkt odniesienia dla ścieżki odczytów; porównania FPS wymagają ponownego sprawdzenia warunków wykonania i kontroli starej wersji.
 
-Surowe dane: [gpu-i00](../measurements/gpu-i00). Są tam raporty testów, pierwsza seria, ostateczna macierz na świeżych buforach, kontrole starszej wersji, próba widocznego okna i konfiguracja z jednym monitorem. Pliki BMP pominięto w archiwum pomiarów, żeby nie powielać obrazów bez zmian wizualnych.
+Surowe dane: [gpu-i00](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i00). Są tam raporty testów, pierwsza seria, ostateczna macierz na świeżych buforach, kontrole starszej wersji, próba widocznego okna i konfiguracja z jednym monitorem. Pliki BMP pominięto w archiwum pomiarów, żeby nie powielać obrazów bez zmian wizualnych.

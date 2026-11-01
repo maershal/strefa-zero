@@ -24,6 +24,3 @@ __pycache__/
 *.p12
 *.pem
 *.key
-
-# Raw QA images ship as a release asset (docs/QA_IMAGES.md); keep them local.
-/docs/measurements/**/*.bmp

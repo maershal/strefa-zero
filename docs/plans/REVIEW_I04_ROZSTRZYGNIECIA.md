@@ -73,7 +73,7 @@ Podstawy sprawdzenia lokalnego: [alokacje/programy/timery/render](../../src/gpu/
 4. Wykonać co najmniej trzy powtórzenia obu wariantów w przeplocie ABBA; odbiór okna obejmuje trzy próby referencji i trzy kandydata, z tymi samymi kryteriami utraty czasu.
 5. Na podstawie profilu wybrać B/C, a D/E uruchamiać wyłącznie przy potwierdzonym koszcie. Kolor gruzu F ma osobne, małe porównanie obrazu.
 
-Zapisane artefakty: [raport I04.5-A/F](../reports/I04_5_GPU_STABILIZATION.md), [dane pomiarowe](../measurements/gpu-i04-5), [raport C i wyniki QA](../reports/I04_5C_GPU_WORK.md), aktualizacja statusu/checklisty/dziennika w głównym planie. Raporty podają również nieosiągnięte cele. Samo zniknięcie komunikatu sterownika, szybszy test bez okna albo skrócenie zaległości zegara nie zalicza etapu.
+Zapisane artefakty: [raport I04.5-A/F](../reports/I04_5_GPU_STABILIZATION.md), [dane pomiarowe](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i04-5), [raport C i wyniki QA](../reports/I04_5C_GPU_WORK.md), aktualizacja statusu/checklisty/dziennika w głównym planie. Raporty podają również nieosiągnięte cele. Samo zniknięcie komunikatu sterownika, szybszy test bez okna albo skrócenie zaległości zegara nie zalicza etapu.
 
 Stan po B, przed badaniem D: po C zapisano 16/16 pomiarów bez potwierdzonego przyspieszenia; opcje C są OFF. Badanie B obejmuje UploadRing, immutable flags=0 oraz fallback GL 4.3, z wynikiem 28/28 QA i 36/36 procesów porównawczych. Direct pozostaje domyślne. Przyczyna różnicy warunków między sesjami nie jest zamknięta; dalsze D/E wymagają przypisania kosztu. I05 nie rozpoczyna się automatycznie. Szczegóły: [raport B](../reports/I04_5B_GPU_TRANSPORT.md).
 

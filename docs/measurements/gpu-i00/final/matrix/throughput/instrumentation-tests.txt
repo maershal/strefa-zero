@@ -1,9 +1,0 @@
-baseline=passed
-no_readback=passed
-readback_4=passed
-no_coupling=passed
-no_diagnostics=passed
-no_timers=passed
-no_counters=passed
-group_timers=passed
-status=passed

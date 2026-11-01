@@ -118,7 +118,7 @@ Druga seria potwierdza spadek łącznego kosztu CPU, a nie wyłącznie przeniesi
 2. Pierścień z trwałym mapowaniem nadal odpytywany w każdym ticku skrócił samo czytanie pakietu, ale p95 CPU pozostawało około 1–2 ms. Nie wybrano tego wariantu.
 3. GetSynciv zamiast ClientWaitSync pogorszył na tym sterowniku koszt odpytywania; wariant cofnięto. Ostateczny transport używa ClientWaitSync z flagami i timeoutem zero, na poziomie klatki.
 
-Surowe dane i wszystkie wyjątki: [gpu-i01](../measurements/gpu-i01). `initial-tick-poll/` i `rejected-get-synciv/` są eksperymentami odrzuconymi; `final-frame-poll/` opisuje implementację końcową. `windows/` zawiera wszystkie dziewięć prób, również nieudane i dokończone po przerwaniu skryptu na legacy / 3.
+Surowe dane i wszystkie wyjątki: [gpu-i01](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i01). `initial-tick-poll/` i `rejected-get-synciv/` są eksperymentami odrzuconymi; `final-frame-poll/` opisuje implementację końcową. `windows/` zawiera wszystkie dziewięć prób, również nieudane i dokończone po przerwaniu skryptu na legacy / 3.
 
 ## Odbiór i następny etap
 

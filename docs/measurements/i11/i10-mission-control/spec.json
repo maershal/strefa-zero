@@ -1,9 +1,0 @@
-{
-  "executable": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\outputs\\StrefaZero-Windows-x64-I10\\StrefaZero.exe",
-  "flags": [
-    "--mission-smoke-test"
-  ],
-  "profile": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\i10-mission-control",
-  "timeout_ms": 120000,
-  "result": "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i11-results\\i10-mission-control\\run-result.json"
-}

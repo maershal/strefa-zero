@@ -1,1 +1,0 @@
-i08_reference=PASS; I08 source snapshot; measurement harness only; 23040 samples

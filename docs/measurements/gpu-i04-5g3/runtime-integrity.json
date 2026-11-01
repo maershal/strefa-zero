@@ -1,9 +1,0 @@
-{
-  "unchanged": true,
-  "baseline_sha256": "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e",
-  "trigger_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
-  "runtime_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
-  "runtime_rebuilt": false,
-  "g2_production_source_hashes_verified": 17,
-  "all_assets_equal_frozen_g2": true
-}

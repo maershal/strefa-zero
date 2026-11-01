@@ -1,9 +1,0 @@
-{
-  "executable": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i07-results\\baseline\\StrefaZero.exe",
-  "flags": [
-    "--mission-test"
-  ],
-  "profile": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i07-results\\frozen-i06-control",
-  "timeout_ms": 600000,
-  "result": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i07-results\\frozen-i06-control\\native-result.json"
-}

@@ -1,8 +1,0 @@
-{
-  "samples": 60,
-  "median_ms": 0.122,
-  "p95_ms": 0.124576,
-  "max_ms": 0.344128,
-  "peak_budget_ms": 1,
-  "pass": true
-}

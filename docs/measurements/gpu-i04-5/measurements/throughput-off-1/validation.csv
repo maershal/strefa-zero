@@ -1,4 +1,0 @@
-scene,expected_particles,actual_particles,finite,steps,timer_mode
-mission,3096,3096,1,360,off
-stress_16k,16000,16000,1,360,off
-stress_32k,32768,32768,1,360,off

@@ -1,7 +1,0 @@
-{
-  "initial_attempt": "matrix-launch-rejected",
-  "reason": "The new --gpu-pbf-size flag was omitted from the supervisor ExtraArguments allowlist; all 12 candidate invocations were rejected before process creation. Four Q-only processes succeeded.",
-  "remedy": "Add the new flag with values 64/128/256 to the existing allowlist, retain the failed attempt, run the complete balanced schedule in a fresh directory.",
-  "runtime_or_acceptance_changes": false,
-  "included_in_performance_comparison": false
-}

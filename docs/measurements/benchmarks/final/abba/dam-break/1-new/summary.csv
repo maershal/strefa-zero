@@ -1,2 +1,0 @@
-scene,ticks,median_ms,p95_ms,p99_ms,max_ms,max_mass_error,max_energy_error,max_pcg_residual,nonconverged_ticks,max_overfill,finite
-dam-break,180,54.4564,72.988,86.2501,93.2971,3.48882e-09,2.76603e-07,9.99445e-05,0,9.71158e-06,1

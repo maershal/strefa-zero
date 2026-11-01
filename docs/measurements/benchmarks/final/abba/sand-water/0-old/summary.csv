@@ -1,2 +1,0 @@
-scene,ticks,median_ms,p95_ms,p99_ms,max_ms,max_mass_error,max_energy_error,max_pcg_residual,nonconverged_ticks,max_overfill,finite
-sand-water,180,73.831,105.888,158.497,194.667,6.8103e-09,1.17719e-06,9.99983e-05,0,0.00116857,1
