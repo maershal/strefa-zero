@@ -87,7 +87,8 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
                 const auto commands=world->read_dispatch_commands();
                 require(commands[detail::active_command]==(count+local-1)/local&&commands[detail::draw_command+1]==count,"Active dispatch/draw arguments disagree with actual loaded count");
                 require(commands[detail::reduction_command]==(count?1U:0U),"Empty reduction was not gated");
-                for(unsigned i=0;i<6;++i)world->step();drain(*world);
+                for(unsigned i=0;i<6;++i)world->step();
+                drain(*world);
                 require(world->take_timings().size()==6&&world->take_group_profiles().size()==6,"FIFO lost GPU query samples");
                 const auto idle=world->read_dispatch_commands();
                 for(auto command:{detail::rebuild_command,detail::sync_command,detail::terrain_command,detail::blast_command,detail::blast_terrain_command,detail::debris_command})
@@ -107,7 +108,8 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
             require(calls.timer_submissions+calls.timer_skips==70,"Query queue did not account for full slots");
             require(world->take_timings().size()==calls.timer_submissions,"Query queue overwrote a pending sample");
             checks<<"query_queue_"<<local<<" submitted="<<calls.timer_submissions<<" skipped="<<calls.timer_skips<<" admission_retries="<<admission_retries<<'\n';
-            for(unsigned i=0;i<12;++i)world->step();clear(*world);scene(*world,0);drain(*world);
+            for(unsigned i=0;i<12;++i)world->step();
+            clear(*world);scene(*world,0);drain(*world);
             require(world->take_timings().empty(),"Old-generation timing updated a new world");
             checks<<"groups_"<<local<<"=passed (empty, tails, capacity, FIFO wraps, reset)\n";checks.flush();
         }
@@ -118,7 +120,8 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
                 Grain grain;grain.position={178,90,178,90};grain.motion={3,0,1,1};
                 const std::vector<std::uint32_t> walls(width*height);world->load(std::span{&grain,1},walls);world->configure_mission({});
                 if(blast)world->queue_explosion({1,174,90,12,20});
-                for(unsigned i=0;i<3;++i)world->step();const auto state=world->readback();
+                for(unsigned i=0;i<3;++i)world->step();
+                const auto state=world->readback();
                 if(!optimized)reference=state;
                 else for(unsigned i=0;i<4;++i){require(std::abs(state[0].position[i]-reference[0].position[i])<.001F,"In-place blast changed particle positions");require(std::abs(state[0].motion[i]-reference[0].motion[i])<.001F,"In-place blast changed particle velocity");}
             }
@@ -149,7 +152,8 @@ std::expected<void,std::string> validate_execution(const std::filesystem::path& 
 #undef HEADER
         steps<<'\n';
         const auto metric=[&](unsigned count,const char* variant,unsigned repeat,const char* name,const std::vector<double>& values){
-            if(values.empty())return;summary<<count<<','<<variant<<','<<repeat<<','<<name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
+            if(values.empty())return;
+            summary<<count<<','<<variant<<','<<repeat<<','<<name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
         };
         for(unsigned repeat=1;repeat<=3;++repeat){
             auto choices=variants();if(repeat%2==0)std::ranges::reverse(choices);

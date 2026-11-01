@@ -22,7 +22,8 @@ VfxPool::~VfxPool(){
 GLint VfxPool::location(GLuint program,const char* name)const{
     const auto p=std::find_if(uniforms.begin(),uniforms.end(),[&](const auto& x){return x.id==program;});
     const auto n=std::find_if(uniform_names.begin(),uniform_names.end(),[&](const auto* x){return std::strcmp(x,name)==0;});
-    if(p==uniforms.end()||n==uniform_names.end())throw std::logic_error{"Uncached VFX uniform"};return p->locations[static_cast<std::size_t>(n-uniform_names.begin())];
+    if(p==uniforms.end()||n==uniform_names.end())throw std::logic_error{"Uncached VFX uniform"};
+    return p->locations[static_cast<std::size_t>(n-uniform_names.begin())];
 }
 void VfxPool::initialize(ShaderLibrary& library,const std::filesystem::path& folder){
     if(initialized)return;
@@ -31,7 +32,8 @@ void VfxPool::initialize(ShaderLibrary& library,const std::filesystem::path& fol
     graphics=library.program({{GL_VERTEX_SHADER,folder/"vfx_draw.vert"},{GL_FRAGMENT_SHADER,folder/"vfx_draw.frag"}});
     copy=library.program({{GL_VERTEX_SHADER,folder/"liquid_surface.vert"},{GL_FRAGMENT_SHADER,folder/"vfx_canvas.frag"}});canvas_program=copy;
     for(GLuint program:{init,prepare,update,events_program,water_program,finish,graphics,copy}){ProgramUniforms u;u.id=program;
-        for(unsigned i=0;i<uniform_names.size();++i)u.locations[i]=gl.GetUniformLocation(program,uniform_names[i]);uniforms.push_back(u);}
+        for(unsigned i=0;i<uniform_names.size();++i)u.locations[i]=gl.GetUniformLocation(program,uniform_names[i]);
+        uniforms.push_back(u);}
     gl.GenBuffers(static_cast<GLsizei>(buffers.size()),buffers.data());
     const std::array<std::size_t,7> sizes{vfx_capacity*sizeof(VfxParticle),vfx_capacity*4,vfx_capacity*4,vfx_capacity*4,sizeof(VfxCounters),16+vfx_event_capacity*sizeof(VfxEvent),vfx_capacity*12};
     for(unsigned i=0;i<sizes.size();++i){gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[i]);gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(sizes[i]),nullptr,GL_DYNAMIC_COPY);}
@@ -52,7 +54,8 @@ void VfxPool::run(GLuint program,unsigned groups){
     gl.DispatchCompute(groups,1,1);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
 }
 void VfxPool::reset(unsigned gen){
-    if(!initialized)return;generation=gen;tick=0;bank=0;++serial;latest={};latest.counts[1]=vfx_capacity;latest.clock[0]=gen;latest.draw={4,0,0,0};active_probe=nullptr;
+    if(!initialized)return;
+    generation=gen;tick=0;bank=0;++serial;latest={};latest.counts[1]=vfx_capacity;latest.clock[0]=gen;latest.draw={4,0,0,0};active_probe=nullptr;
     state.invalidate();gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[4]);gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,sizeof(latest),&latest);bind();run(init,(vfx_capacity+127)/128);state.invalidate();
 }
 void VfxPool::set_options(VfxOptions value){if(value.quality==VfxQuality::off&&config.quality!=VfxQuality::off)reset(generation);config=value;}
@@ -66,7 +69,8 @@ VfxPool::Probe* VfxPool::begin_probe(bool draw,bool metadata){
 void VfxPool::close_probe(Probe* p){if(!p)return;if(p->measured)gl.QueryCounter(p->queries[3],GL_TIMESTAMP);
     gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);gl.BindBuffer(GL_COPY_READ_BUFFER,buffers[4]);gl.BindBuffer(GL_COPY_WRITE_BUFFER,p->buffer);gl.CopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,0,0,sizeof(VfxCounters));p->fence=gl.FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE,0);++probe_count;}
 void VfxPool::begin_tick(GLuint terrain_id,unsigned gen,unsigned source_tick,float seconds){
-    if(!enabled())return;sand_field=0;if(gen!=generation)reset(gen);generation=gen;tick=source_tick;dt=seconds;normalization=1.F/(1.F+4.F*(1.F-1.F/(1.35F*1.35F))*(1.F-1.F/(1.35F*1.35F)));terrain=terrain_id;state.invalidate();bind();active_probe=begin_probe(false);
+    if(!enabled())return;
+    sand_field=0;if(gen!=generation)reset(gen);generation=gen;tick=source_tick;dt=seconds;normalization=1.F/(1.F+4.F*(1.F-1.F/(1.35F*1.35F))*(1.F-1.F/(1.35F*1.35F)));terrain=terrain_id;state.invalidate();bind();active_probe=begin_probe(false);
 }
 void VfxPool::field_target(){
     state.raster(320,192);state.vertex_array(vao);state.framebuffer(fbo);gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,field,0);glClearColor(0,0,0,0);glClear(GL_COLOR_BUFFER_BIT);
@@ -76,34 +80,40 @@ void VfxPool::upload_field(std::span<const float> values,std::span<const std::ui
     normalization=1.F;state.texture(2,field);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,320,192,GL_RGBA,GL_FLOAT,values.data());state.texture(3,cpu_terrain);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,320,192,GL_RED_INTEGER,GL_UNSIGNED_SHORT,walls.data());terrain=cpu_terrain;
 }
 void VfxPool::end_tick(GLuint mission,std::span<const VfxEvent> events,bool water){
-    if(!enabled())return;const auto refused=events.size()>vfx_event_capacity?static_cast<unsigned>(events.size()-vfx_event_capacity):0u;events=events.first(std::min<std::size_t>(events.size(),vfx_event_capacity));
+    if(!enabled())return;
+    const auto refused=events.size()>vfx_event_capacity?static_cast<unsigned>(events.size()-vfx_event_capacity):0u;events=events.first(std::min<std::size_t>(events.size(),vfx_event_capacity));
     if(active_probe)gl.QueryCounter(active_probe->queries[1],GL_TIMESTAMP);
     state.invalidate();bind();run(prepare);run(update,(vfx_capacity+127)/128);
     if(active_probe)gl.QueryCounter(active_probe->queries[2],GL_TIMESTAMP);
     if(!mission&&!events.empty()){const std::array<unsigned,4> header{generation,tick,static_cast<unsigned>(events.size()),refused};gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[5]);gl.BufferData(GL_SHADER_STORAGE_BUFFER,16+vfx_event_capacity*sizeof(VfxEvent),nullptr,GL_STREAM_DRAW);gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,sizeof(header),header.data());if(!events.empty())gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,16,static_cast<GLsizeiptr>(events.size_bytes()),events.data());}
     state.base(6,mission?mission:buffers[5]);state.use(events_program);gl.Uniform1i(location(events_program,"cpuSource"),mission?0:events.empty()?2:1);run(events_program);
-    if(water)for(int kind=5;kind<=7;++kind){state.use(water_program);gl.Uniform1i(location(water_program,"layer"),kind);run(water_program,((320*192)/(config.quality==VfxQuality::low?4:1)+127)/128);}if(sand_field){state.texture(1,sand_field);state.use(water_program);gl.Uniform1i(location(water_program,"layer"),9);run(water_program,((320*192)/(config.quality==VfxQuality::low?4:1)+127)/128);}run(finish);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);bank=1-bank;close_probe(active_probe);active_probe=nullptr;
+    if(water)for(int kind=5;kind<=7;++kind){state.use(water_program);gl.Uniform1i(location(water_program,"layer"),kind);run(water_program,((320*192)/(config.quality==VfxQuality::low?4:1)+127)/128);}
+    if(sand_field){state.texture(1,sand_field);state.use(water_program);gl.Uniform1i(location(water_program,"layer"),9);run(water_program,((320*192)/(config.quality==VfxQuality::low?4:1)+127)/128);}run(finish);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);bank=1-bank;close_probe(active_probe);active_probe=nullptr;
     if(!config.profile&&tick%30==0&&probe_count<probes.size()){
         auto* p=begin_probe(true,true);close_probe(p);
     }
     state.invalidate();
 }
 void VfxPool::draw(GLuint target,int w,int h,int layer,float interpolation,bool linear){
-    if(!enabled())return;state.raster(w,h);state.framebuffer(target);state.vertex_array(vao);bind();
+    if(!enabled())return;
+    state.raster(w,h);state.framebuffer(target);state.vertex_array(vao);bind();
     auto* p=begin_probe(true);state.use(graphics);gl.Uniform1f(location(graphics,"fieldNormalization"),normalization);gl.Uniform1i(location(graphics,"layer"),layer);gl.Uniform1f(location(graphics,"alpha"),std::clamp(interpolation,0.F,1.F));gl.Uniform1i(location(graphics,"linearOutput"),linear?1:0);gl.Uniform4f(location(graphics,"renderExtent"),static_cast<float>(w),static_cast<float>(h),0.F,0.F);
     state.draw_indirect(buffers[4]);glEnable(GL_BLEND);gl.BlendFuncSeparate(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA,GL_ONE,GL_ONE_MINUS_SRC_ALPHA);gl.DrawArraysIndirect(GL_TRIANGLE_STRIP,reinterpret_cast<void*>(layer==2?offsetof(VfxCounters,wave):layer==0?offsetof(VfxCounters,pre):offsetof(VfxCounters,post)));glDisable(GL_BLEND);close_probe(p);
 }
 void VfxPool::allocate_scratch(int w,int h,bool linear){
     if(scratch&&w==scratch_width&&h==scratch_height&&scratch_linear==linear)return;
-    if(scratch)glDeleteTextures(1,&scratch);texture(scratch,w,h,linear?GL_RGBA16F:GL_RGBA8,GL_RGBA,GL_FLOAT);scratch_linear=linear;if(!scratch_fbo)gl.GenFramebuffers(1,&scratch_fbo);state.framebuffer(scratch_fbo);gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,scratch,0);scratch_width=w;scratch_height=h;
+    if(scratch)glDeleteTextures(1,&scratch);
+    texture(scratch,w,h,linear?GL_RGBA16F:GL_RGBA8,GL_RGBA,GL_FLOAT);scratch_linear=linear;if(!scratch_fbo)gl.GenFramebuffers(1,&scratch_fbo);state.framebuffer(scratch_fbo);gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,scratch,0);scratch_width=w;scratch_height=h;
     if(gl.CheckFramebufferStatus(GL_FRAMEBUFFER)!=GL_FRAMEBUFFER_COMPLETE)throw std::runtime_error{"Incomplete distortion framebuffer"};
 }
 void VfxPool::distort(GLuint source,GLuint target,int w,int h,float interpolation,bool linear){
-    if(!enabled())return;state.invalidate();allocate_scratch(w,h,linear);state.raster(w,h);state.vertex_array(vao);state.framebuffer(scratch_fbo);state.use(copy);state.texture(4,source);gl.Uniform1i(location(copy,"copyMode"),0);gl.Uniform4f(location(copy,"renderExtent"),static_cast<float>(w),static_cast<float>(h),0.F,0.F);
+    if(!enabled())return;
+    state.invalidate();allocate_scratch(w,h,linear);state.raster(w,h);state.vertex_array(vao);state.framebuffer(scratch_fbo);state.use(copy);state.texture(4,source);gl.Uniform1i(location(copy,"copyMode"),0);gl.Uniform4f(location(copy,"renderExtent"),static_cast<float>(w),static_cast<float>(h),0.F,0.F);
     auto* p=begin_probe(true);state.draw_indirect(buffers[4]);gl.DrawArraysIndirect(GL_TRIANGLES,reinterpret_cast<void*>(offsetof(VfxCounters,copy)));close_probe(p);state.texture(4,scratch);draw(target,w,h,2,interpolation,linear);
 }
 void VfxPool::cpu_canvas(GLuint source,GLuint background,float interpolation){
-    if(!enabled())return;state.invalidate();state.raster(960,576);state.vertex_array(vao);state.framebuffer(cpu_fbos[0]);state.texture(4,source);state.texture(1,background);state.use(canvas_program);gl.Uniform1i(location(copy,"copyMode"),1);gl.Uniform4f(location(copy,"renderExtent"),960.F,576.F,0.F,0.F);glDrawArrays(GL_TRIANGLES,0,3);
+    if(!enabled())return;
+    state.invalidate();state.raster(960,576);state.vertex_array(vao);state.framebuffer(cpu_fbos[0]);state.texture(4,source);state.texture(1,background);state.use(canvas_program);gl.Uniform1i(location(copy,"copyMode"),1);gl.Uniform4f(location(copy,"renderExtent"),960.F,576.F,0.F,0.F);glDrawArrays(GL_TRIANGLES,0,3);
     draw(cpu_fbos[0],960,576,0,interpolation);distort(cpu_images[0],cpu_fbos[0],960,576,interpolation);state.framebuffer(cpu_fbos[1]);glClearColor(0,0,0,0);glClear(GL_COLOR_BUFFER_BIT);draw(cpu_fbos[1],960,576,1,interpolation);state.framebuffer(0);state.invalidate();
 }
 void VfxPool::poll(){
@@ -124,7 +134,8 @@ VfxSnapshot VfxPool::snapshot(){
     gl.BindBuffer(GL_COPY_READ_BUFFER,buffers[3]);if(!result.free.empty())gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,static_cast<GLsizeiptr>(result.free.size()*4),result.free.data());state.invalidate();return result;
 }
 void VfxPool::seed_for_test(std::span<const VfxParticle> input){
-    if(input.size()>vfx_capacity)throw std::invalid_argument{"VFX diagnostic seed capacity"};reset(generation);std::vector<unsigned> ids(vfx_capacity);std::iota(ids.begin(),ids.end(),0u);latest.counts={static_cast<unsigned>(input.size()),vfx_capacity-static_cast<unsigned>(input.size()),0,static_cast<unsigned>(input.size())};latest.draw={4,static_cast<unsigned>(input.size()),0,0};
+    if(input.size()>vfx_capacity)throw std::invalid_argument{"VFX diagnostic seed capacity"};
+    reset(generation);std::vector<unsigned> ids(vfx_capacity);std::iota(ids.begin(),ids.end(),0u);latest.counts={static_cast<unsigned>(input.size()),vfx_capacity-static_cast<unsigned>(input.size()),0,static_cast<unsigned>(input.size())};latest.draw={4,static_cast<unsigned>(input.size()),0,0};
     std::vector<unsigned> draw_ids(vfx_capacity*3);for(unsigned i=0;i<input.size();++i){const auto kind=input[i].appearance[0];const auto layer=(kind==7||kind==9||kind==10)?0u:kind==11?2u:1u;draw_ids[layer*vfx_capacity+latest.layers[layer]++]=i;}latest.pre={4,latest.layers[0],0,0};latest.post={4,latest.layers[1],0,0};latest.wave={4,latest.layers[2],0,0};latest.copy={3,latest.layers[2]?1u:0u,0,0};
     gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);const auto put=[&](GLuint buffer,GLsizeiptr bytes,const void* data){gl.BindBuffer(GL_COPY_WRITE_BUFFER,buffer);if(bytes)gl.BufferSubData(GL_COPY_WRITE_BUFFER,0,bytes,data);};
     put(buffers[0],static_cast<GLsizeiptr>(input.size_bytes()),input.data());put(buffers[1],static_cast<GLsizeiptr>(input.size()*4),ids.data());put(buffers[3],static_cast<GLsizeiptr>((vfx_capacity-input.size())*4),ids.data()+input.size());put(buffers[4],sizeof(latest),&latest);put(buffers[6],static_cast<GLsizeiptr>(draw_ids.size()*4),draw_ids.data());gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT|GL_COMMAND_BARRIER_BIT);state.invalidate();

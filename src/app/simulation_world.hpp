@@ -10,7 +10,7 @@ struct SimulationFrame {
     std::optional<gpu::Stroke> stroke;
     double elapsed{};
     bool focused{},paused{},single_step{},scripted{};
-    gpu::ThermalBrush thermal_brush;
+    gpu::ThermalBrush thermal_brush{};
 };
 struct SimulationSubmission {unsigned ticks{};double cpu_ms{},render_ms{};};
 // One active scene and scheduler for both presentation views. The underlying

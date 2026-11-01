@@ -22,7 +22,8 @@ std::expected<void,std::string> validate_cpu_vfx(gpu::RenderDevice& device,const
             for(const auto& sample:pool.take_samples())timing<<fps<<','<<sample.tick<<",0,"<<sample.field_ms<<','<<sample.update_ms<<','<<sample.emit_ms<<','<<sample.draw_ms<<'\n';
         }
         pool.set_options({gpu::VfxQuality::off,false});if(!pool.snapshot().alive.empty())throw std::runtime_error{"CPU VFX off retained particles"};pool.set_options({gpu::VfxQuality::low,false});
-        if(glGetError()!=GL_NO_ERROR)throw std::runtime_error{"CPU VFX OpenGL error"};report<<"result=PASS\n";return {};
+        if(glGetError()!=GL_NO_ERROR)throw std::runtime_error{"CPU VFX OpenGL error"};
+        report<<"result=PASS\n";return {};
     }catch(const std::exception& e){std::ofstream{output/"cpu-vfx-error.txt"}<<e.what()<<'\n';return std::unexpected{e.what()};}
 }
 }

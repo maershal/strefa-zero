@@ -7,7 +7,8 @@ SceneRenderer::~SceneRenderer(){
     for(auto& t:terrain_timings)if(t.ids[0])gl.DeleteQueries(2,t.ids.data());
     release_frozen();for(auto& t:timings)if(t.ids[0])gl.DeleteQueries(10,t.ids.data());delete_targets();
     if(field_command)gl.DeleteBuffers(1,&field_command);
-    if(terrain_image)glDeleteTextures(1,&terrain_image);if(vao)gl.DeleteVertexArrays(1,&vao);
+    if(terrain_image)glDeleteTextures(1,&terrain_image);
+    if(vao)gl.DeleteVertexArrays(1,&vao);
 }
 GLint SceneRenderer::location(GLuint p,const char* name)const{return uniforms.at(p).at(name);}
 void SceneRenderer::delete_targets(){
@@ -96,7 +97,8 @@ void SceneRenderer::render(const RenderState& input,float interpolation){
     if(hdr){lighting.illuminate(scene_image,receiver_image,terrain_image,rw,rh,hdr_scene_fbo,options.lighting);state.base(0,input.buffers[input.current]);state.base(4,input.buffers[4]);}
     attachment(raw_image);glClearColor(0,0,0,0);glClear(GL_COLOR_BUFFER_BIT);
     if(input.fluids_enabled){state.texture(3,terrain_image);state.use(reference?reference_splat:splat);gl.Uniform1f(location(reference?reference_splat:splat,"alpha"),a);
-        if(!reference)extent(splat,"renderExtent");glEnable(GL_BLEND);gl.BlendFuncSeparate(GL_ONE,GL_ONE,GL_ONE,GL_ONE);draw_active(input);glDisable(GL_BLEND);
+        if(!reference)extent(splat,"renderExtent");
+        glEnable(GL_BLEND);gl.BlendFuncSeparate(GL_ONE,GL_ONE,GL_ONE,GL_ONE);draw_active(input);glDisable(GL_BLEND);
     }mark(2);
     const bool smooth=input.fluids_enabled&&!reference&&options.quality!=RenderQuality::basic&&stage!=RenderStage::opaque;
     if(smooth){attachment(temporary_image);state.texture(0,raw_image);state.texture(2,raw_image);state.texture(3,terrain_image);state.use(filter);
@@ -136,7 +138,8 @@ void SceneRenderer::end_terrain_update(){if(terrain_active){auto& t=terrain_timi
 void SceneRenderer::poll_samples(){
     for(unsigned i=0;i<32;++i){auto& t=terrain_timings[terrain_head];if(!t.pending)break;GLint ready{};gl.GetQueryObjectiv(t.ids[1],GL_QUERY_RESULT_AVAILABLE,&ready);if(!ready)break;
         GLuint64 a{},b{};gl.GetQueryObjectui64v(t.ids[0],GL_QUERY_RESULT,&a);gl.GetQueryObjectui64v(t.ids[1],GL_QUERY_RESULT,&b);
-        if(terrain_samples.size()<8192)terrain_samples.push_back(static_cast<double>(b-a)/1e6);t.pending=false;terrain_head=(terrain_head+1)%32;
+        if(terrain_samples.size()<8192)terrain_samples.push_back(static_cast<double>(b-a)/1e6);
+        t.pending=false;terrain_head=(terrain_head+1)%32;
     }
 
     for(unsigned i=0;i<timings.size();++i){auto& t=timings[timing_head];if(!t.pending)break;GLint ready{};gl.GetQueryObjectiv(t.ids[7],GL_QUERY_RESULT_AVAILABLE,&ready);if(!ready)break;
@@ -152,7 +155,8 @@ void SceneRenderer::reset_profiles(){
     for(auto& t:terrain_timings){if(t.ids[0])gl.DeleteQueries(2,t.ids.data());t={};}terrain_head=terrain_cursor=0;terrain_active=false;terrain_samples.clear();
 }
 void SceneRenderer::resize_for_test(int scale){if(scale<1||scale>6)throw std::invalid_argument{"Render scale outside 1..6"};
-    if(rw==width*scale)return;delete_targets();rw=width*scale;rh=height*scale;allocate_targets();reset_profiles();}
+    if(rw==width*scale)return;
+    delete_targets();rw=width*scale;rh=height*scale;allocate_targets();reset_profiles();}
 std::uint64_t SceneRenderer::memory_bytes()const{return static_cast<std::uint64_t>(rw)*rh*(4+8+1+3*8+2+16)+width*height*2+16+lighting.memory_bytes();}
 std::vector<std::uint8_t> SceneRenderer::read_image()const{std::vector<std::uint8_t> pixels(static_cast<std::size_t>(rw)*rh*4);
     gl.BindFramebuffer(GL_READ_FRAMEBUFFER,world_fbo);glReadPixels(0,0,rw,rh,GL_RGBA,GL_UNSIGNED_BYTE,pixels.data());gl.BindFramebuffer(GL_READ_FRAMEBUFFER,0);state.invalidate();return pixels;}

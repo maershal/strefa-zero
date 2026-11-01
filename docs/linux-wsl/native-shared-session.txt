@@ -1,0 +1,7 @@
+frames=130
+checks=12
+passed=1
+world_creations=1
+programs=70
+cpu_game_created=0
+cpu_laboratory_created=0

@@ -28,7 +28,8 @@ std::expected<void,std::string> ParticleWorld::validate_vfx(const std::filesyste
                             if(std::abs(delta)<1e-12){if(start<minimum||start>maximum){enter=2;break;}}
                             else{double lo=(minimum-start)/delta,hi=(maximum-start)/delta;if(lo>hi)std::swap(lo,hi);enter=std::max(enter,lo);leave=std::min(leave,hi);}}
                             blocked=enter<=leave;}
-                        if(blocked)continue;const double w=q*q;expected[p.motion[3]==5?0:1]+=w;expected[2]+=w*p.motion[0];expected[3]+=w*p.motion[1];}
+                        if(blocked)continue;
+                        const double w=q*q;expected[p.motion[3]==5?0:1]+=w;expected[2]+=w*p.motion[0];expected[3]+=w*p.motion[1];}
                     for(unsigned c=0;c<4;++c)if(std::abs(actual[(y*width+x)*4+c]-expected[c])>std::max(.002,std::abs(expected[c])*.003))valid=false;
                 }
                 require(valid,"point_field_matches_independent_kernel");pool.end_tick(0,{},false);
@@ -37,15 +38,18 @@ std::expected<void,std::string> ParticleWorld::validate_vfx(const std::filesyste
             pool.set_options({VfxQuality::low,false});pool.reset(gen);require(check_pool(pool.snapshot()),"initial_partition");
             std::array<VfxEvent,3> events{event(VfxKind::explosion,1),event(VfxKind::impact,2),event(VfxKind::muzzle,3)};advance(events);auto first=pool.snapshot();require(first.counters.emitted[1]==1&&first.counters.emitted[3]==1&&first.counters.emitted[8]>40&&check_pool(first),"confirmed_effect_catalog");
             --tick;advance(events,0);const auto duplicate=pool.snapshot();require(first.counters.emitted==duplicate.counters.emitted,"duplicate_batch_not_reemitted");
-            for(unsigned i=0;i<240;++i)advance();require(pool.snapshot().alive.empty(),"expired_slots_reclaimed");
+            for(unsigned i=0;i<240;++i)advance();
+            require(pool.snapshot().alive.empty(),"expired_slots_reclaimed");
             std::vector<VfxParticle> full(vfx_capacity,particle(VfxKind::explosion,60,60,0,0,1000));pool.seed_for_test(full);auto explosion=event(VfxKind::explosion);advance(std::span{&explosion,1});auto saturated=pool.snapshot();require(saturated.alive.size()==vfx_capacity&&saturated.counters.rejected[1]>0&&check_pool(saturated),"full_pool_nonblocking");
-            for(auto& p:full)p.previous_age_life[3]=.001F;pool.seed_for_test(full);advance();require(pool.snapshot().free.size()==vfx_capacity&&check_pool(pool.snapshot()),"full_pool_recycled");
+            for(auto& p:full)p.previous_age_life[3]=.001F;
+            pool.seed_for_test(full);advance();require(pool.snapshot().free.size()==vfx_capacity&&check_pool(pool.snapshot()),"full_pool_recycled");
             std::fill(field.begin(),field.end(),0.F);std::fill(walls.begin(),walls.end(),std::uint16_t{0});for(unsigned y=0;y<192;++y)walls[y*320+100]=1;
             auto fast=particle(VfxKind::spark,99.5F,80.5F,1000,0);pool.seed_for_test(std::span{&fast,1});advance({},.1F);require(pool.snapshot().alive.empty(),"swept_one_cell_wall");
             std::fill(walls.begin(),walls.end(),std::uint16_t{0});walls[79*width+100]=1;
             auto corner=particle(VfxKind::jet,99.5F,79.5F,100,100);pool.seed_for_test(std::span{&corner,1});advance({},.02F);require(pool.snapshot().alive.empty(),"supercover_corner");
             walls[80*width+100]=1;auto mark=particle(VfxKind::scorch,100.5F,80.5F);pool.seed_for_test(std::span{&mark,1});advance();require(pool.snapshot().alive.size()==1,"scorch_requires_support");std::fill(walls.begin(),walls.end(),std::uint16_t{0});advance();require(pool.snapshot().alive.empty(),"scorch_removed_with_terrain");
-            for(unsigned i=0;i<320*192;++i)field[4*i]=.5F;pool.reset(gen);for(unsigned i=0;i<60;++i)advance({},1.F/120.F,true);require(pool.snapshot().alive.empty(),"calm_water_no_emission");
+            for(unsigned i=0;i<320*192;++i)field[4*i]=.5F;
+            pool.reset(gen);for(unsigned i=0;i<60;++i)advance({},1.F/120.F,true);require(pool.snapshot().alive.empty(),"calm_water_no_emission");
             auto bubble=particle(VfxKind::bubble,60,60);pool.seed_for_test(std::span{&bubble,1});for(unsigned i=0;i<320*192;++i)field[4*i]=1;for(unsigned i=0;i<30;++i)advance();auto rising=pool.snapshot();require(rising.alive.size()==1&&rising.particles[rising.alive[0]].position_velocity[1]<60,"bubble_rises");
             for(unsigned i=0;i<320*192;++i){field[4*i]=0;field[4*i+1]=1;}advance();require(pool.snapshot().alive.empty(),"water_decorations_not_oil");
             std::fill(field.begin(),field.end(),0.F);for(unsigned y=0;y<192;++y)for(unsigned x=0;x<320;++x){const unsigned i=y*320+x;field[4*i]=(x%2)?.6F:.2F;field[4*i+2]=(x%2)?100.F:-100.F;}

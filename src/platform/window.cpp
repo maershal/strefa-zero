@@ -100,18 +100,21 @@ PresentationInfo Window::presentation_info() const noexcept {
 }
 std::expected<void, std::string> Window::apply_video(
     const core::Settings& next, const core::Settings& previous) {
-    if (!SDL_GL_SetSwapInterval(next.vsync ? 1 : 0))
+    // WSLg/X11 may expose no swap-control extension at all. If VSync is
+    // already disabled, changing unrelated settings must still work.
+    const bool change_vsync = next.vsync != previous.vsync && next.vsync != vsync_;
+    if (change_vsync && !SDL_GL_SetSwapInterval(next.vsync ? 1 : 0))
         return std::unexpected{sdl_error("Zmiana VSync")};
     if (next.width != previous.width || next.height != previous.height) {
         const float scale = display_scale();
         if (!SDL_SetWindowSize(window_.get(),
             static_cast<int>(std::lround(static_cast<float>(next.width) * scale)),
             static_cast<int>(std::lround(static_cast<float>(next.height) * scale)))) {
-            SDL_GL_SetSwapInterval(previous.vsync ? 1 : 0);
+            if (change_vsync) SDL_GL_SetSwapInterval(vsync_ ? 1 : 0);
             return std::unexpected{sdl_error("Zmiana rozmiaru okna")};
         }
     }
-    vsync_ = next.vsync;
+    if (change_vsync) vsync_ = next.vsync;
     return {};
 }
 void Window::show() const { SDL_ShowWindow(window_.get()); }

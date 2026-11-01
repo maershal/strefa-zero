@@ -22,40 +22,49 @@ std::optional<std::expected<int,std::string>> run_diagnostic_scenario(const Laun
     }
     if(options.fluid_check||options.fluid_benchmark){
         const auto result=gpu::validate_fluid_quality(assets/"shaders",profile,options.gpu_execution,options.fluid_benchmark);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.cache_check)return validate_shader_cache(profile);
     if(options.work_test){
         const auto result=gpu::validate_work(profile,options.gpu_execution);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.transport_test){
         const auto result=gpu::validate_transport(profile);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.cost_profile||options.cost_check){
         const auto result=gpu::profile_cost(profile,options.gpu_execution,options.cost_mode,options.cost_check);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.hot_test){
         const auto result=gpu::validate_hot_reads(profile,options.gpu_execution);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.coupling_test||options.coupling_profile){
         const auto result=gpu::validate_coupling(profile,options.coupling_profile,options.coupling_reference_control,options.coupling_legacy_check,options.gpu_execution);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.neighbor_test||options.neighbor_profile){
         const auto result=gpu::validate_neighbors(profile,options.neighbor_profile);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.execution_test||options.execution_profile){
         const auto result=options.pbf_restrict_test?gpu::validate_pbf_restrict(profile):gpu::validate_execution(profile,options.execution_profile);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.readback_test||options.readback_profile){
         const auto result=options.readback_test?gpu::validate_readback(profile):gpu::profile_readback(profile);
-        if(!result)return std::unexpected{result.error()};return 0;
+        if(!result)return std::unexpected{result.error()};
+        return 0;
     }
     if(options.gpu_test||options.gpu_liquid_test||options.gpu_flow_test||options.mission_test||options.gpu_profile||options.stabilization_profile||options.gpu_profile_check||options.readback_test||options.readback_profile||options.execution_test||options.execution_profile||options.neighbor_test||options.neighbor_profile||options.coupling_test||options.coupling_profile||options.work_test||options.transport_test||options.hot_test||options.cost_profile||options.cost_check){
         auto world=gpu::ParticleWorld::create(assets/"shaders",options.gpu_execution,options.gpu_profiling);if(!world)return std::unexpected{world.error()};

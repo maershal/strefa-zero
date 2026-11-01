@@ -57,7 +57,8 @@ std::expected<void,std::string> validate_liquids(ParticleWorld& world,const std:
         walls[59*width+156]=1;walls[60*width+156]=1;
         initial.clear();for(int y=0;y<12;++y)for(int x=0;x<8;++x)initial.push_back(particle(145.F+x,40.F+y,5,80));
         world.load(initial,walls);for(int tick=0;tick<120;++tick)world.step();const auto shielded=world.readback();conserved(initial,shielded);
-        for(const auto& p:shielded)if(p.motion[3]>.5F)require(p.position[0]<=155.681F,"Liquid tunneled through thin wall");report<<"thin_wall_transport_and_pressure=passed\n";
+        for(const auto& p:shielded)if(p.motion[3]>.5F)require(p.position[0]<=155.681F,"Liquid tunneled through thin wall");
+        report<<"thin_wall_transport_and_pressure=passed\n";
         // Distinct materials keep exact carrier counts through edit/reuse.
         world.reset(Scene::empty);world.paint({100,40,100,40,6,Material::water});world.paint({130,40,130,40,6,Material::oil});
         glFinish();world.poll();glFinish();world.poll();require(world.metrics().water>50&&world.metrics().oil>50,"Liquid brush/count failed");

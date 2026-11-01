@@ -12,6 +12,15 @@ cd strefa-zero
 
 Repozytorium zawiera źródła, zasoby, testy i dokumentację. Wyniki kompilacji powstają lokalnie w `build/` i są pomijane przez Git.
 
+**Linux / WSL2 (Ubuntu 24.04):** natywny port SDL/OpenGL, skrypty Bash,
+oddzielne presety CMake i przenośna paczka z SDL. Instalacja zależności,
+WSLg, wymagania grafiki i testy: [LINUX_WSL.md](docs/LINUX_WSL.md).
+
+```bash
+./scripts/build.sh
+./scripts/run.sh --mission
+```
+
 Prototyp offline w C++23, SDL 3.4.18 i Dear ImGui 1.93.0. **Laboratorium GPU — ciecze i ziarna** używa OpenGL 4.3 compute i ciągłych pozycji cząstek. Dotychczasowe laboratorium materiałów i poligon zachowują fizykę CPU oraz obsługę OpenGL 3.3.
 
 ## Misja GPU 0.7

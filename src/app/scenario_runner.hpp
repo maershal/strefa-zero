@@ -138,6 +138,8 @@ public:
                 <<"\nphase_gating_effective="<<(app.execution_.phase_gating&&app.execution_.neighbors!=gpu::NeighborMode::linked)
                 <<"\nneighbor_reads_requested="<<gpu::neighbor_reads_name(app.execution_.neighbor_reads)<<"\nneighbor_reads_effective="<<gpu::neighbor_reads_name(gpu::effective_neighbor_reads(app.execution_.neighbor_reads,app.execution_.neighbors))<<"\nstorage_requested="<<gpu::device_storage_name(app.execution_.storage)<<"\nreadback_period="<<app.gpu_profiling_.readback_period<<"\nskip_zero_projection="<<app.execution_.skip_zero_projection<<'\n';
             report<<"storage_effective="<<gpu::device_storage_name(measured.upload_stats().mode)<<'\n';
+            report<<"conditional_work_requested="<<app.execution_.conditional_work
+                <<"\nconditional_work_effective="<<measured.execution_options().conditional_work<<'\n';
             report<<"gpu_timer_mode="<<gpu::timer_mode_name(gpu::effective_timer_mode(app.gpu_profiling_))
                 <<"\ngpu_timing_available="<<(gpu::effective_timer_mode(app.gpu_profiling_)!=gpu::TimerMode::off&&measured.metrics().timing_samples>0)
                 <<"\ngpu_timing_samples="<<measured.metrics().timing_samples<<'\n';

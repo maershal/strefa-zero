@@ -15,7 +15,7 @@ double compare(const std::vector<Grain>& a,const std::vector<Grain>& b){
     double error=0;
     for(unsigned i=0;i<capacity;++i){
         require(a[i].motion[3]==b[i].motion[3],"Hot reads changed stable IDs/materials");if(a[i].motion[3]<.5F)continue;
-        for(const auto pair:{std::pair{a[i].position,b[i].position},std::pair{a[i].motion,b[i].motion},std::pair{a[i].contact,b[i].contact},std::pair{a[i].residual,b[i].residual}})
+        for(const auto& pair:{std::pair{a[i].position,b[i].position},std::pair{a[i].motion,b[i].motion},std::pair{a[i].contact,b[i].contact},std::pair{a[i].residual,b[i].residual}})
             for(unsigned k=0;k<4;++k){require(std::isfinite(pair.second[k]),"Hot reads produced nonfinite state");error=std::max(error,std::abs(static_cast<double>(pair.first[k])-pair.second[k]));}
     }
     require(error<.0001,"Hot reads differ from authoritative full-state reference");return error;

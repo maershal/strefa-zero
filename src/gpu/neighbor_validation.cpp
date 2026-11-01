@@ -19,7 +19,8 @@ bool visible_cpu(const Grain& a,const Grain& b,const std::vector<std::uint32_t>&
     const double ax=a.position[0],ay=a.position[1],dx=b.position[0]-ax,dy=b.position[1]-ay;
     for(int y=std::max(0,static_cast<int>(std::floor(std::min(ay,ay+dy)))-1);y<=std::min(height-1,static_cast<int>(std::floor(std::max(ay,ay+dy)))+1);++y)
         for(int x=std::max(0,static_cast<int>(std::floor(std::min(ax,ax+dx)))-1);x<=std::min(width-1,static_cast<int>(std::floor(std::max(ax,ax+dx)))+1);++x){
-            if(!walls[y*width+x])continue;double low=0,high=1;
+            if(!walls[y*width+x])continue;
+            double low=0,high=1;
             const auto axis=[&](double origin,double delta,double edge){
                 if(std::abs(delta)<1e-12)return origin>=edge&&origin<=edge+1;
                 double lo=(edge-origin)/delta,hi=(edge+1-origin)/delta;if(lo>hi)std::swap(lo,hi);
@@ -126,7 +127,8 @@ std::expected<void,std::string> validate_neighbors(const std::filesystem::path& 
 #undef HEADER
         steps<<'\n';
         const auto metric=[&](unsigned count,const char* variant,unsigned repeat,const char* name,const std::vector<double>& values){
-            if(values.empty())return;summary<<count<<','<<variant<<','<<repeat<<','<<name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
+            if(values.empty())return;
+            summary<<count<<','<<variant<<','<<repeat<<','<<name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
         };
         for(unsigned repeat=1;repeat<=3;++repeat){
             if(repeat%2==0)std::ranges::reverse(variants);
