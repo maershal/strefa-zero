@@ -1,8 +1,8 @@
-# Preserve byte-identical measurement evidence and collapse it in GitHub diffs.
+* text=auto
 *.sh text eol=lf
-docs/gpu-*/** -text linguist-generated=true
-# Preserve the original supplied review documents.
-docs/reviews/** -text
 
-# Keep I05-I11 measurement bytes intact and collapse generated evidence.
-docs/i*/** -text linguist-generated=true
+# Raw measurement evidence: keep bytes identical (manifests hash them) and
+# collapse it in GitHub diffs and language statistics.
+docs/measurements/** -text linguist-generated=true
+# Original supplied review documents.
+docs/plans/reviews/** -text

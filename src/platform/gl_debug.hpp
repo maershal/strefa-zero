@@ -10,11 +10,12 @@ public:
     ~GlDebugLog();
     // Labels callback receipt; asynchronous driver messages may describe earlier work.
     void set_phase(DebugPhase phase) noexcept;
-    GlDebugLog(const GlDebugLog&)=delete;
-    GlDebugLog& operator=(const GlDebugLog&)=delete;
+    GlDebugLog(const GlDebugLog&) = delete;
+    GlDebugLog& operator=(const GlDebugLog&) = delete;
+
 private:
     struct Impl;
     explicit GlDebugLog(std::unique_ptr<Impl> impl);
     std::unique_ptr<Impl> impl_;
 };
-}
+} // namespace strefa::platform

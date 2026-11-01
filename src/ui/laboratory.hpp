@@ -1,6 +1,7 @@
 #pragma once
-#include "ui/view.hpp"
 #include "sim/laboratory.hpp"
+#include "ui/view.hpp"
+
 #include <optional>
 
 namespace strefa::ui {
@@ -19,7 +20,7 @@ struct LaboratoryControls {
     sim::Material previous_material{sim::Material::sand};
     bool previous_erase{};
 };
-using Stroke=sim::BrushStroke;
+using Stroke = sim::BrushStroke;
 struct LaboratoryInput {
     bool reset{}, clear{}, single_step{};
     std::optional<Stroke> stroke;

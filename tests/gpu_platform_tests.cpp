@@ -1,6 +1,8 @@
 #include "gpu/world.hpp"
 #include "platform/window.hpp"
+
 #include <SDL3/SDL_opengl.h>
+
 #include <cmath>
 #include <filesystem>
 #include <fstream>
@@ -38,8 +40,7 @@ int main(int argc, char** argv) {
         if (!created) throw std::runtime_error{created.error()};
         auto& world = **created;
         std::ofstream report{output / "platform-dispatch.txt"};
-        report << "renderer=" << glGetString(GL_RENDERER)
-               << "\nversion=" << glGetString(GL_VERSION)
+        report << "renderer=" << glGetString(GL_RENDERER) << "\nversion=" << glGetString(GL_VERSION)
                << "\nconditional_work_effective=" << world.execution_options().conditional_work
                << "\nvideo_settings=PASS\n";
         for (const bool shielded : {false, true}) {

@@ -1,6 +1,8 @@
 #include "platform/texture.hpp"
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
+
 #include <cstring>
 #include <memory>
 #include <utility>
@@ -9,7 +11,9 @@
 namespace strefa::platform {
 
 Texture::Texture(Texture&& other) noexcept
-    : id_{std::exchange(other.id_, 0)}, width_{other.width_}, height_{other.height_} {}
+    : id_{std::exchange(other.id_, 0)},
+      width_{other.width_},
+      height_{other.height_} {}
 Texture& Texture::operator=(Texture&& other) noexcept {
     if (this != &other) {
         if (id_) glDeleteTextures(1, &id_);
@@ -19,15 +23,17 @@ Texture& Texture::operator=(Texture&& other) noexcept {
     }
     return *this;
 }
-Texture::~Texture() { if (id_) glDeleteTextures(1, &id_); }
+Texture::~Texture() {
+    if (id_) glDeleteTextures(1, &id_);
+}
 
-std::expected<Texture, std::string> Texture::create_rgba(int width, int height,
-    std::span<const std::byte> pixels) {
+std::expected<Texture, std::string> Texture::create_rgba(int width, int height, std::span<const std::byte> pixels) {
     if (width <= 0 || height <= 0 || width > 8192 || height > 8192
         || pixels.size() != static_cast<std::size_t>(width) * static_cast<std::size_t>(height) * 4)
         return std::unexpected{"Nieprawidłowe wymiary tekstury RGBA."};
     Texture result;
-    result.width_ = width; result.height_ = height;
+    result.width_ = width;
+    result.height_ = height;
     GLint previous{}, alignment{};
     glGetIntegerv(GL_TEXTURE_BINDING_2D, &previous);
     glGetIntegerv(GL_UNPACK_ALIGNMENT, &alignment);
@@ -82,10 +88,10 @@ std::expected<Texture, std::string> Texture::load_bmp(const std::filesystem::pat
     std::vector<unsigned char> tight(row_bytes * static_cast<std::size_t>(converted->h));
     for (int row = 0; row < converted->h; ++row)
         std::memcpy(tight.data() + static_cast<std::size_t>(row) * row_bytes,
-            static_cast<const unsigned char*>(converted->pixels)
-                + static_cast<std::size_t>(row) * static_cast<std::size_t>(converted->pitch), row_bytes);
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, converted->w, converted->h, 0,
-        GL_RGBA, GL_UNSIGNED_BYTE, tight.data());
+                    static_cast<const unsigned char*>(converted->pixels)
+                            + static_cast<std::size_t>(row) * static_cast<std::size_t>(converted->pitch),
+                    row_bytes);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, converted->w, converted->h, 0, GL_RGBA, GL_UNSIGNED_BYTE, tight.data());
     const auto error = glGetError();
     glBindTexture(GL_TEXTURE_2D, 0);
     if (error != GL_NO_ERROR) return std::unexpected{"Sterownik odrzucił teksturę tła."};

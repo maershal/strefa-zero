@@ -1,5 +1,6 @@
 #pragma once
 #include "core/settings.hpp"
+
 #include <filesystem>
 
 namespace strefa::platform {
@@ -10,6 +11,7 @@ public:
     [[nodiscard]] std::expected<core::Settings, std::string> load() const;
     [[nodiscard]] std::expected<void, std::string> save(const core::Settings& settings) const;
     [[nodiscard]] const std::filesystem::path& path() const noexcept { return file_; }
+
 private:
     std::filesystem::path file_;
 };

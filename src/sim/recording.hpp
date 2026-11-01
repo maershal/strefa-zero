@@ -1,5 +1,6 @@
 #pragma once
 #include "sim/world.hpp"
+
 #include <filesystem>
 #include <fstream>
 
@@ -10,6 +11,7 @@ public:
     explicit Recording(const std::filesystem::path& directory);
     void capture(const World& world, double physics_ms, RenderMode mode = RenderMode::materials);
     void finish();
+
 private:
     std::filesystem::path directory_;
     std::ofstream log_;

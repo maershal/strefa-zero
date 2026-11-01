@@ -1,5 +1,7 @@
 #include "ui/laboratory.hpp"
+
 #include <imgui.h>
+
 #include <algorithm>
 #include <cmath>
 
@@ -20,42 +22,53 @@ void canvas(LaboratoryFrame& lab, float scale) {
     draw->AddRect(start, end, IM_COL32(132, 155, 104, 180));
     draw->PushClipRect(start, end, true);
     if (controls.show_chunks) {
-        for (int cy = 0; cy < sim::World::rows; ++cy) for (int cx = 0; cx < sim::World::columns; ++cx) {
-            const ImVec2 a{start.x + cx * sim::World::chunk_size * zoom, start.y + cy * sim::World::chunk_size * zoom};
-            const ImVec2 b{a.x + sim::World::chunk_size * zoom, a.y + sim::World::chunk_size * zoom};
-            if (lab.world.chunk_awake(cy * sim::World::columns + cx))
-                draw->AddRectFilled(a, b, IM_COL32(171, 214, 88, 18));
-            draw->AddRect(a, b, IM_COL32(151, 174, 126, 45));
-        }
+        for (int cy = 0; cy < sim::World::rows; ++cy)
+            for (int cx = 0; cx < sim::World::columns; ++cx) {
+                const ImVec2 a{start.x + cx * sim::World::chunk_size * zoom,
+                               start.y + cy * sim::World::chunk_size * zoom};
+                const ImVec2 b{a.x + sim::World::chunk_size * zoom, a.y + sim::World::chunk_size * zoom};
+                if (lab.world.chunk_awake(cy * sim::World::columns + cx))
+                    draw->AddRectFilled(a, b, IM_COL32(171, 214, 88, 18));
+                draw->AddRect(a, b, IM_COL32(151, 174, 126, 45));
+            }
     }
     bool drew = false;
     if (hovered) {
         const auto mouse = ImGui::GetIO().MousePos;
         const sim::Point point{std::clamp(static_cast<int>((mouse.x - start.x) / zoom), 0, sim::World::width - 1),
-            std::clamp(static_cast<int>((mouse.y - start.y) / zoom), 0, sim::World::height - 1)};
+                               std::clamp(static_cast<int>((mouse.y - start.y) / zoom), 0, sim::World::height - 1)};
         const float wheel = ImGui::GetIO().MouseWheel;
         if (wheel != 0) controls.radius = std::clamp(controls.radius + (wheel > 0 ? 1 : -1), 1, 16);
         const bool erase = ImGui::IsMouseDown(ImGuiMouseButton_Right) || controls.material == sim::Material::empty;
         draw->AddCircle({start.x + (point.x + .5F) * zoom, start.y + (point.y + .5F) * zoom},
-            (controls.radius + .5F) * zoom, erase ? IM_COL32(255, 165, 130, 220) : IM_COL32(232, 241, 203, 220), 32);
+                        (controls.radius + .5F) * zoom,
+                        erase ? IM_COL32(255, 165, 130, 220) : IM_COL32(232, 241, 203, 220), 32);
         if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
             const auto from = controls.previous && controls.previous_material == controls.material
-                && controls.previous_erase == erase ? *controls.previous : point;
-            if (controls.tool != 0 && !erase) lab.input.heat = point;
-            else lab.input.stroke = Stroke{from, point, controls.radius, controls.material, erase};
-            controls.previous = point; controls.previous_material = controls.material;
-            controls.previous_erase = erase; drew = true;
+                                           && controls.previous_erase == erase
+                                    ? *controls.previous
+                                    : point;
+            if (controls.tool != 0 && !erase)
+                lab.input.heat = point;
+            else
+                lab.input.stroke = Stroke{from, point, controls.radius, controls.material, erase};
+            controls.previous = point;
+            controls.previous_material = controls.material;
+            controls.previous_erase = erase;
+            drew = true;
         }
-        lab.input.probe=point;
+        lab.input.probe = point;
         const auto inspected = lab.world.sample(point);
-        if(inspected) {
-        const auto& sample=*inspected;
-        ImGui::SetTooltip("%s [%d, %d]\nT: %.2f °C  /  gaz: %.2f °C\np gazu: %.3f  /  cieczy: %.2f\nMasa: %.4f  /  ciecz: %.3f\nu gazu: (%.2f, %.2f)\nu cieczy: (%.2f, %.2f)\nTlen: %.5f  /  paliwo: %.4f\nProdukty rozpuszczone: %.4f",
-            sim::definition(sample.material).name.data(), point.x, point.y,
-            sample.temperature - 273.15, sample.air_temperature - 273.15, sample.pressure, sample.liquid_pressure,
-            sample.mass, sample.liquid_fill, sample.air_velocity.x, sample.air_velocity.y,
-            sample.liquid_velocity.x, sample.liquid_velocity.y, sample.oxygen, sample.fuel, sample.dissolved);
-        } else ImGui::SetTooltip("Odczyt pól [%d, %d]…",point.x,point.y);
+        if (inspected) {
+            const auto& sample = *inspected;
+            ImGui::SetTooltip(
+                    "%s [%d, %d]\nT: %.2f °C  /  gaz: %.2f °C\np gazu: %.3f  /  cieczy: %.2f\nMasa: %.4f  /  ciecz: %.3f\nu gazu: (%.2f, %.2f)\nu cieczy: (%.2f, %.2f)\nTlen: %.5f  /  paliwo: %.4f\nProdukty rozpuszczone: %.4f",
+                    sim::definition(sample.material).name.data(), point.x, point.y, sample.temperature - 273.15,
+                    sample.air_temperature - 273.15, sample.pressure, sample.liquid_pressure, sample.mass,
+                    sample.liquid_fill, sample.air_velocity.x, sample.air_velocity.y, sample.liquid_velocity.x,
+                    sample.liquid_velocity.y, sample.oxygen, sample.fuel, sample.dissolved);
+        } else
+            ImGui::SetTooltip("Odczyt pól [%d, %d]…", point.x, point.y);
     }
     if (!drew) controls.previous.reset();
     draw->PopClipRect();
@@ -67,40 +80,42 @@ void palette(LaboratoryFrame& lab, float scale) {
     auto& controls = lab.controls;
     ImGui::TextUnformatted("SCENA I POLA");
     if (ImGui::BeginCombo("##scene", sim::scene_names[static_cast<unsigned>(controls.scene)])) {
-        for (unsigned i=0; i < static_cast<unsigned>(sim::Scene::count); ++i)
-            if (ImGui::Selectable(sim::scene_names[i], static_cast<unsigned>(controls.scene)==i)) {
-                controls.scene=static_cast<sim::Scene>(i); lab.input.reset=true;
+        for (unsigned i = 0; i < static_cast<unsigned>(sim::Scene::count); ++i)
+            if (ImGui::Selectable(sim::scene_names[i], static_cast<unsigned>(controls.scene) == i)) {
+                controls.scene = static_cast<sim::Scene>(i);
+                lab.input.reset = true;
             }
         ImGui::EndCombo();
     }
-    constexpr const char* views[]{"Materiały", "Temperatura", "Ciśnienie", "Prędkość", "Tlen", "Aktywność: ciepło/ruch/reakcje"};
-    int view=static_cast<int>(controls.view);
+    constexpr const char* views[]{"Materiały", "Temperatura", "Ciśnienie",
+                                  "Prędkość",  "Tlen",        "Aktywność: ciepło/ruch/reakcje"};
+    int view = static_cast<int>(controls.view);
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::Combo("##view", &view, views, 6)) controls.view=static_cast<sim::RenderMode>(view);
+    if (ImGui::Combo("##view", &view, views, 6)) controls.view = static_cast<sim::RenderMode>(view);
     ImGui::SetNextItemWidth(-1);
     ImGui::Combo("##tool", &controls.tool, "Materiał\0Ogrzewanie +100\0Chłodzenie -100\0");
-    bool open=lab.world.config().open_top;
-    if (ImGui::Checkbox("Otwarta góra (gazy)", &open)) lab.input.boundary_toggle=true;
-    if (ImGui::Button(controls.recording ? "Zatrzymaj zapis" : "Nagrywaj co 3 kroki")) lab.input.record_toggle=true;
+    bool open = lab.world.config().open_top;
+    if (ImGui::Checkbox("Otwarta góra (gazy)", &open)) lab.input.boundary_toggle = true;
+    if (ImGui::Button(controls.recording ? "Zatrzymaj zapis" : "Nagrywaj co 3 kroki")) lab.input.record_toggle = true;
     ImGui::TextDisabled("Nagrania: profil/recordings");
-    const auto& physics=lab.world.statistics();
-    if(!lab.world.ready) ImGui::TextDisabled("Ładowanie sceny…");
-    ImGui::Text("Symulacja: %.1f / %d kroków/s",lab.world.steps_per_second,60*controls.speed);
+    const auto& physics = lab.world.statistics();
+    if (!lab.world.ready) ImGui::TextDisabled("Ładowanie sceny…");
+    ImGui::Text("Symulacja: %.1f / %d kroków/s", lab.world.steps_per_second, 60 * controls.speed);
     ImGui::TextDisabled("Okno działa niezależnie od fizyki");
     ImGui::Text("Krok %.2f ms | PCG %d", lab.step_ms, physics.pressure_iterations);
-    if(ImGui::TreeNode("Koszt obliczeń")) {
-        ImGui::Text("Wątki fizyki: %u",physics.worker_threads);
-        ImGui::Text("Ciecze %.2f ms (ciśnienie %.2f)",physics.liquid_ms,physics.pressure_ms);
-        ImGui::Text("Gazy %.2f ms (transport %.2f)",physics.air_ms,physics.air_transport_ms);
-        ImGui::Text("Ciepło %.2f ms | reakcje %.2f",physics.heat_ms,physics.reaction_ms);
-        ImGui::Text("Podkroki: ciecz %d | gaz %d",physics.liquid_substeps,physics.air_substeps);
+    if (ImGui::TreeNode("Koszt obliczeń")) {
+        ImGui::Text("Wątki fizyki: %u", physics.worker_threads);
+        ImGui::Text("Ciecze %.2f ms (ciśnienie %.2f)", physics.liquid_ms, physics.pressure_ms);
+        ImGui::Text("Gazy %.2f ms (transport %.2f)", physics.air_ms, physics.air_transport_ms);
+        ImGui::Text("Ciepło %.2f ms | reakcje %.2f", physics.heat_ms, physics.reaction_ms);
+        ImGui::Text("Podkroki: ciecz %d | gaz %d", physics.liquid_substeps, physics.air_substeps);
         ImGui::TreePop();
     }
-    ImGui::Text("Błąd PCG %.2e",physics.pressure_residual);
-    if (!physics.pressure_converged) ImGui::TextColored({1,.5F,.3F,1},"PCG: brak zbieżności");
-    if (!physics.finite) ImGui::TextColored({1,.2F,.2F,1},"BŁĄD: niefinitywny stan");
-    ImGui::Text("Bilans m: %.2e  H: %.2e",physics.mass_error,physics.energy_error);
-    ImGui::Text("Ujście m: %.3f  H: %.1f",physics.escaped_mass,physics.escaped_energy);
+    ImGui::Text("Błąd PCG %.2e", physics.pressure_residual);
+    if (!physics.pressure_converged) ImGui::TextColored({1, .5F, .3F, 1}, "PCG: brak zbieżności");
+    if (!physics.finite) ImGui::TextColored({1, .2F, .2F, 1}, "BŁĄD: niefinitywny stan");
+    ImGui::Text("Bilans m: %.2e  H: %.2e", physics.mass_error, physics.energy_error);
+    ImGui::Text("Ujście m: %.3f  H: %.1f", physics.escaped_mass, physics.escaped_energy);
     ImGui::Separator();
     ImGui::TextUnformatted("MATERIAŁY");
     ImGui::Separator();
@@ -109,7 +124,7 @@ void palette(LaboratoryFrame& lab, float scale) {
         const auto& def = sim::materials[i];
         ImGui::PushID(static_cast<int>(i));
         ImGui::ColorButton("##swatch", {def.color.r / 255.F, def.color.g / 255.F, def.color.b / 255.F, 1},
-            ImGuiColorEditFlags_NoTooltip, {16.F * scale, 16.F * scale});
+                           ImGuiColorEditFlags_NoTooltip, {16.F * scale, 16.F * scale});
         ImGui::SameLine();
         if (ImGui::Selectable(def.name.data(), controls.material == material)) controls.material = material;
         ImGui::PopID();
@@ -132,20 +147,20 @@ void palette(LaboratoryFrame& lab, float scale) {
         ImGui::TextDisabled("CPU  /  60 kroków/s  /  320 × 192");
     }
 }
-}
+} // namespace
 
 Action draw_laboratory(LaboratoryFrame& lab, const FrameInfo& frame, const Fonts& fonts) {
     const auto* viewport = ImGui::GetMainViewport();
     const float s = frame.scale;
     ImGui::SetNextWindowPos(viewport->WorkPos);
     ImGui::SetNextWindowSize(viewport->WorkSize);
-    constexpr auto flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove
-        | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
+    constexpr auto flags = ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoResize
+                         | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoScrollbar;
     ImGui::Begin("Laboratory", nullptr, flags);
     ImGui::PushFont(fonts.heading, 26);
     ImGui::TextUnformatted("LABORATORIUM MATERIAŁÓW");
     ImGui::PopFont();
-    if(!frame.message.empty()) ImGui::TextColored({1,.7F,.35F,1},"%s",frame.message.data());
+    if (!frame.message.empty()) ImGui::TextColored({1, .7F, .35F, 1}, "%s", frame.message.data());
     const bool back = ImGui::Button("Menu [Esc]");
     ImGui::SameLine();
     if (!ImGui::GetIO().WantTextInput) ImGui::SetNextItemShortcut(ImGuiKey_Space);
@@ -163,7 +178,7 @@ Action draw_laboratory(LaboratoryFrame& lab, const FrameInfo& frame, const Fonts
     ImGui::Separator();
     const float side = std::min(240.0F * s, ImGui::GetContentRegionAvail().x * .3F);
     ImGui::BeginChild("Canvas", {-(side + ImGui::GetStyle().ItemSpacing.x), 0}, ImGuiChildFlags_None,
-        ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     canvas(lab, s);
     ImGui::EndChild();
     ImGui::SameLine();

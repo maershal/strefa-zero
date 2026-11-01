@@ -1,83 +1,526 @@
 namespace strefa::gpu {
-std::expected<void,std::string> ParticleWorld::validate_lighting(const std::filesystem::path& output,bool benchmark){
-    try{
-        std::filesystem::create_directories(output);auto& s=*impl_;auto& renderer=s.renderer;auto& light=renderer.lighting;auto& gl=s.gl;
-        auto require=[](bool ok,const char* message){if(!ok)throw std::runtime_error{message};};
-        std::ofstream report{output/"lighting-tests.txt"};std::ofstream environment{output/"lighting-environment.txt"};
-        environment<<"renderer="<<reinterpret_cast<const char*>(glGetString(GL_RENDERER))<<"\nversion="<<reinterpret_cast<const char*>(glGetString(GL_VERSION))<<"\nresolution=960x576\nreference=current working I10\nmoisture=R32F 256x128, tick 120Hz\n";
-        const auto original=render_options();const auto old_vfx=vfx_options();set_vfx_options({VfxQuality::off,false});renderer.stage=RenderStage::complete;
-        auto input=[&]{return detail::RenderState{s.buffers,s.current,s.fluids_enabled,s.mission_enabled};};
-        auto bytes=[&]{gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);std::vector<std::byte> result;for(auto id:s.buffers){gl.BindBuffer(GL_COPY_READ_BUFFER,id);GLint size{};gl.GetBufferParameteriv(GL_COPY_READ_BUFFER,GL_BUFFER_SIZE,&size);const auto start=result.size();result.resize(start+static_cast<std::size_t>(size));gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,size,result.data()+start);}s.invalidate_bindings();return result;};
-        auto drain=[&]{glFinish();poll(false);renderer.poll_samples();};
-        auto tick_presentation=[&](unsigned t,bool mission=false){if(benchmark&&(s.mission_enabled||(s.thermal&&s.thermal_config.enabled))){light.prepare_birth(s.buffers,s.current,s.mission_enabled&&s.execution.conditional_work);s.invalidate_bindings();}if(s.thermal&&s.thermal_config.enabled)s.thermal->presentation(light.thermal_image);light.tick(s.buffers,s.current,s.epoch,t,mission,renderer.terrain_image,s.thermal&&s.thermal_config.enabled?light.thermal_image:0,s.thermal&&s.thermal_config.enabled?s.thermal->presentation_particles():0);s.invalidate_bindings();};
-        auto grain=[](float x,float y,unsigned kind){Grain p;p.position={x,y,x,y};p.contact={0,0,x,y};p.motion={0,0,1,static_cast<float>(kind)};return p;};
-        auto lamp=[](float x,float y,float radius=70.F){PointLight l;l.position={x,y,radius,1};l.color={3,2,1,1};l.history={0,2,0,0};return l;};
-        const std::array<std::string_view,6> names{"day","night","fire","explosion","water","sand"};
-        if(benchmark){
-            std::ofstream csv{output/"lighting-samples.csv"};csv<<"scene,quality,block,order,frame,pair_gpu_ms,cpu_submit_ms,memory_bytes\n";
-            std::ofstream sources{output/"lighting-sources.csv"};sources<<"scene,quality,block,order,stored_sources,rejected_candidates,culled_by_quality\n";
-            std::ofstream passes{output/"lighting-passes.csv"};passes<<"scene,quality,block,order,kind,serial";for(auto name:lighting_pass_names)passes<<','<<name<<"_ms";passes<<'\n';
-            std::array<GLuint,480> queries{};gl.GenQueries(static_cast<GLsizei>(queries.size()),queries.data());
-            for(unsigned scene=0;scene<names.size();++scene){
-                if(scene==2){set_thermal_options({true});reset_thermal_scene(1);for(int t=0;t<120;++t){if(!step()){drain();--t;}}}
-                else{set_thermal_options({});if(scene<4)reset_mission();else reset(scene==4?Scene::oil_water:Scene::sand_water);}
-                if(scene==3){queue_explosion({1,180,100,20,50});require(step(),"Explosion benchmark fixture failed");drain();}
-                std::array<PointLight,8> lamps;for(unsigned i=0;i<8;++i){lamps[i]=lamp(30.F+static_cast<float>(i)*37.F,40.F+static_cast<float>(i%3)*46.F);lamps[i].history[3]=static_cast<float>(i);}
-                if(scene==3){const auto burst=light.snapshot();for(unsigned i=0;i<burst.counts[0];++i)if(burst.lights[i].history[1]==4){lamps[0]=burst.lights[i];lamps[0].history[0]=lamps[0].history[2]=0;break;}}
-                light.set_lamps(lamps);unsigned visual_tick=static_cast<unsigned>(s.metrics.steps)+1;
-                tick_presentation(visual_tick++);drain();const auto before=bytes();const auto frozen=renderer.freeze(input());
-                for(auto quality:{LightingQuality::low,LightingQuality::high})for(unsigned block=1;block<=3;++block)for(unsigned order=0;order<4;++order){
-                    const bool candidate=order==1||order==2;RenderOptions opt;opt.lighting.quality=candidate?quality:LightingQuality::off;opt.lighting.ambient=scene==1?.12F:.85F;renderer.set_options(opt);
-                    for(unsigned n=0;n<120;++n){if(candidate){tick_presentation(visual_tick++);tick_presentation(visual_tick++);}renderer.render(frozen,1);if(n%16==15)drain();}drain();light.take_samples();renderer.take_samples();
-                    opt.profile_passes=true;renderer.set_options(opt);std::array<double,240> cpu{};
-                    for(unsigned n=0;n<240;++n){const auto started=SDL_GetTicksNS();gl.QueryCounter(queries[n*2],GL_TIMESTAMP);if(candidate){tick_presentation(visual_tick++);tick_presentation(visual_tick++);}renderer.render(frozen,1);gl.QueryCounter(queries[n*2+1],GL_TIMESTAMP);cpu[n]=static_cast<double>(SDL_GetTicksNS()-started)/1e6;if(n%16==15)drain();}drain();
-                    const auto variant=candidate?std::string{lighting_quality_name(quality)}:"off_for_"+std::string{lighting_quality_name(quality)};
-                    for(unsigned n=0;n<240;++n){GLuint64 a{},b{};gl.GetQueryObjectui64v(queries[n*2],GL_QUERY_RESULT,&a);gl.GetQueryObjectui64v(queries[n*2+1],GL_QUERY_RESULT,&b);csv<<names[scene]<<','<<variant<<','<<block<<','<<order<<','<<n<<','<<static_cast<double>(b-a)/1e6<<','<<cpu[n]<<','<<light.memory_bytes()<<'\n';}
-                    for(const auto& sample:light.take_samples()){passes<<names[scene]<<','<<variant<<','<<block<<','<<order<<','<<(sample.tick?"tick":"render")<<','<<sample.serial;for(double ms:sample.milliseconds)passes<<','<<ms;passes<<'\n';}
-                    const auto source_counts=light.snapshot();sources<<names[scene]<<','<<variant<<','<<block<<','<<order<<','<<source_counts.counts[0]<<','<<source_counts.counts[1]<<','<<std::max(0,int(source_counts.counts[0])-(quality==LightingQuality::low?16:32))<<'\n';
-                    renderer.take_samples();require(bytes()==before,"Presentation benchmark changed physical buffers");
-                    if(block==1&&candidate){renderer.save_image(output/(std::string{names[scene]}+"-"+std::string{lighting_quality_name(quality)}+".bmp"));}
-                }renderer.release_frozen();report<<names[scene]<<"_benchmark=PASS\n";report.flush();
-            }gl.DeleteQueries(static_cast<GLsizei>(queries.size()),queries.data());renderer.set_options(original);set_vfx_options(old_vfx);report<<"benchmark=PASS; 6 scenes, 2 qualities, 3 ABBA, 240 frames; candidate pair contains 2 presentation ticks and render; off reference omits I11 ticks to include their full incremental cost, frozen physics\n";return {};
+std::expected<void, std::string> ParticleWorld::validate_lighting(const std::filesystem::path& output, bool benchmark) {
+    try {
+        std::filesystem::create_directories(output);
+        auto& s = *impl_;
+        auto& renderer = s.renderer;
+        auto& light = renderer.lighting;
+        auto& gl = s.gl;
+        auto require = [](bool ok, const char* message) {
+            if (!ok) throw std::runtime_error{message};
+        };
+        std::ofstream report{output / "lighting-tests.txt"};
+        std::ofstream environment{output / "lighting-environment.txt"};
+        environment << "renderer=" << reinterpret_cast<const char*>(glGetString(GL_RENDERER))
+                    << "\nversion=" << reinterpret_cast<const char*>(glGetString(GL_VERSION))
+                    << "\nresolution=960x576\nreference=current working I10\nmoisture=R32F 256x128, tick 120Hz\n";
+        const auto original = render_options();
+        const auto old_vfx = vfx_options();
+        set_vfx_options({VfxQuality::off, false});
+        renderer.stage = RenderStage::complete;
+        auto input = [&] { return detail::RenderState{s.buffers, s.current, s.fluids_enabled, s.mission_enabled}; };
+        auto bytes = [&] {
+            gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+            std::vector<std::byte> result;
+            for (auto id : s.buffers) {
+                gl.BindBuffer(GL_COPY_READ_BUFFER, id);
+                GLint size{};
+                gl.GetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
+                const auto start = result.size();
+                result.resize(start + static_cast<std::size_t>(size));
+                gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, size, result.data() + start);
+            }
+            s.invalidate_bindings();
+            return result;
+        };
+        auto drain = [&] {
+            glFinish();
+            poll(false);
+            renderer.poll_samples();
+        };
+        auto tick_presentation = [&](unsigned t, bool mission = false) {
+            if (benchmark && (s.mission_enabled || (s.thermal && s.thermal_config.enabled))) {
+                light.prepare_birth(s.buffers, s.current, s.mission_enabled && s.execution.conditional_work);
+                s.invalidate_bindings();
+            }
+            if (s.thermal && s.thermal_config.enabled) s.thermal->presentation(light.thermal_image);
+            light.tick(s.buffers, s.current, s.epoch, t, mission, renderer.terrain_image,
+                       s.thermal && s.thermal_config.enabled ? light.thermal_image : 0,
+                       s.thermal && s.thermal_config.enabled ? s.thermal->presentation_particles() : 0);
+            s.invalidate_bindings();
+        };
+        auto grain = [](float x, float y, unsigned kind) {
+            Grain p;
+            p.position = {x, y, x, y};
+            p.contact = {0, 0, x, y};
+            p.motion = {0, 0, 1, static_cast<float>(kind)};
+            return p;
+        };
+        auto lamp = [](float x, float y, float radius = 70.F) {
+            PointLight l;
+            l.position = {x, y, radius, 1};
+            l.color = {3, 2, 1, 1};
+            l.history = {0, 2, 0, 0};
+            return l;
+        };
+        const std::array<std::string_view, 6> names{"day", "night", "fire", "explosion", "water", "sand"};
+        if (benchmark) {
+            std::ofstream csv{output / "lighting-samples.csv"};
+            csv << "scene,quality,block,order,frame,pair_gpu_ms,cpu_submit_ms,memory_bytes\n";
+            std::ofstream sources{output / "lighting-sources.csv"};
+            sources << "scene,quality,block,order,stored_sources,rejected_candidates,culled_by_quality\n";
+            std::ofstream passes{output / "lighting-passes.csv"};
+            passes << "scene,quality,block,order,kind,serial";
+            for (auto name : lighting_pass_names) passes << ',' << name << "_ms";
+            passes << '\n';
+            std::array<GLuint, 480> queries{};
+            gl.GenQueries(static_cast<GLsizei>(queries.size()), queries.data());
+            for (unsigned scene = 0; scene < names.size(); ++scene) {
+                if (scene == 2) {
+                    set_thermal_options({true});
+                    reset_thermal_scene(1);
+                    for (int t = 0; t < 120; ++t) {
+                        if (!step()) {
+                            drain();
+                            --t;
+                        }
+                    }
+                } else {
+                    set_thermal_options({});
+                    if (scene < 4)
+                        reset_mission();
+                    else
+                        reset(scene == 4 ? Scene::oil_water : Scene::sand_water);
+                }
+                if (scene == 3) {
+                    queue_explosion({1, 180, 100, 20, 50});
+                    require(step(), "Explosion benchmark fixture failed");
+                    drain();
+                }
+                std::array<PointLight, 8> lamps;
+                for (unsigned i = 0; i < 8; ++i) {
+                    lamps[i] = lamp(30.F + static_cast<float>(i) * 37.F, 40.F + static_cast<float>(i % 3) * 46.F);
+                    lamps[i].history[3] = static_cast<float>(i);
+                }
+                if (scene == 3) {
+                    const auto burst = light.snapshot();
+                    for (unsigned i = 0; i < burst.counts[0]; ++i)
+                        if (burst.lights[i].history[1] == 4) {
+                            lamps[0] = burst.lights[i];
+                            lamps[0].history[0] = lamps[0].history[2] = 0;
+                            break;
+                        }
+                }
+                light.set_lamps(lamps);
+                unsigned visual_tick = static_cast<unsigned>(s.metrics.steps) + 1;
+                tick_presentation(visual_tick++);
+                drain();
+                const auto before = bytes();
+                const auto frozen = renderer.freeze(input());
+                for (auto quality : {LightingQuality::low, LightingQuality::high})
+                    for (unsigned block = 1; block <= 3; ++block)
+                        for (unsigned order = 0; order < 4; ++order) {
+                            const bool candidate = order == 1 || order == 2;
+                            RenderOptions opt;
+                            opt.lighting.quality = candidate ? quality : LightingQuality::off;
+                            opt.lighting.ambient = scene == 1 ? .12F : .85F;
+                            renderer.set_options(opt);
+                            for (unsigned n = 0; n < 120; ++n) {
+                                if (candidate) {
+                                    tick_presentation(visual_tick++);
+                                    tick_presentation(visual_tick++);
+                                }
+                                renderer.render(frozen, 1);
+                                if (n % 16 == 15) drain();
+                            }
+                            drain();
+                            light.take_samples();
+                            renderer.take_samples();
+                            opt.profile_passes = true;
+                            renderer.set_options(opt);
+                            std::array<double, 240> cpu{};
+                            for (unsigned n = 0; n < 240; ++n) {
+                                const auto started = SDL_GetTicksNS();
+                                gl.QueryCounter(queries[n * 2], GL_TIMESTAMP);
+                                if (candidate) {
+                                    tick_presentation(visual_tick++);
+                                    tick_presentation(visual_tick++);
+                                }
+                                renderer.render(frozen, 1);
+                                gl.QueryCounter(queries[n * 2 + 1], GL_TIMESTAMP);
+                                cpu[n] = static_cast<double>(SDL_GetTicksNS() - started) / 1e6;
+                                if (n % 16 == 15) drain();
+                            }
+                            drain();
+                            const auto variant = candidate ? std::string{lighting_quality_name(quality)}
+                                                           : "off_for_" + std::string{lighting_quality_name(quality)};
+                            for (unsigned n = 0; n < 240; ++n) {
+                                GLuint64 a{}, b{};
+                                gl.GetQueryObjectui64v(queries[n * 2], GL_QUERY_RESULT, &a);
+                                gl.GetQueryObjectui64v(queries[n * 2 + 1], GL_QUERY_RESULT, &b);
+                                csv << names[scene] << ',' << variant << ',' << block << ',' << order << ',' << n << ','
+                                    << static_cast<double>(b - a) / 1e6 << ',' << cpu[n] << ',' << light.memory_bytes()
+                                    << '\n';
+                            }
+                            for (const auto& sample : light.take_samples()) {
+                                passes << names[scene] << ',' << variant << ',' << block << ',' << order << ','
+                                       << (sample.tick ? "tick" : "render") << ',' << sample.serial;
+                                for (double ms : sample.milliseconds) passes << ',' << ms;
+                                passes << '\n';
+                            }
+                            const auto source_counts = light.snapshot();
+                            sources << names[scene] << ',' << variant << ',' << block << ',' << order << ','
+                                    << source_counts.counts[0] << ',' << source_counts.counts[1] << ','
+                                    << std::max(0, int(source_counts.counts[0])
+                                                           - (quality == LightingQuality::low ? 16 : 32))
+                                    << '\n';
+                            renderer.take_samples();
+                            require(bytes() == before, "Presentation benchmark changed physical buffers");
+                            if (block == 1 && candidate) {
+                                renderer.save_image(output
+                                                    / (std::string{names[scene]} + "-"
+                                                       + std::string{lighting_quality_name(quality)} + ".bmp"));
+                            }
+                        }
+                renderer.release_frozen();
+                report << names[scene] << "_benchmark=PASS\n";
+                report.flush();
+            }
+            gl.DeleteQueries(static_cast<GLsizei>(queries.size()), queries.data());
+            renderer.set_options(original);
+            set_vfx_options(old_vfx);
+            report << "benchmark=PASS; 6 scenes, 2 qualities, 3 ABBA, 240 frames; candidate pair contains 2 presentation ticks and render; off reference omits I11 ticks to include their full incremental cost, frozen physics\n";
+            return {};
         }
-        std::vector<std::uint32_t> walls(width*height);for(int y=20;y<170;++y)walls[static_cast<std::size_t>(y)*width+150]=1;for(int x=150;x<230;++x)walls[80*width+x]=1;walls[65*width+149]=1;
-        load({},walls);light.set_lamps(std::array{lamp(130.5F,60.5F)});tick_presentation(1);
-        RenderOptions options;options.lighting.quality=LightingQuality::low;options.lighting.ambient=0;options.lighting.bloom=0;renderer.set_options(options);const auto physical=bytes();renderer.render(input(),1);drain();
-        const auto image=light.read_light();require(image[(60*width+140)*4]>.01F,"Nearby lamp is shadowed by terrain behind it");require(image[(60*width+160)*4]==0,"Light leaks through one-cell wall");
-        options.lighting.quality=LightingQuality::high;renderer.set_options(options);renderer.render(input(),1);drain();require(light.read_light()[(60*width+160)*4]==0,"JFA soft shadow leaks through wall");require(bytes()==physical,"Lighting render changed physics");
-        report<<"thin_wall_and_wall_behind_lamp=PASS\n";
-        const auto seeds=light.read_seeds();double max_error=0;for(unsigned n=0;n<1024;++n){const int x=static_cast<int>(hash(n+900)%320),y=static_cast<int>(hash(n+1900)%192);const auto at=static_cast<std::size_t>(y*width+x)*2;const unsigned sx=seeds[at],sy=seeds[at+1];require(sx<320&&sy<192&&walls[sy*320+sx]!=0,"JFA seed does not reference an actual obstacle");double exact=1e20;for(int wy=0;wy<height;++wy)for(int wx=0;wx<width;++wx)if(walls[static_cast<std::size_t>(wy)*width+wx])exact=std::min(exact,std::hypot(double(x-wx),double(y-wy)));max_error=std::max(max_error,std::hypot(double(x)-sx,double(y)-sy)-exact);}require(max_error<1.,"JFA fixture error exceeds one cell");report<<"jfa_exact_reference=PASS max_error_cells="<<max_error<<"\n";s.invalidate_bindings();
+        std::vector<std::uint32_t> walls(width * height);
+        for (int y = 20; y < 170; ++y) walls[static_cast<std::size_t>(y) * width + 150] = 1;
+        for (int x = 150; x < 230; ++x) walls[80 * width + x] = 1;
+        walls[65 * width + 149] = 1;
+        load({}, walls);
+        light.set_lamps(std::array{lamp(130.5F, 60.5F)});
+        tick_presentation(1);
+        RenderOptions options;
+        options.lighting.quality = LightingQuality::low;
+        options.lighting.ambient = 0;
+        options.lighting.bloom = 0;
+        renderer.set_options(options);
+        const auto physical = bytes();
+        renderer.render(input(), 1);
+        drain();
+        const auto image = light.read_light();
+        require(image[(60 * width + 140) * 4] > .01F, "Nearby lamp is shadowed by terrain behind it");
+        require(image[(60 * width + 160) * 4] == 0, "Light leaks through one-cell wall");
+        options.lighting.quality = LightingQuality::high;
+        renderer.set_options(options);
+        renderer.render(input(), 1);
+        drain();
+        require(light.read_light()[(60 * width + 160) * 4] == 0, "JFA soft shadow leaks through wall");
+        require(bytes() == physical, "Lighting render changed physics");
+        report << "thin_wall_and_wall_behind_lamp=PASS\n";
+        const auto seeds = light.read_seeds();
+        double max_error = 0;
+        for (unsigned n = 0; n < 1024; ++n) {
+            const int x = static_cast<int>(hash(n + 900) % 320), y = static_cast<int>(hash(n + 1900) % 192);
+            const auto at = static_cast<std::size_t>(y * width + x) * 2;
+            const unsigned sx = seeds[at], sy = seeds[at + 1];
+            require(sx < 320 && sy < 192 && walls[sy * 320 + sx] != 0,
+                    "JFA seed does not reference an actual obstacle");
+            double exact = 1e20;
+            for (int wy = 0; wy < height; ++wy)
+                for (int wx = 0; wx < width; ++wx)
+                    if (walls[static_cast<std::size_t>(wy) * width + wx])
+                        exact = std::min(exact, std::hypot(double(x - wx), double(y - wy)));
+            max_error = std::max(max_error, std::hypot(double(x) - sx, double(y) - sy) - exact);
+        }
+        require(max_error < 1., "JFA fixture error exceeds one cell");
+        report << "jfa_exact_reference=PASS max_error_cells=" << max_error << "\n";
+        s.invalidate_bindings();
 
         // Independent slab intersections, rather than a second implementation of grid traversal.
-        auto visible=[&](const std::array<float,4>& ray){const int receiver=static_cast<int>(ray[1])*width+static_cast<int>(ray[0]);if(walls[static_cast<std::size_t>(static_cast<int>(ray[3])*width+static_cast<int>(ray[2]))])return false;
-            for(int y=0;y<height;++y)for(int x=0;x<width;++x){if(!walls[static_cast<std::size_t>(y)*width+x]||y*width+x==receiver)continue;double low=0,high=1;for(int k=0;k<2;++k){const double a=ray[static_cast<std::size_t>(k)],d=ray[static_cast<std::size_t>(k)+2]-a,min=k==0?x:y,max=min+1.;if(std::abs(d)<1e-12){if(a<min||a>max){low=2;break;}}else{double l=(min-a)/d,h=(max-a)/d;if(l>h)std::swap(l,h);low=std::max(low,l);high=std::min(high,h);}}if(low<=high&&low<=1&&high>=0)return false;}
-            return true;};
-        std::vector<std::array<float,4>> rays;for(unsigned i=0;i<1024;++i){const auto a=hash(i*4+1),b=hash(i*4+2),c=hash(i*4+3),d=hash(i*4+4);rays.push_back({static_cast<float>(a%318)+.31F,static_cast<float>(b%190)+.37F,static_cast<float>(c%318)+.53F,static_cast<float>(d%190)+.61F});}
-        rays.push_back({148.5F,64.5F,150.5F,66.5F});rays.push_back({130.5F,60.5F,140.5F,60.5F});rays.push_back({149.5F,60.5F,149.5F,60.5F});
-        const auto probe=s.shader_library.program({{GL_COMPUTE_SHADER,s.shader_folder/"lighting_probe.comp"}});std::array<GLuint,2> buffers{};gl.GenBuffers(2,buffers.data());gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[0]);gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(rays.size()*sizeof(rays[0])),rays.data(),GL_STATIC_DRAW);gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,buffers[1]);gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(rays.size()*4),nullptr,GL_DYNAMIC_COPY);
-        s.device.state.invalidate();s.device.state.base(4,buffers[0]);s.device.state.base(5,buffers[1]);s.device.state.texture(3,renderer.terrain_image);s.device.state.use(probe);gl.Uniform1i(gl.GetUniformLocation(probe,"probeCount"),static_cast<int>(rays.size()));gl.DispatchCompute(static_cast<GLuint>((rays.size()+63)/64),1,1);gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);std::vector<float> answers(rays.size());gl.BindBuffer(GL_COPY_READ_BUFFER,buffers[1]);gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,static_cast<GLsizeiptr>(answers.size()*4),answers.data());gl.DeleteBuffers(2,buffers.data());s.invalidate_bindings();
-        for(std::size_t i=0;i<rays.size();++i)require((answers[i]>.5F)==visible(rays[i]),"GPU shadow differs from independent segment/AABB oracle");
-        report<<"independent_visibility_oracle=PASS "<<rays.size()<<" rays\n";
-        paint({150.5F,60.5F,150.5F,60.5F,2,Material::erase});renderer.render(input(),1);drain();require(light.read_light()[(60*width+160)*4]>.01F,"Destroyed wall still casts stale shadow");report<<"same_frame_destruction=PASS\n";
-        std::fill(walls.begin(),walls.end(),0);std::array particles{grain(100.5F,100.5F,1),grain(101.3F,100.5F,5)};load(particles,walls);for(unsigned t=1;t<=30;++t)tick_presentation(t);drain();require(light.read_moisture()[0]>.999F,"Water contact failed to wet sand");const auto wet=light.read_moisture();tick_presentation(30);renderer.render(input(),1);renderer.render(input(),1);drain();require(light.read_moisture()==wet,"Render/duplicate tick changed moisture");
-        load(std::span{particles}.first(1),walls);std::vector<float> moisture(capacity,1.F);glBindTexture(GL_TEXTURE_2D,light.moisture);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,256,128,GL_RED,GL_FLOAT,moisture.data());s.invalidate_bindings();for(unsigned t=1;t<=3600;++t){tick_presentation(t);if(t%64==0)drain();}drain();require(light.read_moisture()[0]<.0001F,"Ambient drying must finish in thirty seconds");report<<"moisture_contact_drying_duplicate_tick_render=PASS\n";
-        load({},walls);glBindTexture(GL_TEXTURE_2D,light.moisture);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,256,128,GL_RED,GL_FLOAT,moisture.data());s.invalidate_bindings();paint({100,100,100,100,2,Material::sand});drain();const auto born=readback();const auto born_wet=light.read_moisture();for(unsigned i=0;i<born.size();++i)if(born[i].motion[3]==1)require(born_wet[i]==0,"New particle inherited moisture from reused slot");report<<"slot_reuse=PASS\n";
-        load(std::span{particles}.first(1),walls);glBindTexture(GL_TEXTURE_2D,light.moisture);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,256,128,GL_RED,GL_FLOAT,moisture.data());std::vector<float> hot(width*height*4);for(std::size_t i=0;i<hot.size();i+=4)hot[i]=1093.15F;glBindTexture(GL_TEXTURE_2D,light.thermal_image);glTexSubImage2D(GL_TEXTURE_2D,0,0,0,width,height,GL_RGBA,GL_FLOAT,hot.data());s.invalidate_bindings();for(unsigned t=1;t<=450;++t){light.tick(s.buffers,s.current,s.epoch,t,false,renderer.terrain_image,light.thermal_image);if(t%64==0)drain();}drain();require(light.read_moisture()[0]<.0001F,"Hot drying did not respect the eightfold cap");report<<"hot_drying=PASS\n";
+        auto visible = [&](const std::array<float, 4>& ray) {
+            const int receiver = static_cast<int>(ray[1]) * width + static_cast<int>(ray[0]);
+            if (walls[static_cast<std::size_t>(static_cast<int>(ray[3]) * width + static_cast<int>(ray[2]))])
+                return false;
+            for (int y = 0; y < height; ++y)
+                for (int x = 0; x < width; ++x) {
+                    if (!walls[static_cast<std::size_t>(y) * width + x] || y * width + x == receiver) continue;
+                    double low = 0, high = 1;
+                    for (int k = 0; k < 2; ++k) {
+                        const double a = ray[static_cast<std::size_t>(k)], d = ray[static_cast<std::size_t>(k) + 2] - a,
+                                     min = k == 0 ? x : y, max = min + 1.;
+                        if (std::abs(d) < 1e-12) {
+                            if (a < min || a > max) {
+                                low = 2;
+                                break;
+                            }
+                        } else {
+                            double l = (min - a) / d, h = (max - a) / d;
+                            if (l > h) std::swap(l, h);
+                            low = std::max(low, l);
+                            high = std::min(high, h);
+                        }
+                    }
+                    if (low <= high && low <= 1 && high >= 0) return false;
+                }
+            return true;
+        };
+        std::vector<std::array<float, 4>> rays;
+        for (unsigned i = 0; i < 1024; ++i) {
+            const auto a = hash(i * 4 + 1), b = hash(i * 4 + 2), c = hash(i * 4 + 3), d = hash(i * 4 + 4);
+            rays.push_back({static_cast<float>(a % 318) + .31F, static_cast<float>(b % 190) + .37F,
+                            static_cast<float>(c % 318) + .53F, static_cast<float>(d % 190) + .61F});
+        }
+        rays.push_back({148.5F, 64.5F, 150.5F, 66.5F});
+        rays.push_back({130.5F, 60.5F, 140.5F, 60.5F});
+        rays.push_back({149.5F, 60.5F, 149.5F, 60.5F});
+        const auto probe = s.shader_library.program({{GL_COMPUTE_SHADER, s.shader_folder / "lighting_probe.comp"}});
+        std::array<GLuint, 2> buffers{};
+        gl.GenBuffers(2, buffers.data());
+        gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, buffers[0]);
+        gl.BufferData(GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(rays.size() * sizeof(rays[0])), rays.data(),
+                      GL_STATIC_DRAW);
+        gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, buffers[1]);
+        gl.BufferData(GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(rays.size() * 4), nullptr, GL_DYNAMIC_COPY);
+        s.device.state.invalidate();
+        s.device.state.base(4, buffers[0]);
+        s.device.state.base(5, buffers[1]);
+        s.device.state.texture(3, renderer.terrain_image);
+        s.device.state.use(probe);
+        gl.Uniform1i(gl.GetUniformLocation(probe, "probeCount"), static_cast<int>(rays.size()));
+        gl.DispatchCompute(static_cast<GLuint>((rays.size() + 63) / 64), 1, 1);
+        gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        std::vector<float> answers(rays.size());
+        gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[1]);
+        gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(answers.size() * 4), answers.data());
+        gl.DeleteBuffers(2, buffers.data());
+        s.invalidate_bindings();
+        for (std::size_t i = 0; i < rays.size(); ++i)
+            require((answers[i] > .5F) == visible(rays[i]), "GPU shadow differs from independent segment/AABB oracle");
+        report << "independent_visibility_oracle=PASS " << rays.size() << " rays\n";
+        paint({150.5F, 60.5F, 150.5F, 60.5F, 2, Material::erase});
+        renderer.render(input(), 1);
+        drain();
+        require(light.read_light()[(60 * width + 160) * 4] > .01F, "Destroyed wall still casts stale shadow");
+        report << "same_frame_destruction=PASS\n";
+        std::fill(walls.begin(), walls.end(), 0);
+        std::array particles{grain(100.5F, 100.5F, 1), grain(101.3F, 100.5F, 5)};
+        load(particles, walls);
+        for (unsigned t = 1; t <= 30; ++t) tick_presentation(t);
+        drain();
+        require(light.read_moisture()[0] > .999F, "Water contact failed to wet sand");
+        const auto wet = light.read_moisture();
+        tick_presentation(30);
+        renderer.render(input(), 1);
+        renderer.render(input(), 1);
+        drain();
+        require(light.read_moisture() == wet, "Render/duplicate tick changed moisture");
+        load(std::span{particles}.first(1), walls);
+        std::vector<float> moisture(capacity, 1.F);
+        glBindTexture(GL_TEXTURE_2D, light.moisture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 128, GL_RED, GL_FLOAT, moisture.data());
+        s.invalidate_bindings();
+        for (unsigned t = 1; t <= 3600; ++t) {
+            tick_presentation(t);
+            if (t % 64 == 0) drain();
+        }
+        drain();
+        require(light.read_moisture()[0] < .0001F, "Ambient drying must finish in thirty seconds");
+        report << "moisture_contact_drying_duplicate_tick_render=PASS\n";
+        load({}, walls);
+        glBindTexture(GL_TEXTURE_2D, light.moisture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 128, GL_RED, GL_FLOAT, moisture.data());
+        s.invalidate_bindings();
+        paint({100, 100, 100, 100, 2, Material::sand});
+        drain();
+        const auto born = readback();
+        const auto born_wet = light.read_moisture();
+        for (unsigned i = 0; i < born.size(); ++i)
+            if (born[i].motion[3] == 1) require(born_wet[i] == 0, "New particle inherited moisture from reused slot");
+        report << "slot_reuse=PASS\n";
+        load(std::span{particles}.first(1), walls);
+        glBindTexture(GL_TEXTURE_2D, light.moisture);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 256, 128, GL_RED, GL_FLOAT, moisture.data());
+        std::vector<float> hot(width * height * 4);
+        for (std::size_t i = 0; i < hot.size(); i += 4) hot[i] = 1093.15F;
+        glBindTexture(GL_TEXTURE_2D, light.thermal_image);
+        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, width, height, GL_RGBA, GL_FLOAT, hot.data());
+        s.invalidate_bindings();
+        for (unsigned t = 1; t <= 450; ++t) {
+            light.tick(s.buffers, s.current, s.epoch, t, false, renderer.terrain_image, light.thermal_image);
+            if (t % 64 == 0) drain();
+        }
+        drain();
+        require(light.read_moisture()[0] < .0001F, "Hot drying did not respect the eightfold cap");
+        report << "hot_drying=PASS\n";
         // Known linear HDR values cross the real tonemapper, palette LUT and sRGB output.
-        GLuint color_input{},color_output{},color_fbo{};std::vector<float> colors(16*16*4);const std::array<float,6> levels{0,.003F,.18F,1,4,16};for(unsigned y=0;y<16;++y)for(unsigned x=0;x<16;++x){const auto at=(y*16+x)*4;for(unsigned k=0;k<3;++k)colors[at+k]=levels[std::min(x/3,5u)];colors[at+3]=1;}
-        glGenTextures(1,&color_input);glBindTexture(GL_TEXTURE_2D,color_input);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA16F,16,16,0,GL_RGBA,GL_FLOAT,colors.data());glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
-        glGenTextures(1,&color_output);glBindTexture(GL_TEXTURE_2D,color_output);glTexImage2D(GL_TEXTURE_2D,0,GL_RGBA8,16,16,0,GL_RGBA,GL_UNSIGNED_BYTE,nullptr);gl.GenFramebuffers(1,&color_fbo);gl.BindFramebuffer(GL_FRAMEBUFFER,color_fbo);gl.FramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,color_output,0);light.resize(16,16);options.lighting.bloom=0;options.lighting.vignette=0;light.impulse=0;s.invalidate_bindings();light.finish(color_input,color_fbo,16,16,options.lighting);gl.BindFramebuffer(GL_READ_FRAMEBUFFER,color_fbo);std::array<unsigned char,16*16*4> decoded{};glReadPixels(0,0,16,16,GL_RGBA,GL_UNSIGNED_BYTE,decoded.data());for(unsigned x=0;x<16;++x){const double value=levels[std::min(x/3,5u)];const auto aces=[](double v){return std::clamp(v*(2.51*v+.03)/(v*(2.43*v+.59)+.14),0.,1.);};const double film=std::clamp((aces(value+.03)-aces(.03))/(1.-aces(.03)),0.,1.)*.99;const double display=film<=.0031308?film*12.92:1.055*std::pow(film,1/2.4)-.055;require(std::abs(decoded[x*4]/255.-display)<.025,"HDR tonemap/sRGB test failed (possible double encoding or clipping)");require(decoded[x*4+3]==255,"Postprocess output alpha must be opaque");}gl.BindFramebuffer(GL_READ_FRAMEBUFFER,0);gl.DeleteFramebuffers(1,&color_fbo);glDeleteTextures(1,&color_input);glDeleteTextures(1,&color_output);s.invalidate_bindings();report<<"hdr_srgb_and_opaque_output=PASS\n";
+        GLuint color_input{}, color_output{}, color_fbo{};
+        std::vector<float> colors(16 * 16 * 4);
+        const std::array<float, 6> levels{0, .003F, .18F, 1, 4, 16};
+        for (unsigned y = 0; y < 16; ++y)
+            for (unsigned x = 0; x < 16; ++x) {
+                const auto at = (y * 16 + x) * 4;
+                for (unsigned k = 0; k < 3; ++k) colors[at + k] = levels[std::min(x / 3, 5u)];
+                colors[at + 3] = 1;
+            }
+        glGenTextures(1, &color_input);
+        glBindTexture(GL_TEXTURE_2D, color_input);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 16, 16, 0, GL_RGBA, GL_FLOAT, colors.data());
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glGenTextures(1, &color_output);
+        glBindTexture(GL_TEXTURE_2D, color_output);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        gl.GenFramebuffers(1, &color_fbo);
+        gl.BindFramebuffer(GL_FRAMEBUFFER, color_fbo);
+        gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color_output, 0);
+        light.resize(16, 16);
+        options.lighting.bloom = 0;
+        options.lighting.vignette = 0;
+        light.impulse = 0;
+        s.invalidate_bindings();
+        light.finish(color_input, color_fbo, 16, 16, options.lighting);
+        gl.BindFramebuffer(GL_READ_FRAMEBUFFER, color_fbo);
+        std::array<unsigned char, 16 * 16 * 4> decoded{};
+        glReadPixels(0, 0, 16, 16, GL_RGBA, GL_UNSIGNED_BYTE, decoded.data());
+        for (unsigned x = 0; x < 16; ++x) {
+            const double value = levels[std::min(x / 3, 5u)];
+            const auto aces = [](double v) {
+                return std::clamp(v * (2.51 * v + .03) / (v * (2.43 * v + .59) + .14), 0., 1.);
+            };
+            const double film = std::clamp((aces(value + .03) - aces(.03)) / (1. - aces(.03)), 0., 1.) * .99;
+            const double display = film <= .0031308 ? film * 12.92 : 1.055 * std::pow(film, 1 / 2.4) - .055;
+            require(std::abs(decoded[x * 4] / 255. - display) < .025,
+                    "HDR tonemap/sRGB test failed (possible double encoding or clipping)");
+            require(decoded[x * 4 + 3] == 255, "Postprocess output alpha must be opaque");
+        }
+        gl.BindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+        gl.DeleteFramebuffers(1, &color_fbo);
+        glDeleteTextures(1, &color_input);
+        glDeleteTextures(1, &color_output);
+        s.invalidate_bindings();
+        report << "hdr_srgb_and_opaque_output=PASS\n";
 
-        reset_mission();light.set_lamps({});const MissionInput shoot{0,220,100,MissionButton::fire};require(step(shoot),"Shot fixture backpressure");drain();const auto shot=light.snapshot();require(shot.counts[0]>0,"Confirmed muzzle event produced no light with VFX off");tick_presentation(s.gameplay.tick(),true);drain();require(light.snapshot().counts==shot.counts,"Duplicate event emitted light twice");report<<"events_without_vfx_and_dedup=PASS\n";
-        queue_explosion({1,180,100,20,50});require(step(),"Explosion fixture backpressure");drain();options.lighting.quality=LightingQuality::high;options.lighting.ambient=.12F;options.lighting.bloom=.08F;renderer.set_options(options);renderer.render(input(),1);drain();renderer.save_image(output/"explosion-high.bmp");
-        for(unsigned scene=0;scene<names.size();++scene){if(scene==2){set_thermal_options({true});reset_thermal_scene(1);for(unsigned t=0;t<60;++t){if(!step()){drain();--t;}}}else{set_thermal_options({});if(scene<4)reset_mission();else reset(scene==4?Scene::oil_water:Scene::sand_water);tick_presentation(1);}
-            if(scene==3){queue_explosion({1,180,100,20,50});require(step(),"Explosion image fixture failed");drain();}
-            if(scene!=2){light.set_lamps(std::array{lamp(52,48,48),lamp(155,32,52),lamp(278,117,38)});tick_presentation(2);}
-            const auto state=bytes();const auto events=event_stats();const auto tick=s.metrics.steps;std::vector<float> reference_field;for(auto quality:{LightingQuality::off,LightingQuality::low,LightingQuality::high}){options.lighting.quality=quality;options.lighting.ambient=scene==1?.12F:.85F;renderer.set_options(options);renderer.render(input(),1);drain();const auto raw_field=renderer.read_field();if(quality==LightingQuality::off)reference_field=raw_field;else require(raw_field==reference_field,"Lighting changed the fluid splat field (particle bindings not restored)");require(bytes()==state&&event_stats()==events&&s.metrics.steps==tick,"Presentation changes physical state/events/tick");renderer.save_image(output/(std::string{names[scene]}+"-"+std::string{lighting_quality_name(quality)}+".bmp"));}report<<names[scene]<<"_composition=PASS\n";report.flush();}
-        
-        set_thermal_options({});std::vector<Grain> reference_particles;std::array isolated{grain(70.5F,45.5F,1),grain(140.5F,65.5F,2),grain(220.5F,85.5F,1)};std::fill(walls.begin(),walls.end(),0);for(auto quality:{LightingQuality::off,LightingQuality::low,LightingQuality::high}){options.profile_passes=false;options.lighting.quality=quality;renderer.set_options(options);load(isolated,walls);for(unsigned t=0;t<120;++t){require(step(),"Isolated fixture backpressure");render(.5F);}drain();const auto result=readback();if(reference_particles.empty())reference_particles=result;else require(std::memcmp(reference_particles.data(),result.data(),result.size()*sizeof(Grain))==0,"Lighting quality changes isolated physical trajectories");}report<<"physical_trajectories_off_low_high=PASS\n";
-        options.profile_passes=true;options.lighting.quality=LightingQuality::high;renderer.set_options(options);drain();light.take_samples();std::ofstream rebuild{output/"lighting-rebuild.csv"};rebuild<<"sample,shadow_ms\n";for(unsigned n=0;n<60;++n){paint({150,70,150,70,2,n%2?Material::wall:Material::erase});renderer.render(input(),1);if(n%8==7)drain();}drain();unsigned rebuilt=0;for(const auto& sample:light.take_samples())if(!sample.tick)rebuild<<rebuilt++<<','<<sample.milliseconds[1]<<'\n';require(rebuilt>=60,"Missing shadow rebuild samples");report<<"destruction_profile=PASS\n";
-require(glGetError()==GL_NO_ERROR,"OpenGL error during I11 validation");renderer.set_options(original);set_vfx_options(old_vfx);report<<"quality=PASS\n";return {};
-    }catch(const std::exception& e){return std::unexpected{e.what()};}
+        reset_mission();
+        light.set_lamps({});
+        const MissionInput shoot{0, 220, 100, MissionButton::fire};
+        require(step(shoot), "Shot fixture backpressure");
+        drain();
+        const auto shot = light.snapshot();
+        require(shot.counts[0] > 0, "Confirmed muzzle event produced no light with VFX off");
+        tick_presentation(s.gameplay.tick(), true);
+        drain();
+        require(light.snapshot().counts == shot.counts, "Duplicate event emitted light twice");
+        report << "events_without_vfx_and_dedup=PASS\n";
+        queue_explosion({1, 180, 100, 20, 50});
+        require(step(), "Explosion fixture backpressure");
+        drain();
+        options.lighting.quality = LightingQuality::high;
+        options.lighting.ambient = .12F;
+        options.lighting.bloom = .08F;
+        renderer.set_options(options);
+        renderer.render(input(), 1);
+        drain();
+        renderer.save_image(output / "explosion-high.bmp");
+        for (unsigned scene = 0; scene < names.size(); ++scene) {
+            if (scene == 2) {
+                set_thermal_options({true});
+                reset_thermal_scene(1);
+                for (unsigned t = 0; t < 60; ++t) {
+                    if (!step()) {
+                        drain();
+                        --t;
+                    }
+                }
+            } else {
+                set_thermal_options({});
+                if (scene < 4)
+                    reset_mission();
+                else
+                    reset(scene == 4 ? Scene::oil_water : Scene::sand_water);
+                tick_presentation(1);
+            }
+            if (scene == 3) {
+                queue_explosion({1, 180, 100, 20, 50});
+                require(step(), "Explosion image fixture failed");
+                drain();
+            }
+            if (scene != 2) {
+                light.set_lamps(std::array{lamp(52, 48, 48), lamp(155, 32, 52), lamp(278, 117, 38)});
+                tick_presentation(2);
+            }
+            const auto state = bytes();
+            const auto events = event_stats();
+            const auto tick = s.metrics.steps;
+            std::vector<float> reference_field;
+            for (auto quality : {LightingQuality::off, LightingQuality::low, LightingQuality::high}) {
+                options.lighting.quality = quality;
+                options.lighting.ambient = scene == 1 ? .12F : .85F;
+                renderer.set_options(options);
+                renderer.render(input(), 1);
+                drain();
+                const auto raw_field = renderer.read_field();
+                if (quality == LightingQuality::off)
+                    reference_field = raw_field;
+                else
+                    require(raw_field == reference_field,
+                            "Lighting changed the fluid splat field (particle bindings not restored)");
+                require(bytes() == state && event_stats() == events && s.metrics.steps == tick,
+                        "Presentation changes physical state/events/tick");
+                renderer.save_image(
+                        output
+                        / (std::string{names[scene]} + "-" + std::string{lighting_quality_name(quality)} + ".bmp"));
+            }
+            report << names[scene] << "_composition=PASS\n";
+            report.flush();
+        }
+
+        set_thermal_options({});
+        std::vector<Grain> reference_particles;
+        std::array isolated{grain(70.5F, 45.5F, 1), grain(140.5F, 65.5F, 2), grain(220.5F, 85.5F, 1)};
+        std::fill(walls.begin(), walls.end(), 0);
+        for (auto quality : {LightingQuality::off, LightingQuality::low, LightingQuality::high}) {
+            options.profile_passes = false;
+            options.lighting.quality = quality;
+            renderer.set_options(options);
+            load(isolated, walls);
+            for (unsigned t = 0; t < 120; ++t) {
+                require(step(), "Isolated fixture backpressure");
+                render(.5F);
+            }
+            drain();
+            const auto result = readback();
+            if (reference_particles.empty())
+                reference_particles = result;
+            else
+                require(std::memcmp(reference_particles.data(), result.data(), result.size() * sizeof(Grain)) == 0,
+                        "Lighting quality changes isolated physical trajectories");
+        }
+        report << "physical_trajectories_off_low_high=PASS\n";
+        options.profile_passes = true;
+        options.lighting.quality = LightingQuality::high;
+        renderer.set_options(options);
+        drain();
+        light.take_samples();
+        std::ofstream rebuild{output / "lighting-rebuild.csv"};
+        rebuild << "sample,shadow_ms\n";
+        for (unsigned n = 0; n < 60; ++n) {
+            paint({150, 70, 150, 70, 2, n % 2 ? Material::wall : Material::erase});
+            renderer.render(input(), 1);
+            if (n % 8 == 7) drain();
+        }
+        drain();
+        unsigned rebuilt = 0;
+        for (const auto& sample : light.take_samples())
+            if (!sample.tick) rebuild << rebuilt++ << ',' << sample.milliseconds[1] << '\n';
+        require(rebuilt >= 60, "Missing shadow rebuild samples");
+        report << "destruction_profile=PASS\n";
+        require(glGetError() == GL_NO_ERROR, "OpenGL error during I11 validation");
+        renderer.set_options(original);
+        set_vfx_options(old_vfx);
+        report << "quality=PASS\n";
+        return {};
+    } catch (const std::exception& e) {
+        return std::unexpected{e.what()};
+    }
 }
-}
+} // namespace strefa::gpu

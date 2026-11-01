@@ -1,0 +1,55 @@
+# Strefa Zero C++ style. Run ./scripts/format.sh (or --check) before committing.
+# GLSL shaders under assets/shaders are not formatted by clang-format.
+---
+Language: Cpp
+BasedOnStyle: LLVM
+Standard: Latest
+ColumnLimit: 120
+IndentWidth: 4
+ContinuationIndentWidth: 8
+AccessModifierOffset: -4
+NamespaceIndentation: None
+FixNamespaceComments: true
+ShortNamespaceLines: 0
+
+PointerAlignment: Left
+ReferenceAlignment: Pointer
+QualifierAlignment: Leave
+SpaceAfterTemplateKeyword: false
+SpaceBeforeCpp11BracedList: false
+Cpp11BracedListStyle: true
+
+AllowShortFunctionsOnASingleLine: Inline
+AllowShortLambdasOnASingleLine: All
+AllowShortIfStatementsOnASingleLine: WithoutElse
+AllowShortLoopsOnASingleLine: true
+AllowShortBlocksOnASingleLine: Never
+AllowShortCaseLabelsOnASingleLine: true
+AllowShortEnumsOnASingleLine: true
+AlwaysBreakTemplateDeclarations: MultiLine
+BreakBeforeBinaryOperators: NonAssignment
+BreakConstructorInitializers: BeforeColon
+PackConstructorInitializers: CurrentLine
+BinPackArguments: true
+BinPackParameters: true
+AlignAfterOpenBracket: Align
+AlignOperands: AlignAfterOperator
+AlignTrailingComments:
+  Kind: Always
+  OverEmptyLines: 0
+MaxEmptyLinesToKeep: 1
+KeepEmptyLinesAtTheStartOfBlocks: false
+BreakStringLiterals: false
+InsertNewlineAtEOF: true
+LineEnding: LF
+
+# Project headers first, then third-party (SDL, ImGui), then the standard library.
+SortIncludes: CaseSensitive
+IncludeBlocks: Regroup
+IncludeCategories:
+  - Regex: '^"'
+    Priority: 1
+  - Regex: '^<(SDL3|imgui|backends)/|^<imgui'
+    Priority: 2
+  - Regex: '^<.*>'
+    Priority: 3

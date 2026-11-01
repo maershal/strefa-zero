@@ -1,0 +1,73 @@
+# Strefa Zero
+
+C++23 2D game prototype with material simulation: GPU liquids (PBF) and grains (PBD) on
+OpenGL 4.3 compute, a CPU reference thermochemical model, a mission, a training arena and
+two laboratories. SDL 3.4.18 + Dear ImGui 1.93.0 (fetched by CMake with pinned SHA-256).
+Targets Windows (MSVC) and Linux/WSL2 (GCC >= 13). User-facing docs are in **Polish**;
+keep new docs, UI strings and error messages in Polish, code identifiers and comments in English.
+
+## Build and test
+
+```bash
+./scripts/build.sh --test-suite cpu   # configure + build build/linux-release, CPU tests (~1 min after first build)
+./scripts/build.sh                    # + window/GPU smoke tests (needs a display; WSLg works)
+./scripts/build.sh --test-suite all   # full QA, ~70 tests, many minutes, needs GL 4.3
+./scripts/build.sh --core-only        # no SDL/OpenGL
+ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   # one test
+./scripts/format.sh                   # clang-format all C++ (CI runs --check)
+./scripts/lint.sh [files...]          # clang-tidy, advisory
+```
+
+- Warnings are errors (`STREFA_WARNINGS_AS_ERRORS=ON` in scripts and presets).
+- GPU tests exit **77** (skipped) without an OpenGL 4.3 context. Software Mesa:
+  `./scripts/run.sh --software` or `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`.
+- Most GPU/app tests are `StrefaZero --<mode>-check --profile <dir>` invocations registered in
+  `CMakeLists.txt`; they write reports into `<dir>` and exit.
+- Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja).
+
+## Layout
+
+| Path | Contents |
+| --- | --- |
+| `src/core` | settings schema (`meta::Field`), validation |
+| `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp` |
+| `src/game` | `strefa_game` (CPU arena session), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
+| `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`), renderer, VFX, thermal, lighting, readback/upload rings, and the `*_validation`/`*_profile` check modes |
+| `src/platform` | SDL window, GL context, textures, settings storage |
+| `src/ui` | ImGui menu, laboratories, arena |
+| `src/app` | `Application`, launch options (`launch_options.cpp` = all CLI flags), diagnostic scenarios |
+| `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |
+| `tests/` | one executable per `*_tests.cpp`, registered in `CMakeLists.txt` |
+| `scripts/` | build/run/package/format/lint; `scripts/profiling/` = Windows-era PowerShell + Python measurement harnesses |
+| `docs/` | guides at top level, `reports/` per iteration, `plans/`, `measurements/` (see below); index in `docs/README.md` |
+
+Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
+
+## Conventions
+
+- Style is enforced by `.clang-format` (4 spaces, 120 columns). Run `./scripts/format.sh` before
+  committing. X-macro lists (`GL_FUNCTIONS`, `STREFA_GPU_COUNTERS`) are hand-laid out one entry
+  per line inside `// clang-format off` blocks; keep that when adding entries.
+- `snake_case` functions/variables, `CamelCase` types, trailing `_` on private members,
+  `namespace strefa::<module>`.
+- Expected platform failures return `std::expected`; RAII for SDL/GL resources.
+- Defaults matter: GPU options with unmet budgets stay **off** by default (thermal, lighting,
+  phase gating, PBF restrict, ...). Do not flip a default without new measurements and a report.
+- Simulation is deterministic across 1/2/4 threads (`sim.numerics_parallel`); keep reductions
+  in a fixed order.
+- New CLI flags go in `src/app/launch_options.cpp`; new check modes also need a CTest entry
+  with `SKIP_RETURN_CODE 77` and a `gpu` label.
+
+## Measurement data — do not read
+
+`docs/measurements/` holds ~12k raw logs/CSV/JSON/BMP files from past QA runs (hundreds of MB,
+plus untracked BMPs). They are byte-identical evidence verified by `SHA256SUMS.txt` manifests
+inside each folder (`-text` in `.gitattributes`). Never edit or reformat them. Reading them is
+blocked in `.claude/settings.json`; the reports in `docs/reports/` quote every number needed.
+New measurement runs go into a new `docs/measurements/<stage>/` folder.
+
+## Git
+
+- Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build, CPU tests,
+  Mesa smoke tests, Linux package). Docs-only changes skip CI.
+- Do not commit `build/`, `dist/` or raw `*.bmp` captures (ignored).
