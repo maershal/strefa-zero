@@ -23,22 +23,24 @@ public:
     void configure(unsigned requested) {
         // Configure once, before the first job. Automatic mode leaves capacity
         // for UI/rendering and avoids relying on all SMT siblings.
-        const unsigned automatic=std::clamp(std::thread::hardware_concurrency()/2,1U,2U);
+        const unsigned automatic = std::clamp(std::thread::hardware_concurrency() / 2, 1U, 2U);
         lanes_ = std::clamp(requested ? requested : automatic, 1U, 4U);
-        for (unsigned lane = 1; lane < lanes_; ++lane)
-            workers_.emplace_back([this, lane] { worker_loop(lane); });
+        for (unsigned lane = 1; lane < lanes_; ++lane) workers_.emplace_back([this, lane] { worker_loop(lane); });
     }
     [[nodiscard]] unsigned lanes() const noexcept { return lanes_; }
     template<class F> void run(int count, int minimum_per_lane, F&& function) {
         if (lanes_ == 1 || count < minimum_per_lane * static_cast<int>(lanes_)) {
-            function(0, count); return;
+            function(0, count);
+            return;
         }
-        count_ = count; context_ = &function;
+        count_ = count;
+        context_ = &function;
         invoke_ = [](void* context, int first, int last) noexcept {
             (*static_cast<std::remove_reference_t<F>*>(context))(first, last);
         };
         remaining_.store(lanes_ - 1, std::memory_order_relaxed);
-        epoch_.fetch_add(1, std::memory_order_release); epoch_.notify_all();
+        epoch_.fetch_add(1, std::memory_order_release);
+        epoch_.notify_all();
         invoke_(context_, 0, count_ / static_cast<int>(lanes_));
         auto left = remaining_.load(std::memory_order_acquire);
         while (left != 0) {
@@ -46,6 +48,7 @@ public:
             left = remaining_.load(std::memory_order_acquire);
         }
     }
+
 private:
     void worker_loop(unsigned lane) noexcept {
         unsigned observed = 0;

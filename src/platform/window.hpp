@@ -1,7 +1,9 @@
 #pragma once
 
 #include "core/settings.hpp"
+
 #include <SDL3/SDL.h>
+
 #include <expected>
 #include <memory>
 #include <string>
@@ -15,26 +17,32 @@ public:
     SdlSystem(SdlSystem&& other) noexcept;
     SdlSystem(const SdlSystem&) = delete;
     SdlSystem& operator=(const SdlSystem&) = delete;
+
 private:
     SdlSystem() = default;
     bool active_{false};
 };
 
-struct WindowDeleter { void operator()(SDL_Window* window) const noexcept; };
-struct ContextDeleter { void operator()(SDL_GLContextState* context) const noexcept; };
+struct WindowDeleter {
+    void operator()(SDL_Window* window) const noexcept;
+};
+struct ContextDeleter {
+    void operator()(SDL_GLContextState* context) const noexcept;
+};
 
 struct PresentationInfo {
     SDL_WindowFlags window_flags{};
     SDL_DisplayID display_id{};
-    int pixel_width{},pixel_height{},mode_width{},mode_height{};
+    int pixel_width{}, pixel_height{}, mode_width{}, mode_height{};
     float refresh_hz{};
-    int refresh_numerator{},refresh_denominator{},swap_interval{};
-    bool focused{},minimized{},mode_available{},vsync_enabled{},swap_interval_available{};
+    int refresh_numerator{}, refresh_denominator{}, swap_interval{};
+    bool focused{}, minimized{}, mode_available{}, vsync_enabled{}, swap_interval_available{};
 };
 
 class Window {
 public:
-    [[nodiscard]] static std::expected<Window, std::string> create(const core::Settings& settings,bool prefer_compute=true,bool debug_context=false);
+    [[nodiscard]] static std::expected<Window, std::string>
+    create(const core::Settings& settings, bool prefer_compute = true, bool debug_context = false);
     Window(Window&&) noexcept = default;
     Window(const Window&) = delete;
     Window& operator=(Window&&) = delete;
@@ -48,8 +56,8 @@ public:
     // Diagnostic queries only; callers account for their CPU cost separately.
     [[nodiscard]] PresentationInfo presentation_info() const noexcept;
     [[nodiscard]] const std::string& warning() const noexcept { return warning_; }
-    [[nodiscard]] std::expected<void, std::string> apply_video(
-        const core::Settings& next, const core::Settings& previous);
+    [[nodiscard]] std::expected<void, std::string> apply_video(const core::Settings& next,
+                                                               const core::Settings& previous);
     void show() const;
     void clear() const;
     void present() const;

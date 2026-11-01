@@ -1,5 +1,6 @@
 #include "core/settings.hpp"
 #include "platform/settings_store.hpp"
+
 #include <chrono>
 #include <filesystem>
 #include <fstream>
@@ -24,12 +25,12 @@ void round_trip() {
     check(result.has_value() && *result == settings, "Settings must round-trip without precision loss");
     const auto partial = strefa::core::deserialize("# comment\r\nwidth=1600\r\nfuture_key=allowed\r\n");
     check(partial.has_value() && partial->width == 1600 && partial->vsync,
-        "Partial files should use defaults and tolerate future fields");
+          "Partial files should use defaults and tolerate future fields");
 }
 
 void invalid_input() {
-    for (const auto text : {"ui_scale=nan", "ui_scale=inf", "width=1600oops", "width=1",
-        "width=1280\nwidth=1600", "map_theme=99", "vsync=maybe", "schema_version=2", "missing_equals"})
+    for (const auto text : {"ui_scale=nan", "ui_scale=inf", "width=1600oops", "width=1", "width=1280\nwidth=1600",
+                            "map_theme=99", "vsync=maybe", "schema_version=2", "missing_equals"})
         check(!strefa::core::deserialize(text).has_value(), "Malformed settings must be rejected");
     strefa::core::Settings settings;
     settings.frame_limit = 0;
@@ -41,7 +42,12 @@ void replace_file() {
     const auto path = std::filesystem::current_path() / ("settings-test-" + std::to_string(nonce) + ".ini");
     struct Cleanup {
         std::filesystem::path path;
-        ~Cleanup() { std::error_code ignored; std::filesystem::remove(path, ignored); path += ".tmp"; std::filesystem::remove(path, ignored); }
+        ~Cleanup() {
+            std::error_code ignored;
+            std::filesystem::remove(path, ignored);
+            path += ".tmp";
+            std::filesystem::remove(path, ignored);
+        }
     } cleanup{path};
     strefa::platform::SettingsStore store{path};
     check(store.load().has_value(), "A missing file should yield defaults");
@@ -57,14 +63,19 @@ void replace_file() {
     invalid.ui_scale = -1.0F;
     check(!store.save(invalid).has_value(), "Invalid data must not overwrite the file");
     check(store.load().value() == second, "Rejected save must preserve the previous file");
-    { std::ofstream corrupt{path}; corrupt << "width=broken"; }
+    {
+        std::ofstream corrupt{path};
+        corrupt << "width=broken";
+    }
     check(!store.load().has_value(), "Corrupted settings must report failure");
 }
-}
+} // namespace
 
 int main() {
     try {
-        round_trip(); invalid_input(); replace_file();
+        round_trip();
+        invalid_input();
+        replace_file();
         std::cout << "PASS: round-trip, invalid inputs, atomic replacement and corruption handling\n";
         return 0;
     } catch (const std::exception& error) {

@@ -1,8 +1,11 @@
 #include "ui/session.hpp"
+
 #include "platform/window.hpp"
+
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
+
 #include <cmath>
 #include <utility>
 
@@ -12,7 +15,8 @@ Session::Session(Session&& other) noexcept
     : context_{std::exchange(other.context_, nullptr)},
       platform_ready_{std::exchange(other.platform_ready_, false)},
       renderer_ready_{std::exchange(other.renderer_ready_, false)},
-      fonts_{other.fonts_}, scale_{other.scale_} {}
+      fonts_{other.fonts_},
+      scale_{other.scale_} {}
 Session::~Session() {
     if (!context_) return;
     ImGui::SetCurrentContext(context_);
@@ -21,8 +25,8 @@ Session::~Session() {
     ImGui::DestroyContext(context_);
 }
 
-std::expected<Session, std::string> Session::create(
-    const platform::Window& window, const std::filesystem::path& assets) {
+std::expected<Session, std::string> Session::create(const platform::Window& window,
+                                                    const std::filesystem::path& assets) {
     IMGUI_CHECKVERSION();
     Session result;
     result.context_ = ImGui::CreateContext();
@@ -41,14 +45,15 @@ std::expected<Session, std::string> Session::create(
         return std::unexpected{"Brak czcionek w assets/fonts. Rozpakuj pełną paczkę aplikacji."};
     result.fonts_.body = io.Fonts->AddFontFromFileTTF(regular.c_str(), 18.0F);
     result.fonts_.heading = io.Fonts->AddFontFromFileTTF(bold.c_str(), 18.0F);
-    if (!result.fonts_.body || !result.fonts_.heading)
-        return std::unexpected{"Nie można wczytać czcionek interfejsu."};
+    if (!result.fonts_.body || !result.fonts_.heading) return std::unexpected{"Nie można wczytać czcionek interfejsu."};
     io.FontDefault = result.fonts_.body;
     result.set_scale(window.display_scale(), 1.0F);
     return result;
 }
 
-void Session::process_event(const SDL_Event& event) const { ImGui_ImplSDL3_ProcessEvent(&event); }
+void Session::process_event(const SDL_Event& event) const {
+    ImGui_ImplSDL3_ProcessEvent(&event);
+}
 void Session::new_frame() {
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplSDL3_NewFrame();

@@ -17,8 +17,7 @@ std::string_view trim(std::string_view text) {
     return text.substr(begin, text.find_last_not_of(spaces) - begin + 1);
 }
 
-template<class T>
-std::string encode(T value) {
+template<class T> std::string encode(T value) {
     if constexpr (std::is_same_v<T, bool>) {
         return value ? "true" : "false";
     } else if constexpr (std::is_enum_v<T>) {
@@ -27,8 +26,8 @@ std::string encode(T value) {
         std::array<char, 64> buffer{};
         const auto result = [&] {
             if constexpr (std::is_floating_point_v<T>)
-                return std::to_chars(buffer.data(), buffer.data() + buffer.size(), value,
-                    std::chars_format::general, std::numeric_limits<T>::max_digits10);
+                return std::to_chars(buffer.data(), buffer.data() + buffer.size(), value, std::chars_format::general,
+                                     std::numeric_limits<T>::max_digits10);
             else
                 return std::to_chars(buffer.data(), buffer.data() + buffer.size(), value);
         }();
@@ -36,12 +35,17 @@ std::string encode(T value) {
     }
 }
 
-template<class T>
-bool decode(std::string_view text, T& destination) {
+template<class T> bool decode(std::string_view text, T& destination) {
     if (text.empty()) return false;
     if constexpr (std::is_same_v<T, bool>) {
-        if (text == "true") { destination = true; return true; }
-        if (text == "false") { destination = false; return true; }
+        if (text == "true") {
+            destination = true;
+            return true;
+        }
+        if (text == "false") {
+            destination = false;
+            return true;
+        }
         return false;
     } else if constexpr (std::is_enum_v<T>) {
         std::underlying_type_t<T> value{};
@@ -52,7 +56,8 @@ bool decode(std::string_view text, T& destination) {
         T value{};
         const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
         if (result.ec != std::errc{} || result.ptr != text.data() + text.size()) return false;
-        if constexpr (std::is_floating_point_v<T>) if (!std::isfinite(value)) return false;
+        if constexpr (std::is_floating_point_v<T>)
+            if (!std::isfinite(value)) return false;
         destination = value;
         return true;
     }
