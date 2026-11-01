@@ -30,7 +30,7 @@ A/D — ruch; Spacja — skok; PPM — plecak; LPM — karabin; R — przeładow
 
 Wybór scen i map pól znajduje się po prawej. Najedź kursorem na świat, aby obejrzeć temperaturę, ciśnienia, prędkości, masę, paliwo i tlen. Panel można przewijać. LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja zatrzymuje czas, F wykonuje pojedynczy krok.
 
-Rozwiń „Koszt obliczeń”, aby sprawdzić czasy cieczy, ciśnienia, gazów i ciepła. Wersja 0.4.2 korzysta domyślnie z maksymalnie dwóch wątków fizyki, zoptymalizowanego PCG oraz poprawionego transportu cieczy. Okno nadal działa niezależnie od symulacji. Ciężka scena może pracować poniżej 60 kroków/s; audyt CPU znajduje się w docs/PERFORMANCE_AUDIT.md paczki źródłowej.
+Rozwiń „Koszt obliczeń”, aby sprawdzić czasy cieczy, ciśnienia, gazów i ciepła. Wersja 0.4.2 korzysta domyślnie z maksymalnie dwóch wątków fizyki, zoptymalizowanego PCG oraz poprawionego transportu cieczy. Okno nadal działa niezależnie od symulacji. Ciężka scena może pracować poniżej 60 kroków/s; audyt CPU znajduje się w docs/reports/PERFORMANCE_AUDIT.md paczki źródłowej.
 
 Aby porównać cztery wątki, uruchom `StrefaZero.exe --laboratory --physics-threads 4`. Parametr działa także z `--arena`. Wybór 1–4 nie zmienia szybkości czasu gry ani współczynników materiałów; zmienia podział pracy CPU.
 
@@ -70,15 +70,15 @@ Zniszczona tarcza pozostaje wrakiem, który zatrzymuje pociski. Zachowano efekty
 
 Domyślny profil `legacy` zachowuje ustawienia I06. Eksperymentalny profil `balanced` dodaje ważone granice, napięcie 2D, adhezję i ograniczoną wirowość: `StrefaZero.exe --mission --gpu-fluid-profile balanced`. Te same ustawienia działają w narzędziach świata. Nagrania v2 zawierają konfigurację fizyki; starsze nagrania v1 wymagają `legacy`.
 
-Walidacja: `StrefaZero.exe --gpu-fluid-check --gpu-fluid-profile balanced --profile wyniki-i07`. Wyniki, koszt i ograniczenia: [I07_FLUID_QUALITY.md](I07_FLUID_QUALITY.md).
+Walidacja: `StrefaZero.exe --gpu-fluid-check --gpu-fluid-profile balanced --profile wyniki-i07`. Wyniki, koszt i ograniczenia: [I07_FLUID_QUALITY.md](reports/I07_FLUID_QUALITY.md).
 
 ## Obraz wody I08
 
-W narzędziach świata wybierz jakość obrazu: Podstawowy, Standardowy lub Wysoki. Zmiana nie resetuje sceny. Przy uruchamianiu można użyć `--gpu-render-quality basic|standard|high`. Podstawowy pozostaje domyślny na podstawie pomiarów GTX 1650. Profile fizyki `legacy`/`balanced` są osobnym ustawieniem. [Raport I08](I08_SCENE_RENDERER.md).
+W narzędziach świata wybierz jakość obrazu: Podstawowy, Standardowy lub Wysoki. Zmiana nie resetuje sceny. Przy uruchamianiu można użyć `--gpu-render-quality basic|standard|high`. Podstawowy pozostaje domyślny na podstawie pomiarów GTX 1650. Profile fizyki `legacy`/`balanced` są osobnym ustawieniem. [Raport I08](reports/I08_SCENE_RENDERER.md).
 
 ## Efekty I09
 
-Domyślne VFX low mają pulę 16 384. Wybór efektów w narzędziach i poligonie działa bez resetowania fizyki. Z wiersza poleceń: `StrefaZero.exe --mission --gpu-vfx-quality low`, `high` lub `off`. Jakość wody i fizyki wybiera się osobno. Poligon CPU używa tej samej puli na GL 4.3, a na GL 3.3 zachowuje uproszczone efekty. Szczegóły odbioru: [I09_GPU_VFX.md](I09_GPU_VFX.md).
+Domyślne VFX low mają pulę 16 384. Wybór efektów w narzędziach i poligonie działa bez resetowania fizyki. Z wiersza poleceń: `StrefaZero.exe --mission --gpu-vfx-quality low`, `high` lub `off`. Jakość wody i fizyki wybiera się osobno. Poligon CPU używa tej samej puli na GL 4.3, a na GL 3.3 zachowuje uproszczone efekty. Szczegóły odbioru: [I09_GPU_VFX.md](reports/I09_GPU_VFX.md).
 
 Odbiór wydajności I09 pozostaje otwarty: końcowy najgorszy segment low dodał 0,678 ms przy limicie 0,25 ms. Szczegóły i warunki pomiarów są w raporcie I09.
 
@@ -86,10 +86,10 @@ Odbiór wydajności I09 pozostaje otwarty: końcowy najgorszy segment low dodał
 
 Uruchom `StrefaZero.exe --gpu-thermal-scene fire` (albo `oil`, `quench`, `phases`). W narzędziach można włączyć „Termika i gazy I10”, wybrać scenę i nacisnąć „Wczytaj scenę I10”. Dostępne są grzanie, chłodzenie, dodawanie drewna/lodu/lawy oraz gazów. Widoki pokazują temperaturę, ciśnienie projekcji, prędkość, tlen i paliwo; inspektor podaje tick ostatniej gotowej próbki. Pauza i pojedynczy krok obejmują też termikę.
 
-W misji użyj `--gpu-thermal on`. Domyślnie jest `off`, ponieważ budżet wydajności nie został spełniony. CPU i fallback GL 3.3 zachowują dotychczasową termikę referencyjną. Zakres materiałów, testy i wyniki: [I10_GPU_THERMAL.md](I10_GPU_THERMAL.md).
+W misji użyj `--gpu-thermal on`. Domyślnie jest `off`, ponieważ budżet wydajności nie został spełniony. CPU i fallback GL 3.3 zachowują dotychczasową termikę referencyjną. Zakres materiałów, testy i wyniki: [I10_GPU_THERMAL.md](reports/I10_GPU_THERMAL.md).
 
 ## Oświetlenie I11
 
 `StrefaZero.exe --mission --gpu-lighting-quality low` włącza światło, HDR, subtelny bloom i styl piasku. `high` dodaje miękkie cienie; `off` zachowuje dotychczasowy obraz. W narzędziach GPU wybierz „ŚWIATŁO / I11”; bloom, winieta, wstrząs i aberracja mają osobne suwaki. Wstrząs i aberracja są początkowo wyłączone. Wilgoć piasku jest wizualna, utrzymuje się po wyjściu z wody i wysycha w tickach.
 
-I11 pozostaje domyślnie wyłączone; odbiór wydajności: otwarty. Termika I10 jest oddzielną opcją. [Raport I11](I11_LIGHTING.md) opisuje testy, pomiary i ograniczenia.
+I11 pozostaje domyślnie wyłączone; odbiór wydajności: otwarty. Termika I10 jest oddzielną opcją. [Raport I11](reports/I11_LIGHTING.md) opisuje testy, pomiary i ograniczenia.

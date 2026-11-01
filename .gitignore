@@ -1,12 +1,22 @@
+# Build output
 /build/
+/build-*/
+/dist/
 /.cache/
 /CMakeUserPresets.json
+
+# IDE and tool state
+/.vs/
+/.vscode/
+/.idea/
 *.user
 *.suo
 imgui.ini
-/build-*/
-/dist/
-/.vs/
+/.claude/settings.local.json
+__pycache__/
+*.py[cod]
+
+# Secrets
 .env
 .env.*
 !.env.example
@@ -15,7 +25,5 @@ imgui.ini
 *.pem
 *.key
 
-# Raw QA images are distributed as a release asset; keep generated caches local.
-__pycache__/
-*.py[cod]
-/docs/**/*.bmp
+# Raw QA images ship as a release asset (docs/QA_IMAGES.md); keep them local.
+/docs/measurements/**/*.bmp

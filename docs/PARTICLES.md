@@ -1,6 +1,6 @@
 # Model fizyczny 0.4.2
 
-Zmiany warunków stabilności, MIC(0), zgodności szczelnego Poissona, granicy prędkości cieczy i wielowątkowości opisuje [audyt matematyczny i wydajnościowy](PERFORMANCE_AUDIT.md). Aktualne domyślne CFL: 0,45 dla akustyki/adwekcji gazów i 0,9 dla sumy adwekcji i lepkości cieczy. Liczba podkroków cieczy jest ustalana ponownie po każdej projekcji.
+Zmiany warunków stabilności, MIC(0), zgodności szczelnego Poissona, granicy prędkości cieczy i wielowątkowości opisuje [audyt matematyczny i wydajnościowy](reports/PERFORMANCE_AUDIT.md). Aktualne domyślne CFL: 0,45 dla akustyki/adwekcji gazów i 0,9 dla sumy adwekcji i lepkości cieczy. Liczba podkroków cieczy jest ustalana ponownie po każdej projekcji.
 
 ## Stan, jednostki i bilans
 
