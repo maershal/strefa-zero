@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Check shell script modes
         run: |
           bad=$(git ls-files -s -- '*.sh' | grep -v -e '^100755 ' -e $'\tscripts/linux-env.sh$' || true)
@@ -44,7 +44,7 @@ jobs:
       GALLIUM_DRIVER: llvmpipe
       SDL_VIDEO_DRIVER: x11
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install build and graphics dependencies
         run: |
           sudo apt-get update
