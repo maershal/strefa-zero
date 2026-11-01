@@ -125,6 +125,6 @@ Przy limicie 60 FPS mediana klatki nie przyspiesza. Wyniki potwierdzają mniejsz
 
 Nowe testy sprawdzają rzeczywiste komendy zapisane przez GPU, wszystkie aktywne ID po kroku grawitacji, końcówki grup, pełną pojemność, FIFO, reset, wybuch na pustej scenie i konwersję gruzu w tym samym ticku, brak odradzania usuniętych ID oraz zgodność impulsu w miejscu ze ścieżką referencyjną.
 
-Surowe dane: [gpu-i02](../measurements/gpu-i02). I02 jest wdrożone i odebrane w zakresie harmonogramu, specjalizacji i FIFO. Pędzel zachowuje pełną ścieżkę przebudowy jako granicę edycji; warunkowa praca dotyczy automatycznego przygotowania ticka misji. Wyników kontrolowanego harnessu nie traktujemy jako gwarancji FPS.
+Surowe dane: [gpu-i02](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i02). I02 jest wdrożone i odebrane w zakresie harmonogramu, specjalizacji i FIFO. Pędzel zachowuje pełną ścieżkę przebudowy jako granicę edycji; warunkowa praca dotyczy automatycznego przygotowania ticka misji. Wyników kontrolowanego harnessu nie traktujemy jako gwarancji FPS.
 
 Następny zakres po odbiorze: **I03 — uporządkowanie danych i kompletne sąsiedztwo z bezpiecznym marginesem ruchu**.

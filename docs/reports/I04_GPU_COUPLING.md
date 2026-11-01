@@ -104,4 +104,4 @@ Wstępny układ łączył duży stały wektor terms i metadane atomowe w jednym 
 
 `combined` jest domyślny. `local` zachowuje sekwencyjne zastosowanie reakcji, a `reference` globalną redukcję I03. Przełącznik całego zestawu `--gpu-execution` należy podawać przed szczegółowymi opcjami. Skrypt Windows czeka na natywny proces. Benchmark i pełny audyt poprawności są osobnymi poleceniami.
 
-Surowe dane: [gpu-i04](../measurements/gpu-i04). Kolejny zakres: **I05 — jeden silnik i współdzielone zasoby**. Cel GPU i historia spowolnień pozostają jawnie otwarte.
+Surowe dane: [gpu-i04](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i04). Kolejny zakres: **I05 — jeden silnik i współdzielone zasoby**. Cel GPU i historia spowolnień pozostają jawnie otwarte.

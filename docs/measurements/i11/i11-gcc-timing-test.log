@@ -1,8 +1,0 @@
-Internal ctest changing into directory: /mnt/c/Users/mrmae/Documents/Codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
-Test project /mnt/c/users/mrmae/documents/codex/2026-10-24/chcia-bym-stworzy-gr-typu-soldat-3/work/build-i05-gcc
-    Start 1: graphics.lighting_contract
-1/1 Test #1: graphics.lighting_contract .......   Passed    0.06 sec
-
-100% tests passed, 0 tests failed out of 1
-
-Total Test time (real) =   0.54 sec

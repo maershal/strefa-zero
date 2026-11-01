@@ -1,9 +1,0 @@
-﻿{
-    "executable":  "C:\\Users\\mrmae\\Documents\\Codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\build-i09-i08-reference\\StrefaZero.exe",
-    "sha256":  "dde1afb954d057d82c7038c609a7ec5d60c2a03151199c4148092c06404160e6",
-    "flags":  [
-                  "--gpu-render-benchmark"
-              ],
-    "started_utc":  "2026-10-31T10:42:59.8614091Z",
-    "scope":  "I08 source plus measurement-only harness"
-}

@@ -1,3 +1,0 @@
-pbf_64=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08
-pbf_128=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08
-pbf_256=passed (general/reduction=256; empty,tails,sparse IDs,capacity,CPU density); max_error=6.89544e-08

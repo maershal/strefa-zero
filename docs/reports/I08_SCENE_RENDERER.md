@@ -70,11 +70,11 @@ Wdrożono pełne A/B/C. **Domyślnie basic; budżet wody odebrany w kontrolowane
 - Niezależne orakle: splat, prędkość, segmenty, **512 odcinków terenu i 512 odcinków maski cieczy**; potwierdzone HP, deduplikacja błysku i reset.
 - Kontrakt obcego stanu, eksporty i większy render zaliczone. KHR_debug nie zgłosił błędów GL; zachowano ostrzeżenia wydajności dotyczące synchronicznych eksportów i specjalizacji shaderów. Końcowy test jakości ma 308 komunikatów i 0 utraconych. Regularny render nie odpytuje stanu GL; lokalizacje uniformów są buforowane przy inicjalizacji.
 
-[CTest](../measurements/i08/ctest.log), [JUnit](../measurements/i08/ctest.xml), [GCC](../measurements/i08/gcc-tests.log), [testy obrazu](../measurements/i08/final-quality/render-tests.txt), [KHR_debug](../measurements/i08/final-quality/gl-debug.txt), [audyt źródeł](../measurements/i08/source-audit.json), [podsumowanie](../measurements/i08/final-validation.json).
+[CTest](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/ctest.log), [JUnit](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/ctest.xml), [GCC](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/gcc-tests.log), [testy obrazu](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-quality/render-tests.txt), [KHR_debug](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-quality/gl-debug.txt), [audyt źródeł](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/source-audit.json), [podsumowanie](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-validation.json).
 
 ### Obraz i filtry
 
-![Porównanie referencji i etapów A/B/C](../measurements/i08/comparison.png)
+![Porównanie referencji i etapów A/B/C](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/comparison.png?raw=true)
 
 Średni bezwzględny błąd udziału oleju względem surowego pola, wyłącznie w nośności cieczy:
 
@@ -84,7 +84,7 @@ Wdrożono pełne A/B/C. **Domyślnie basic; budżet wody odebrany w kontrolowane
 | immersion | 0.002335 | 0.000354 |
 | mission | 0.001966 | 0.000297 |
 
-To miara rozmycia granicy faz, nie miara dokładności fizyki. [Wszystkie wyniki](../measurements/i08/final-quality/filter-comparison.csv); oryginalne obrazy BMP są w tym samym katalogu.
+To miara rozmycia granicy faz, nie miara dokładności fizyki. [Wszystkie wyniki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-quality/filter-comparison.csv); oryginalne obrazy BMP są w tym samym katalogu.
 
 ### Koszt wody i wybór jakości
 
@@ -96,7 +96,7 @@ Dla każdego bloku podano największą medianę pojedynczego segmentu kandydata 
 | 2 | 0.173488 | 0.460016 | 0.464896 | 0,300 |
 | 3 | 0.174080 | 0.458976 | 0.465312 | 0,300 |
 
-Końcowa macierz zawiera **51 840 próbek w 216 segmentach**: 3 bloki ABBA × 3 jakości × 3 sceny × 2 rozmiary. Wcześniejsza pełna macierz jest zachowana oddzielnie. Analizator przeszedł 7 kontroli, odrzucając brakujące/zdublowane próbki, błędne etykiety i niefinitywne/ujemne czasy: [kontrole](../measurements/i08/analysis-controls.json). Wynik kwalifikuje basic, nie standard/high. [Surowe znaczniki](../measurements/i08/final-benchmark/render-samples.csv), [mediany i percentyle każdego przebiegu](../measurements/i08/final-benchmark/render-summary.json).
+Końcowa macierz zawiera **51 840 próbek w 216 segmentach**: 3 bloki ABBA × 3 jakości × 3 sceny × 2 rozmiary. Wcześniejsza pełna macierz jest zachowana oddzielnie. Analizator przeszedł 7 kontroli, odrzucając brakujące/zdublowane próbki, błędne etykiety i niefinitywne/ujemne czasy: [kontrole](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/analysis-controls.json). Wynik kwalifikuje basic, nie standard/high. [Surowe znaczniki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-benchmark/render-samples.csv), [mediany i percentyle każdego przebiegu](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/final-benchmark/render-summary.json).
 
 Cały render jest droższy od referencji. Poniżej średnia z median segmentów basic oraz odpowiadającej referencji; nie są to percentyle połączonego rozkładu:
 
@@ -126,10 +126,10 @@ Sześć prób tej samej misji: trzy bez VSync i bez limitera FPS, trzy z VSync. 
 | off-3 | 1600 × 920 | 0.493 | 3.222 | 3.859 | 4.755 | 1700 | 0 |
 | on-3 | 1600 × 920 | 16.664 | 16.725 | 16.887 | 30.887 | 1796 | 0 |
 
-Każda próba ukończyła misję 3/3. Cel p95 całej klatki ≤16,67 ms: bez VSync **spełniony**, z VSync **nieodebrany**. Wszystkie odstępy klatek zachowano. Kompletność osobnej tabeli podziału czasu CPU na fazy: ograniczona pojemnością bufora; liczniki utraconych wierszy są w podsumowaniu. [Wszystkie rozkłady, fokus i zaległość](../measurements/i08/window-summary.json).
+Każda próba ukończyła misję 3/3. Cel p95 całej klatki ≤16,67 ms: bez VSync **spełniony**, z VSync **nieodebrany**. Wszystkie odstępy klatek zachowano. Kompletność osobnej tabeli podziału czasu CPU na fazy: ograniczona pojemnością bufora; liczniki utraconych wierszy są w podsumowaniu. [Wszystkie rozkłady, fokus i zaległość](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/window-summary.json).
 
 Dodatkowa integracja high + eksperymentalne balanced przeszła misję w widocznym oknie. To test funkcjonalny tego połączenia, bez odbioru budżetu balanced. Pełna regresja nadal ujawnia historyczną zmienność GPU: przykładowo wariant PBF 128 miał p95 misji około 12,14 ms, podczas gdy bazowa misja około 3,06 ms. To różne konfiguracje i rozkłady; nie przypisujemy różnicy rendererowi. I04.5, stabilność I06 i budżet balanced I07 pozostają otwarte.
 
 Nieudane pierwsze kompilacje oraz uruchomienie z nierozwiniętymi nowymi include GLSL zachowano w artefaktach. Loader otrzymał jawne lokalne zależności i końcowe kontrole przeszły. Źródła produkcyjne nie zmieniły się podczas końcowej macierzy, CTest i prób okien. Osobne pliki SHA256 identyfikują wcześniejszy pomiar oraz końcowy EXE.
 
-Paczka Windows przeszła własny test renderera oraz pełną trasę misji. [Weryfikacja paczki](../measurements/i08/package-checks.json).
+Paczka Windows przeszła własny test renderera oraz pełną trasę misji. [Weryfikacja paczki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i08/package-checks.json).

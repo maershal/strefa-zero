@@ -1,6 +1,0 @@
-renderer=D3D12 (NVIDIA GeForce GTX 1650)
-version=4.6 (Core Profile) Mesa 25.2.8-0ubuntu0.24.04.2
-conditional_work_effective=0
-exposed_vx=27.6806
-shielded_vx=0
-result=PASS

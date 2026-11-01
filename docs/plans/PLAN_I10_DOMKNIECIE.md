@@ -2,7 +2,7 @@
 
 Data: **2026-10-31**. Status: **plan, bez wdrożenia E0–E4 i bez nowych wyników pomiarów**.
 
-I10 ma już funkcjonalne podetapy A–D: entalpię i wymianę ciepła, gazy MAC, spalanie i fazy oraz wspólne narzędzia i obraz. Ten plan dotyczy pozostałego odbioru I10. Punktem odniesienia są [raport I10](../reports/I10_GPU_THERMAL.md), zachowane dane `docs/measurements/i10/` i [główny plan](PLAN_ROZWOJU_GPU.md#i10--termika-i-gazy-na-gpu-ogień-połączony-ze-światem).
+I10 ma już funkcjonalne podetapy A–D: entalpię i wymianę ciepła, gazy MAC, spalanie i fazy oraz wspólne narzędzia i obraz. Ten plan dotyczy pozostałego odbioru I10. Punktem odniesienia są [raport I10](../reports/I10_GPU_THERMAL.md), zachowane dane [`i10/`](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i10) i [główny plan](PLAN_ROZWOJU_GPU.md#i10--termika-i-gazy-na-gpu-ogień-połączony-ze-światem).
 
 ## Cel i punkt wyjścia
 

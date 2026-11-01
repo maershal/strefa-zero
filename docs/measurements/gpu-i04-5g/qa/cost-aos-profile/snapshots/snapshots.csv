@@ -1,5 +1,0 @@
-snapshot,label,generation,tick,ordinal,phase,iteration,reach,active,dmax,builds,global_candidates,fresh_candidates,global_to_fresh,geometric_neighbors,missed,reference,global_median,global_p95,global_max,fresh_median,fresh_p95,fresh_max,near_median,near_p95,near_max
-0,large_outlier,2,0,0,-1,-1,1,3,96.25,1,8,8,1,4,0,all_pairs,3,3,3,3,3,3,1,2,2
-0,large_outlier,2,0,0,-1,-1,2,3,96.25,1,9,9,1,6,0,all_pairs,3,3,3,3,3,3,2,2,2
-1,after_four_steps,2,4,0,-1,-1,1,3,0.0625,9,9,9,1,4,0,all_pairs,3,3,3,3,3,3,1,2,2
-1,after_four_steps,2,4,0,-1,-1,2,3,0.0625,9,9,9,1,6,0,all_pairs,3,3,3,3,3,3,2,2,2

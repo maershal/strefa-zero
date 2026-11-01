@@ -1,3 +1,0 @@
-roundtrip=PASS
-negative_cases=12
-passed=1

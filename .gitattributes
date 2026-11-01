@@ -1,8 +1,5 @@
 * text=auto
 *.sh text eol=lf
 
-# Raw measurement evidence: keep bytes identical (manifests hash them) and
-# collapse it in GitHub diffs and language statistics.
-docs/measurements/** -text linguist-generated=true
 # Original supplied review documents.
 docs/plans/reviews/** -text

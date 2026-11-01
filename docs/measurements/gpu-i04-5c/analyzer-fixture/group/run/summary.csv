@@ -1,2 +1,0 @@
-scene,variant,repeat,metric,samples,available,median,p95,p99,max
-mission,elapsed,1,gpu_step_ms,240,1,2,3,4,5

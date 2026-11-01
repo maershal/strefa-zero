@@ -1,5 +1,0 @@
-layout=aos mode=sorted all_pairs,visibility,large_corrections,projection,dense_capacity,spawn,erase,reset=passed
-layout=aos mode=reused all_pairs,visibility,large_corrections,projection,dense_capacity,spawn,erase,reset=passed
-layout=soa mode=sorted all_pairs,visibility,large_corrections,projection,dense_capacity,spawn,erase,reset=passed
-layout=soa mode=reused all_pairs,visibility,large_corrections,projection,dense_capacity,spawn,erase,reset=passed
-status=passed

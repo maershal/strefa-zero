@@ -1,4 +1,0 @@
-{
-  "valid": false,
-  "reason": "Nested PowerShell launcher returned before child control processes completed; overlapped with repeated probes, invalid comparison. Both versions must be rerun sequentially."
-}

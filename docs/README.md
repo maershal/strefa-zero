@@ -31,10 +31,13 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 - [REVIEW_I04_ROZSTRZYGNIECIA.md](plans/REVIEW_I04_ROZSTRZYGNIECIA.md) — rozstrzygnięcia review v0.7.0-i04.
 - [reviews/](plans/reviews/) — oryginalne dokumenty review (bez zmian).
 
-## Surowe pomiary — [measurements/](measurements/)
+## Surowe pomiary — [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements)
 
-Logi, CSV, JSON, JUnit, migawki i manifesty `SHA256SUMS.txt` z każdego etapu, w katalogach
-odpowiadających raportom (`gpu-i00` … `gpu-i04-5g3b`, `i05` … `i11`, `gpu050` … `gpu070`,
-`benchmarks`, `linux-wsl`, `legacy`). Pliki są przechowywane bajt w bajt (`-text` w
-`.gitattributes`) i nie powinny być edytowane — manifesty wewnątrz katalogów je weryfikują.
-Raporty cytują z nich potrzebne liczby; nie trzeba ich czytać, aby pracować z kodem.
+Logi, CSV, JSON, JUnit, migawki i manifesty `SHA256SUMS.txt` z każdego etapu leżą w osobnym
+repozytorium, w katalogach odpowiadających raportom (`gpu-i00` … `gpu-i04-5g3b`, `i05` … `i11`,
+`gpu050` … `gpu070`, `benchmarks`, `linux-wsl`, `legacy`). Pliki są przechowywane bajt w bajt
+i nie powinny być edytowane — manifest w każdym katalogu je weryfikuje. Raporty cytują
+potrzebne liczby i linkują do danych permalinkami do commita
+[`88ba160`](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539); nie trzeba ich pobierać, aby pracować z kodem.
+Nowe pomiary nie trafiają do tego repozytorium: raport i opis PR zawierają tabelę podsumowania,
+a surowe dane idą do repozytorium pomiarów albo jako artefakt CI.

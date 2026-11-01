@@ -1,9 +1,0 @@
-{
-  "executable": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5q-control-build\\StrefaZero.exe",
-  "flags": [
-    "--gpu-coupling-control"
-  ],
-  "profile": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5q-results\\reference-only\\4",
-  "timeout_ms": 180000,
-  "result": "C:\\users\\mrmae\\documents\\codex\\2026-10-24\\chcia-bym-stworzy-gr-typu-soldat-3\\work\\i04-5q-results\\reference-only\\4\\native-result.json"
-}

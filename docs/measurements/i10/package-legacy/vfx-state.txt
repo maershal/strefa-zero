@@ -1,4 +1,0 @@
-quality=low
-render_device_created=0
-cpu_adapter=0
-world_creations=0

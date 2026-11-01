@@ -66,7 +66,7 @@ instalują pełny zestaw zależności X11/Wayland przez `apt`.
 | Narzędzie fizyki bez DISPLAY i WAYLAND_DISPLAY | PASS, scena arena, 5 ticków |
 | Paczka przeniesiona do katalogu ze spacją, SDL przez `$ORIGIN` | PASS |
 
-Końcowe uzupełniające wyniki oraz raporty znajdują się w `linux-wsl/`.
+Końcowe uzupełniające wyniki oraz raporty znajdują się w [`linux-wsl/`](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/linux-wsl).
 Nie deklarujemy zaliczenia całego CTest ani odbioru wydajności I04.5–I11.
 Końcowe krótkie próby D3D12 po poprawkach okna: 3/3 PASS (19,53 s);
 obejmują test platformy wraz z VSync, pełny smoke aplikacji i laboratorium GPU.

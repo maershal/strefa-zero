@@ -1,6 +1,0 @@
-{
-  "matching_storage_and_period": "passed",
-  "wrong_storage_invalid": "passed",
-  "wrong_readback_period_invalid": "passed",
-  "automatic_staged_fallback": "passed"
-}

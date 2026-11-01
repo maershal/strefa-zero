@@ -1,7 +1,0 @@
-{
-  "baseline_exe_sha256": "1a1f53457ca590187417818f24d42bbea93d11c7b29bc5e7d8fea7320f918d5e",
-  "trigger_exe_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
-  "current_runtime_sha256": "333287c4063fa722eb4314fd70c0f6509cc92479c7890ee1da772bf1b0443af8",
-  "root_manifest_sha256_before": "b89d09bdd1774351e7dde8e1c5ba799a4c3a80eca27c0adaaf0a17326a3a7c1e",
-  "runtime_modified": false
-}

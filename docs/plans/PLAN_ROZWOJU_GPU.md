@@ -67,7 +67,7 @@ Kierunek review jest trafny: najpierw ograniczyć narzut przebiegów i komunikac
 
 ## 3. Pomiar początkowy i budżety
 
-Poniżej **istniejące** wyniki wydania 0.7.0 z `docs/measurements/gpu070/build/gpu-mission-benchmark.csv`. Nie wykonywano nowego benchmarku przy pisaniu planu.
+Poniżej **istniejące** wyniki wydania 0.7.0 z [`gpu070/build/gpu-mission-benchmark.csv`](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu070/build/gpu-mission-benchmark.csv). Nie wykonywano nowego benchmarku przy pisaniu planu.
 
 | Scena | Cząstki na początku pomiaru | Mediana GPU/krok | p95 GPU/krok | Mediana CPU submit |
 | --- | ---: | ---: | ---: | ---: |
@@ -479,7 +479,7 @@ Po każdej zakończonej iteracji dopisać: zakres i pliki, wynik testów, median
 
 ## 8. Materiały pomocnicze
 
-Kod i dane: [architektura 0.7](../ARCHITECTURE.md), [misja GPU](../reports/GPU_MISSION_070.md), [przegląd fizyki 0.6.1](../reports/PHYSICS_REVIEW_061.md), [benchmark misji](../measurements/gpu070/build/gpu-mission-benchmark.csv), [próbki okna](../measurements/gpu070/build/mission-frames.csv), [obecne testy](../measurements/legacy/TEST_RESULTS.txt).
+Kod i dane: [architektura 0.7](../ARCHITECTURE.md), [misja GPU](../reports/GPU_MISSION_070.md), [przegląd fizyki 0.6.1](../reports/PHYSICS_REVIEW_061.md), [benchmark misji](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu070/build/gpu-mission-benchmark.csv), [próbki okna](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu070/build/mission-frames.csv), [obecne testy](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/legacy/TEST_RESULTS.txt).
 
 Review z 2026-10-29: [oryginał dostarczony przez użytkownika](reviews/review_strefa_zero_v0_7_0_i04_roadmap.md) oraz [rejestr przyjęcia i korekt](REVIEW_I04_ROZSTRZYGNIECIA.md). Te materiały nie zmieniają historycznych raportów ani statusu wydania I04.
 

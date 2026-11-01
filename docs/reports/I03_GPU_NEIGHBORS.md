@@ -114,4 +114,4 @@ Paczka Windows I03 przeszła nowy audyt sąsiedztwa z własnego katalogu. Wymusz
 
 `--gpu-neighbors sorted` przebudowuje zakresy przed każdym zapytaniem i służy kontroli kosztu sortowania. `linked` zachowuje listy z I02. `--gpu-layout aos|soa` wybiera wspólne ABI obliczeń i renderera. Parametry przełączające całą konfigurację `--gpu-execution` należy podawać przed tymi szczegółowymi przełącznikami.
 
-Surowe dane i logi: [gpu-i03](../measurements/gpu-i03). Kolejny zakres: **I04 — lokalne sprzężenie postaci**. Przyczyna historycznych okresowych spowolnień GPU z I00–I01 nadal nie została ustalona.
+Surowe dane i logi: [gpu-i03](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/gpu-i03). Kolejny zakres: **I04 — lokalne sprzężenie postaci**. Przyczyna historycznych okresowych spowolnień GPU z I00–I01 nadal nie została ustalona.

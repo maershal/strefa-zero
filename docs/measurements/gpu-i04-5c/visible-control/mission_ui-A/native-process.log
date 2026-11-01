@@ -1,8 +1,0 @@
-{
-    "pid":  21100,
-    "exit_code":  1,
-    "timed_out":  false,
-    "started_utc":  "2026-10-29T21:12:02.5718455Z",
-    "ended_utc":  "2026-10-29T21:13:07.7303586Z",
-    "elapsed_seconds":  65.1585131
-}

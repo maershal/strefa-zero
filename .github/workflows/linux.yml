@@ -29,8 +29,6 @@ jobs:
             echo "$bad"
             exit 1
           fi
-      - name: Test Claude Code hook
-        run: ./scripts/test-claude-hook.sh
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format-18
       - name: Check C++ formatting

@@ -39,7 +39,7 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 | `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |
 | `tests/` | one executable per `*_tests.cpp`, registered in `CMakeLists.txt` |
 | `scripts/` | build/run/package/format/lint; `scripts/profiling/` = Windows-era PowerShell + Python measurement harnesses |
-| `docs/` | guides at top level, `reports/` per iteration, `plans/`, `measurements/` (see below); index in `docs/README.md` |
+| `docs/` | guides at top level, `reports/` per iteration, `plans/`; raw measurements are in a separate repo (see below); index in `docs/README.md` |
 
 Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 
@@ -58,19 +58,24 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 - New CLI flags go in `src/app/launch_options.cpp`; new check modes also need a CTest entry
   with `SKIP_RETURN_CODE 77` and a `gpu` label.
 
-## Measurement data — do not read
+## Measurement data
 
-`docs/measurements/` holds ~12k raw logs/CSV/JSON/BMP files from past QA runs (hundreds of MB,
-151 of the BMPs are tracked in git, others are untracked). They are byte-identical evidence verified by `SHA256SUMS.txt` manifests
-inside each folder (`-text` in `.gitattributes`). Never edit or reformat them. Reading them is
-blocked in `.claude/settings.json`; the reports in `docs/reports/` quote every number needed.
-New measurement runs go into a new `docs/measurements/<stage>/` folder.
+Raw QA data (~12k logs/CSV/JSON/BMP files, 679 MB) lives in the separate repository
+[maershal/strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements), byte-identical and
+verified by a `SHA256SUMS.txt` manifest in each folder. Reports in `docs/reports/` quote every number needed and
+link to it with permalinks pinned to a commit; there is no need to clone it to work on the code.
+
+- New measurements do **not** go into this repository. Put a summary (table of at most 10 rows) in the report
+  and the PR description; commit the raw data to the measurements repo (new `<stage>/` folder with its own
+  manifest) or attach it as a CI artifact, and link it by permalink.
+- `/.ignore` and the `deny` rules in `.claude/settings.json` still exclude `docs/measurements/` as a safeguard
+  against a stale local copy.
 
 ## Git
 
 - Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build, CPU tests,
   Mesa smoke tests, Linux package). Docs-only changes skip CI.
-- Do not commit `build/`, `dist/` or raw `*.bmp` captures (ignored).
+- Do not commit `build/`, `dist/` (ignored) or raw measurement data (see above).
 - To hide the bulk-format commit in `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 
 ## Workflow
@@ -78,7 +83,6 @@ New measurement runs go into a new `docs/measurements/<stage>/` folder.
 - One change = one new branch = one PR, described as Goal / Changes / Tests / Risks / Out of scope.
   Do not merge before CI is green. Add new `*.sh` files with `git update-index --chmod=+x`
   (CI rejects tracked `.sh` files that are not 100755, except the sourced `scripts/linux-env.sh`).
-- `scripts/test-claude-hook.sh` tests `.claude/hooks/block-measurements.sh` (needs `jq`).
 
 ## Definition of done
 

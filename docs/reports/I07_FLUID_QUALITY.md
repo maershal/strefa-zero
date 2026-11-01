@@ -79,11 +79,11 @@ Implementacja funkcjonalna zakończona. **Pozostaje domyślne legacy.** Pełny b
 - Widoczne okno balanced: 900 klatek, 1798 ticków, brak pominiętego czasu; mediana / p95 / p99 klatki 16,6689 / 16,6764 / 16,8219 ms. To pojedyncza poprawna próba okna, nie dowód usunięcia historycznej zmienności.
 - Oryginalny zamrożony I06 przechodzi własną misję. Największe odległości stóp w próbkach tras I07 legacy względem I06: 1.1380 / 0.8870 / 1.3230 komórki (30/60/144 FPS). To próbki trasy i jej wyniku, nie dowód bitowej zgodności całego świata.
 
-[Pełne CTest](../measurements/i07/ctest.log), [JUnit](../measurements/i07/ctest.xml), [GCC](../measurements/i07/gcc-tests.log), [kontrole integracyjne](../measurements/i07/candidate-integration.json), [protokół z balanced](../measurements/i07/candidate-gameplay/gameplay-tests.txt), [okno](../measurements/i07/candidate-window/mission-ui.txt), [zgodność z I06](../measurements/i07/legacy-i06-compatibility.json), [identyfikacja i kompletność](../measurements/i07/final-validation.json).
+[Pełne CTest](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/ctest.log), [JUnit](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/ctest.xml), [GCC](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/gcc-tests.log), [kontrole integracyjne](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/candidate-integration.json), [protokół z balanced](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/candidate-gameplay/gameplay-tests.txt), [okno](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/candidate-window/mission-ui.txt), [zgodność z I06](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/legacy-i06-compatibility.json), [identyfikacja i kompletność](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/final-validation.json).
 
 ### Jakość i wybór parametrów
 
-![Skupianie cząstek w zbiorniku](../measurements/i07/clustering.png)
+![Skupianie cząstek w zbiorniku](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/clustering.png?raw=true)
 
 Wartości opisują okno od 600 do 1200 ticków. Amplituda to zakres średniej wysokości powierzchni, a udział skupionych nośników oznacza cząstki tej samej fazy z sąsiadem bliżej niż 0,5 komórki. Próg 0,05% komórki z review nie został przyjęty jako arbitralny warunek.
 
@@ -100,11 +100,11 @@ Balanced redukuje skupianie nośników w zbiorniku i scenie kropli oleju; nie da
 
 Podniesienie s_corr ogranicza skupianie, ale zmienia amplitudy innych scen, więc nie podnosimy go automatycznie. Cztery podkroki zachowują reguły i szczelność, lecz podnoszą energię kinetyczną zbiornika do około 42674 jednostek modelu wobec 1376–1683 w legacy oraz koszt misji; pozostają wariantem diagnostycznym. Wybór bazowy to 2 × 8 PBF / 12 kontaktów, s_corr=0,0001. Nowe modele mają niezależne wyłączenia do analizy.
 
-[Wszystkie miary](../measurements/i07/quality-summary.json), [granice powtarzalności zapisane przed kandydatami](../measurements/i07/quality/baseline-envelope.json), [surowe sceny i obrazy](../measurements/i07/quality).
+[Wszystkie miary](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/quality-summary.json), [granice powtarzalności zapisane przed kandydatami](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/quality/baseline-envelope.json), [surowe sceny i obrazy](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/quality).
 
 ### Koszt GPU i CPU
 
-![Przyrost kosztu GPU](../measurements/i07/gpu-budget.png)
+![Przyrost kosztu GPU](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/gpu-budget.png?raw=true)
 
 Poniżej średnie z dwóch median w każdym bloku A–B–B–A, nie percentyle połączonego rozkładu.
 
@@ -136,7 +136,7 @@ Tych pojedynczych ablacjnych prób nie traktujemy jako powtarzalnej przewagi ani
 
 Osobna, perturbująca sonda passes zebrała po trzy próbki nowych etapów w misji: świeża gęstość około 0,04694 ms/przebieg, pole normalnych/omega około 0,04666 ms/przebieg, końcowa aktualizacja prędkości około 0,06349 ms/przebieg. Każdy wykonuje się dwa razy na tick; nie sumujemy median jako percentyla całego kroku. Przebudowa wag jest częścią istniejącego dirty-terrain, a jej koszt jest obecny w pełnej trasie z destrukcją; nie uzyskano osobnego, reprezentatywnego czasu samej przebudowy. Próbki op=9 sondy przypadały na przebiegi bez edycji, więc nie przedstawiamy ich jako kosztu aktualizacji wag.
 
-[Bloki ABBA i pełne 16k/32k](../measurements/i07/abba-summary.json), [surowe próby](../measurements/i07/benchmark), [ablacje](../measurements/i07/ablation-costs), [koszt przebiegów](../measurements/i07/new-pass-costs.json), [surowa sonda](../measurements/i07/candidate-pass-costs).
+[Bloki ABBA i pełne 16k/32k](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/abba-summary.json), [surowe próby](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/benchmark), [ablacje](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/ablation-costs), [koszt przebiegów](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/new-pass-costs.json), [surowa sonda](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/candidate-pass-costs).
 
 ### Integralność i zachowane próby
 
@@ -146,7 +146,7 @@ Pierwszy przebieg jakości balanced przeszedł. W przygotowawczej macierzy znale
 
 Nie kontynuowano I04.5, nie zmieniono progów historycznych testów i nie wymieniono solvera ani renderera. APIC/FLIP, rozdzielczość 0,5, optyka, VFX i termika pozostają poza I07.
 
-[Źródła bazy](../measurements/i07/baseline-source.json), [zgodność archiwum I06](../measurements/i07/baseline-source-archive-comparison.json), [zmiany](../measurements/i07/source-changes.json), [zamrożony protokół](../measurements/i07/protocol.json), [sprzęt](../measurements/i07/host.json), [shader/EXE integrity](../measurements/i07/runtime-assets-integrity.json).
+[Źródła bazy](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/baseline-source.json), [zgodność archiwum I06](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/baseline-source-archive-comparison.json), [zmiany](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/source-changes.json), [zamrożony protokół](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/protocol.json), [sprzęt](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/host.json), [shader/EXE integrity](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i07/runtime-assets-integrity.json).
 
 
 Wykresy publikowane w raporcie można odtworzyć na Windows poleceniem `./scripts/plot-fluids.ps1 -Results ./docs/i07` (.NET Charting). Analizator `analyze-fluids.py` wylicza też bloki ABBA z surowych prób benchmarku.

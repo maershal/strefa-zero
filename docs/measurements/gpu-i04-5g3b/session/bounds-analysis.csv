@@ -1,9 +1,0 @@
-run,scene,indexed_dispatches,dmax_median,dmax_max,build_ids,dmax_over_1,dmax_over_2
-post-bounds,mission,29056,0.0625,0.0625,481,0,0
-post-bounds,stress_16k,19440,0.0625,0.25,481,0,0
-post-bounds,stress_32k,19440,0.0625,0.25,481,0,0
-post-bounds,mission_blast,29056,0.0625,0.4375,481,0,0
-post-snapshots,mission,29056,0.0625,0.0625,481,0,0
-post-snapshots,stress_16k,19440,0.0625,0.25,481,0,0
-post-snapshots,stress_32k,19440,0.0625,0.25,481,0,0
-post-snapshots,mission_blast,29056,0.0625,0.4375,481,0,0

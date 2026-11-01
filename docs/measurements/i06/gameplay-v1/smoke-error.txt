@@ -1,8 +1,0 @@
-0(98) : error C7529: OpenGL does not allow #include directives
-0(99) : error C0109: Can't open include file "world_protocol.glsl"
-0(114) : error C0000: syntax error, unexpected ';', expecting "::" at token ";"
-0(114) : error C0000: syntax error, unexpected ';', expecting "::" at token ";"
-0(123) : error C7529: OpenGL does not allow #include directives
-0(124) : error C0109: Can't open include file "soldier_pose.glsl"
-0(125) : error C0000: syntax error, unexpected '(', expecting "::" at token "("
-0(169) : error C1503: undefined variable "terms"

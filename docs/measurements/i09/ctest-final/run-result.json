@@ -1,7 +1,0 @@
-{
-  "aborted": true,
-  "reason": "Restore standalone physics scope; initial I09 integration enabled VFX in legacy physics-only tests.",
-  "completed": 37,
-  "passed": 35,
-  "failed": 2
-}

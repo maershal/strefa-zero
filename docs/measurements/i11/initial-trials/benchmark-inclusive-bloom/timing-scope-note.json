@@ -1,5 +1,0 @@
-{
-  "outer_pair_valid": true,
-  "bloom_includes_composition": true,
-  "reason_for_repeat": "Add separate composition boundary, then collect the same complete matrix with separately timed bloom."
-}

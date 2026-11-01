@@ -1,5 +1,0 @@
-﻿"Order","Name","Kind","CostMode","Visible","Observe","IdleBeforeSeconds"
-"1","observer-off-1","cost","off","False","False","0"
-"2","observer-on-1","cost","off","False","True","0"
-"3","observer-on-2","cost","off","False","True","0"
-"4","observer-off-2","cost","off","False","False","0"

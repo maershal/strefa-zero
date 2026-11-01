@@ -1,8 +1,0 @@
-full_pool_single_cell_field_finite=PASS
-full_pool_field_not_empty=PASS
-presentation_does_not_write_physical_state=PASS
-material_source_overflow_is_bounded_and_counted=PASS
-stored_sources=32
-rejected_candidates=931
-opengl_no_error=PASS
-result=PASS

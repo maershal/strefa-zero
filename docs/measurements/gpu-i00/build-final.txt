@@ -1,7 +1,0 @@
-[0/2] Re-checking globbed directories...
-[1/7] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\main.cpp for CXX dependencies
-[2/7] Scanning C:\Users\mrmae\Documents\Codex\2026-10-24\chcia-bym-stworzy-gr-typu-soldat-3\outputs\strefa-zero\src\app\application.cpp for CXX dependencies
-[3/7] Generating CXX dyndep file CMakeFiles\strefa_zero.dir\CXX.dd
-[4/7] Building CXX object CMakeFiles\strefa_zero.dir\src\main.cpp.obj
-[5/7] Building CXX object CMakeFiles\strefa_zero.dir\src\app\application.cpp.obj
-[6/7] Linking CXX executable runtime-070\StrefaZero.exe

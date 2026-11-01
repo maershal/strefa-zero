@@ -1,4 +1,0 @@
-[1/4] Building CXX object CMakeFiles/strefa_gameplay.dir/src/game/gameplay_session.cpp.o
-[2/4] Linking CXX static library libstrefa_gameplay.a
-[3/4] Building CXX object CMakeFiles/strefa_gameplay_tests.dir/tests/gameplay_tests.cpp.o
-[4/4] Linking CXX executable strefa_gameplay_tests

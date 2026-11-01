@@ -1,9 +1,0 @@
-{
-  "initial_attempt": "matrix-summary-only",
-  "valid_native_processes": 16,
-  "issue": "All summary percentiles were present, but fresh per-scene directories did not exist when the cost exporter attempted tick/counter output. The immutable Q binary has the same behavior.",
-  "remedy": "The native supervisor now creates all four scene directories before either binary starts; rerun the entire balanced schedule in a fresh matrix directory. The analyzer now requires 240 raw tick records and effective per-scene parameters.",
-  "runtime_changed": false,
-  "included_in_final_performance_comparison": false,
-  "direct_cli_precondition": "Use profile-pbf.ps1/profile-cost.ps1 or pre-create the four scene folders when using --gpu-cost-profile directly."
-}

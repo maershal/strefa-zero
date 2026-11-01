@@ -1,9 +1,0 @@
-create mode=narrow compatibility_C=0
-mode=narrow compatibility_C=0 passed
-create mode=sorted compatibility_C=0
-mode=sorted compatibility_C=0 passed
-create mode=sorted compatibility_C=1
-mode=sorted compatibility_C=1 passed
-cache_bitwise_audits=86
-linked_sorted_request=narrow_fallback_passed
-status=passed

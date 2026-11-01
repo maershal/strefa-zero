@@ -1,6 +1,0 @@
-groups_64=passed (empty, tails, capacity, FIFO wraps, reset)
-groups_128=passed (empty, tails, capacity, FIFO wraps, reset)
-groups_256=passed (empty, tails, capacity, FIFO wraps, reset)
-reference_blast_edit=passed
-optimized_blast_edit=passed
-status=passed

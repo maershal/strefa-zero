@@ -105,7 +105,7 @@ Wcześniejsze nieudane i przerwane próby zachowano w `i11/initial-trials` oraz 
 
 Wstępna pełna seria miała 66/68: stary test liczby dispatchów nie uwzględniał jawnej prezentacji, a test misji przekroczył 60 s. Zachowano wynik i timeout. Po rozdzieleniu liczników oraz usunięciu powtarzanego sprawdzania framebufferów wydzielona próba pięciu testów przeszła, w tym misja w 15,53 s, z niezmienionym limitem 60 s. Kontrolny I10 przeszedł tę samą misję w 15,573 s.
 
-Porównanie obrazów: [off / low / high](../measurements/i11/quality/comparison.png). Surowe obrazy BMP wszystkich sześciu scen, CSV, logi, JUnit, zachowana baza I10, różnica źródeł, hashe shaderów i pochodzenie pliku EXE znajdują się w `i11/`.
+Porównanie obrazów: [off / low / high](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i11/quality/comparison.png). Surowe obrazy BMP wszystkich sześciu scen, CSV, logi, JUnit, zachowana baza I10, różnica źródeł, hashe shaderów i pochodzenie pliku EXE znajdują się w `i11/`.
 
 ## Weryfikacja paczki Windows
 

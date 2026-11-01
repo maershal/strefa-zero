@@ -72,30 +72,30 @@ Czas klatki GPU obejmuje przygotowanie pola, aktualizacje, emisje i render, w ty
 
 **Funkcjonalność I09 wdrożona. Odbiór budżetu VFX 0,25 ms pozostaje otwarty.** W końcowej macierzy każdy z 24 segmentów low przy 960 × 576 przekroczył próg; najgorszy dodatkowy koszt wyniósł **0,678344 ms**. Domyślne ustawienia pozostają `legacy/basic/low`, zgodnie z ustaleniami. Nie zmieniono tolerancji QA ani fizyki dla uzyskania wyniku.
 
-Sprzęt: NVIDIA GeForce GTX 1650, sterownik 610.47, OpenGL 4.3; Intel Core i5-9300HF (4C/8T), Windows 11 Home 10.0.26200. Build MSVC 19.51.36256.0, C++23, Release/LTO, SDL 3.4.18, ImGui 1.93.0. [Metadane sprzętu](../measurements/i09/hardware.json), [powiązanie buildów i źródeł](../measurements/i09/build-provenance.json), [manifest źródeł](../measurements/i09/source-sha256.json).
+Sprzęt: NVIDIA GeForce GTX 1650, sterownik 610.47, OpenGL 4.3; Intel Core i5-9300HF (4C/8T), Windows 11 Home 10.0.26200. Build MSVC 19.51.36256.0, C++23, Release/LTO, SDL 3.4.18, ImGui 1.93.0. [Metadane sprzętu](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/hardware.json), [powiązanie buildów i źródeł](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/build-provenance.json), [manifest źródeł](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/source-sha256.json).
 
 ### Poprawność
 
 | Kontrola | Wynik | Dowód |
 | --- | --- | --- |
-| Pełna regresja Windows | 61/61, bez pominięć, 1438,94 s | [JUnit](../measurements/i09/ctest-complete/ctest.xml) |
-| Ostatnie poprawki prezentacji i telemetrii | 10/10, 116,55 s | [JUnit](../measurements/i09/ctest-final-check/ctest.xml) |
-| CPU GCC, warnings as errors | 9/9 | [JUnit](../measurements/i09/gcc-ctest.xml) |
-| Kontrakt GPU, pula i niezmienność świata | PASS | [wyniki](../measurements/i09/quality/vfx-tests.txt) |
-| Trasy misji off/low/high, po 1700 ticków | wszystkie 3/3 cele | [wyniki](../measurements/i09/quality/vfx-tests.txt) |
-| Porównanie trajektorii, wspólne 90 checkpointów | PASS, niezmienione limity I04.5-Q | [CSV](../measurements/i09/quality/vfx-replay.csv), [podsumowanie](../measurements/i09/quality/vfx-replay-summary.csv) |
-| Adapter CPU 30/60/144 FPS | PASS, po 20 błysków lufy i 120 markerów plecaka, checksum bez zmian | [wyniki](../measurements/i09/quality/cpu-vfx-tests.txt) |
-| Kontrole negatywne analizatora macierzy | 9/9 odrzuconych uszkodzeń | [JSON](../measurements/i09/benchmark-7/analysis-controls.json) |
+| Pełna regresja Windows | 61/61, bez pominięć, 1438,94 s | [JUnit](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/ctest-complete/ctest.xml) |
+| Ostatnie poprawki prezentacji i telemetrii | 10/10, 116,55 s | [JUnit](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/ctest-final-check/ctest.xml) |
+| CPU GCC, warnings as errors | 9/9 | [JUnit](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/gcc-ctest.xml) |
+| Kontrakt GPU, pula i niezmienność świata | PASS | [wyniki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/vfx-tests.txt) |
+| Trasy misji off/low/high, po 1700 ticków | wszystkie 3/3 cele | [wyniki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/vfx-tests.txt) |
+| Porównanie trajektorii, wspólne 90 checkpointów | PASS, niezmienione limity I04.5-Q | [CSV](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/vfx-replay.csv), [podsumowanie](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/vfx-replay-summary.csv) |
+| Adapter CPU 30/60/144 FPS | PASS, po 20 błysków lufy i 120 markerów plecaka, checksum bez zmian | [wyniki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/cpu-vfx-tests.txt) |
+| Kontrole negatywne analizatora macierzy | 9/9 odrzuconych uszkodzeń | [JSON](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/analysis-controls.json) |
 
 Maksymalny średni defekt replay wyniósł 2,062·10⁻⁷ komórki, maksymalne przesunięcie środka 7,172·10⁻⁸; defekt postaci w końcowej próbie wyniósł zero. Nie wymagamy zgodności bitowej całej wykonywanej symulacji GPU. Osobna kontrola zamrożonego świata wymaga dokładnej zgodności wszystkich bajtów ośmiu buforów, ticka i statystyk kanału zdarzeń i przechodzi.
 
 Pełny CTest wykonano przed ostatnią korektą punktu lufy sprzed odrzutu, przesunięcia dyszy plecaka, testu dokładnego narożnika i dodatkowych kolumn CSV. Te obszary sprawdziła końcowa seria 10 testów. Późniejsze żądanie aktywacji okna dotyczy wyłącznie `--show-test-window`; jego wynik jest raportowany w pomiarach okna i kontroli paczki. Każdy proces ma własny hash EXE w `run-spec.json`; nie przypisujemy starszych pomiarów innemu plikowi.
 
-Wstępna pełna seria została przerwana po 37 testach (35 PASS, 2 FAIL), gdy wykryto włączenie VFX w historycznych profilach samej fizyki. Przywrócono jawny zakres tych profili oraz domyślne off dla samodzielnego `ParticleWorld::create`. Kolejna pełna seria 61/61 korzysta z poprawnego zakresu. [Zachowane wyniki przerwanej serii](../measurements/i09/ctest-final/run-result.json). Domyślna aplikacja z przekazanym wspólnym urządzeniem nadal używa low.
+Wstępna pełna seria została przerwana po 37 testach (35 PASS, 2 FAIL), gdy wykryto włączenie VFX w historycznych profilach samej fizyki. Przywrócono jawny zakres tych profili oraz domyślne off dla samodzielnego `ParticleWorld::create`. Kolejna pełna seria 61/61 korzysta z poprawnego zakresu. [Zachowane wyniki przerwanej serii](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/ctest-final/run-result.json). Domyślna aplikacja z przekazanym wspólnym urządzeniem nadal używa low.
 
 ### Koszt całego dodatkowego VFX
 
-Końcowy plik ma 69 120 wierszy i 288 kompletnych segmentów. W tabeli podano zakres przyrostu median sześciu segmentów kandydata low/high oraz największe p95/p99 **całego mierzonego odcinka GPU** spośród segmentów low. To render zamrożonego świata z dwiema aktualizacjami VFX, bez kroku solvera. Pełne rozkłady, także CPU submit oraz kontrolnego off, są w [podsumowaniu](../measurements/i09/benchmark-7/vfx-summary.json); [surowe próbki](../measurements/i09/benchmark-7/vfx-samples.csv), [liczniki według typu](../measurements/i09/benchmark-7/vfx-pool-segments.csv).
+Końcowy plik ma 69 120 wierszy i 288 kompletnych segmentów. W tabeli podano zakres przyrostu median sześciu segmentów kandydata low/high oraz największe p95/p99 **całego mierzonego odcinka GPU** spośród segmentów low. To render zamrożonego świata z dwiema aktualizacjami VFX, bez kroku solvera. Pełne rozkłady, także CPU submit oraz kontrolnego off, są w [podsumowaniu](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-summary.json); [surowe próbki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-samples.csv), [liczniki według typu](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-pool-segments.csv).
 
 | Rozmiar | Scena | low Δ mediana [ms] | high Δ mediana [ms] | low p95 całego odcinka [ms] | low p99 [ms] | low max mediana CPU submit [ms] |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -108,7 +108,7 @@ Końcowy plik ma 69 120 wierszy i 288 kompletnych segmentów. W tabeli podano za
 | 1600×960 | sand_water | 0.122–0.127 | 0.140–0.145 | 1.118 | 1.878 | 0.560 |
 | 1600×960 | saturated | 0.297–0.304 | 0.342–0.345 | 2.156 | 2.589 | 0.633 |
 
-Wcześniejsze pełne macierze też nie spełniły bramki (najlepszy zaobserwowany najgorszy segment około 0,284 ms, kolejna seria około 0,350 ms). Zachowano surowe dane i hashe w [archiwum prób przygotowawczych](../measurements/i09/preliminary-matrices.zip). Wyników nie uśredniamy pomiędzy różnymi buildami ani nie wybieramy najkorzystniejszej serii do kwalifikacji. Zmienność dostarczania pracy CPU/GPU jest widoczna; osobny krótszy profil shaderów nie wyjaśnia całego przyrostu i nie zastępuje pomiaru bramki.
+Wcześniejsze pełne macierze też nie spełniły bramki (najlepszy zaobserwowany najgorszy segment około 0,284 ms, kolejna seria około 0,350 ms). Zachowano surowe dane i hashe w [archiwum prób przygotowawczych](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/preliminary-matrices.zip). Wyników nie uśredniamy pomiędzy różnymi buildami ani nie wybieramy najkorzystniejszej serii do kwalifikacji. Zmienność dostarczania pracy CPU/GPU jest widoczna; osobny krótszy profil shaderów nie wyjaśnia całego przyrostu i nie zastępuje pomiaru bramki.
 
 Zastosowane ograniczenia kosztu low: rzadsza ocena źródeł z kompensacją intensywności, stabilny LOD rysowania wtórnej wody, pomijanie oceny emiterów po dojściu do rezerwy, oddzielne listy warstw, brak kopii/dystorsji przy braku fali, cache uniformów i stanu rasteryzacji oraz brak timerów w zwykłej telemetrii. Nadal obecne są wszystkie typy efektów. Dalszego zysku nie uzyskano przez redukcję cząstek fizycznych ani zmianę solvera.
 
@@ -121,7 +121,7 @@ Z zachowanego początkowego drzewa I08 zbudowano osobny EXE z dodatkowym przebie
 | 960×576 | 0,154–0,197 | 0,173–0,175 | 0,176–0,178 | 0,616–0,623 |
 | 1600×960 | 0,341–0,349 | 0,427–0,438 | 0,428–0,432 | 1,320–1,330 |
 
-Zakresy median segmentów. [Próbki i08-reference.csv](../measurements/i09/i08-reference/i08-reference.csv), [podsumowanie](../measurements/i09/i08-reference/summary.json), [źródła, pełna zmiana harnessu i odtworzenie](../measurements/i09/i08-reference/README.md). Referencja I09 off pozostaje blisko tych wartości; jej rozkłady są jawne w macierzy I09.
+Zakresy median segmentów. [Próbki i08-reference.csv](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/i08-reference/i08-reference.csv), [podsumowanie](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/i08-reference/summary.json), [źródła, pełna zmiana harnessu i odtworzenie](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/i08-reference/README.md). Referencja I09 off pozostaje blisko tych wartości; jej rozkłady są jawne w macierzy I09.
 
 ### Etapy, pamięć i CPU
 
@@ -134,9 +134,9 @@ Profil pomocniczy zawiera 120 ticków i 60 renderów na scenę. Agregacja łącz
 | sand_water | 0.0472 | 0.0222 | 0.0389 | 0.0141 |
 | saturated | 0.1510 | 0.0496 | 0.0262 | 0.0429 |
 
-[Próbki etapów](../measurements/i09/benchmark-7/vfx-pass-samples.csv), [agregacja na klatkę](../measurements/i09/benchmark-7/vfx-frame-stages.csv), [p95/p99 etapów](../measurements/i09/benchmark-7/vfx-stage-summary.json). Cały jawny magazyn VFX dla pomiaru 960 × 576 wynosi 6 230 256 B (około 5,94 MiB), w tym 768 KiB cząstek; cele okna i dodatkowe scratch mogą zwiększyć tę wartość. Statystyki runtime są asynchroniczne, co 30 ticków; log końca misji może pokazać np. tick 1680 przy ticku świata 1700. Nie jest to bieżący stan używany do sterowania fizyką.
+[Próbki etapów](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-pass-samples.csv), [agregacja na klatkę](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-frame-stages.csv), [p95/p99 etapów](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/vfx-stage-summary.json). Cały jawny magazyn VFX dla pomiaru 960 × 576 wynosi 6 230 256 B (około 5,94 MiB), w tym 768 KiB cząstek; cele okna i dodatkowe scratch mogą zwiększyć tę wartość. Statystyki runtime są asynchroniczne, co 30 ticków; log końca misji może pokazać np. tick 1680 przy ticku świata 1700. Nie jest to bieżący stan używany do sterowania fizyką.
 
-Adapter CPU: koszt przygotowania/uploadu i zlecenia VFX na tick w próbach jakości miał mediany 1,863–2,587 ms, p95 2,608–3,958 ms, p99 2,892–10,135 ms. GPU etapy i ich rozkłady raportujemy osobno w [CPU summary](../measurements/i09/cpu-summary.json) i [surowym CSV](../measurements/i09/quality/cpu-vfx-samples.csv). To krótki test kontraktu z pomiarami, zawierający kontrole checksum i fence; nie jest niezależną kwalifikacją p95 całej gry CPU.
+Adapter CPU: koszt przygotowania/uploadu i zlecenia VFX na tick w próbach jakości miał mediany 1,863–2,587 ms, p95 2,608–3,958 ms, p99 2,892–10,135 ms. GPU etapy i ich rozkłady raportujemy osobno w [CPU summary](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/cpu-summary.json) i [surowym CSV](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/quality/cpu-vfx-samples.csv). To krótki test kontraktu z pomiarami, zawierający kontrole checksum i fence; nie jest niezależną kwalifikacją p95 całej gry CPU.
 
 ### Widoczne okno, VSync i debug
 
@@ -153,20 +153,20 @@ Trzy próby bez VSync i trzy z VSync ukończyły misję (3/3 cele), bez odrzucon
 
 **Fokus w środowisku pozostał 0%, także po dodaniu `SDL_RaiseWindow` w `--show-test-window`.** Narzędzie computer-use nie uruchomiło się z powodu błędu `sandboxCwd is not a local file URI`. Nie użyto tych wyników do kwalifikacji aktywnego okna. Obserwowane p95 bez VSync jest poniżej 16,67 ms, ale formalny cel aktywnego okna pozostaje otwarty. VSync przekracza 16,67 ms również w tych próbach. Scheduler skryptu diagnostycznego świadomie pozwala wykonać misję bez fokusu; normalna gra zatrzymuje ticki po utracie fokusu.
 
-[Końcowe próbki, metadane i obrazy](../measurements/i09/windows-focused/window-summary.json); wcześniejszą serię bez żądania aktywacji zachowano w [windows-final](../measurements/i09/windows-final/window-summary.json). Nazwa `windows-focused` oznacza próbę uzyskania fokusu, nie potwierdzony stan. KHR_debug nie zgłosił GL ERROR ani UNDEFINED_BEHAVIOR w kontroli VFX i próbach okna. Ostrzeżenia wydajności sterownika, m.in. migracje buforów podczas jawnych snapshotów testowych, pozostają w surowych logach; nie są usuwane z raportu. [Zestawienie debug](../measurements/i09/debug-summary.json).
+[Końcowe próbki, metadane i obrazy](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/windows-focused/window-summary.json); wcześniejszą serię bez żądania aktywacji zachowano w [windows-final](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/windows-final/window-summary.json). Nazwa `windows-focused` oznacza próbę uzyskania fokusu, nie potwierdzony stan. KHR_debug nie zgłosił GL ERROR ani UNDEFINED_BEHAVIOR w kontroli VFX i próbach okna. Ostrzeżenia wydajności sterownika, m.in. migracje buforów podczas jawnych snapshotów testowych, pozostają w surowych logach; nie są usuwane z raportu. [Zestawienie debug](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/debug-summary.json).
 
 ### Obrazy
 
 Zestawienia mają kolumny off/low/high; checkpoint i czas symulacji VFX są wspólne. Dynamiczne sceny po rozruchu mogą emitować tylko pojedyncze markery — nie zwiększamy intensywności wyłącznie na potrzeby zrzutu. Pełna pula jest sztucznym testem 16k pęcherzyków o długim życiu, nie naturalnym stanem misji.
 
-![Misja off/low/high](../measurements/i09/benchmark-7/mission-comparison.png)
-![Przerwana zapora off/low/high](../measurements/i09/benchmark-7/dam_break-comparison.png)
-![Piasek z wodą off/low/high](../measurements/i09/benchmark-7/sand_water-comparison.png)
-![Pełna pula off/low/high](../measurements/i09/benchmark-7/saturated-comparison.png)
+![Misja off/low/high](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/mission-comparison.png?raw=true)
+![Przerwana zapora off/low/high](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/dam_break-comparison.png?raw=true)
+![Piasek z wodą off/low/high](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/sand_water-comparison.png?raw=true)
+![Pełna pula off/low/high](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/benchmark-7/saturated-comparison.png?raw=true)
 
 ### Kontrola paczki
 
-Paczka ma nazwę `StrefaZero-Windows-x64-I09`. Jej rzeczywisty EXE wykonał ponownie pełne `--gpu-vfx-check --gl-debug`; kontrola kontraktów, adaptera CPU i tras off/low/high przechodzi. [Wyniki uruchomienia z paczki](../measurements/i09/package-quality/quality/run-result.json). Uruchomienia `--smoke-test` na GL 4.3 i wymuszonym GL 3.3 również przechodzą: [CPU](../measurements/i09/package-cpu/cpu/run-result.json), [fallback](../measurements/i09/package-legacy/legacy/run-result.json). Log CPU potwierdza `cpu_adapter=1`, `world_creations=0`; fallback `render_device_created=0`. Końcowy hash, zależności i zakresy wcześniejszych testów są w `BUILD_INFO.json`, manifestach SHA256 i `build-provenance.json`.
+Paczka ma nazwę `StrefaZero-Windows-x64-I09`. Jej rzeczywisty EXE wykonał ponownie pełne `--gpu-vfx-check --gl-debug`; kontrola kontraktów, adaptera CPU i tras off/low/high przechodzi. [Wyniki uruchomienia z paczki](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/package-quality/quality/run-result.json). Uruchomienia `--smoke-test` na GL 4.3 i wymuszonym GL 3.3 również przechodzą: [CPU](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/package-cpu/cpu/run-result.json), [fallback](https://github.com/maershal/strefa-zero-measurements/blob/88ba1601a3c6ab19b0e97a3ed8e679a593e09539/i09/package-legacy/legacy/run-result.json). Log CPU potwierdza `cpu_adapter=1`, `world_creations=0`; fallback `render_device_created=0`. Końcowy hash, zależności i zakresy wcześniejszych testów są w `BUILD_INFO.json`, manifestach SHA256 i `build-provenance.json`.
 
 ### Granice odbioru
 
