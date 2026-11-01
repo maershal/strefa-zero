@@ -21,6 +21,16 @@ jobs:
     timeout-minutes: 5
     steps:
       - uses: actions/checkout@v4
+      - name: Check shell script modes
+        run: |
+          bad=$(git ls-files -s -- '*.sh' | grep -v -e '^100755 ' -e $'\tscripts/linux-env.sh$' || true)
+          if [ -n "$bad" ]; then
+            echo "Skrypty bez trybu 100755 (git update-index --chmod=+x):"
+            echo "$bad"
+            exit 1
+          fi
+      - name: Test Claude Code hook
+        run: ./scripts/test-claude-hook.sh
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format-18
       - name: Check C++ formatting
