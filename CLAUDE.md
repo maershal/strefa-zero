@@ -61,7 +61,7 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 ## Measurement data — do not read
 
 `docs/measurements/` holds ~12k raw logs/CSV/JSON/BMP files from past QA runs (hundreds of MB,
-plus untracked BMPs). They are byte-identical evidence verified by `SHA256SUMS.txt` manifests
+151 of the BMPs are tracked in git, others are untracked). They are byte-identical evidence verified by `SHA256SUMS.txt` manifests
 inside each folder (`-text` in `.gitattributes`). Never edit or reformat them. Reading them is
 blocked in `.claude/settings.json`; the reports in `docs/reports/` quote every number needed.
 New measurement runs go into a new `docs/measurements/<stage>/` folder.
@@ -71,3 +71,23 @@ New measurement runs go into a new `docs/measurements/<stage>/` folder.
 - Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build, CPU tests,
   Mesa smoke tests, Linux package). Docs-only changes skip CI.
 - Do not commit `build/`, `dist/` or raw `*.bmp` captures (ignored).
+- To hide the bulk-format commit in `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
+
+## Workflow
+
+- One change = one new branch = one PR, described as Goal / Changes / Tests / Risks / Out of scope.
+  Do not merge before CI is green. Add new `*.sh` files with `git update-index --chmod=+x`
+  (CI rejects tracked `.sh` files that are not 100755, except the sourced `scripts/linux-env.sh`).
+- `scripts/test-claude-hook.sh` tests `.claude/hooks/block-measurements.sh` (needs `jq`).
+
+## Definition of done
+
+- `./scripts/build.sh --test-suite cpu` is green (Windows: `pwsh ./scripts/build.ps1 -Configuration Release -CoreOnly`).
+- `./scripts/format.sh --check` is clean.
+- The PR description lists the GPU tests that were not run locally.
+
+## Contracts
+
+- SSBO bindings 0-7, the 64-byte particle ABI, `WorldCommand`/`WorldEvent` (64 B, align 16);
+  recordings v1-v3 must stay readable. The GL 3.3 fallback changes only with explicit approval.
+- Never relax test thresholds or tolerances to make a test pass; report the failure instead.
