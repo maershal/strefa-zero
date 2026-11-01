@@ -1,0 +1,61 @@
+name: Linux
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      SDL_VIDEO_DRIVER: x11
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install build and graphics dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+            libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
+            libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev xvfb xauth
+      - name: Build and test CPU contracts
+        run: ./scripts/build.sh --test-suite cpu --jobs 2
+      - name: Test windows and compute shaders with Mesa
+        run: |
+          xvfb-run -a -s '-screen 0 1280x720x24' \
+            ctest --test-dir build/linux-release --output-on-failure --parallel 1 \
+            -R '^(app\.opengl_smoke|gpu\.(platform_dispatch|gameplay))$'
+          MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330 \
+            xvfb-run -a -s '-screen 0 1280x720x24' \
+            ctest --test-dir build/linux-release --output-on-failure -R '^app\.opengl33_smoke$'
+      - name: Package Linux runtime
+        run: ./scripts/package-linux.sh
+      - name: Verify relocated runtime
+        run: |
+          mkdir -p /tmp/strefa-bundle
+          tar -xzf dist/StrefaZero-Linux-x86_64.tar.gz -C /tmp/strefa-bundle
+          cd /tmp/strefa-bundle/StrefaZero-Linux-x86_64
+          sha256sum -c SHA256SUMS.txt
+          env -u LD_LIBRARY_PATH xvfb-run -a ./StrefaZero --smoke-test --profile /tmp/strefa-installed-profile
+          ./StrefaPhysics --scene arena --ticks 5 --output /tmp/strefa-installed-physics
+      - uses: actions/upload-artifact@v4
+        with:
+          name: StrefaZero-Linux-x86_64
+          path: dist/StrefaZero-Linux-x86_64.tar.gz*
+          if-no-files-found: error
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: Linux-test-logs
+          path: |
+            build/linux-release/Testing/Temporary/
+            build/linux-release/*profile/*.txt

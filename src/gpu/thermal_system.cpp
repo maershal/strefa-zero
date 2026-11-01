@@ -38,7 +38,9 @@ void ThermalSystem::initialize(ShaderLibrary& library,const std::filesystem::pat
     presentation_program=library.program({{GL_COMPUTE_SHADER,folder/"lighting_thermal.comp"}},material_defines());linear_location=gl.GetUniformLocation(graphics,"linearOutput");view_location=gl.GetUniformLocation(graphics,"viewMode");extent_location=gl.GetUniformLocation(graphics,"renderExtent");event_mode=gl.GetUniformLocation(events,"mode");event_generation=gl.GetUniformLocation(events,"sourceGeneration");event_tick=gl.GetUniformLocation(events,"sourceTick");
     gl.GenBuffers(2,particles.data());gl.GenBuffers(2,cells.data());gl.GenBuffers(1,&auxiliary);gl.GenBuffers(1,&reduction);gl.GenVertexArrays(1,&vao);
     const auto allocate=[&](GLuint b,std::size_t bytes){gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,b);gl.BufferData(GL_SHADER_STORAGE_BUFFER,static_cast<GLsizeiptr>(bytes),nullptr,GL_DYNAMIC_COPY);};
-    for(auto b:particles)allocate(b,particle_count*sizeof(ThermalParticle));for(auto b:cells)allocate(b,cell_count*sizeof(ThermalCell));allocate(auxiliary,(4*cell_count+particle_count)*sizeof(std::uint32_t)+32);allocate(reduction,totals_bytes);state.invalidate();
+    for(auto b:particles)allocate(b,particle_count*sizeof(ThermalParticle));
+    for(auto b:cells)allocate(b,cell_count*sizeof(ThermalCell));
+    allocate(auxiliary,(4*cell_count+particle_count)*sizeof(std::uint32_t)+32);allocate(reduction,totals_bytes);state.invalidate();
 }
 void ThermalSystem::bind(){state.base(0,physics[physical_bank]);state.base(1,physics[physical_bank^1]);state.base(2,particles[particle_bank]);state.base(3,particles[particle_bank^1]);state.base(4,physics[4]);state.base(5,cells[cell_bank]);state.base(6,cells[cell_bank^1]);state.base(7,auxiliary);}
 void ThermalSystem::run(int op,unsigned n){
@@ -77,7 +79,8 @@ void ThermalSystem::consume_events(const std::array<GLuint,8>& buffers,unsigned 
     state.base(4,buffers[4]);state.base(5,cells[cell_bank]);state.base(6,buffers[6]);state.base(7,auxiliary);state.use(events);gl.Uniform1i(event_generation,std::bit_cast<int>(gen));gl.Uniform1i(event_tick,std::bit_cast<int>(tick));gl.Uniform1i(event_mode,0);gl.DispatchCompute(1,1,1);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);gl.Uniform1i(event_mode,1);gl.DispatchCompute((cell_count+127)/128,1,1);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);state.invalidate();
 }
 void ThermalSystem::condense(const std::array<GLuint,8>& buffers,unsigned& current){
-    if(!options.reactions)return;physics=buffers;physical_bank=current;run(21,particle_count);
+    if(!options.reactions)return;
+    physics=buffers;physical_bank=current;run(21,particle_count);
     state.base(0,physics[current]);state.base(1,physics[current^1]);state.base(2,particles[particle_bank]);state.base(3,cells[cell_bank]);state.base(4,physics[4]);state.base(5,physics[5]);state.base(6,physics[6]);state.use(condensation);gl.DispatchCompute((cell_count+127)/128,1,1);gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);current^=1;physical_bank=current;state.invalidate();
 }
 void ThermalSystem::erase(const std::array<GLuint,8>& buffers,unsigned current,const ThermalBrush& region){
@@ -94,7 +97,8 @@ ThermalTotals ThermalSystem::read_totals(GLuint buffer)const{
     ThermalTotals t;t.radiated=sums[15];t.mass=sums[0];t.enthalpy=sums[1];t.chemical=sums[2];t.external_mass=sums[3];t.external_enthalpy=sums[4];t.external_chemical=sums[5];t.released_heat=sums[6];t.oxygen=sums[7];t.fuel=sums[8];t.steam=sums[9];t.smoke=sums[10];t.divergence_l2=std::sqrt(sums[11]/cell_count);t.divergence_max=sums[12];t.finite=sums[13]==0&&std::ranges::all_of(sums,[](double x){return std::isfinite(x);});return t;
 }
 void ThermalSystem::request_inspection(int x,int y){
-    if(x<0||y<0||x>=320||y>=192||inspect_count==inspections.size())return;auto& p=inspections[(inspect_head+inspect_count)%inspections.size()];
+    if(x<0||y<0||x>=320||y>=192||inspect_count==inspections.size())return;
+    auto& p=inspections[(inspect_head+inspect_count)%inspections.size()];
     if(!p.buffer){gl.GenBuffers(1,&p.buffer);gl.BindBuffer(GL_COPY_WRITE_BUFFER,p.buffer);gl.BufferData(GL_COPY_WRITE_BUFFER,sizeof(ThermalCell),nullptr,GL_STREAM_READ);}
     gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);gl.BindBuffer(GL_COPY_READ_BUFFER,cells[cell_bank]);gl.BindBuffer(GL_COPY_WRITE_BUFFER,p.buffer);gl.CopyBufferSubData(GL_COPY_READ_BUFFER,GL_COPY_WRITE_BUFFER,static_cast<GLintptr>((y*320+x)*sizeof(ThermalCell)),0,sizeof(ThermalCell));p.fence=gl.FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE,0);p.serial=serial;p.generation=generation;p.tick=tick_;p.x=x;p.y=y;++inspect_count;state.invalidate();
 }

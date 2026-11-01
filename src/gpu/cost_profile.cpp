@@ -104,7 +104,8 @@ void write_trace(const TraceReport& trace,const std::filesystem::path& output){
     const bool bounds=trace.mode==CostMode::bounds||trace.mode==CostMode::snapshots;
     for(const auto& p:trace.dispatches){
         events<<p.generation<<','<<p.tick<<','<<p.ordinal<<','<<p.phase<<','<<p.iteration<<','<<pass_family_names[static_cast<unsigned>(p.family)]<<','<<p.operation<<','<<p.sampled<<',';
-        if(p.sampled)events<<p.milliseconds;events<<','<<p.indexed<<',';
+        if(p.sampled)events<<p.milliseconds;
+        events<<','<<p.indexed<<',';
         if(bounds&&p.indexed)events<<p.displacement<<','<<p.builds;else events<<',';events<<'\n';
     }
     summary<<"snapshot,label,generation,tick,ordinal,phase,iteration,reach,active,dmax,builds,global_candidates,fresh_candidates,global_to_fresh,geometric_neighbors,missed,reference,global_median,global_p95,global_max,fresh_median,fresh_p95,fresh_max,near_median,near_p95,near_max\n"<<std::setprecision(10);
@@ -126,18 +127,20 @@ void validate_trace(const std::filesystem::path& shaders,const std::filesystem::
     for(int y=180;y<height;++y)for(int x=0;x<width;++x)walls[y*width+x]=1;
     auto reference=create();reference->load(initial,walls);static_cast<void>(reference->read_neighbors());
     std::vector<std::array<float,4>> delta(256);delta[255]={-96.2F,0,0,0};reference->displace_for_test(delta);
-    for(unsigned tick=0;tick<4;++tick)reference->step();const auto expected=reference->readback();
+    for(unsigned tick=0;tick<4;++tick)reference->step();
+    const auto expected=reference->readback();
     for(const auto mode:{CostMode::off,CostMode::passes,CostMode::bounds,CostMode::snapshots}){
         auto world=create();world->load(initial,walls);static_cast<void>(world->read_neighbors());
         TraceConfig config;config.mode=mode;config.max_events=1024;config.max_samples=8;config.max_snapshots=2;
         const auto before=world->counters();world->start_diagnostic_trace(config);
         if(mode==CostMode::off)require((world->counters()-before).api_calls==0,"Disabled trace allocated GL resources");
         world->displace_for_test(delta);if(mode==CostMode::snapshots)world->capture_diagnostic_snapshot("large_outlier");
-        for(unsigned tick=0;tick<4;++tick)world->step();if(mode==CostMode::snapshots)world->capture_diagnostic_snapshot("after_four_steps");
+        for(unsigned tick=0;tick<4;++tick)world->step();
+        if(mode==CostMode::snapshots)world->capture_diagnostic_snapshot("after_four_steps");
         drain(*world);const auto actual=world->readback();double max_error=0;
         for(unsigned id=0;id<capacity;++id){
             require(actual[id].motion[3]==expected[id].motion[3],"Diagnostic capture changed membership");if(actual[id].motion[3]<.5F)continue;
-            for(const auto pair:{std::pair{actual[id].position,expected[id].position},std::pair{actual[id].motion,expected[id].motion},std::pair{actual[id].residual,expected[id].residual},std::pair{actual[id].contact,expected[id].contact}})
+            for(const auto& pair:{std::pair{actual[id].position,expected[id].position},std::pair{actual[id].motion,expected[id].motion},std::pair{actual[id].residual,expected[id].residual},std::pair{actual[id].contact,expected[id].contact}})
                 for(unsigned k=0;k<4;++k){require(std::isfinite(pair.first[k]),"Diagnostic capture produced nonfinite state");max_error=std::max(max_error,std::abs(static_cast<double>(pair.first[k])-pair.second[k]));}
         }
         require(max_error<.0001,"Diagnostic capture changed the authoritative state");const auto trace=world->read_diagnostic_trace();

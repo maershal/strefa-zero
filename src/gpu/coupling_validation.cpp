@@ -134,7 +134,8 @@ std::expected<void,std::string> validate_coupling(const std::filesystem::path& o
 #undef HEADER
         steps<<'\n';
         const auto metric=[&](const char* name,const char* variant,unsigned repeat,const char* metric_name,const std::vector<double>& values){
-            if(values.empty())return;summary<<name<<','<<variant<<','<<repeat<<','<<metric_name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
+            if(values.empty())return;
+            summary<<name<<','<<variant<<','<<repeat<<','<<metric_name<<','<<values.size()<<','<<percentile(values,.5)<<','<<percentile(values,.95)<<','<<percentile(values,.99)<<','<<*std::ranges::max_element(values)<<'\n';
         };
         for(unsigned repeat=1;repeat<=3;++repeat){
             if(repeat%2==0)std::ranges::reverse(variants);

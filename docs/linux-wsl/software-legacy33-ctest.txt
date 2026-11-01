@@ -1,0 +1,12 @@
+Internal ctest changing into directory: /home/maershal/.cache/strefa-zero-wsl/release
+Test project /home/maershal/.cache/strefa-zero-wsl/release
+    Start 69: app.opengl33_smoke
+1/1 Test #69: app.opengl33_smoke ...............   Passed    4.93 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+graphics       =   4.93 sec*proc (1 test)
+integration    =   4.93 sec*proc (1 test)
+
+Total Test time (real) =   4.93 sec

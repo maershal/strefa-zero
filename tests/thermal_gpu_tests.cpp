@@ -8,7 +8,8 @@
 #include <iomanip>
 #include <iostream>
 int main(int argc,char** argv){
-    if(argc!=3)return 2;const std::filesystem::path output{argv[2]};std::filesystem::create_directories(output);
+    if(argc!=3)return 2;
+    const std::filesystem::path output{argv[2]};std::filesystem::create_directories(output);
     try{
         auto sdl=strefa::platform::SdlSystem::create();if(!sdl)throw std::runtime_error{sdl.error()};
         strefa::core::Settings settings;auto window=strefa::platform::Window::create(settings,true,true);if(!window)throw std::runtime_error{window.error()};

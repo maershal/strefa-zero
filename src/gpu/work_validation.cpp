@@ -25,7 +25,7 @@ double compare(const std::vector<Grain>& reference,const std::vector<Grain>& can
         const auto& a=reference[id];const auto& b=candidate[id];
         require(a.motion[3]==b.motion[3],"Work gating changed active IDs/material membership");
         if(a.motion[3]<.5F)continue;
-        for(const auto pair:{std::pair{a.position,b.position},std::pair{a.motion,b.motion},
+        for(const auto& pair:{std::pair{a.position,b.position},std::pair{a.motion,b.motion},
                              std::pair{a.contact,b.contact},std::pair{a.residual,b.residual}})
             for(unsigned k=0;k<4;++k){
                 require(std::isfinite(pair.second[k]),"Work gating produced a nonfinite state");
@@ -77,7 +77,8 @@ std::expected<void,std::string> validate_work(const std::filesystem::path& outpu
         const auto shaders=std::filesystem::path{reinterpret_cast<const char8_t*>(SDL_GetBasePath())}/"assets/shaders";
         const auto create=[&](const ExecutionOptions& options){
             auto made=ParticleWorld::create(shaders,options);
-            if(!made)throw std::runtime_error{made.error()};return std::move(*made);
+            if(!made)throw std::runtime_error{made.error()};
+            return std::move(*made);
         };
         require(layout.neighbors!=NeighborMode::linked,"Work validation requires sorted/reused; linked fallback is checked internally");
         const bool soa=layout.soa;const auto mode=layout.neighbors;
@@ -86,7 +87,7 @@ std::expected<void,std::string> validate_work(const std::filesystem::path& outpu
             report<<"reference_world_begin layout="<<soa<<" neighbors="<<static_cast<int>(mode)<<std::endl;
             const auto reference_started=SDL_GetTicksNS();auto reference=create(base);
             report<<"reference_world_create_ms="<<static_cast<double>(SDL_GetTicksNS()-reference_started)/1e6<<std::endl;
-            for(const auto flags:{std::pair{true,false},std::pair{false,true},std::pair{true,true}}){
+            for(const auto& flags:{std::pair{true,false},std::pair{false,true},std::pair{true,true}}){
                 auto options=base;options.phase_gating=flags.first;options.skip_zero_projection=flags.second;
                 report<<"candidate_world_begin phase="<<flags.first<<" certificate="<<flags.second<<std::endl;
                 const auto candidate_started=SDL_GetTicksNS();auto candidate=create(options);

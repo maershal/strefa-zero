@@ -1,0 +1,26 @@
+      Start  1: graphics.lighting_contract
+ 1/11 Test  #1: graphics.lighting_contract .......   Passed    0.00 sec
+      Start  2: game.vfx_contract
+ 2/11 Test  #2: game.vfx_contract ................   Passed    0.04 sec
+      Start  3: physics.fluid_reference
+ 3/11 Test  #3: physics.fluid_reference ..........   Passed    0.01 sec
+      Start  4: game.protocol
+ 4/11 Test  #4: game.protocol ....................   Passed    0.00 sec
+      Start  5: game.clock
+ 5/11 Test  #5: game.clock .......................   Passed    0.00 sec
+      Start  6: core.settings
+ 6/11 Test  #6: core.settings ....................   Passed    0.00 sec
+      Start  7: sim.materials
+ 7/11 Test  #7: sim.materials ....................   Passed   15.38 sec
+      Start  8: sim.numerics_parallel
+ 8/11 Test  #8: sim.numerics_parallel ............   Passed   14.09 sec
+      Start  9: game.training
+ 9/11 Test  #9: game.training ....................   Passed   45.88 sec
+      Start 10: sim.laboratory_worker
+10/11 Test #10: sim.laboratory_worker ............   Passed    0.05 sec
+      Start 11: physics.thermal_contract
+11/11 Test #11: physics.thermal_contract .........   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 11
+
+Total Test time (real) =  75.48 sec

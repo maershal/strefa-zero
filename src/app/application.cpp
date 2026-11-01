@@ -318,7 +318,8 @@ public:
 
 private:
     void ensure_render_device(){
-        if(render_device_)return;GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
+        if(render_device_)return;
+        GLint major{},minor{};glGetIntegerv(GL_MAJOR_VERSION,&major);glGetIntegerv(GL_MINOR_VERSION,&minor);
         if(major<4||(major==4&&minor<3))return;
         render_device_=std::make_shared<gpu::RenderDevice>(utf8_path(SDL_GetBasePath())/"assets/shaders",shader_cache_?store_.path().parent_path()/"shader-cache":std::filesystem::path{});render_device_->vfx.set_options(vfx_options_);
     }

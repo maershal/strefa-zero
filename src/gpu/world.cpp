@@ -365,7 +365,17 @@ std::expected<std::unique_ptr<ParticleWorld>,std::string> ParticleWorld::create(
             throw std::invalid_argument{"Compute group sizes must be 64, 128 or 256; ubershaders require matching sizes."};
         // The shared device configures its program cache before VFX and world programs.
         if(!execution.fluid.valid())throw std::invalid_argument{"Invalid I07 fluid configuration."};
-        s.execution=execution;s.compile_kernels(shaders);
+        s.execution=execution;
+        // Mesa D3D12 in WSL can skip a nonzero conditional blast dispatch.
+        // Keep active-particle indirect dispatch, but use the existing direct
+        // path for optional work. The same fixture passes on native GL/Mesa
+        // llvmpipe and with conditional_work=false (see LINUX_WSL_QA.md).
+        const auto* renderer=reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+        if(renderer&&std::string_view{renderer}.starts_with("D3D12 (")&&s.execution.conditional_work){
+            s.execution.conditional_work=false;
+            SDL_LogWarn(SDL_LOG_CATEGORY_RENDER,"Mesa D3D12: using direct dispatch for conditional GPU work.");
+        }
+        s.compile_kernels(shaders);
         s.shader_folder=shaders;s.renderer.initialize(s.shader_library,shaders,s.layout_defines());s.renderer.vfx=&s.resources->vfx;
         s.gl.GenBuffers(static_cast<GLsizei>(s.buffers.size()),s.buffers.data());
         const std::array<std::size_t,8> sizes{capacity*sizeof(Grain),capacity*sizeof(Grain),static_cast<std::size_t>(s.execution.neighbors==NeighborMode::linked?width*height*4:(16+3*width*height+480+(s.execution.phase_gating?240:0))*4),s.index_buffer_size(),static_cast<std::size_t>(width*height*(execution.fluid.boundary==FluidBoundary::volume?20:16)+(execution.fluid.boundary==FluidBoundary::volume?144*4:0)),capacity*8+detail::command_words*4,mission_buffer_size,s.terms_buffer_size()};
@@ -692,7 +702,8 @@ void ParticleWorld::set_thermal_options(ThermalOptions value){
 ThermalOptions ParticleWorld::thermal_options()const{return impl_->thermal_config;}
 void ParticleWorld::set_thermal_view(ThermalView view){if(impl_->thermal)impl_->thermal->view=view;}
 void ParticleWorld::set_thermal_brush(const ThermalBrush& brush){
-    if(!std::ranges::all_of(brush.segment,[](float v){return std::isfinite(v);})||!std::isfinite(brush.radius)||brush.radius<1||brush.radius>16||!std::isfinite(brush.rate)||brush.rate<0||brush.rate>10000||brush.tool>ThermalTool::steam)throw std::invalid_argument{"Invalid thermal brush"};impl_->thermal_brush=brush;
+    if(!std::ranges::all_of(brush.segment,[](float v){return std::isfinite(v);})||!std::isfinite(brush.radius)||brush.radius<1||brush.radius>16||!std::isfinite(brush.rate)||brush.rate<0||brush.rate>10000||brush.tool>ThermalTool::steam)throw std::invalid_argument{"Invalid thermal brush"};
+    impl_->thermal_brush=brush;
 }
 const ThermalTotals& ParticleWorld::thermal_totals()const{static const ThermalTotals empty;return impl_->thermal?impl_->thermal->totals():empty;}
 ThermalSnapshot ParticleWorld::read_thermal(){return impl_->thermal?impl_->thermal->snapshot():ThermalSnapshot{};}
@@ -780,7 +791,9 @@ std::vector<GroupProfile> ParticleWorld::take_group_profiles(){return std::excha
 MissionSnapshot ParticleWorld::read_mission()const{
     auto& s=*impl_;MissionSnapshot result{};s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,s.buffers[6]);s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER,32,sizeof(result),&result);
-    if(!s.hold_events)s.event_ring.poll(s.gameplay);if(s.mission_enabled)s.gameplay.present(result.inventory,result.timers,result.targets,result.status[3]);return result;
+    if(!s.hold_events)s.event_ring.poll(s.gameplay);
+    if(s.mission_enabled)s.gameplay.present(result.inventory,result.timers,result.targets,result.status[3]);
+    return result;
 }
 std::vector<std::uint32_t> ParticleWorld::read_terrain()const{
     auto& s=*impl_;std::vector<std::uint32_t> result(width*height*4);s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -901,7 +914,8 @@ std::expected<void,std::string> ParticleWorld::validate_gameplay_protocol(const 
         std::array<std::array<float,8>,grenade_capacity> grenades{};
         for(unsigned i=0;i<grenades.size();++i){grenades[i][0]=100+static_cast<float>(i);grenades[i][1]=100;grenades[i][4]=.001F;}
         s.upload(6,32+sizeof(MissionSnapshot)+bullet_capacity*32,sizeof(grenades),grenades.data());
-        for(unsigned i=0;i<grenade_capacity+2;++i)tick();drain();
+        for(unsigned i=0;i<grenade_capacity+2;++i)tick();
+        drain();
         require(gameplay().state().explosions==grenade_capacity,"Simultaneous detonations lost/duplicated");
         report<<"simultaneous_detonations=PASS\n";
         // Coyote jump on current GPU state; no HUD poll is used for admission.

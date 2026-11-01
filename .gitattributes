@@ -1,4 +1,5 @@
 # Preserve byte-identical measurement evidence and collapse it in GitHub diffs.
+*.sh text eol=lf
 docs/gpu-*/** -text linguist-generated=true
 # Preserve the original supplied review documents.
 docs/reviews/** -text

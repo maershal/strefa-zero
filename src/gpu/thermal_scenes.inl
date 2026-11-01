@@ -1,6 +1,7 @@
 namespace strefa::gpu {
 void ParticleWorld::reset_thermal_scene(unsigned scene){
-    if(scene<1||scene>4)throw std::invalid_argument{"Thermal scene: 1..4"};auto options=thermal_options();options.enabled=true;set_thermal_options(options);
+    if(scene<1||scene>4)throw std::invalid_argument{"Thermal scene: 1..4"};
+    auto options=thermal_options();options.enabled=true;set_thermal_options(options);
     std::vector<std::uint32_t> walls(width*height);std::vector<Grain> grains;std::vector<std::pair<sim::Material,float>> tags;
     const auto box=[&](int x0,int y0,int x1,int y1,unsigned material){for(int y=y0;y<=y1;++y)for(int x=x0;x<=x1;++x)walls[y*width+x]=material;};
     box(0,187,319,191,1);box(40,45,41,186,1);box(278,45,279,186,1);box(40,45,279,46,1);box(120,105,199,107,2);

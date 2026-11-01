@@ -5,8 +5,6 @@
 
 namespace strefa::ui {
 namespace {
-ImU32 color(sim::Color value) { return IM_COL32(value.r, value.g, value.b, value.a); }
-
 void canvas(LaboratoryFrame& lab, float scale) {
     auto& controls = lab.controls;
     const auto room = ImGui::GetContentRegionAvail();

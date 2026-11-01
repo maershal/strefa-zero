@@ -36,7 +36,7 @@ struct ArenaFrame {
     ArenaView game;
     ArenaInput& input;
     bool focused{},scene_mission{true},paused{};
-    Image vfx_front;bool shared_vfx{},effects_enabled{true};int* vfx_quality{};int* lighting_quality{};std::array<float,2> camera{};
+    Image vfx_front{};bool shared_vfx{},effects_enabled{true};int* vfx_quality{};int* lighting_quality{};std::array<float,2> camera{};
 };
 [[nodiscard]] Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts);
 

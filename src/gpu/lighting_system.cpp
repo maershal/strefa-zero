@@ -13,8 +13,11 @@ void texture(GLuint& id,int w,int h,GLint format,GLenum channels,GLenum type,con
 LightingSystem::~LightingSystem(){
     for(auto& p:probes)if(p.queries[0])gl.DeleteQueries(8,p.queries.data());
     for(GLuint t:{moisture,field,light_image,thermal_image,shadow_mask,seeds[0],seeds[1],post_scratch,density})if(t)glDeleteTextures(1,&t);
-    for(auto t:bloom_down)if(t)glDeleteTextures(1,&t);for(auto t:bloom_up)if(t)glDeleteTextures(1,&t);
-    for(GLuint b:{pool,lamps,candidates,field_command})if(b)gl.DeleteBuffers(1,&b);if(vao)gl.DeleteVertexArrays(1,&vao);if(fbo)gl.DeleteFramebuffers(1,&fbo);
+    for(auto t:bloom_down)if(t)glDeleteTextures(1,&t);
+    for(auto t:bloom_up)if(t)glDeleteTextures(1,&t);
+    for(GLuint b:{pool,lamps,candidates,field_command})if(b)gl.DeleteBuffers(1,&b);
+    if(vao)gl.DeleteVertexArrays(1,&vao);
+    if(fbo)gl.DeleteFramebuffers(1,&fbo);
 }
 GLint LightingSystem::location(GLuint p,const char* n)const{return uniforms.at(p).at(n);}
 void LightingSystem::initialize(ShaderLibrary& library,const std::filesystem::path& folder,const std::string& defines){
@@ -50,7 +53,8 @@ void LightingSystem::set_lamps(std::span<const PointLight> values){
     if(values.size()>8)throw std::invalid_argument{"At most eight static lamps"};
     for(const auto& p:values)for(float f:p.position)if(!std::isfinite(f))throw std::invalid_argument{"Invalid lamp position"};
     const std::array<unsigned,4> header{static_cast<unsigned>(values.size()),0,0,0};lamp_count=header[0];gl.BindBuffer(GL_SHADER_STORAGE_BUFFER,lamps);gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,0,16,header.data());
-    if(!values.empty())gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,16,static_cast<GLsizeiptr>(values.size_bytes()),values.data());state.invalidate();
+    if(!values.empty())gl.BufferSubData(GL_SHADER_STORAGE_BUFFER,16,static_cast<GLsizeiptr>(values.size_bytes()),values.data());
+    state.invalidate();
 }
 void LightingSystem::bind_birth(){image(7,moisture,GL_READ_WRITE,GL_R32F);}
 void LightingSystem::prepare_birth(const std::array<GLuint,8>& buffers,unsigned current,bool conditional){PresentationCounterScope observation{gl};state.invalidate();state.base(0,buffers[current]);state.base(5,buffers[5]);state.use(birth_program);gl.Uniform1i(location(birth_program,"mode"),conditional?1:0);bind_birth();gl.DispatchCompute(256,1,1);gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT|GL_TEXTURE_FETCH_BARRIER_BIT);state.invalidate();}
@@ -67,7 +71,9 @@ void LightingSystem::poll(){while(count){auto& p=probes[head];GLint ready{};gl.G
     samples.push_back(s);p.pending=false;head=(head+1)%static_cast<unsigned>(probes.size());--count;}}
 std::vector<LightingSample> LightingSystem::take_samples(){poll();return std::exchange(samples,{});}
 void LightingSystem::tick(const std::array<GLuint,8>& buffers,unsigned current,unsigned gen,unsigned tick_id,bool mission,GLuint terrain,GLuint heat,GLuint thermal_particles){
-    if(gen!=generation)reset(gen);if(tick_known&&tick_id<=last_tick)return;last_tick=tick_id;tick_known=true;PresentationCounterScope observation{gl};begin(true);state.invalidate();state.vertex_array(vao);
+    if(gen!=generation)reset(gen);
+    if(tick_known&&tick_id<=last_tick)return;
+    last_tick=tick_id;tick_known=true;PresentationCounterScope observation{gl};begin(true);state.invalidate();state.vertex_array(vao);
     state.base(1,field_command);state.base(6,buffers[6]);state.use(field_program);gl.DispatchCompute(1,1,1);gl.MemoryBarrier(GL_COMMAND_BARRIER_BIT);
     attach(field,320,192);glClearColor(0,0,0,0);glClear(GL_COLOR_BUFFER_BIT);state.base(0,buffers[current]);state.base(5,buffers[5]);state.texture(3,terrain);state.base(2,thermal_particles?thermal_particles:buffers[current]);state.use(field_vertex);gl.Uniform1i(location(field_vertex,"heatEnabled"),thermal_particles?1:0);state.draw_indirect(field_command);
     glEnable(GL_PROGRAM_POINT_SIZE);glEnable(GL_BLEND);gl.BlendFuncSeparate(GL_ONE,GL_ONE,GL_ONE,GL_ONE);gl.DrawArraysIndirect(GL_POINTS,nullptr);glDisable(GL_BLEND);glDisable(GL_PROGRAM_POINT_SIZE);
@@ -78,7 +84,8 @@ void LightingSystem::tick(const std::array<GLuint,8>& buffers,unsigned current,u
     mark(1);end();state.framebuffer(0);state.invalidate();
 }
 void LightingSystem::resize(int w,int h){if(rw==w&&rh==h)return;rw=w;rh=h;for(auto& t:bloom_down){if(t)glDeleteTextures(1,&t);t=0;}for(auto& t:bloom_up){if(t)glDeleteTextures(1,&t);t=0;}
-    if(post_scratch)glDeleteTextures(1,&post_scratch);texture(post_scratch,w,h,GL_RGBA16F,GL_RGBA,GL_FLOAT);
+    if(post_scratch)glDeleteTextures(1,&post_scratch);
+    texture(post_scratch,w,h,GL_RGBA16F,GL_RGBA,GL_FLOAT);
     for(int i=0;i<3;++i){texture(bloom_down[i],std::max(1,w>>(i+1)),std::max(1,h>>(i+1)),GL_RGBA16F,GL_RGBA,GL_FLOAT,nullptr,true);texture(bloom_up[i],std::max(1,w>>(i+1)),std::max(1,h>>(i+1)),GL_RGBA16F,GL_RGBA,GL_FLOAT,nullptr,true);}state.invalidate();}
 void LightingSystem::illuminate(GLuint scene,GLuint,GLuint terrain,int w,int h,GLuint target,const LightingOptions& options){
     PresentationCounterScope observation{gl};resize(w,h);begin(false);state.invalidate();state.vertex_array(vao);state.base(0,pool);state.base(1,lamps);state.texture(3,terrain);
@@ -105,5 +112,6 @@ std::vector<float> LightingSystem::read_light()const{std::vector<float> values(3
 std::vector<std::uint16_t> LightingSystem::read_seeds()const{std::vector<std::uint16_t> values(320*192*2);glBindTexture(GL_TEXTURE_2D,seeds[0]);glGetTexImage(GL_TEXTURE_2D,0,GL_RG_INTEGER,GL_UNSIGNED_SHORT,values.data());return values;}
 LightingSnapshot LightingSystem::snapshot()const{LightingSnapshot s;gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);gl.BindBuffer(GL_COPY_READ_BUFFER,pool);gl.GetBufferSubData(GL_COPY_READ_BUFFER,0,sizeof(s),&s);return s;}
 std::uint64_t LightingSystem::memory_bytes()const{std::uint64_t total=32768*4+320*192*(8*3+2+4*2)+64*64*8+sizeof(LightingSnapshot)+960*sizeof(PointLight)+16+8*sizeof(PointLight)+16+static_cast<std::uint64_t>(rw)*rh*8;
-    for(int i=0;i<3;++i)total+=static_cast<std::uint64_t>(std::max(1,rw>>(i+1)))*std::max(1,rh>>(i+1))*16;return total;}
+    for(int i=0;i<3;++i)total+=static_cast<std::uint64_t>(std::max(1,rw>>(i+1)))*std::max(1,rh>>(i+1))*16;
+    return total;}
 }
