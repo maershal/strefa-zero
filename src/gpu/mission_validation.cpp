@@ -1,4 +1,4 @@
-#include "gpu/world.hpp"
+#include "gpu/validation.hpp"
 #include "sim/fixed_clock.hpp"
 
 #include <SDL3/SDL_opengl.h>
@@ -33,18 +33,6 @@ std::vector<std::uint32_t> floor_at(int y) {
     for (int j = y; j < height; ++j)
         for (int x = 0; x < width; ++x) walls[j * width + x] = 1;
     return walls;
-}
-MissionInput route(unsigned tick) {
-    if (tick < 60) return {0, 54, 177, fire};
-    if (tick < 400) return {1, 164, 177, (tick < 240 ? jet : 0U) | (tick == 60 ? jump : 0U)};
-    if (tick < 460) return {0, 164, 177, fire};
-    if (tick < 580) return {0, 132, 145, fire};
-    if (tick < 790) return {1, 276, 177, 0};
-    if (tick < 850) return {0, 276, 177, fire};
-    if (tick < 880) return {0, 230, 125, reload};
-    if (tick < 1100) return {0, 230, 125, fire};
-    if (tick < 1340) return {1, 308, 177, (tick < 1260 ? jet : 0U) | (tick == 1100 ? jump : 0U)};
-    return {0, 308, 177, 0};
 }
 double percentile(std::vector<double> v, double q) {
     if (v.empty()) return 0;
@@ -82,9 +70,6 @@ void benchmark(std::ofstream& out, const char* scene, unsigned count, ParticleWo
         << percentile(render, .99) << ',' << *std::ranges::max_element(render) << std::endl;
 }
 } // namespace
-MissionInput scripted_mission_input(unsigned tick) {
-    return route(tick);
-}
 std::expected<void, std::string> validate_mission(ParticleWorld& world, const std::filesystem::path& output) {
     try {
         std::filesystem::create_directories(output);
@@ -256,7 +241,7 @@ std::expected<void, std::string> validate_mission(ParticleWorld& world, const st
             while (tick < 1700) {
                 const int count = clock.advance(1.0 / fps, false, 1);
                 for (int j = 0; j < count && tick < 1700; ++j) {
-                    world.step(route(tick++));
+                    world.step(scripted_mission_input(tick++));
                     if (tick % 60 == 0) {
                         auto state = world.read_mission();
                         finite(state);

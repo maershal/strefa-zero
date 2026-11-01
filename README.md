@@ -41,19 +41,37 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 
 ## Opcje uruchomienia
 
+`StrefaZero` (gra) przyjmuje tylko opcje gracza; `StrefaZero --help` je wypisuje.
+
+| Opcja | Znaczenie |
+| --- | --- |
+| `--mission`, `--gpu-laboratory`, `--laboratory`, `--arena` | Start bezpośrednio w trybie (zob. tabela wyżej). |
+| `--profile <katalog>` | Katalog ustawień, nagrań i raportów (domyślnie profil użytkownika). |
+| `--opengl33` | Wymusza kontekst 3.3 (kontrola zgodności; tryby GPU niedostępne). |
+| `--gl-debug` | Zapisuje komunikaty sterownika OpenGL do `gl-debug.txt` w profilu. |
+| `--smoke-test`, `--mission-smoke-test` | Test dymny menu / misji GPU tego pliku wykonywalnego (wymaga `--profile`). |
+| `--help` | Lista opcji. |
+
+Model cieczy, jakość obrazu, efekty, termikę GPU ([I07](docs/reports/I07_FLUID_QUALITY.md)–[I10](docs/reports/I10_GPU_THERMAL.md))
+wybiera się w narzędziach świata GPU, a oświetlenie ([I11](docs/reports/I11_LIGHTING.md)) w ustawieniach.
+Termika i oświetlenie są domyślnie wyłączone, bo nie spełniają jeszcze budżetów czasu klatki.
+
+### StrefaQA
+
+`StrefaQA` powstaje w tym samym katalogu kompilacji (nie trafia do paczki gracza). Przyjmuje opcje gracza
+oraz wszystkie walidacje, benchmarki, profile i pokrętła eksperymentów, z tą samą semantyką co wcześniej
+`StrefaZero`. Pełna lista z wartościami domyślnymi: [docs/maintenance/INVENTORY.md](docs/maintenance/INVENTORY.md)
+i `src/app/launch_options.cpp`. Przykłady pokręteł startowych:
+
 | Opcja | Domyślnie | Znaczenie |
 | --- | --- | --- |
-| `--profile <katalog>` | profil użytkownika | Katalog ustawień, nagrań i raportów. |
 | `--physics-threads 1-4` | najwyżej 2 | Wątki fizyki CPU. |
-| `--opengl33` | — | Wymusza kontekst 3.3 (kontrola zgodności). |
 | `--gpu-fluid-profile legacy\|balanced` | `legacy` | Model cieczy ([I07](docs/reports/I07_FLUID_QUALITY.md)). |
 | `--gpu-render-quality basic\|standard\|high` | `basic` | Jakość obrazu wody ([I08](docs/reports/I08_SCENE_RENDERER.md)). |
 | `--gpu-vfx-quality off\|low\|high` | `low` | Efekty GPU ([I09](docs/reports/I09_GPU_VFX.md)). |
-| `--gpu-thermal on` | wyłączone | Termika, gazy i ogień GPU ([I10](docs/reports/I10_GPU_THERMAL.md)). |
-| `--gpu-lighting-quality off\|low\|high` | `off` | Światło 2D, HDR i bloom ([I11](docs/reports/I11_LIGHTING.md)). |
-
-Termika i oświetlenie są domyślnie wyłączone, bo nie spełniają jeszcze budżetów czasu klatki.
-Pełna lista opcji: `src/app/launch_options.cpp`.
+| `--gpu-thermal on`, `--gpu-thermal-scene fire\|oil\|quench\|phases` | wyłączone | Termika, gazy i ogień GPU ([I10](docs/reports/I10_GPU_THERMAL.md)). |
+| `--gpu-lighting-quality off\|low\|high` | z ustawień | Światło 2D, HDR i bloom ([I11](docs/reports/I11_LIGHTING.md)). |
+| `--shader-cache on` | wyłączony | Cache skompilowanych shaderów. |
 
 ## Budowanie i testy
 
@@ -67,8 +85,9 @@ Pełna lista opcji: `src/app/launch_options.cpp`.
 ```
 
 Ostrzeżenia są błędami (`-Werror`, `/WX`). Testy GPU bez kontekstu OpenGL 4.3 kończą się
-kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne (`--gpu-*-check`,
-`--mission-test`, `--smoke-test` …) zapisują raporty w `--profile` i kończą proces.
+kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
+`--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`
+i kończą proces. Skrypty `scripts/profiling/*.ps1` przyjmują `-Executable StrefaQA.exe`.
 
 `StrefaPhysics` uruchamia sceny CPU bez okna:
 
@@ -83,10 +102,11 @@ kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne (`--gpu-*-check`
 src/core      ustawienia i schemat metadanych
 src/sim       model CPU: świat, termika, ciecze MAC/PCG, powietrze, reakcje, sceny
 src/game      sesja gry, protokół świata, animacja i IK
-src/gpu       świat GPU: PBF/PBD, renderer, VFX, termika, oświetlenie, walidacje
+src/gpu       świat GPU: PBF/PBD, renderer, VFX, termika, oświetlenie; walidacje (gpu/validation.hpp)
 src/platform  okno SDL, kontekst GL, tekstury, zapis ustawień
 src/ui        menu, laboratoria, poligon (ImGui)
-src/app       aplikacja, opcje uruchomienia, scenariusze diagnostyczne
+src/app       aplikacja, opcje uruchomienia, scenariusze diagnostyczne (te ostatnie tylko w StrefaQA)
+src/tools     StrefaPhysics (sceny CPU bez okna) i StrefaQA (walidacje, benchmarki, profile)
 assets/       shadery GLSL, sprite'y, tła, czcionki
 tests/        testy CTest
 scripts/      build, run, pakowanie, format i lint; profiling/ — narzędzia pomiarowe

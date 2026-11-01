@@ -1,5 +1,5 @@
 #include "gpu/dispatch_layout.hpp"
-#include "gpu/world.hpp"
+#include "gpu/validation.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>

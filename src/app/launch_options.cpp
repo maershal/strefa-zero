@@ -1,5 +1,7 @@
 #include "app/application.hpp"
 
+#include <algorithm>
+#include <array>
 #include <charconv>
 #include <cmath>
 #include <string_view>
@@ -8,11 +10,71 @@ namespace {
 std::filesystem::path utf8_path(const char* text) {
     return std::filesystem::path{reinterpret_cast<const char8_t*>(text)};
 }
+struct PlayerOption {
+    std::string_view name, value, description;
+};
+// The only options StrefaZero accepts; StrefaQA additionally accepts every validation, benchmark and tuning option.
+constexpr std::array player_options{
+        PlayerOption{"--profile", "<katalog>", "katalog ustawień i raportów (domyślnie katalog użytkownika)"},
+        PlayerOption{"--mission", "", "start w misji GPU"},
+        PlayerOption{"--gpu-laboratory", "", "start w laboratorium GPU"},
+        PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
+        PlayerOption{"--arena", "", "start na poligonie CPU"},
+        PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
+        PlayerOption{"--gl-debug", "", "zapis komunikatów sterownika OpenGL do gl-debug.txt w katalogu profilu"},
+        PlayerOption{"--smoke-test", "", "test dymny menu (wymaga --profile)"},
+        PlayerOption{"--mission-smoke-test", "", "test dymny misji GPU (wymaga --profile)"},
+        PlayerOption{"--help", "", "ta pomoc"},
+};
 } // namespace
-std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
+std::string help_text(OptionScope scope) {
+    std::string text = scope == OptionScope::player
+                             ? "Strefa Zero — opcje uruchomienia:\n"
+                             : "StrefaQA — opcje gry (pełna lista w docs/maintenance/INVENTORY.md):\n";
+    for (const auto& option : player_options) {
+        std::string usage{option.name};
+        if (!option.value.empty()) usage += " " + std::string{option.value};
+        usage.resize(std::max<std::size_t>(usage.size() + 2, 24), ' ');
+        text += "  " + usage + std::string{option.description} + "\n";
+    }
+    if (scope == OptionScope::all)
+        text += "Walidacje, benchmarki, profile i pokrętła GPU: README.md, sekcja StrefaQA.\n";
+    return text;
+}
+int LaunchOptions::test_count() const {
+    return static_cast<int>(smoke_test) + laboratory_smoke_test + gpu_test + gpu_liquid_test + gpu_flow_test
+         + gpu_smoke_test + mission_test + mission_smoke + gpu_profile + stabilization_profile + gpu_profile_check
+         + readback_test + readback_profile + execution_test + execution_profile + neighbor_test + neighbor_profile
+         + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
+         + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
+         + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check;
+}
+StartMode LaunchOptions::start_mode() const {
+    if (start_in_laboratory) return StartMode::cpu_laboratory;
+    if (start_in_arena) return StartMode::cpu_arena;
+    if (start_in_gpu) return StartMode::gpu_laboratory;
+    if (start_in_mission) return StartMode::mission;
+    return StartMode::menu;
+}
+SmokeScenario LaunchOptions::smoke_scenario() const {
+    if (smoke_test) return SmokeScenario::menu;
+    if (laboratory_smoke_test) return SmokeScenario::cpu_laboratory;
+    if (gpu_smoke_test) return SmokeScenario::gpu_laboratory;
+    if (mission_smoke) return SmokeScenario::mission;
+    if (session_smoke) return SmokeScenario::session;
+    return SmokeScenario::none;
+}
+std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, OptionScope scope) {
     LaunchOptions result;
     for (int i = 1; i < argc; ++i) {
         const std::string_view argument{argv[i]};
+        if (scope == OptionScope::player
+            && std::ranges::none_of(player_options, [&](const auto& option) { return option.name == argument; }))
+            return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
+        if (argument == "--help") {
+            result.help = true;
+            return result;
+        }
         if (argument == "--gpu-lighting-check")
             result.lighting_check = true;
         else if (argument == "--gpu-lighting-benchmark")
@@ -394,16 +456,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
             return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
     }
     if (!result.gpu_execution.fluid.valid()) return std::unexpected{"Konfiguracja cieczy poza zakresem I07."};
-    if ((result.smoke_test || result.laboratory_smoke_test || result.gpu_test || result.gpu_liquid_test
-         || result.gpu_flow_test || result.gpu_smoke_test || result.mission_test || result.mission_smoke
-         || result.gpu_profile || result.stabilization_profile || result.gpu_profile_check || result.readback_test
-         || result.readback_profile || result.execution_test || result.execution_profile || result.neighbor_test
-         || result.neighbor_profile || result.coupling_test || result.coupling_profile || result.work_test
-         || result.transport_test || result.hot_test || result.cost_profile || result.thermal_check
-         || result.thermal_benchmark || result.vfx_check || result.vfx_benchmark || result.lighting_check
-         || result.lighting_benchmark || result.render_check || result.render_benchmark || result.fluid_check
-         || result.fluid_benchmark || result.cost_check || result.session_smoke || result.cache_check)
-        && result.profile.empty())
+    if (result.is_test() && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
     if (static_cast<int>(result.start_in_arena) + result.start_in_laboratory + result.start_in_gpu
                 + result.start_in_mission
@@ -421,20 +474,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv) {
             || result.gpu_profiling.readback_mode != gpu::ReadbackMode::automatic))
         return std::unexpected{
                 "Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
-    if (static_cast<int>(result.smoke_test) + result.laboratory_smoke_test + result.gpu_test + result.gpu_liquid_test
-                + result.gpu_flow_test + result.gpu_smoke_test + result.mission_test + result.mission_smoke
-                + result.gpu_profile + result.stabilization_profile + result.gpu_profile_check + result.readback_test
-                + result.readback_profile + result.execution_test + result.execution_profile + result.neighbor_test
-                + result.neighbor_profile + result.coupling_test + result.coupling_profile + result.work_test
-                + result.transport_test + result.hot_test + result.cost_profile + result.cost_check
-                + result.thermal_check + result.thermal_benchmark + result.vfx_check + result.vfx_benchmark
-                + result.lighting_check + result.lighting_benchmark + result.render_check + result.render_benchmark
-                + result.fluid_check + result.fluid_benchmark + result.session_smoke + result.cache_check
-        > 1)
-        return std::unexpected{"Wybierz jeden rodzaj testu."};
-    if ((result.test_vsync.has_value() || result.test_frame_limit.has_value())
-        && !(result.smoke_test || result.laboratory_smoke_test || result.gpu_smoke_test || result.mission_smoke
-             || result.session_smoke))
+    if (result.test_count() > 1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if ((result.test_vsync.has_value() || result.test_frame_limit.has_value()) && !result.is_window_smoke())
         return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;
 }

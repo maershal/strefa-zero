@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Porządki — podział StrefaZero / StrefaQA
+
+`StrefaZero` zawiera grę i 10 opcji gracza (`--help`); walidacje, benchmarki, profile i pokrętła eksperymentów przeszły do osobnego programu `StrefaQA` (biblioteka `strefa_diagnostics`) z niezmienioną semantyką. CTest uruchamia tryby QA przez `StrefaQA` bez zmiany nazw, etykiet i limitów czasu; `app.opengl_smoke`, `app.opengl33_smoke` i `gpu.mission_ui` nadal sprawdzają `StrefaZero`. `Application` przyjmuje `LaunchConfig` zamiast 21 parametrów. Stan wyjściowy: [INVENTORY.md](maintenance/INVENTORY.md).
+
 ## Porządki — osobne repozytorium pomiarów
 
 Surowe dane z `docs/measurements/` (12 312 plików, 679 MB) przeniesiono bajt w bajt do [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements/tree/88ba1601a3c6ab19b0e97a3ed8e679a593e09539); katalogi bez manifestu dostały tam własne `SHA256SUMS.txt`. Linki w raportach i planach są permalinkami do tego commita. Historii repozytorium nie przepisywano, więc starsze commity nadal zawierają dane. Usunięto hook Claude Code blokujący odczyt pomiarów wraz z jego testem w CI.

@@ -1,7 +1,7 @@
 #include "app/diagnostic_scenarios.hpp"
 
 #include "app/cpu_vfx.hpp"
-#include "gpu/world.hpp"
+#include "gpu/validation.hpp"
 #include "platform/texture.hpp"
 namespace strefa::app {
 std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const LaunchOptions& options,

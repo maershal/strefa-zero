@@ -21,8 +21,9 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 - Warnings are errors (`STREFA_WARNINGS_AS_ERRORS=ON` in scripts and presets).
 - GPU tests exit **77** (skipped) without an OpenGL 4.3 context. Software Mesa:
   `./scripts/run.sh --software` or `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`.
-- Most GPU/app tests are `StrefaZero --<mode>-check --profile <dir>` invocations registered in
-  `CMakeLists.txt`; they write reports into `<dir>` and exit.
+- Most GPU/app tests are `StrefaQA --<mode>-check --profile <dir>` invocations registered in
+  `CMakeLists.txt`; they write reports into `<dir>` and exit. Only `app.opengl_smoke`,
+  `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).
 - Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja).
 
 ## Layout
@@ -32,10 +33,11 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 | `src/core` | settings schema (`meta::Field`), validation |
 | `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp` |
 | `src/game` | `strefa_game` (CPU arena session), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
-| `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`), renderer, VFX, thermal, lighting, readback/upload rings, and the `*_validation`/`*_profile` check modes |
+| `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`, incl. the `*_validation.inl` member checks), renderer, VFX, thermal, lighting, readback/upload rings. The free `*_validation.cpp`/`*_profile.cpp`/`profiling.cpp` check modes (declared in `gpu/validation.hpp`) build into `strefa_diagnostics` |
 | `src/platform` | SDL window, GL context, textures, settings storage |
 | `src/ui` | ImGui menu, laboratories, arena |
-| `src/app` | `Application`, launch options (`launch_options.cpp` = all CLI flags), diagnostic scenarios |
+| `src/app` | `strefa_app`: `Application`, `run_main`, launch options (`launch_options.cpp` = all CLI flags; `player_options` = the StrefaZero subset). `diagnostic_scenarios.cpp` and `*_validation.cpp` belong to `strefa_diagnostics` |
+| `src/tools` | `qa_main.cpp` = `StrefaQA` (game + every QA/tuning flag, links `strefa_diagnostics`); `physics_runner.cpp` = `StrefaPhysics`. `src/main.cpp` = `StrefaZero` (player flags only) |
 | `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |
 | `tests/` | one executable per `*_tests.cpp`, registered in `CMakeLists.txt` |
 | `scripts/` | build/run/package/format/lint; `scripts/profiling/` = Windows-era PowerShell + Python measurement harnesses |
@@ -55,8 +57,9 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   phase gating, PBF restrict, ...). Do not flip a default without new measurements and a report.
 - Simulation is deterministic across 1/2/4 threads (`sim.numerics_parallel`); keep reductions
   in a fixed order.
-- New CLI flags go in `src/app/launch_options.cpp`; new check modes also need a CTest entry
-  with `SKIP_RETURN_CODE 77` and a `gpu` label.
+- New CLI flags go in `src/app/launch_options.cpp` and are StrefaQA-only unless added to `player_options`
+  (keep StrefaZero under 15 options; `app.launch_options` checks it). New check modes go in
+  `run_diagnostic_scenario` and need a CTest entry running `strefa_qa` with `SKIP_RETURN_CODE 77` and a `gpu` label.
 
 ## Measurement data
 
