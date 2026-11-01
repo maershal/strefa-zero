@@ -4,7 +4,7 @@
 
 `app::SimulationWorld` jest jedynym właścicielem aktywnego `ParticleWorld` w aplikacji. Gra i narzędzia są dwoma widokami tej samej jawnie skonfigurowanej sceny. `DeviceContext` udostępnia API i sprawdza kontekst/wątek, `ShaderLibrary` posiada programy, a `SceneRenderer` posiada cele renderowania. Opcjonalny cache binarny nie zmienia własności świata. `ReadbackRing` pozostaje wspólnym transportem podsumowań. Zmiana widoku nie resetuje sceny ani generacji; reset/zmiana sceny są jawnymi działaniami.
 
-`Application` obsługuje cykl życia i klatkę. Parsowanie uruchomienia, scenariusze diagnostyczne i `ScenarioRunner` są wydzielone. `SessionRecording` zapisuje polecenia rzeczywiście wykonanych kroków; CSV eksportu korzysta z ostatniego asynchronicznego HUD. Modele CPU powstają dopiero przy wejściu do narzędzia referencyjnego. Szczegóły i walidacja: [I05](reports/I05_SHARED_WORLD.md).
+`Application` obsługuje cykl życia i klatkę; konfigurację dostaje jako `LaunchConfig` (z `StartMode` i `SmokeScenario`). Parsowanie uruchomienia, scenariusze diagnostyczne i `ScenarioRunner` są wydzielone. Biblioteka `strefa_app` zawiera grę i smoke testy okna; `strefa_diagnostics` (walidacje, benchmarki, profile, `run_diagnostic_scenario`) linkuje się tylko do `StrefaQA`, który przekazuje ją do `app::run` jako hook wywoływany po utworzeniu kontekstu GL, przed interfejsem. `StrefaZero` przyjmuje wyłącznie opcje gracza. `SessionRecording` zapisuje polecenia rzeczywiście wykonanych kroków; CSV eksportu korzysta z ostatniego asynchronicznego HUD. Modele CPU powstają dopiero przy wejściu do narzędzia referencyjnego. Szczegóły i walidacja: [I05](reports/I05_SHARED_WORLD.md).
 
 ## Misja i granica prezentacji
 
