@@ -22,7 +22,8 @@ namespace strefa::app {
 class ScenarioRunner {
 public:
     static constexpr std::uint64_t mission_smoke_min_ticks = 1700;
-    // Internal limit below the CTest TIMEOUT of gpu.mission_ui (60 s), measured from SDL start.
+    // Internal limit, measured from SDL start, that ends gpu.mission_ui with a progress report well before its
+    // CTest TIMEOUT (120 s) kills it.
     static constexpr std::uint64_t mission_smoke_deadline_ns = 55'000'000'000;
     // Hardware GPU: wall time the interactive clock may discard after the first second.
     static constexpr double mission_smoke_max_dropped = 0.5;
@@ -469,14 +470,14 @@ public:
         write_heartbeat(app, "w toku");
     }
     template<class App> void write_heartbeat(const App& app, std::string_view state) const {
-        const char* scenario = smoke_test     ? "menu"
-                             : lab_smoke      ? "cpu_laboratory"
-                             : gpu_smoke      ? "gpu_laboratory"
-                             : mission_smoke  ? "mission"
-                             : session_smoke  ? "session"
-                             : mission_quick  ? "mission_quick"
-                             : fault_smoke    ? "mode_faults"
-                                              : "none";
+        const char* scenario = smoke_test    ? "menu"
+                             : lab_smoke     ? "cpu_laboratory"
+                             : gpu_smoke     ? "gpu_laboratory"
+                             : mission_smoke ? "mission"
+                             : session_smoke ? "session"
+                             : mission_quick ? "mission_quick"
+                             : fault_smoke   ? "mode_faults"
+                                             : "none";
         const std::uint64_t ticks = app.simulation_ ? app.simulation_->metrics().steps
                                   : app.lab_worker_ ? app.lab_worker_->snapshot()->report.tick
                                                     : 0;
