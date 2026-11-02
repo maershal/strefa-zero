@@ -64,6 +64,10 @@ jobs:
       - name: Test summary
         if: always()
         run: python3 scripts/junit-summary.py 'Linux (Mesa, wszystkie testy graphics)' build/junit/graphics.xml >> "$GITHUB_STEP_SUMMARY"
+      # Like linux.yml: a skip that does not depend on the GL version (e.g. gpu.shader_cache) must not leave the run green.
+      - name: Require no skipped graphics tests
+        if: always()
+        run: python3 scripts/junit-summary.py --fail-on-skipped 'Mesa' build/junit/graphics.xml
       # Reports, CSV and progress.txt of every profile; BMP captures stay out to keep the artifact small.
       - uses: actions/upload-artifact@v7
         if: always()

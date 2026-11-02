@@ -27,15 +27,16 @@ done
 readonly max_file_bytes=1048576
 readonly max_code_lines=800
 readonly large_label="large-pr-approved"
+# The template is in English; "|" lists the Polish headings of older descriptions, still accepted.
 readonly sections=(
     "Goal"
     "Changes"
     "Tests"
     "Risks"
     "Out of scope"
-    "Kontrakty dotknięte?"
-    "Testy GPU nieuruchomione lokalnie"
-    "Kontrole przed scaleniem"
+    "Contracts touched?|Kontrakty dotknięte?"
+    "GPU tests not run locally|Testy GPU nieuruchomione lokalnie"
+    "Pre-merge checks|Kontrole przed scaleniem"
 )
 readonly required_content=("Goal" "Changes" "Tests")
 
@@ -85,11 +86,25 @@ has_section() {
     grep -qxF -- "## $1" <<<"$(sed -E 's/[[:space:]]+$//' <<<"$body")"
 }
 
+# Prints the first heading of "$1" ("name|alias|...") present in the description; fails if none is.
+find_section() {
+    local name names
+    IFS='|' read -ra names <<<"$1"
+    for name in "${names[@]}"; do
+        if has_section "$name"; then
+            printf '%s\n' "$name"
+            return 0
+        fi
+    done
+    return 1
+}
+
 if [[ -z "${body//[[:space:]]/}" ]]; then
     fail "Opis PR jest pusty. Użyj szablonu .github/pull_request_template.md."
 else
     for section in "${sections[@]}"; do
-        has_section "$section" || fail "Brak sekcji „## $section” w opisie PR (szablon .github/pull_request_template.md)."
+        find_section "$section" >/dev/null ||
+            fail "Brak sekcji „## ${section%%|*}” w opisie PR (szablon .github/pull_request_template.md)."
     done
     for section in "${required_content[@]}"; do
         if has_section "$section"; then
@@ -97,10 +112,10 @@ else
             [[ -n "${text//[[:space:]]/}" ]] || fail "Sekcja „## $section” w opisie PR jest pusta."
         fi
     done
-    if has_section "Kontrole przed scaleniem"; then
-        unchecked=$(section_text "Kontrole przed scaleniem" | grep -cE '^[[:space:]]*[-*][[:space:]]+\[ \]' || true)
+    if checks=$(find_section "Pre-merge checks|Kontrole przed scaleniem"); then
+        unchecked=$(section_text "$checks" | grep -cE '^[[:space:]]*[-*][[:space:]]+\[ \]' || true)
         if [[ "$unchecked" -gt 0 ]]; then
-            warn "Nieodhaczone pozycje w „Kontrole przed scaleniem”: $unchecked. Odhacz je przed merge."
+            warn "Nieodhaczone pozycje w „$checks”: $unchecked. Odhacz je przed merge."
         fi
     fi
 fi

@@ -4,7 +4,8 @@ C++23 2D game prototype with material simulation: GPU liquids (PBF) and grains (
 OpenGL 4.3 compute, a CPU reference thermochemical model, a mission, a training arena and
 two laboratories. SDL 3.4.18 + Dear ImGui 1.93.0 (fetched by CMake with pinned SHA-256).
 Targets Windows (MSVC) and Linux/WSL2 (GCC >= 13). User-facing docs are in **Polish**;
-keep new docs, UI strings and error messages in Polish, code identifiers and comments in English.
+keep new docs, UI strings and error messages in Polish; code identifiers, comments, commit messages and PR titles and
+descriptions in English.
 
 ## Build and test
 
@@ -108,6 +109,7 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 ## Workflow
 
 - One change = one new branch = one PR, described as Goal / Changes / Tests / Risks / Out of scope.
+  Commit messages, PR titles and PR descriptions are in English (older history is in Polish).
   Do not merge before CI is green. Add new `*.sh` files with `git update-index --chmod=+x`
   (CI rejects tracked `.sh` files that are not 100755, except the sourced `scripts/linux-env.sh`).
 - Fill in `.github/pull_request_template.md` (all sections, contracts touched, GPU tests not run locally).
@@ -115,7 +117,7 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
   file > 1 MB, raw data (`docs/measurements/**`, `*.csv`/`*.bmp` outside `assets/`) or > 800 changed code lines
   without the `large-pr-approved` label.
 - Before merging run `/review-pr <number>` (subagent `pr-reviewer`, posts a comment review). Do not merge while CI
-  is red or not finished. Every item under „Kontrole przed scaleniem” in the PR description must be checked.
+  is red or not finished. Every item under "Pre-merge checks" in the PR description must be checked.
 
 ## Definition of done
 

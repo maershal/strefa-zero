@@ -1,47 +1,47 @@
 ## Goal
 
-<!-- Po co ta zmiana: problem, decyzja albo pomiar, który ją uzasadnia. Jeden temat na PR. -->
+<!-- Why this change: the problem, decision or measurement behind it. One topic per PR. PR text and commits are in English. -->
 
 ## Changes
 
-<!-- Co dokładnie się zmienia. Każda zmiana zachowania, wartości domyślnej lub semantyki ustawień wymieniona wprost. -->
+<!-- What exactly changes. Name every change of behaviour, default value or setting semantics explicitly. -->
 
 ## Tests
 
-<!-- Uruchomione testy: platforma, kompilator, sterownik GPU, wynik (np. `./scripts/build.sh --test-suite cpu` 15/15). -->
+<!-- Tests run: platform, compiler, GPU driver, result (e.g. `./scripts/build.sh --test-suite cpu` 15/15). -->
 
 ## Risks
 
-<!-- Co może się zepsuć, na jakim sprzęcie, jak to wykryć i wycofać. -->
+<!-- What can break, on which hardware, how to detect it and roll it back. -->
 
 ## Out of scope
 
-<!-- Co świadomie zostaje na później. -->
+<!-- What is deliberately left for later. -->
 
-## Kontrakty dotknięte?
+## Contracts touched?
 
-<!-- Zaznacz każdy dotknięty kontrakt (CLAUDE.md › Contracts) i podaj link lub cytat zgody właściciela. Jeśli żaden, zaznacz ostatnią pozycję. -->
+<!-- Check every contract touched (CLAUDE.md › Contracts) and give a link to or quote of the owner's approval. If none, check the last item. -->
 
-- [ ] SSBO 0-7 (bindingi)
-- [ ] ABI cząstki 64 B
+- [ ] SSBO 0-7 (bindings)
+- [ ] 64-byte particle ABI
 - [ ] `WorldCommand` / `WorldEvent` (64 B, align 16)
-- [ ] Nagrania v1-v3 (odczyt)
-- [ ] Fallback GL 3.3
-- [ ] Domyślne opcje GPU (termika, oświetlenie, phase gating, PBF restrict, …)
-- [ ] Progi i tolerancje testów
-- [ ] Limit 15 opcji StrefaZero
-- [ ] Żaden
+- [ ] Recordings v1-v3 (reading)
+- [ ] GL 3.3 fallback
+- [ ] GPU default options (thermal, lighting, phase gating, PBF restrict, …)
+- [ ] Test thresholds and tolerances
+- [ ] 15-option limit of StrefaZero
+- [ ] None
 
-## Testy GPU nieuruchomione lokalnie
+## GPU tests not run locally
 
-<!-- Nazwy testów CTest (np. `gpu.mission`, `app.opengl33_smoke`) albo „brak”. -->
+<!-- CTest names (e.g. `gpu.mission`, `app.opengl33_smoke`) or "none". -->
 
-## Kontrole przed scaleniem
+## Pre-merge checks
 
-<!-- Odhacz tuż przed merge. Workflow `pr-hygiene` ostrzega o nieodhaczonych pozycjach. -->
+<!-- Check right before merging. The `pr-hygiene` workflow warns about unchecked items. -->
 
-- [ ] CI ukończone i zielone (Linux, Windows, pr-hygiene)
-- [ ] `/review-pr <numer>` uruchomiony, blokery i uwagi „major” rozwiązane lub opisane
-- [ ] Opis zgodny z diffem, jeden temat
-- [ ] `./scripts/build.sh --test-suite cpu` i `./scripts/format.sh --check` zielone
-- [ ] Surowe pomiary w strefa-zero-measurements, nie w tym repo
+- [ ] CI finished and green (Linux, Windows, pr-hygiene)
+- [ ] `/review-pr <number>` run, blockers and "major" findings resolved or explained
+- [ ] Description matches the diff, one topic
+- [ ] `./scripts/build.sh --test-suite cpu` and `./scripts/format.sh --check` green
+- [ ] Raw measurements in strefa-zero-measurements, not in this repository
