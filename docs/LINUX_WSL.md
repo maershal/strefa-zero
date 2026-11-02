@@ -115,7 +115,8 @@ ctest --preset linux-release -LE graphics
 ## Testy i paczka
 
 `build.sh` domyślnie uruchamia testy CPU oraz krótkie testy okna OpenGL 3.3,
-podstawowego okna, protokołu misji i laboratorium GPU. `--test-suite cpu` wybiera tylko
+podstawowego okna (8/8 ekranów), protokołu misji, ekranu misji (`gpu.mission_ui_quick`),
+laboratorium GPU i powrotu do menu po błędzie trybu (`app.mode_faults`). `--test-suite cpu` wybiera tylko
 testy bez okna, `--test-suite all` pełny CTest, a `--skip-tests` samą kompilację.
 Testy GPU wymagają kontekstu 4.3; na starszym sterowniku kod 77 oznacza
 **pominięcie**, a nie zaliczenie fizyki GPU. Testy graficzne wykonuj szeregowo.
@@ -125,7 +126,8 @@ Pełne QA jest znacznie dłuższe, zwłaszcza na llvmpipe.
 najmniej 900 klatek, 1700 ticków i braku utraty czasu, z limitem 60 s. Timeout
 występował także w Windows przed portem ([raport I05](https://github.com/maershal/strefa-zero/blob/main/docs/I05_SHARED_WORLD.md)).
 Test zachowuje próg i pozostaje w pełnym QA (`--test-suite all`, etykieta
-`performance`); krótki zestaw sprawdza protokół misji przez `gpu.gameplay`.
+`performance`); krótki zestaw sprawdza protokół misji przez `gpu.gameplay`, a sam
+ekran misji przez `gpu.mission_ui_quick` (180 klatek, bez wymogu ticków).
 Przeniesienie na Linux nie zamyka wcześniejszego odbioru wydajności.
 
 ```bash
