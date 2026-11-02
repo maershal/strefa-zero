@@ -94,7 +94,10 @@ jobs:
           ./scripts/build.sh --test-suite cpu --jobs "$(nproc)" --junit-dir build/junit \
             --dependency-cache ~/.cache/strefa-deps
           ccache --show-stats
+      # STREFA_REQUIRE_GL43=1: a GPU test without OpenGL 4.3 fails (exit 1) instead of being skipped (77).
       - name: Test windows and compute shaders with Mesa
+        env:
+          STREFA_REQUIRE_GL43: "1"
         run: |
           xvfb-run -a -s '-screen 0 1280x720x24' \
             ctest --test-dir build/linux-release --output-on-failure -L '^ci-smoke$' \
@@ -103,6 +106,9 @@ jobs:
             xvfb-run -a -s '-screen 0 1280x720x24' \
             ctest --test-dir build/linux-release --output-on-failure -L '^ci-gl33$' \
             --output-junit "$PWD/build/junit/gl33.xml"
+      # Any other skip (e.g. gpu.shader_cache without program binaries) must not leave the job green either.
+      - name: Require no skipped window tests
+        run: python3 scripts/junit-summary.py --fail-on-skipped 'Mesa' build/junit/{smoke,gl33}.xml
       - name: Test summary
         if: always()
         run: python3 scripts/junit-summary.py 'Linux (Release)' build/junit/{cpu,smoke,gl33}.xml >> "$GITHUB_STEP_SUMMARY"

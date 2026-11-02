@@ -31,10 +31,7 @@ int main(int argc, char** argv) {
         unsynced.vsync = false;
         if (!window->apply_video(unsynced, resized) || window->vsync_enabled())
             throw std::runtime_error{"Cannot retain or select disabled VSync"};
-        GLint major{}, minor{};
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        glGetIntegerv(GL_MINOR_VERSION, &minor);
-        if (major < 4 || (major == 4 && minor < 3)) return 77;
+        if (!strefa::platform::context_has_gl43()) return strefa::platform::missing_gl43_exit_code();
 
         auto created = strefa::gpu::ParticleWorld::create(argv[1]);
         if (!created) throw std::runtime_error{created.error()};

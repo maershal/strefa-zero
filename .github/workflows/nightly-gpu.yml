@@ -1,0 +1,77 @@
+name: Nightly GPU
+
+# Every `graphics` test on Mesa llvmpipe, one at a time; pull requests run only the `ci-smoke` subset in linux.yml.
+# Not a required check: a red run is a report to read, not a merge gate.
+on:
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 500M
+
+jobs:
+  graphics-full:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 240
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      SDL_VIDEO_DRIVER: x11
+      STREFA_REQUIRE_GL43: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build and graphics dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config ccache \
+            libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
+            libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev xvfb xauth
+      - name: Restore pinned dependency archives
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/strefa-deps
+          key: strefa-deps-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-nightly-gpu-${{ github.sha }}
+          restore-keys: |
+            ccache-nightly-gpu-
+            ccache-build-and-test-main-
+      # llvmpipe is several times slower than a GPU: only the time limits grow (x3), every check stays the same.
+      - name: Build
+        run: |
+          ccache --zero-stats
+          ./scripts/build.sh --skip-tests --jobs "$(nproc)" --dependency-cache ~/.cache/strefa-deps \
+            -- -DSTREFA_GPU_TIMEOUT_SCALE=3
+          ccache --show-stats
+      - name: Run every graphics test with Mesa
+        run: |
+          mkdir -p build/junit
+          xvfb-run -a -s '-screen 0 1280x720x24' \
+            ctest --test-dir build/linux-release --output-on-failure --parallel 1 -L graphics \
+            --output-junit "$PWD/build/junit/graphics.xml"
+      - name: Test summary
+        if: always()
+        run: python3 scripts/junit-summary.py 'Linux (Mesa, wszystkie testy graphics)' build/junit/graphics.xml >> "$GITHUB_STEP_SUMMARY"
+      # Reports, CSV and progress.txt of every profile; BMP captures stay out to keep the artifact small.
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: Linux-nightly-gpu-profiles
+          retention-days: 14
+          path: |
+            build/junit/
+            build/linux-release/Testing/Temporary/
+            build/linux-release/*profile/**
+            !build/linux-release/*profile/**/*.bmp

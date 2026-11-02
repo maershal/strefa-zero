@@ -23,10 +23,7 @@ int main(int argc, char** argv) {
         settings.vsync = false;
         auto window = strefa::platform::Window::create(settings, true, true);
         if (!window) throw std::runtime_error{window.error()};
-        GLint major{}, minor{};
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        glGetIntegerv(GL_MINOR_VERSION, &minor);
-        if (major < 4 || (major == 4 && minor < 3)) return 77;
+        if (!strefa::platform::context_has_gl43()) return strefa::platform::missing_gl43_exit_code();
         auto debug = strefa::platform::GlDebugLog::create(output / "gl-debug.txt");
         if (debug) debug->set_phase(strefa::platform::DebugPhase::validation);
         strefa::gpu::detail::DeviceContext device;

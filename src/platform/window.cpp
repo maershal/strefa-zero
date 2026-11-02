@@ -4,6 +4,8 @@
 
 #include <algorithm>
 #include <cmath>
+#include <iostream>
+#include <string_view>
 #include <utility>
 
 namespace strefa::platform {
@@ -141,6 +143,24 @@ void Window::clear() const {
 }
 void Window::present() const {
     SDL_GL_SwapWindow(window_.get());
+}
+
+bool context_has_gl43() noexcept {
+    GLint major{}, minor{};
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    return major > 4 || (major == 4 && minor >= 3);
+}
+int missing_gl43_exit_code() {
+    // SDL_getenv instead of std::getenv: MSVC deprecates the latter (C4996 under /WX).
+    const char* required = SDL_getenv("STREFA_REQUIRE_GL43");
+    if (!required || std::string_view{required} != "1") return 77;
+    GLint major{}, minor{};
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    std::cerr << "Brak OpenGL 4.3 (kontekst " << major << '.' << minor
+              << "), a STREFA_REQUIRE_GL43=1 wymaga testów GPU.\n";
+    return 1;
 }
 
 } // namespace strefa::platform

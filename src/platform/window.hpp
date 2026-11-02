@@ -73,4 +73,10 @@ private:
     std::string warning_;
 };
 
+// The GPU world, its tools and the mission need OpenGL 4.3 compute shaders (current context).
+[[nodiscard]] bool context_has_gl43() noexcept;
+// Exit code of a GPU test without OpenGL 4.3: 77 (CTest skip), or 1 with STREFA_REQUIRE_GL43=1 (CI on Mesa),
+// which also reports the context version on stderr.
+[[nodiscard]] int missing_gl43_exit_code();
+
 } // namespace strefa::platform

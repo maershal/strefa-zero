@@ -19,6 +19,7 @@ int main(int argc, char** argv) {
         strefa::core::Settings settings;
         auto window = strefa::platform::Window::create(settings, true, true);
         if (!window) throw std::runtime_error{window.error()};
+        if (!strefa::platform::context_has_gl43()) return strefa::platform::missing_gl43_exit_code();
         auto debug = strefa::platform::GlDebugLog::create(output / "gl-debug.txt");
         if (debug) debug->set_phase(strefa::platform::DebugPhase::validation);
         strefa::gpu::ExecutionOptions execution;
