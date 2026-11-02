@@ -96,8 +96,9 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 
 ## Protokół pomiaru
 
-- Tools: `StrefaQA --scene-benchmark <lista|all> [--seconds N] [--vsync on|off]`, telemetry `scripts/profiling/GpuTelemetry.psm1`,
-  soak `scripts/profiling/soak.ps1`; step-by-step Windows procedure in `docs/maintenance/GPU_CHECK.md`.
+- Tools: `StrefaQA --scene-benchmark <lista|all> [--seconds N] [--vsync on|off] [--repeat N|--loop-minutes M]`, telemetry
+  `scripts/profiling/GpuTelemetry.psm1`, soak `scripts/profiling/soak.ps1 [-SingleProcess] [-Baseline <csv>]`; procedure and
+  metric definitions (budget share, frames by tick count) in `docs/maintenance/GPU_CHECK.md`.
 - Laptop on AC power, balanced/high-performance plan recorded; start with a cooled GPU (idle >= 5 min, temperature noted).
 - A/B comparisons: >= 3 repetitions in ABBA order, same build flags, same window size and VSync setting.
 - Record telemetry for every run; discard runs whose windows show an active clock event reason other than `gpu_idle`
