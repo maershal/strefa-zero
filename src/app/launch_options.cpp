@@ -49,7 +49,7 @@ int LaunchOptions::test_count() const {
          + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
          + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
          + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check
-         + mission_ui_smoke + fault_smoke;
+         + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty();
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -66,6 +66,7 @@ SmokeScenario LaunchOptions::smoke_scenario() const {
     if (session_smoke) return SmokeScenario::session;
     if (mission_ui_smoke) return SmokeScenario::mission_quick;
     if (fault_smoke) return SmokeScenario::mode_faults;
+    if (!benchmark_scenes.empty()) return SmokeScenario::scene_benchmark;
     return SmokeScenario::none;
 }
 std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, OptionScope scope) {
@@ -99,19 +100,37 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         else if (argument == "--gpu-thermal-benchmark")
             result.thermal_benchmark = true;
         else if (argument == "--gpu-thermal-scene" && i + 1 < argc) {
-            const std::string_view scene{argv[++i]};
-            if (scene == "fire")
-                result.thermal_scene = 1;
-            else if (scene == "oil")
-                result.thermal_scene = 2;
-            else if (scene == "quench")
-                result.thermal_scene = 3;
-            else if (scene == "phases")
-                result.thermal_scene = 4;
-            else
-                return std::unexpected{"Scena termiki: fire, oil, quench, phases."};
+            const auto scene = find_scene_id(thermal_scene_ids, argv[++i], "termiki");
+            if (!scene) return std::unexpected{scene.error()};
+            result.thermal_scene = *scene + 1;
             result.gpu_thermal.enabled = true;
             result.start_in_gpu = true;
+        } else if (argument == "--scene-benchmark" && i + 1 < argc) {
+            auto scenes = parse_benchmark_scenes(argv[++i]);
+            if (!scenes) return std::unexpected{scenes.error()};
+            result.benchmark_scenes = std::move(*scenes);
+        } else if (argument == "--seconds" && i + 1 < argc) {
+            const std::string_view value{argv[++i]};
+            const auto parsed = std::from_chars(value.data(), value.data() + value.size(), result.benchmark_seconds);
+            if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || result.benchmark_seconds < 1
+                || result.benchmark_seconds > 600)
+                return std::unexpected{"Czas pomiaru sceny: 1–600 s."};
+            result.benchmark_tuned = true;
+        } else if ((argument == "--repeat" || argument == "--loop-minutes") && i + 1 < argc) {
+            const bool repeat = argument == "--repeat";
+            const std::string_view value{argv[++i]};
+            unsigned& target = repeat ? result.benchmark_repeat : result.benchmark_loop_minutes;
+            const auto parsed = std::from_chars(value.data(), value.data() + value.size(), target);
+            if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || target < 1
+                || target > (repeat ? 1000U : 240U))
+                return std::unexpected{repeat ? "Liczba przebiegów (--repeat): 1–1000."
+                                              : "Czas pętli (--loop-minutes): 1–240 min."};
+            result.benchmark_tuned = true;
+        } else if (argument == "--vsync" && i + 1 < argc) {
+            const std::string_view value{argv[++i]};
+            if (value != "on" && value != "off") return std::unexpected{"VSync benchmarku: on lub off."};
+            result.benchmark_vsync = value == "on";
+            result.benchmark_tuned = true;
         } else if (argument == "--gpu-thermal" && i + 1 < argc) {
             const std::string_view mode{argv[++i]};
             if (mode != "on" && mode != "off") return std::unexpected{"Termika GPU: on lub off."};
@@ -472,9 +491,11 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 + result.start_in_mission
         > 1)
         return std::unexpected{"Wybierz jeden tryb startowy."};
-    if ((result.test_seconds || result.test_unpaced || result.test_window_size.has_value()) && !result.mission_smoke
-        && !result.gpu_smoke_test)
+    const bool window_measurement = result.mission_smoke || result.gpu_smoke_test;
+    if ((result.test_seconds || result.test_unpaced) && !window_measurement)
         return std::unexpected{"Opcje pomiaru okna wymagają testu misji lub laboratorium GPU."};
+    if (result.test_window_size.has_value() && !window_measurement && result.benchmark_scenes.empty())
+        return std::unexpected{"Opcja --test-window-size wymaga testu misji, laboratorium GPU lub benchmarku scen."};
     if (result.coupling_reference_control && result.coupling_legacy_check)
         return std::unexpected{"Wybierz jedną kontrolę sprzężenia: reference control albo legacy."};
     if (result.cost_profile
@@ -485,6 +506,12 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         return std::unexpected{
                 "Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
     if (result.test_count() > 1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if (result.benchmark_tuned && result.benchmark_scenes.empty())
+        return std::unexpected{"Opcje --seconds, --vsync, --repeat i --loop-minutes wymagają --scene-benchmark."};
+    if (result.benchmark_repeat > 1 && result.benchmark_loop_minutes)
+        return std::unexpected{"Wybierz --repeat albo --loop-minutes."};
+    if (!result.benchmark_scenes.empty() && result.start_mode() != StartMode::menu)
+        return std::unexpected{"Benchmark scen sam wybiera sceny; usuń opcje startowe."};
     if ((result.test_vsync.has_value() || result.test_frame_limit.has_value()) && !result.is_window_smoke())
         return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;

@@ -28,6 +28,7 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 ## Utrzymanie — [maintenance/](maintenance/)
 
 - [INVENTORY.md](maintenance/INVENTORY.md) — flagi, kod QA i testy CTest przed podziałem StrefaZero / StrefaQA.
+- [GPU_CHECK.md](maintenance/GPU_CHECK.md) — pomiar scen i soak GPU na Windows: co uruchomić i co odesłać.
 
 ## Plany — [plans/](plans/)
 

@@ -11,7 +11,11 @@ namespace strefa::app {
 int run_main(int argc, char** argv, OptionScope scope, const DiagnosticRunner& diagnostics) {
     const auto options = parse_options(argc, argv, scope);
     if (!options) {
-        SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Strefa Zero", options.error().c_str(), nullptr);
+        // StrefaQA runs unattended from scripts; a modal box would block them until the timeout.
+        if (scope == OptionScope::all)
+            std::cerr << options.error() << '\n';
+        else
+            SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Strefa Zero", options.error().c_str(), nullptr);
         return 1;
     }
     if (options->help) {
@@ -29,6 +33,7 @@ int run_main(int argc, char** argv, OptionScope scope, const DiagnosticRunner& d
             std::error_code ignored;
             std::filesystem::create_directories(options->profile, ignored);
             std::ofstream{options->profile / "smoke-error.txt"} << error;
+            if (scope == OptionScope::all) std::cerr << error << '\n';
         } else
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Strefa Zero — błąd", error.c_str(), nullptr);
     };

@@ -119,6 +119,10 @@ kodem 77, który CTest oznacza jako pominięty; ze zmienną `STREFA_REQUIRE_GL43
 kodem 1, więc brak GL 4.3 nie zostawia zielonego wyniku. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
 `--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`
 i kończą proces. Skrypty `scripts/profiling/*.ps1` przyjmują `-Executable StrefaQA.exe`.
+Pomiar scen w oknie: `StrefaQA --scene-benchmark <lista|all> [--seconds 60] [--vsync on|off]
+[--repeat N | --loop-minutes M] [--test-window-size W H] --profile <katalog>` (identyfikatory `gpu:<scena>`,
+`mission`, `thermal:<scena>`, `lab:<scena>`; wyniki w `scene-benchmark.csv`, procedura pomiaru i opis kolumn:
+[GPU_CHECK.md](docs/maintenance/GPU_CHECK.md)).
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
 1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
 `errors.log`).

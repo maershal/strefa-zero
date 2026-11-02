@@ -1,4 +1,5 @@
 #pragma once
+#include "app/scene_benchmark.hpp"
 #include "gpu/diagnostics.hpp"
 #include "gpu/profiling.hpp"
 #include "gpu/render_options.hpp"
@@ -10,12 +11,23 @@
 #include <functional>
 #include <optional>
 #include <string>
+#include <vector>
 
 namespace strefa::app {
 
 // The parser allows at most one start mode and at most one test, so each maps to a single value.
 enum class StartMode { menu, cpu_laboratory, cpu_arena, gpu_laboratory, mission };
-enum class SmokeScenario { none, menu, cpu_laboratory, gpu_laboratory, mission, session, mission_quick, mode_faults };
+enum class SmokeScenario {
+    none,
+    menu,
+    cpu_laboratory,
+    gpu_laboratory,
+    mission,
+    session,
+    mission_quick,
+    mode_faults,
+    scene_benchmark
+};
 // StrefaZero accepts only the player options; StrefaQA and the contract tests accept every option.
 enum class OptionScope { player, all };
 
@@ -39,6 +51,11 @@ struct LaunchOptions {
             neighbor_profile{}, coupling_test{}, coupling_profile{};
     gpu::ThermalOptions gpu_thermal;
     unsigned thermal_scene{};
+    std::vector<BenchmarkScene> benchmark_scenes; // --scene-benchmark, one window run per scene
+    unsigned benchmark_seconds{60};
+    unsigned benchmark_repeat{1};      // --repeat: passes over the scene list in one process
+    unsigned benchmark_loop_minutes{}; // --loop-minutes: start passes until this much time has passed
+    bool benchmark_vsync{true}, benchmark_tuned{};
     bool thermal_check{}, thermal_benchmark{};
     gpu::VfxOptions gpu_vfx;
     bool vfx_check{}, vfx_benchmark{};

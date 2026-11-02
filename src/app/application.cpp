@@ -4,6 +4,7 @@
 #include "app/cpu_vfx.hpp"
 #include "app/frame_profile.hpp"
 #include "app/scenario_runner.hpp"
+#include "app/scene_benchmark.hpp"
 #include "app/simulation_world.hpp"
 #include "build_info.hpp"
 #include "platform/gl_debug.hpp"
@@ -28,6 +29,7 @@
 #include <format>
 #include <fstream>
 #include <iomanip>
+#include <iostream>
 #include <memory>
 #include <optional>
 #include <stdexcept>
@@ -69,6 +71,16 @@ struct ApplicationAssets {
     ui::Image soldier, parts, weapons;
 };
 
+// One --scene-benchmark scene: settings in, collected frames and GPU samples out.
+struct BenchmarkRun {
+    BenchmarkScene scene;
+    double warmup_seconds{}, measure_seconds{};
+    BenchmarkRecord record;
+    std::uint64_t measure_started_ns{};
+    std::array<std::uint64_t, 3> drops_at_start{}; // Metrics::*_timings_dropped when the window opened
+    bool measuring{}, completed{};
+};
+
 struct LaunchConfig {
     sim::PhysicsConfig physics;
     gpu::ProfileOptions profiling;
@@ -80,8 +92,10 @@ struct LaunchConfig {
     bool unpaced{};
     gpu::ThermalOptions thermal;
     unsigned thermal_scene{}, test_seconds{};
+    std::optional<unsigned> gpu_scene{}, lab_scene{}; // set per scene by the scene benchmark
     StartMode start{StartMode::menu};
     SmokeScenario smoke{SmokeScenario::none};
+    BenchmarkRun* benchmark{};
 };
 
 class Application {
@@ -112,7 +126,12 @@ public:
           start_{config.start},
           smoke_{config.smoke} {
         thermal_options_ = config.thermal;
-        initial_thermal_scene_ = config.thermal_scene;
+        if (config.thermal_scene)
+            initial_scene_ = SceneConfiguration{false, gpu::Scene::empty, config.thermal_scene};
+        else if (config.gpu_scene)
+            initial_scene_ = SceneConfiguration{false, static_cast<gpu::Scene>(*config.gpu_scene)};
+        if (config.lab_scene) lab_controls_.scene = static_cast<sim::Scene>(*config.lab_scene);
+        benchmark_ = config.benchmark;
         window_seconds_ = config.test_seconds;
         gpu_controls_.thermal_enabled = config.thermal.enabled;
         vfx_options_ = config.vfx;
@@ -132,6 +151,7 @@ public:
         const bool mission_quick = smoke_ == SmokeScenario::mission_quick;
         const bool fault_smoke = smoke_ == SmokeScenario::mode_faults;
         const bool window_test = smoke_ != SmokeScenario::none;
+        const bool bench = smoke_ == SmokeScenario::scene_benchmark;
         const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
         const bool start_in_arena = start_ == StartMode::cpu_arena;
         const bool start_gpu = start_ == StartMode::gpu_laboratory;
@@ -159,6 +179,8 @@ public:
         if (start_mission || mission_smoke || session_smoke || mission_quick) {
             if (!perform(ui::Action::open_mission) && !start_mission) return std::unexpected{message_};
         }
+        // A benchmark scene that cannot open (e.g. no OpenGL 4.3) fails instead of measuring the menu.
+        if (bench && state_.screen == ui::Screen::main_menu) return std::unexpected{message_};
         // The scripted mission route is indexed by tick, so the run ends after its ticks at any FPS.
         constexpr std::uint64_t mission_smoke_min_ticks = ScenarioRunner::mission_smoke_min_ticks;
         ScenarioRunner scenario{smoke_test, lab_smoke, gpu_smoke, mission_smoke, gpu_profiling_.collect, session_smoke};
@@ -416,7 +438,7 @@ public:
                             static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle));
                 }
                 if (gpu_frame) {
-                    update_gpu(gpu_input, sim_seconds, focused || gpu_smoke || session_smoke);
+                    update_gpu(gpu_input, sim_seconds, focused || gpu_smoke || session_smoke || bench);
                 }
                 if (state_.screen == ui::Screen::laboratory) {
                     const auto updated = update_lab(input, sim_seconds);
@@ -427,15 +449,16 @@ public:
                     lab_controls_.previous.reset();
                 }
                 if (state_.screen == ui::Screen::gpu_mission && action != ui::Action::back) {
-                    update_mission(arena_input, sim_seconds, focused || mission_smoke || session_smoke || mission_quick,
-                                   mission_smoke || session_smoke || mission_quick);
+                    update_mission(arena_input, sim_seconds,
+                                   focused || mission_smoke || session_smoke || mission_quick || bench,
+                                   mission_smoke || session_smoke || mission_quick || bench);
                     if (mission_smoke) {
                         const auto& metrics = simulation_->metrics();
                         const bool timing_available = gpu::effective_timer_mode(gpu_profiling_) != gpu::TimerMode::off
                                                    && metrics.timing_samples > 0;
                         mission_frame = std::array<double, 12>{static_cast<double>(frames),
                                                                frame_ms,
-                                                               metrics.gpu_ms,
+                                                               metrics.physics_ms,
                                                                metrics.cpu_submit_ms,
                                                                simulation_.clock().dropped_seconds(),
                                                                ui_poll_ms,
@@ -458,6 +481,7 @@ public:
                     && simulation_)
                     update_clock_stats(sim_seconds, static_cast<double>(frame_start) / 1e9);
                 if (mission_smoke && simulation_) scenario.mission_clock_frame(*this, sim_seconds, frame_start);
+                if (bench) record_benchmark_frame(frame_start, frame_ms);
                 mark(frame_profile.update_ms);
                 if (profile_frames) {
                     frame_profile.world_render_ms = world_render_submit_ms_;
@@ -536,7 +560,7 @@ public:
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
                     mark(frame_profile.capture_ms);
                 }
-                if ((smoke_test || gpu_smoke || mission_smoke || session_smoke || mission_quick || fault_smoke)
+                if ((smoke_test || gpu_smoke || mission_smoke || session_smoke || mission_quick || fault_smoke || bench)
                     && glGetError() != GL_NO_ERROR)
                     return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
                 mark(frame_profile.validation_ms);
@@ -607,6 +631,94 @@ public:
     }
 
 private:
+    // --scene-benchmark: warm-up frames only advance the baselines; the measurement window
+    // records one row per frame and ends the loop. GPU samples are drained every frame, so the
+    // 10 000-entry queues of ParticleWorld never fill and every sample has a frame time.
+    void record_benchmark_frame(std::uint64_t frame_start, double frame_ms) {
+        auto& run = *benchmark_;
+        // A mode failure returns to the menu; the scene fails instead of measuring the menu.
+        if (state_.screen == ui::Screen::main_menu) {
+            run.record.error = message_.empty() ? std::string{"tryb zamknięty przed końcem pomiaru"} : message_;
+            running_ = false;
+            return;
+        }
+        if (!benchmark_started_ns_) benchmark_started_ns_ = frame_start;
+        const double elapsed = static_cast<double>(frame_start - benchmark_started_ns_) / 1e9;
+        BenchmarkFrame row;
+        row.sdl_ns = frame_start;
+        row.frame_ms = frame_ms;
+        const auto flags = SDL_GetWindowFlags(window_.native());
+        row.window = {(flags & SDL_WINDOW_HIDDEN) == 0, (flags & SDL_WINDOW_INPUT_FOCUS) != 0,
+                      (flags & SDL_WINDOW_MINIMIZED) != 0, (flags & SDL_WINDOW_OCCLUDED) != 0};
+        // frame_ms is the time since the previous frame started, so the reload of a restart made in
+        // the previous call shows up in this frame: flag this one, not the frame that requested it.
+        row.route_reset = std::exchange(benchmark_route_reset_pending_, false);
+        if (row.route_reset && run.measuring) ++run.record.route_resets;
+        // The scripted mission route ends at scripted_mission_ticks; restart it so a long window
+        // keeps measuring the route instead of an idle scene.
+        if (run.scene.kind == BenchmarkScene::Kind::mission && simulation_
+            && simulation_->metrics().steps >= gpu::scripted_mission_ticks) {
+            simulation_.reset(simulation_.scene());
+            benchmark_route_reset_pending_ = true;
+        }
+        double dropped = 0;
+        if (state_.screen == ui::Screen::laboratory && lab_snapshot_) {
+            const auto tick = lab_snapshot_->report.tick;
+            row.ticks = static_cast<unsigned>(tick - std::min(tick, std::exchange(benchmark_lab_tick_, tick)));
+            row.cpu_step_ms = lab_snapshot_->step_ms;
+            dropped = lab_snapshot_->overload_seconds; // worker overrun, cumulative per scene
+        } else if (simulation_) {
+            row.ticks = mission_ticks_this_frame_ + gpu_ticks_this_frame_;
+            row.pending_seconds = simulation_.clock().pending_seconds();
+            dropped = simulation_.clock().dropped_seconds();
+        }
+        // A route restart resets the clock's counter; the difference never goes negative.
+        row.dropped_seconds = std::max(0.0, dropped - std::exchange(benchmark_dropped_, dropped));
+        const bool last = elapsed >= run.warmup_seconds + run.measure_seconds;
+        if (simulation_) {
+            if (last) {
+                glFinish(); // completes the queries of ticks submitted inside the window
+                simulation_->poll(false);
+            }
+            const auto& metrics = simulation_->metrics();
+            const std::array drops{metrics.timings_dropped, metrics.presentation_timings_dropped,
+                                   metrics.render_timings_dropped};
+            auto physics = simulation_->take_timings();
+            auto presentation = simulation_->take_presentation_timings();
+            auto render = simulation_->take_render_timings();
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) {
+                run.drops_at_start = drops; // samples completed during warm-up are discarded above
+                return;
+            }
+            const auto append = [](std::vector<double>& all, const std::vector<double>& frame, unsigned& count,
+                                   double& sum) {
+                count = static_cast<unsigned>(frame.size());
+                for (const double ms : frame) sum += ms;
+                all.insert(all.end(), frame.begin(), frame.end());
+            };
+            auto& record = run.record;
+            append(record.physics_gpu_ms, physics, row.physics_samples, row.physics_gpu_ms);
+            append(record.presentation_gpu_ms, presentation, row.presentation_samples, row.presentation_gpu_ms);
+            append(record.render_gpu_ms, render, row.render_samples, row.render_gpu_ms);
+            record.physics_truncated = drops[0] != run.drops_at_start[0];
+            record.presentation_truncated = drops[1] != run.drops_at_start[1];
+            record.render_truncated = drops[2] != run.drops_at_start[2];
+        } else {
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) return;
+        }
+        // The first measured frame only opens the window (GPU queues drained, baselines set).
+        if (!run.measure_started_ns) run.measure_started_ns = frame_start;
+        row.elapsed_seconds = static_cast<double>(frame_start - run.measure_started_ns) / 1e9;
+        row.utc_unix_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                                  std::chrono::system_clock::now().time_since_epoch())
+                                  .count();
+        run.record.frames.push_back(row);
+        if (!last) return;
+        run.completed = true;
+        running_ = false;
+    }
     // Written right after the first GPU world opens (a test killed later still leaves it)
     // and again at exit with the view switches.
     void write_gpu_startup() const {
@@ -640,7 +752,7 @@ private:
         speed_meter_.sample(wall, metrics.steps);
         const bool timed = metrics.timing_samples > 0;
         if (timed && metrics.timing_samples != last_timing_samples_)
-            gpu_monitor_.sample(scene_seconds_, metrics.gpu_ms);
+            gpu_monitor_.sample(scene_seconds_, metrics.physics_ms); // physics only: lighting/thermal do not trip it
         last_timing_samples_ = metrics.timing_samples;
         clock_stats_ = {speed_meter_.speed(SimulationWorld::tick_seconds), lost_seconds_, timed ? metrics.gpu_ms : 0,
                         gpu_monitor_.slowed()};
@@ -915,10 +1027,7 @@ private:
                 write_gpu_startup();
             }
             simulation_.set_thermal_options(thermal_options_);
-            if (!existing && initial_thermal_scene_) {
-                simulation_.reset({false, gpu::Scene::empty, initial_thermal_scene_});
-                initial_thermal_scene_ = 0;
-            }
+            if (!existing && initial_scene_ && !mission) simulation_.reset(*std::exchange(initial_scene_, {}));
             simulation_->set_actor_textures(static_cast<unsigned>(parts_.handle),
                                             static_cast<unsigned>(weapons_.handle), weapons_.width, weapons_.height);
             simulation_->set_render_options(
@@ -1080,8 +1189,147 @@ private:
     gpu::ThermalOptions thermal_options_;
     StartMode start_{StartMode::menu};
     SmokeScenario smoke_{SmokeScenario::none};
-    unsigned initial_thermal_scene_{}, window_seconds_{};
+    std::optional<SceneConfiguration> initial_scene_; // benchmark scene / --gpu-thermal-scene, first GPU open only
+    unsigned window_seconds_{};
+    BenchmarkRun* benchmark_{};
+    std::uint64_t benchmark_started_ns_{}, benchmark_lab_tick_{};
+    double benchmark_dropped_{};
+    bool benchmark_route_reset_pending_{};
 };
+
+std::int64_t utc_unix_ns() {
+    return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
+            .count();
+}
+
+// --scene-benchmark: a fresh Application (world, clocks, UI state) per scene, in one window and GL context.
+template<class RunScene>
+std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options, const LaunchConfig& base,
+                                                    const platform::Window& window,
+                                                    const std::filesystem::path& profile, RunScene run_scene) {
+    const double seconds = options.benchmark_seconds;
+    const double warmup = std::clamp(seconds / 6, 1.0, 10.0);
+    std::ofstream frames_csv{profile / "scene-benchmark-frames.csv"};
+    std::ofstream summary_csv{profile / "scene-benchmark.csv"};
+    std::ofstream info{profile / "scene-benchmark-info.txt"};
+    if (!frames_csv || !summary_csv || !info) return std::unexpected{"Nie można zapisać wyników benchmarku scen."};
+    const auto anchor_sdl = SDL_GetTicksNS();
+    const auto anchor_utc = utc_unix_ns();
+    const auto anchor_sdl_after = SDL_GetTicksNS();
+    const auto presentation = window.presentation_info();
+    const auto flags = SDL_GetWindowFlags(window.native());
+    int logical_width = 0, logical_height = 0;
+    SDL_GetWindowSize(window.native(), &logical_width, &logical_height);
+#ifdef NDEBUG
+    constexpr bool debug_build = false;
+#else
+    constexpr bool debug_build = true;
+#endif
+    info << "schema=2\nbuild_version=" << build::version << "\nndebug=" << !debug_build
+         << "\ngl_vendor=" << gl_string(GL_VENDOR) << "\ngl_renderer=" << gl_string(GL_RENDERER)
+         << "\ngl_version=" << gl_string(GL_VERSION) << "\nvsync_requested=" << options.benchmark_vsync
+         << "\nvsync_enabled=" << window.vsync_enabled() << "\nswap_interval=" << presentation.swap_interval
+         << "\nrefresh_hz=" << window.refresh_hz() << "\nwindow_pixels=" << presentation.pixel_width << 'x'
+         << presentation.pixel_height << "\nwindow_size=" << logical_width << 'x' << logical_height
+         << "\ndisplay_scale=" << SDL_GetWindowDisplayScale(window.native())
+         << "\nwindow_visible=" << ((flags & SDL_WINDOW_HIDDEN) == 0)
+         << "\nwindow_focused=" << ((flags & SDL_WINDOW_INPUT_FOCUS) != 0)
+         << "\nwindow_minimized=" << ((flags & SDL_WINDOW_MINIMIZED) != 0)
+         << "\nwindow_occluded=" << ((flags & SDL_WINDOW_OCCLUDED) != 0)
+         << "\nwater_quality=" << static_cast<int>(base.render.quality)
+         << "\nlighting_quality=" << static_cast<int>(base.render.lighting.quality)
+         << "\nvfx_quality=" << static_cast<int>(base.vfx.quality)
+         << "\nthermal=" << (base.thermal.enabled ? "on" : "off_except_thermal_scenes")
+         << "\nphysics_threads=" << base.physics.worker_threads << "\nsettings=defaults_core_Settings_no_settings_ini"
+         << "\nframe_limiter="
+         << (base.unpaced             ? "off"
+             : window.vsync_enabled() ? "vsync"
+                                      : "frame_limit")
+         << "\ngpu_timer_mode=" << gpu::timer_mode_name(gpu::effective_timer_mode(base.profiling))
+         << "\nwarmup_seconds=" << warmup << "\nmeasure_seconds=" << seconds << "\nrepeat=" << options.benchmark_repeat
+         << "\nloop_minutes=" << options.benchmark_loop_minutes << "\nscenes=" << options.benchmark_scenes.size()
+         << "\nanchor_sdl_ns=" << anchor_sdl << "\nanchor_utc_unix_ns=" << anchor_utc
+         << "\nanchor_sdl_after_ns=" << anchor_sdl_after
+         << "\nutc_unix_ns=system_clock_after_frame_update_same_epoch_as_GpuTelemetry_csv"
+         << "\nphysics_gpu_ms=commands_solver_diagnostics_thermal_tick"
+         << "\npresentation_gpu_ms=thermal_presentation_lighting_tick_vfx_update_event_submit"
+         << "\nrender_gpu_ms=world_render_pass\ngpu_distributions=all_completed_timer_queries_in_window"
+         << "\nlab_scenes=cpu_worker_thread_no_gpu_physics" << "\nmission=scripted_route_restarted_every_"
+         << gpu::scripted_mission_ticks << "_ticks"
+         << "\nstatus=ok|invalid(window_hidden_minimized_or_occluded)|failed\n";
+    frames_csv << benchmark_frames_header << '\n';
+    summary_csv << benchmark_summary_header << '\n';
+    int failures = 0, measured = 0;
+    const auto loop_started = SDL_GetTicksNS();
+    const bool looping = options.benchmark_repeat > 1 || options.benchmark_loop_minutes;
+    // One process for every pass: a process restart (fresh driver state, idle gap) cannot hide a slow regime.
+    for (unsigned pass = 1;; ++pass) {
+        if (options.benchmark_loop_minutes) {
+            const double minutes = static_cast<double>(SDL_GetTicksNS() - loop_started) / 6e10;
+            if (pass > 1 && minutes >= options.benchmark_loop_minutes) break;
+        } else if (pass > options.benchmark_repeat)
+            break;
+        if (looping) std::cout << std::format("Przebieg {}\n", pass) << std::flush;
+        for (const auto& scene : options.benchmark_scenes) {
+            BenchmarkRun run;
+            run.scene = scene;
+            run.warmup_seconds = warmup;
+            run.measure_seconds = seconds;
+            auto config = base;
+            config.benchmark = &run;
+            config.thermal_scene = 0;
+            config.gpu_scene.reset();
+            config.lab_scene.reset();
+            switch (scene.kind) {
+            case BenchmarkScene::Kind::gpu:
+                config.start = StartMode::gpu_laboratory;
+                config.gpu_scene = scene.index;
+                break;
+            case BenchmarkScene::Kind::mission: config.start = StartMode::mission; break;
+            case BenchmarkScene::Kind::thermal:
+                config.start = StartMode::gpu_laboratory;
+                config.thermal_scene = scene.index;
+                config.thermal.enabled = true;
+                break;
+            case BenchmarkScene::Kind::lab:
+                config.start = StartMode::cpu_laboratory;
+                config.lab_scene = scene.index;
+                break;
+            }
+            const auto id = scene.id();
+            // One failing scene is reported in its row; the remaining scenes are still measured.
+            try {
+                const auto result = run_scene(config);
+                if (result && *result != 0) return *result; // e.g. 77: no OpenGL 4.3 for any scene
+                if (!result && run.record.error.empty()) run.record.error = result.error();
+            } catch (const std::exception& error) {
+                run.record.error = error.what();
+            }
+            if (run.record.error.empty() && !run.completed) run.record.error = "pomiar przerwany przed końcem okna";
+            for (const auto& frame : run.record.frames) frames_csv << benchmark_frame_row(id, pass, frame) << '\n';
+            const bool gpu_physics = scene.kind != BenchmarkScene::Kind::lab;
+            auto summary =
+                    summarize(id, std::move(run.record), gpu_physics ? 1.0 / SimulationWorld::tick_seconds : 0.0);
+            summary.pass = pass;
+            failures += summary.status != BenchmarkStatus::ok;
+            ++measured;
+            summary_csv << benchmark_summary_row(summary) << '\n';
+            std::cout << benchmark_summary_line(summary) << std::endl;
+        }
+        // Rows of finished passes survive a later crash or a TIMEOUT kill.
+        frames_csv.flush();
+        summary_csv.flush();
+    }
+    if (!frames_csv.flush() || !summary_csv.flush() || !info.flush())
+        return std::unexpected{"Niepełny zapis wyników benchmarku scen."};
+    if (failures) {
+        std::cerr << std::format("Benchmark scen: {} z {} scen ze statusem innym niż ok (kolumna status w "
+                                 "scene-benchmark.csv).\n",
+                                 failures, measured);
+        return 1;
+    }
+    return 0;
+}
 
 } // namespace
 
@@ -1118,6 +1366,8 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
         settings.frame_limit = 60;
     }
     if (options.test_vsync.has_value()) settings.vsync = *options.test_vsync;
+    const bool scene_benchmark = !options.benchmark_scenes.empty();
+    if (scene_benchmark) settings.vsync = options.benchmark_vsync;
     if (options.test_frame_limit.has_value()) settings.frame_limit = static_cast<int>(*options.test_frame_limit);
     if (options.test_window_size) {
         settings.width = (*options.test_window_size)[0];
@@ -1125,7 +1375,8 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     }
     auto window = platform::Window::create(settings, !options.legacy_graphics, options.gl_debug);
     if (!window) return std::unexpected{window.error()};
-    if (testing && options.show_test_window) {
+    // The scene benchmark measures what a player sees: a hidden window takes a different presentation path.
+    if (testing && (options.show_test_window || scene_benchmark)) {
         window->show();
         SDL_RaiseWindow(window->native());
     }
@@ -1188,12 +1439,20 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
                               .shader_cache = options.shader_cache,
                               .render = render_options,
                               .vfx = vfx_options,
-                              .unpaced = options.test_unpaced,
+                              .unpaced = options.test_unpaced || (scene_benchmark && !options.benchmark_vsync),
                               .thermal = options.gpu_thermal,
                               .thermal_scene = options.thermal_scene,
                               .test_seconds = options.test_seconds,
                               .start = options.start_mode(),
                               .smoke = options.smoke_scenario()};
+    if (scene_benchmark) {
+        auto result = run_scene_benchmark(options, config, *window, profile, [&](const LaunchConfig& scene) {
+            Application application{*window, *gui, store, settings, application_assets, message, scene};
+            return application.run();
+        });
+        if (gl_debug) gl_debug->set_phase(platform::DebugPhase::shutdown);
+        return result;
+    }
     Application application{*window, *gui, store, settings, application_assets, std::move(message), config};
     auto result = application.run();
     if (gl_debug) gl_debug->set_phase(platform::DebugPhase::shutdown);

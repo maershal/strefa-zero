@@ -36,6 +36,10 @@ enum class Scene {
     inverted_oil,
     oil_drop
 };
+// Command-line and benchmark ids, indexed like Scene.
+inline constexpr std::array scene_ids{
+        "avalanche",         "rain",      "mixed",      "empty",     "water-tank",   "dam-break",
+        "connected-vessels", "oil-water", "sand-water", "hourglass", "inverted-oil", "oil-drop"};
 enum class Material { erase, sand, ash, metal, wall, water, oil };
 // Explicit std430 ABI. State stays on the GPU between edits, simulation and drawing.
 struct alignas(16) Grain {
@@ -50,11 +54,15 @@ struct Stroke {
     Material material{Material::sand};
 };
 struct Metrics {
-    double gpu_ms{}, render_ms{}, cpu_submit_ms{}, gameplay_ms{};
+    // gpu_ms is the whole tick: physics_ms (commands, solver, diagnostics, thermal) plus
+    // presentation_ms (thermal presentation, lighting tick, VFX update, event submit).
+    double gpu_ms{}, physics_ms{}, presentation_ms{}, render_ms{}, cpu_submit_ms{}, gameplay_ms{};
     std::uint64_t steps{};
     unsigned grains{}, water{}, oil{};
     float max_compression{};
     std::uint64_t timing_samples{};
+    // Samples lost because a take_*_timings() queue was full (10 000 entries); cumulative per world.
+    std::uint64_t timings_dropped{}, presentation_timings_dropped{}, render_timings_dropped{};
 };
 
 struct NeighborSnapshot {
@@ -147,7 +155,8 @@ public:
     BodySnapshot read_body(); // synchronous validation only
     void inject_body_for_test(std::span<const std::array<float, 4>> reactions, bool apply = true);
     void save_image(const std::filesystem::path& path) const;
-    std::vector<double> take_timings();
+    std::vector<double> take_timings(); // physics part of each tick (Metrics::physics_ms)
+    std::vector<double> take_presentation_timings();
     std::vector<double> take_render_timings();
     std::vector<double> take_cpu_timings();
     void set_profile_options(const ProfileOptions& options);
@@ -178,7 +187,8 @@ private:
     explicit ParticleWorld(std::shared_ptr<RenderDevice>);
     std::unique_ptr<Impl> impl_;
 };
-MissionInput scripted_mission_input(unsigned tick); // regression route, also used by UI smoke test
+MissionInput scripted_mission_input(unsigned tick);      // regression route, also used by UI smoke test
+inline constexpr unsigned scripted_mission_ticks = 1340; // the route is idle from this tick on
 std::expected<void, std::string> validate_fluid_quality(const std::filesystem::path& shaders,
                                                         const std::filesystem::path& output, const ExecutionOptions&,
                                                         bool benchmark);
