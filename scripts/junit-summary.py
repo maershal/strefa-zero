@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 """Markdown summary of ctest --output-junit reports, for $GITHUB_STEP_SUMMARY.
 
-Usage: scripts/junit-summary.py TITLE REPORT.xml... (missing files are listed as absent)
+Usage: scripts/junit-summary.py [--fail-on-skipped] TITLE REPORT.xml... (missing files are listed as absent)
+
+--fail-on-skipped: exit 1 when a report has skipped tests (exit 77), e.g. GPU tests without OpenGL 4.3 in CI.
 """
 
 import sys
@@ -10,13 +12,18 @@ from pathlib import Path
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
+    args = sys.argv[1:]
+    fail_on_skipped = bool(args) and args[0] == "--fail-on-skipped"
+    if fail_on_skipped:
+        args = args[1:]
+    if len(args) < 2:
         print(__doc__.strip(), file=sys.stderr)
         return 2
-    lines = [f"### {sys.argv[1]}", "", "| Raport | Testy | Zaliczone | Błędy | Pominięte | Czas [s] |",
+    lines = [f"### {args[0]}", "", "| Raport | Testy | Zaliczone | Błędy | Pominięte | Czas [s] |",
              "| --- | ---: | ---: | ---: | ---: | ---: |"]
     failures = []
-    for name in sys.argv[2:]:
+    skips = []
+    for name in args[1:]:
         path = Path(name)
         if not path.is_file():
             lines.append(f"| {path.stem} | brak raportu | | | | |")
@@ -29,14 +36,17 @@ def main() -> int:
         passed = len(cases) - len(failed) - len(skipped)
         lines.append(f"| {path.stem} | {len(cases)} | {passed} | {len(failed)} | {len(skipped)} | {seconds:.1f} |")
         failures += [f"{path.stem}: `{c.get('name')}`" for c in failed]
+        skips += [f"{path.stem}: `{c.get('name')}`" for c in skipped]
         slowest = sorted(cases, key=lambda c: float(c.get("time", 0)), reverse=True)[:5]
         if slowest:
             names = ", ".join("`{}` {:.1f}".format(c.get("name"), float(c.get("time", 0))) for c in slowest)
             lines.append(f"| ↳ najwolniejsze | {names} | | | | |")
     if failures:
         lines += ["", "**Niezaliczone:**", *[f"- {f}" for f in failures]]
+    if skips and fail_on_skipped:
+        lines += ["", "**Pominięte (niedozwolone w tym kroku):**", *[f"- {s}" for s in skips]]
     print("\n".join(lines))
-    return 0
+    return 1 if skips and fail_on_skipped else 0
 
 
 if __name__ == "__main__":
