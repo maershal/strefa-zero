@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <fstream>
 #include <iostream>
+#include <limits>
 #include <stdexcept>
 #include <string_view>
 #include <system_error>
@@ -52,6 +53,10 @@ void float_parsing() {
     check(parse(".5", value) && value == 0.5F && parse("7.", value) && value == 7.0F, "Bare fractions must parse");
     for (const auto text : {"", "+1", " 1", "1,5", "abc", "1e", "1e+", "0x10", "1.5f"})
         check(!parse(text, value), "Malformed floats must be rejected");
+    value = 7.0F;
+    check(!parse("abc", value) && value == 7.0F, "Invalid input must keep the previous value");
+    check(parse("1e-40", value) && value > 0.0F && value < std::numeric_limits<float>::min(),
+          "Subnormal floats must parse");
     const std::string_view huge{"1e999"};
     value = 3.0F;
     check(strefa::core::from_chars(huge.data(), huge.data() + huge.size(), value).ec == std::errc::result_out_of_range
@@ -126,7 +131,7 @@ int main() {
         float_parsing();
         quality_and_experimental();
         replace_file();
-        std::cout << "PASS: round-trip, invalid inputs, atomic replacement and corruption handling\n";
+        std::cout << "PASS: round-trip, invalid inputs, float parsing, atomic replacement and corruption handling\n";
         return 0;
     } catch (const std::exception& error) {
         std::cerr << "FAIL: " << error.what() << '\n';
