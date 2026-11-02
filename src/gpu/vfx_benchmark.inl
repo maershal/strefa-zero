@@ -108,7 +108,7 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
                         pool.poll();
                         const auto counters = pool.snapshot().counters;
                         if (scene == 3 && mode != VfxQuality::off && counters.counts[0] != vfx_capacity)
-                            throw std::runtime_error{"Saturated benchmark lost live particles"};
+                            throw std::runtime_error{"Nasycony benchmark utracił żywe cząstki."};
                         for (unsigned frame = 0; frame < frames.size(); ++frame) {
                             const auto& row = frames[frame];
                             std::array<GLuint64, 3> t{};
@@ -159,6 +159,6 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
         }
     pool.set_options({VfxQuality::low, false});
     s.renderer.resize_for_test(3);
-    if (glGetError() != GL_NO_ERROR) return std::unexpected{"VFX benchmark OpenGL error"};
+    if (glGetError() != GL_NO_ERROR) return std::unexpected{"Błąd OpenGL w benchmarku efektów."};
     return {};
 }

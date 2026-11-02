@@ -118,7 +118,7 @@ std::expected<void, std::string> ParticleWorld::run_thermal_benchmark(const std:
         set_profile_options(original);
         ThermalOptions off;
         set_thermal_options(off);
-        if (glGetError() != GL_NO_ERROR) throw std::runtime_error{"Thermal benchmark GL error"};
+        if (glGetError() != GL_NO_ERROR) throw std::runtime_error{"Błąd OpenGL w benchmarku termiki."};
         return {};
     } catch (const std::exception& e) {
         std::ofstream{output / "thermal-benchmark-error.txt"} << e.what() << '\n';

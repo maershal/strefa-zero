@@ -1,6 +1,6 @@
 namespace strefa::gpu {
 void ParticleWorld::reset_thermal_scene(unsigned scene) {
-    if (scene < 1 || scene > 4) throw std::invalid_argument{"Thermal scene: 1..4"};
+    if (scene < 1 || scene > 4) throw std::invalid_argument{"Scena termiki: 1–4."};
     auto options = thermal_options();
     options.enabled = true;
     set_thermal_options(options);

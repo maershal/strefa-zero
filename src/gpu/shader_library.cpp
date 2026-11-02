@@ -39,8 +39,7 @@ std::string restricted_particle_storage(std::string text) {
             ++count;
         }
         if (count != 2)
-            throw std::logic_error{
-                    "PBF bank declarations changed; review the restrict specialization for both AoS and SoA."};
+            throw std::logic_error{"Zmieniły się deklaracje banków PBF; sprawdź specjalizację restrict dla AoS i SoA."};
     }
     return text;
 }

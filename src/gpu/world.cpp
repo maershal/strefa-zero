@@ -221,7 +221,7 @@ struct ParticleWorld::Impl {
     }
     Kernel& prepare(auto& kernels, int op, bool in_place = false, bool separate = false) {
         auto& k = kernels[execution.specialized || separate ? static_cast<unsigned>(op) : 0];
-        if (!k.id) throw std::logic_error{"Missing compute pass"};
+        if (!k.id) throw std::logic_error{"Brak przebiegu obliczeniowego."};
         auto bases = buffers;
         bases[0] = buffers[current];
         bases[1] = buffers[in_place ? current : 1 - current];
@@ -233,7 +233,7 @@ struct ParticleWorld::Impl {
         // A regression in the guard must still never submit an invalid restrict
         // program to the GPU. The test accepts only ParticleAliasError above.
         if (pbf_fault_binding < bases.size())
-            throw std::runtime_error{"PBF binding fault escaped the production preflight guard."};
+            throw std::runtime_error{"Błąd wiązań PBF ominął kontrolę przed uruchomieniem."};
         if (!execution.cached_bindings) {
             gl.UseProgram(granular[0].id);
             if (k.id != granular[0].id) gl.UseProgram(k.id);
@@ -266,7 +266,8 @@ struct ParticleWorld::Impl {
     std::deque<Explosion> explosions;
     MissionInput controls{};
     void next_generation() {
-        if (epoch == std::numeric_limits<unsigned>::max()) throw std::overflow_error{"World generation exhausted"};
+        if (epoch == std::numeric_limits<unsigned>::max())
+            throw std::overflow_error{"Wyczerpano numerację generacji świata."};
         ++epoch;
         resources->vfx.reset(epoch);
         renderer.lighting.reset(epoch);
@@ -549,9 +550,9 @@ ParticleWorld::create(const std::filesystem::path& shaders, const ExecutionOptio
             || !valid_size(execution.effective_pbf_size())
             || (!execution.specialized && execution.local_size != execution.reduction_size))
             throw std::invalid_argument{
-                    "Compute group sizes must be 64, 128 or 256; ubershaders require matching sizes."};
+                    "Rozmiar grupy obliczeń musi wynosić 64, 128 lub 256, a połączone shadery wymagają zgodnych rozmiarów."};
         // The shared device configures its program cache before VFX and world programs.
-        if (!execution.fluid.valid()) throw std::invalid_argument{"Invalid I07 fluid configuration."};
+        if (!execution.fluid.valid()) throw std::invalid_argument{"Nieprawidłowa konfiguracja cieczy."};
         s.execution = execution;
         // Mesa D3D12 in WSL can skip a nonzero conditional blast dispatch.
         // Keep active-particle indirect dispatch, but use the existing direct
@@ -1167,7 +1168,7 @@ std::shared_ptr<RenderDevice> ParticleWorld::render_device() const {
 }
 void ParticleWorld::set_thermal_options(ThermalOptions value) {
     if (value.pressure_iterations == 0 || value.pressure_iterations > 128)
-        throw std::invalid_argument{"Thermal pressure iterations: 1..128"};
+        throw std::invalid_argument{"Iteracje ciśnienia termiki: 1–128."};
     auto& s = *impl_;
     if (value.enabled && !s.thermal) {
         s.thermal = std::make_unique<detail::ThermalSystem>(s.gl, s.device.state);
@@ -1187,7 +1188,7 @@ void ParticleWorld::set_thermal_view(ThermalView view) {
     if (impl_->thermal) impl_->thermal->view = view;
 }
 void ParticleWorld::set_thermal_brush(const ThermalBrush& brush) {
-    if (!valid(brush)) throw std::invalid_argument{"Invalid thermal brush"};
+    if (!valid(brush)) throw std::invalid_argument{"Nieprawidłowy pędzel termiki."};
     impl_->thermal_brush = brush;
 }
 const ThermalTotals& ParticleWorld::thermal_totals() const {
@@ -1303,7 +1304,7 @@ std::array<bool, 5> ParticleWorld::pbf_restrict_programs() const {
          {std::span<const Impl::Kernel>{impl_->granular}, std::span<const Impl::Kernel>{impl_->mission_kernels},
           std::span<const Impl::Kernel>{impl_->neighbors}, std::span<const Impl::Kernel>{impl_->coupling_kernels}})
         for (const auto& kernel : kernels)
-            if (kernel.particle_restrict) throw std::logic_error{"PBF qualifiers escaped their two-program scope."};
+            if (kernel.particle_restrict) throw std::logic_error{"Kwalifikatory PBF wyszły poza dwa programy."};
     std::array<bool, 5> result{};
     for (unsigned i = 0; i < result.size(); ++i) result[i] = impl_->liquids[i].particle_restrict;
     return result;
@@ -1316,10 +1317,10 @@ std::array<std::string, 5> ParticleWorld::pbf_program_sources_for_test() const {
         GLuint shader{};
         GLsizei attached{};
         s.gl.GetAttachedShaders(s.liquids[i].id, 1, &attached, &shader);
-        if (attached != 1) throw std::logic_error{"PBF program must have one attached compute shader."};
+        if (attached != 1) throw std::logic_error{"Program PBF musi mieć dokładnie jeden shader obliczeniowy."};
         GLint length{};
         s.gl.GetShaderiv(shader, GL_SHADER_SOURCE_LENGTH, &length);
-        if (length <= 1) throw std::logic_error{"PBF program has no retrievable shader source."};
+        if (length <= 1) throw std::logic_error{"Program PBF nie udostępnia źródła shadera."};
         result[i].resize(static_cast<std::size_t>(length));
         GLsizei written{};
         s.gl.GetShaderSource(shader, length, &written, result[i].data());
@@ -1331,7 +1332,7 @@ void ParticleWorld::probe_pbf_alias_for_test(unsigned operation, unsigned source
     auto& s = *impl_;
     if ((operation != 1 && operation != 4) || !s.liquids[operation].particle_restrict || source > 8 || binding >= 8
         || source == binding)
-        throw std::invalid_argument{"Invalid PBF binding fault probe."};
+        throw std::invalid_argument{"Nieprawidłowa próba błędu wiązań PBF."};
     const auto before = s.calls;
     const auto current = s.current;
     s.pbf_fault_source = source;
@@ -1341,14 +1342,14 @@ void ParticleWorld::probe_pbf_alias_for_test(unsigned operation, unsigned source
     } catch (const ParticleAliasError&) {
         s.pbf_fault_source = s.pbf_fault_binding = 8;
         if (s.calls.api_calls != before.api_calls || s.current != current)
-            throw std::logic_error{"PBF alias rejection changed GL state or the current bank."};
+            throw std::logic_error{"Odrzucenie aliasu PBF zmieniło stan OpenGL lub bieżący bank."};
         return;
     } catch (...) {
         s.pbf_fault_source = s.pbf_fault_binding = 8;
         throw;
     }
     s.pbf_fault_source = s.pbf_fault_binding = 8;
-    throw std::logic_error{"PBF alias probe was not rejected."};
+    throw std::logic_error{"Próba aliasu PBF nie została odrzucona."};
 }
 std::array<std::uint32_t, 37> ParticleWorld::read_dispatch_commands() const {
     auto& s = *impl_;
@@ -1395,15 +1396,15 @@ void ParticleWorld::queue_explosion(const Explosion& e) {
     if (e.id == 0 || !std::isfinite(e.x) || !std::isfinite(e.y) || !std::isfinite(e.radius) || !std::isfinite(e.impulse)
         || e.x < 0 || e.x >= width || e.y < 0 || e.y >= height || e.radius <= 0 || e.radius > 32 || e.impulse < 0
         || e.impulse > 80)
-        throw std::invalid_argument{"Invalid GPU explosion"};
-    if (impl_->explosions.size() >= 32) throw std::runtime_error{"GPU explosion command queue full"};
+        throw std::invalid_argument{"Nieprawidłowy wybuch GPU."};
+    if (impl_->explosions.size() >= 32) throw std::runtime_error{"Kolejka wybuchów GPU jest pełna."};
     impl_->explosions.push_back(e);
 }
 void ParticleWorld::configure_mission(const MissionConfig& config) {
     if (!std::isfinite(config.spawn_x) || !std::isfinite(config.spawn_y) || !std::isfinite(config.relative_density)
         || config.spawn_x < 4 || config.spawn_x > width - 4 || config.spawn_y < 18 || config.spawn_y > height
         || config.relative_density <= 0)
-        throw std::invalid_argument{"Invalid GPU player configuration"};
+        throw std::invalid_argument{"Nieprawidłowa konfiguracja gracza GPU."};
     auto& s = *impl_;
     s.reset_body();
     MissionSnapshot g{};
@@ -1435,10 +1436,9 @@ void ParticleWorld::configure_mission(const MissionConfig& config) {
 }
 void ParticleWorld::restore_coupling_checkpoint(const MissionSnapshot& checkpoint, std::uint64_t tick) {
     if (checkpoint.status[0] == 0 || checkpoint.events[0] != 0 || checkpoint.counts[2] != 0)
-        throw std::invalid_argument{
-                "Coupling checkpoint requires an active scene without projectile/destruction events"};
+        throw std::invalid_argument{"Punkt kontrolny sprzężenia wymaga aktywnej sceny bez pocisków i zniszczeń."};
     for (float value : checkpoint.actor)
-        if (!std::isfinite(value)) throw std::invalid_argument{"Nonfinite coupling checkpoint"};
+        if (!std::isfinite(value)) throw std::invalid_argument{"Nieskończona wartość w punkcie kontrolnym sprzężenia."};
     auto& s = *impl_;
     s.reset_body();
     s.explosions.clear();
@@ -1829,7 +1829,7 @@ std::vector<Grain> ParticleWorld::readback() const {
 }
 NeighborSnapshot ParticleWorld::read_neighbors() {
     auto& s = *impl_;
-    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Sorted index required"};
+    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
     NeighborSnapshot result;
@@ -1858,7 +1858,7 @@ NeighborSnapshot ParticleWorld::read_neighbors() {
 std::array<std::uint32_t, 240> ParticleWorld::read_phase_mask() {
     auto& s = *impl_;
     if (s.execution.neighbors == NeighborMode::linked || !s.execution.phase_gating)
-        throw std::logic_error{"Sorted phase-gated index required"};
+        throw std::logic_error{"Wymagany posortowany indeks z bramkowaniem faz."};
     // Keep the same anchor generation as the neighbor index. With reuse enabled
     // bins() preserves the cached index and mask after bounded particle motion.
     s.invalidate_bindings();
@@ -1881,7 +1881,7 @@ void ParticleWorld::start_diagnostic_trace(const TraceConfig& config) {
     auto& s = *impl_;
     if ((config.mode == CostMode::bounds || config.mode == CostMode::snapshots)
         && s.execution.neighbors != NeighborMode::reused)
-        throw std::invalid_argument{"Spatial trace requires the production reused index"};
+        throw std::invalid_argument{"Ślad przestrzenny wymaga produkcyjnego indeksu."};
     const auto cells =
             static_cast<std::size_t>(16 + 3 * width * height + 480 + (s.execution.phase_gating ? 240 : 0)) * 4;
     s.trace.start(config, capacity * sizeof(Grain), cells, capacity * 24);
@@ -1893,7 +1893,7 @@ TraceReport ParticleWorld::read_diagnostic_trace() {
 void ParticleWorld::capture_diagnostic_snapshot(std::string label) {
     auto& s = *impl_;
     if (!s.bins_valid || s.execution.neighbors != NeighborMode::reused)
-        throw std::logic_error{"Snapshot requires an existing valid reused index"};
+        throw std::logic_error{"Migawka wymaga istniejącego, poprawnego indeksu."};
     s.trace.capture(std::move(label), s.epoch, s.metrics.steps, 0, s.execution.soa, s.buffers[s.current], s.buffers[2],
                     s.buffers[3]);
 }
@@ -1948,7 +1948,7 @@ HotAudit ParticleWorld::audit_hot_view() {
 }
 std::vector<std::array<float, 4>> ParticleWorld::audit_neighbors(bool pairs) {
     auto& s = *impl_;
-    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Sorted index required"};
+    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
     std::vector<std::array<float, 4>> result(pairs ? 65536 : capacity);
@@ -1963,9 +1963,9 @@ std::vector<std::array<float, 4>> ParticleWorld::audit_neighbors(bool pairs) {
     return result;
 }
 void ParticleWorld::displace_for_test(std::span<const std::array<float, 4>> deltas) {
-    if (deltas.size() > capacity) throw std::invalid_argument{"Too many test displacements"};
+    if (deltas.size() > capacity) throw std::invalid_argument{"Za dużo testowych przesunięć."};
     auto& s = *impl_;
-    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Sorted index required"};
+    if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
     std::vector<std::array<float, 4>> packed(capacity);
@@ -1977,7 +1977,7 @@ void ParticleWorld::displace_for_test(std::span<const std::array<float, 4>> delt
 }
 BodySnapshot ParticleWorld::read_body() {
     auto& s = *impl_;
-    if (s.execution.coupling == CouplingMode::reference) throw std::logic_error{"Compact coupling required"};
+    if (s.execution.coupling == CouplingMode::reference) throw std::logic_error{"Wymagane zwarte sprzężenie ciał."};
     BodySnapshot result;
     s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     // Copy both headers and command bytes to fresh staging. Validation must not
@@ -1999,7 +1999,7 @@ BodySnapshot ParticleWorld::read_body() {
 void ParticleWorld::inject_body_for_test(std::span<const std::array<float, 4>> reactions, bool apply) {
     auto& s = *impl_;
     if (s.execution.coupling == CouplingMode::reference || reactions.size() > 2 * capacity)
-        throw std::invalid_argument{"Invalid compact body test batch"};
+        throw std::invalid_argument{"Nieprawidłowa testowa paczka ciał."};
     s.invalidate_bindings();
     s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     if (!reactions.empty())
@@ -2048,7 +2048,7 @@ std::vector<float> ParticleWorld::read_boundary_weights() const {
 }
 std::vector<std::array<float, 4>> ParticleWorld::fluid_fields_for_test() {
     auto& s = *impl_;
-    if (!s.execution.fluid.fields()) throw std::logic_error{"Fluid fields disabled."};
+    if (!s.execution.fluid.fields()) throw std::logic_error{"Pola cieczy są wyłączone."};
     s.invalidate_bindings();
     s.bins();
     s.liquid_dispatch(5);

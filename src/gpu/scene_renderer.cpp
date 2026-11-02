@@ -55,7 +55,7 @@ void SceneRenderer::allocate_targets() {
         gl.BindFramebuffer(GL_FRAMEBUFFER, id);
         gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, color, 0);
         if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw std::runtime_error{"Niekompletny framebuffer I08."};
+            throw std::runtime_error{"Niekompletny bufor ramki sceny."};
     };
     fbo(hdr_scene_fbo, hdr_scene);
     fbo(hdr_world_fbo, hdr_world);
@@ -66,7 +66,7 @@ void SceneRenderer::allocate_targets() {
     const std::array<GLenum, 2> attachments{GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1};
     gl.DrawBuffers(2, attachments.data());
     if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error{"Niekompletny MRT sceny I08."};
+        throw std::runtime_error{"Niekompletny MRT sceny."};
     gl.BindFramebuffer(GL_FRAMEBUFFER, 0);
     state.invalidate();
 }
@@ -414,7 +414,7 @@ void SceneRenderer::reset_profiles() {
     terrain_samples.clear();
 }
 void SceneRenderer::resize_for_test(int scale) {
-    if (scale < 1 || scale > 6) throw std::invalid_argument{"Render scale outside 1..6"};
+    if (scale < 1 || scale > 6) throw std::invalid_argument{"Skala renderowania poza zakresem 1–6."};
     if (rw == width * scale) return;
     delete_targets();
     rw = width * scale;

@@ -8,7 +8,7 @@ namespace strefa::sim {
 Recording::Recording(const std::filesystem::path& directory) : directory_{directory} {
     std::filesystem::create_directories(directory_);
     log_.open(directory_ / "steps.csv");
-    if (!log_) throw std::runtime_error{"Cannot open recording log"};
+    if (!log_) throw std::runtime_error{"Nie można otworzyć dziennika nagrania."};
     log_ << "tick,physics_ms,mass,enthalpy,mass_error,energy_error,escaped_mass,escaped_energy,pcg_residual,pcg_iterations,converged,divergence,overfill\n";
 }
 void Recording::capture(const World& world, double ms, RenderMode mode) {
@@ -50,7 +50,7 @@ void Recording::capture(const World& world, double ms, RenderMode mode) {
             file.put(over(p.g, 21));
             file.put(over(p.r, 13));
         }
-    if (!file) throw std::runtime_error{"Cannot write recording frame"};
+    if (!file) throw std::runtime_error{"Nie można zapisać klatki nagrania."};
     frames_.push_back(name.str());
 }
 void Recording::finish() {
@@ -65,6 +65,6 @@ void Recording::finish() {
         html << '"' << frames_[i] << '"';
     }
     html << R"(];let index=0,playing=true;const image=document.getElementById('image'),slider=document.getElementById('slider'),count=document.getElementById('count');slider.max=Math.max(0,frames.length-1);function show(){if(frames.length){image.src=frames[index];slider.value=index;count.textContent=(index+1)+' / '+frames.length;}}document.getElementById('play').onclick=()=>playing=!playing;slider.oninput=()=>{index=+slider.value;playing=false;show();};setInterval(()=>{if(playing&&frames.length){index=(index+1)%frames.length;show();}},50);show();</script></html>)";
-    if (!html || !log_) throw std::runtime_error{"Cannot finalize recording"};
+    if (!html || !log_) throw std::runtime_error{"Nie można zakończyć nagrania."};
 }
 } // namespace strefa::sim

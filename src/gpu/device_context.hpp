@@ -9,7 +9,7 @@ namespace strefa::gpu::detail {
 class DeviceContext {
 public:
     DeviceContext() : context_{SDL_GL_GetCurrentContext()}, thread_{std::this_thread::get_id()} {
-        if (!context_) throw std::runtime_error{"GPU device requires a current GL context."};
+        if (!context_) throw std::runtime_error{"Urządzenie GPU wymaga bieżącego kontekstu OpenGL."};
         gl.load();
         GLint flags{};
         glGetIntegerv(GL_CONTEXT_FLAGS, &flags);
@@ -17,7 +17,7 @@ public:
     }
     void require_current() const {
         if (SDL_GL_GetCurrentContext() != context_ || std::this_thread::get_id() != thread_)
-            throw std::logic_error{"GPU world used outside its owning context/thread."};
+            throw std::logic_error{"Świat GPU użyty poza swoim kontekstem lub wątkiem."};
     }
     Api gl;
     GlStateTracker state{gl};

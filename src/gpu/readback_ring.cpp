@@ -59,7 +59,7 @@ void ReadbackRing::configure(ReadbackMode requested, bool debug_labels) {
     }
 }
 bool ReadbackRing::submit(GLuint source, unsigned generation, std::uint64_t revision, std::uint64_t tick) {
-    if (stats_.capacity == 0) throw std::logic_error{"Readback ring not configured"};
+    if (stats_.capacity == 0) throw std::logic_error{"Bufor odczytu GPU nie jest skonfigurowany."};
     if (stats_.pending == stats_.capacity) {
         ++stats_.dropped;
         if (gl_.observation) ++gl_.observation->stage_drops;
@@ -73,7 +73,7 @@ bool ReadbackRing::submit(GLuint source, unsigned generation, std::uint64_t revi
     // The next tick may write the same source SSBO after this copy has read it.
     gl_.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     slot.fence = gl_.FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (!slot.fence) throw std::runtime_error{"GPU readback fence creation failed"};
+    if (!slot.fence) throw std::runtime_error{"Nie można utworzyć bariery odczytu GPU."};
     slot.generation = generation;
     slot.revision = revision;
     slot.tick = tick;
@@ -92,7 +92,7 @@ std::optional<ReadbackPacket> ReadbackRing::poll(unsigned generation, std::uint6
         const auto fence_started = stamp();
         const auto status = gl_.ClientWaitSync(slot.fence, 0, 0);
         timings_.fence_ms += static_cast<double>(stamp() - fence_started) / 1e6;
-        if (status == GL_WAIT_FAILED) throw std::runtime_error{"GPU readback fence polling failed"};
+        if (status == GL_WAIT_FAILED) throw std::runtime_error{"Sprawdzanie bariery odczytu GPU zgłosiło błąd."};
         if (status != GL_ALREADY_SIGNALED && status != GL_CONDITION_SATISFIED) {
             ++stats_.busy_polls;
             break;

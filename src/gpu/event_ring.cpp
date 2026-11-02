@@ -23,13 +23,14 @@ void EventRing::initialize() {
             constexpr auto flags = GL_MAP_READ_BIT | GL_MAP_PERSISTENT_BIT | GL_MAP_COHERENT_BIT;
             gl_.BufferStorage(GL_COPY_WRITE_BUFFER, sizeof(game::EventBatch), nullptr, flags | GL_CLIENT_STORAGE_BIT);
             s.mapped = gl_.MapBufferRange(GL_COPY_WRITE_BUFFER, 0, sizeof(game::EventBatch), flags);
-            if (!s.mapped) throw std::runtime_error{"Cannot map reliable events"};
+            if (!s.mapped) throw std::runtime_error{"Nie można zmapować bufora zdarzeń."};
         } else
             gl_.BufferData(GL_COPY_WRITE_BUFFER, sizeof(game::EventBatch), nullptr, GL_STREAM_READ);
     }
 }
 void EventRing::submit(GLuint source, GLintptr offset, unsigned generation, unsigned tick) {
-    if (stats_.pending == game::event_slots) throw std::logic_error{"Event slot not reserved before tick"};
+    if (stats_.pending == game::event_slots)
+        throw std::logic_error{"Miejsce na zdarzenia nie zostało zarezerwowane przed krokiem."};
     auto& s = slots_[(head_ + stats_.pending) % game::event_slots];
     gl_.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     gl_.BindBuffer(GL_COPY_READ_BUFFER, source);
@@ -37,7 +38,7 @@ void EventRing::submit(GLuint source, GLintptr offset, unsigned generation, unsi
     gl_.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, offset, 0, sizeof(game::EventBatch));
     gl_.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     s.fence = gl_.FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    if (!s.fence) throw std::runtime_error{"Cannot fence reliable events"};
+    if (!s.fence) throw std::runtime_error{"Nie można utworzyć bariery dla zdarzeń."};
     if (gl_.observation) ++gl_.observation->event_copies;
     s.generation = generation;
     s.tick = tick;
@@ -49,7 +50,7 @@ void EventRing::poll(game::GameplaySession& session) {
     while (stats_.pending) {
         auto& s = slots_[head_];
         const auto status = gl_.ClientWaitSync(s.fence, 0, 0);
-        if (status == GL_WAIT_FAILED) throw std::runtime_error{"Reliable event fence failed"};
+        if (status == GL_WAIT_FAILED) throw std::runtime_error{"Bariera zdarzeń zgłosiła błąd."};
         if (status != GL_ALREADY_SIGNALED && status != GL_CONDITION_SATISFIED) break;
         if (s.generation == session.generation()) {
             game::EventBatch batch;
