@@ -78,7 +78,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 ## Git
 
 - Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build, CPU tests,
-  Mesa smoke tests, Linux package). Docs-only changes skip CI.
+  Mesa smoke tests, Linux package) and `.github/workflows/windows.yml` (MSVC build with `/WX`, CPU tests
+  except `sim.golden_master`, whose MSVC hash differs from the GCC reference). Docs-only changes skip CI.
 - Do not commit `build/`, `dist/` (ignored) or raw measurement data (see above).
 - To hide the bulk-format commit in `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 
