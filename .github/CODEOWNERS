@@ -5,3 +5,5 @@
 /cmake/          @maershal
 /.github/        @maershal
 /CLAUDE.md       @maershal
+/.claude/        @maershal
+/scripts/pr-hygiene.sh @maershal

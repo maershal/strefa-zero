@@ -18,7 +18,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
+          ref: ${{ github.event.pull_request.head.sha }}
           fetch-depth: 0
+          persist-credentials: false
       - name: Check description, added files and change size
         env:
           PR_BODY: ${{ github.event.pull_request.body }}

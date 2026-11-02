@@ -40,17 +40,23 @@ readonly sections=(
 readonly required_content=("Goal" "Changes" "Tests")
 
 failures=0
+# Workflow commands treat %, CR and LF specially; escape them so file names cannot break annotations.
+annotation() {
+    local text="${1//%/%25}"
+    text="${text//$'\r'/%0D}"
+    printf '%s\n' "${text//$'\n'/%0A}"
+}
 fail() {
     failures=$((failures + 1))
     if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-        echo "::error::$1"
+        echo "::error::$(annotation "$1")"
     else
         echo "BŁĄD: $1"
     fi
 }
 warn() {
     if [[ -n "${GITHUB_ACTIONS:-}" ]]; then
-        echo "::warning::$1"
+        echo "::warning::$(annotation "$1")"
     else
         echo "UWAGA: $1"
     fi
@@ -99,7 +105,7 @@ else
     fi
 fi
 
-# --- 2./3. Added files: size limit and forbidden measurement paths.
+# --- 2./3. Added files: size limit and forbidden measurement paths. Renames are moves, not new data.
 while IFS= read -r -d '' path; do
     size=$(git cat-file -s "$head:$path")
     if [[ "$size" -gt "$max_file_bytes" ]]; then
@@ -112,12 +118,12 @@ while IFS= read -r -d '' path; do
     *.csv | *.CSV | *.bmp | *.BMP)
         fail "Plik $path: *.csv i *.bmp poza assets/ to surowe dane pomiarowe (repozytorium strefa-zero-measurements)." ;;
     esac
-done < <(git diff -z --name-only --diff-filter=ACR "$merge_base" "$head")
+done < <(git diff -z --name-only --diff-filter=AC "$merge_base" "$head")
 
 # --- 4. Size of the code change (without docs, Markdown, binaries and linguist-generated files).
 is_generated() {
     local value
-    value=$(git check-attr linguist-generated -- "$1" | sed 's/.*: //')
+    value=$(git check-attr --source="$head" linguist-generated -- "$1" | sed 's/.*: //')
     [[ "$value" == "true" || "$value" == "set" ]]
 }
 
@@ -138,10 +144,7 @@ while IFS= read -r -d '' record; do
 done < <(git diff -z --numstat "$merge_base" "$head")
 
 has_large_label=0
-IFS=',' read -r -a label_list <<<"$labels"
-for label in "${label_list[@]}"; do
-    [[ "$label" == "$large_label" ]] && has_large_label=1
-done
+[[ ",$labels," == *",$large_label,"* ]] && has_large_label=1
 
 echo "Zmienione linie kodu (bez docs/, *.md, binarnych i wygenerowanych): $code_lines (limit $max_code_lines)."
 if [[ "$code_lines" -gt "$max_code_lines" && "$has_large_label" -eq 0 ]]; then
