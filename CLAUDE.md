@@ -95,6 +95,12 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 - One change = one new branch = one PR, described as Goal / Changes / Tests / Risks / Out of scope.
   Do not merge before CI is green. Add new `*.sh` files with `git update-index --chmod=+x`
   (CI rejects tracked `.sh` files that are not 100755, except the sourced `scripts/linux-env.sh`).
+- Fill in `.github/pull_request_template.md` (all sections, contracts touched, GPU tests not run locally).
+  `.github/workflows/pr-hygiene.yml` (`scripts/pr-hygiene.sh`, runnable locally) fails on a missing section, an added
+  file > 1 MB, raw data (`docs/measurements/**`, `*.csv`/`*.bmp` outside `assets/`) or > 800 changed code lines
+  without the `large-pr-approved` label.
+- Before merging run `/review-pr <number>` (subagent `pr-reviewer`, posts a comment review). Do not merge while CI
+  is red or not finished. Every item under „Kontrole przed scaleniem” in the PR description must be checked.
 
 ## Definition of done
 
