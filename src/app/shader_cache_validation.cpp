@@ -48,9 +48,10 @@ std::expected<int, std::string> validate_shader_cache(const std::filesystem::pat
             return stats.supported;
         };
         const std::string defines = "#define EXTRA 0u\n";
+        // Without program binaries only the source fallback ran: report a CTest skip, not a pass.
         if (!run(defines, 7, false, false)) {
-            std::ofstream{output / "shader-cache-check.txt"} << "supported=0\nsource_fallback=1\n";
-            return 0;
+            std::ofstream{output / "shader-cache-check.txt"} << "supported=0\nsource_fallback=1\nskipped=1\n";
+            return 77;
         }
         run(defines, 7, true, false);
         for (const auto& entry : std::filesystem::directory_iterator(root / "binaries"))
