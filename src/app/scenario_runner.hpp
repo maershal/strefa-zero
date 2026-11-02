@@ -267,7 +267,7 @@ public:
             unsigned logged = 0;
             std::ifstream log{app.store_.path().parent_path() / "errors.log"};
             for (std::string line; std::getline(log, line);) logged += line.find("Wstrzyknięty") != std::string::npos;
-            const bool passed = fault_ok && !app.fault_screen_ && fault_checks == (app.gpu_available_ ? 9 : 5)
+            const bool passed = fault_ok && !app.fault_screen_ && fault_checks == (app.gpu_available_ ? 9u : 5u)
                              && app.mode_failures_ == expected && logged == expected;
             std::ofstream report{app.store_.path().parent_path() / "mode-faults.txt"};
             report << "frames=" << frames << "\nchecks=" << fault_checks << "\npassed=" << passed
