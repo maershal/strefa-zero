@@ -347,11 +347,7 @@ void World::step(ScanMode mode) {
         s.reaction_awake.fill(false);
     std::ranges::fill(s.shock, 0.F);
     const bool exploded = !s.explosions.empty();
-    for (int n = 0; n < 16 && !s.explosions.empty(); ++n) {
-        const auto command = s.explosions.front();
-        s.explosions.erase(s.explosions.begin());
-        detonate(s, command);
-    }
+    detonate_pending(s, 16);
     s.report.reaction_ms = elapsed();
     const bool air = s.config.air && s.air_awake;
     if (air) solve_air(s, tick_duration);
