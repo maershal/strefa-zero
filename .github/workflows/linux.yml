@@ -170,7 +170,7 @@ jobs:
     if: needs.changes.outputs.code == 'true'
     name: ${{ matrix.job }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
@@ -182,14 +182,19 @@ jobs:
             configuration: RelWithDebInfo
             cmake: -DSTREFA_SANITIZE=thread
             tests: -R '^sim\.(numerics_parallel|laboratory_worker|golden_master)$'
+          # Debug keeps NDEBUG undefined; -O2 instead of -O0 keeps golden_master and game.training within
+          # their time limits (at -O0 they need 85% of them on an 8-core desktop).
+          # libc++ 18 ships std::jthread/std::stop_token only with -fexperimental-library.
           - job: clang
             configuration: Debug
             packages: clang-18 libc++-18-dev libc++abi-18-dev
             cmake: >-
-              -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18
-              -DCMAKE_CXX_FLAGS=-stdlib=libc++ -DCMAKE_EXE_LINKER_FLAGS=-stdlib=libc++
+              -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS_DEBUG='-g -O2'
+              -DCMAKE_CXX_FLAGS='-stdlib=libc++ -fexperimental-library'
+              -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++ -fexperimental-library'
           - job: gcc-debug
             configuration: Debug
+            cmake: -DCMAKE_CXX_FLAGS_DEBUG='-g -O2'
     env:
       ASAN_OPTIONS: detect_leaks=1:detect_stack_use_after_return=1
       UBSAN_OPTIONS: print_stacktrace=1
