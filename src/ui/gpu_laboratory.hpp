@@ -32,7 +32,9 @@ inline gpu::ThermalBrush make_thermal_brush(const GpuControls& controls, const s
             static_cast<gpu::ThermalTool>(tool)};
 }
 struct GpuInput {
-    bool reset{}, thermal_reset{}, step{}, begin_recording{}, save_recording{}, replay_recording{};
+    // select_scene loads controls.scene; reset reloads the scene that is loaded now
+    // (including a thermal scene, which the scene list cannot select).
+    bool select_scene{}, reset{}, thermal_reset{}, step{}, begin_recording{}, save_recording{}, replay_recording{};
     std::optional<gpu::Stroke> stroke;
     gpu::ThermalBrush thermal_brush;
     std::optional<std::array<int, 2>> inspect;
@@ -51,6 +53,7 @@ struct GpuLaboratoryFrame {
     std::uint64_t thermal_memory{};
     const gpu::ThermalInspection* inspection{};
     std::array<float, 2> camera{};
+    unsigned thermal_scene{}; // thermal scene loaded now, 0 = none
 };
 Action draw_gpu_laboratory(GpuLaboratoryFrame&, const FrameInfo&);
 } // namespace strefa::ui

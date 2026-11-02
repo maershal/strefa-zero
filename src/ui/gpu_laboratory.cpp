@@ -3,8 +3,17 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <array>
 #include <numeric>
+#include <string>
 namespace strefa::ui {
+namespace {
+constexpr std::array scene_names{"Lawina",          "Deszcz ziaren",    "Mieszane materiały", "Pusta scena",
+                                 "Zbiornik wody",   "Przerwana zapora", "Naczynia połączone", "Woda i olej",
+                                 "Piasek w wodzie", "Klepsydra",        "Olej pod wodą",      "Kropla oleju",
+                                 "Misja treningowa"};
+constexpr std::array thermal_scene_names{"Brak", "Drewno i dym", "Płonący olej", "Gaszenie wodą", "Przemiany fazowe"};
+} // namespace
 Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     const auto* viewport = ImGui::GetMainViewport();
     const float s = info.scale;
@@ -29,10 +38,22 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     }
     ImGui::Spacing();
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::Combo(
-                "##GpuScene", &controls.scene,
-                "Lawina\0Deszcz ziaren\0Mieszane materiały\0Pusta scena\0Zbiornik wody\0Przerwana zapora\0Naczynia połączone\0Woda i olej\0Piasek w wodzie\0Klepsydra\0Olej pod wodą\0Kropla oleju\0Misja treningowa\0"))
-        lab.input.reset = true;
+    const auto scene_index =
+            static_cast<std::size_t>(std::clamp(controls.scene, 0, static_cast<int>(scene_names.size()) - 1));
+    const std::string scene_label = lab.thermal_scene && lab.thermal_scene < thermal_scene_names.size()
+                                          ? std::string{"Termika: "} + thermal_scene_names[lab.thermal_scene]
+                                          : scene_names[scene_index];
+    if (ImGui::BeginCombo("##GpuScene", scene_label.c_str())) {
+        for (std::size_t i = 0; i < scene_names.size(); ++i) {
+            const bool current = i == scene_index && !lab.thermal_scene;
+            if (ImGui::Selectable(scene_names[i], current)) {
+                controls.scene = static_cast<int>(i);
+                lab.input.select_scene = true;
+            }
+            if (current) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
     if (ImGui::Button("Reset sceny", {-1, 30 * s})) lab.input.reset = true;
     ImGui::Checkbox("Pauza [Spacja]", &controls.paused);
     if (ImGui::Button("Jeden krok [F]", {-1, 28 * s})) lab.input.step = true;
@@ -91,8 +112,8 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
                                ImGuiSliderFlags_AlwaysClamp);
         ImGui::TextWrapped("Źródła I10 działają w wykonanych krokach. Inspektor pokazuje ostatnią gotową próbkę GPU.");
         ImGui::SetNextItemWidth(-1);
-        ImGui::Combo("##ThermalScene", &controls.thermal_scene,
-                     "Brak\0Drewno i dym\0Płonący olej\0Gaszenie wodą\0Przemiany fazowe\0");
+        ImGui::Combo("##ThermalScene", &controls.thermal_scene, thermal_scene_names.data(),
+                     static_cast<int>(thermal_scene_names.size()));
         if (controls.thermal_scene && ImGui::Button("Wczytaj scenę I10", {-1, 28 * s})) lab.input.thermal_reset = true;
         if (lab.thermal) {
             const auto& t = *lab.thermal;

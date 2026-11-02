@@ -57,10 +57,10 @@ jobs:
         run: |
           xvfb-run -a -s '-screen 0 1280x720x24' \
             ctest --test-dir build/linux-release --output-on-failure --parallel 1 \
-            -R '^(app\.opengl_smoke|gpu\.(platform_dispatch|gameplay))$'
+            -R '^(app\.(opengl_smoke|mode_faults)|gpu\.(platform_dispatch|gameplay|mission_ui_quick))$'
           MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330 \
             xvfb-run -a -s '-screen 0 1280x720x24' \
-            ctest --test-dir build/linux-release --output-on-failure -R '^app\.opengl33_smoke$'
+            ctest --test-dir build/linux-release --output-on-failure -R '^app\.(opengl33_smoke|mode_faults)$'
       - name: Package Linux runtime
         run: ./scripts/package-linux.sh
       - name: Verify relocated runtime

@@ -5,6 +5,7 @@
 #include <imgui.h>
 #include <imgui_impl_opengl3.h>
 #include <imgui_impl_sdl3.h>
+#include <imgui_internal.h>
 
 #include <cmath>
 #include <utility>
@@ -62,6 +63,18 @@ void Session::new_frame() {
 void Session::render() const {
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+}
+void Session::abandon_frame() const {
+    if (!ImGui::GetCurrentContext()->WithinFrameScope) return;
+    auto& io = ImGui::GetIO();
+    const bool asserts = std::exchange(io.ConfigErrorRecoveryEnableAssert, false);
+    const bool tooltip = std::exchange(io.ConfigErrorRecoveryEnableTooltip, false);
+    ImGui::EndFrame();
+    io.ConfigErrorRecoveryEnableAssert = asserts;
+    io.ConfigErrorRecoveryEnableTooltip = tooltip;
+}
+bool Session::editing() const {
+    return ImGui::IsAnyItemActive();
 }
 void Session::set_scale(float display_scale, float user_scale) {
     const float next = display_scale * user_scale;

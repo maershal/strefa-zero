@@ -33,6 +33,15 @@ void SimulationWorld::reset(SceneConfiguration scene) {
     suspend();
     recording_.append(scene);
 }
+void SimulationWorld::close() {
+    world_.reset();
+    recording_ = SessionRecording{};
+    clock_.reset();
+    input_.clear();
+    pending_single_step_ = false;
+    thermal_brush_ = {};
+    thermal_pending_ = false;
+}
 void SimulationWorld::set_thermal_options(gpu::ThermalOptions value) {
     if (value != world_->thermal_options()) {
         world_->set_thermal_options(value);

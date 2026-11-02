@@ -24,10 +24,12 @@
 #include <array>
 #include <charconv>
 #include <chrono>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string_view>
 #include <utility>
 
@@ -40,6 +42,31 @@ std::filesystem::path utf8_path(const char* text) {
 std::string gl_string(GLenum name) {
     const auto* value = glGetString(name);
     return value ? reinterpret_cast<const char*>(value) : "unknown";
+}
+// The GPU world, its tools and the mission need OpenGL 4.3 compute shaders.
+bool gl43_available() {
+    GLint major{}, minor{};
+    glGetIntegerv(GL_MAJOR_VERSION, &major);
+    glGetIntegerv(GL_MINOR_VERSION, &minor);
+    return major > 4 || (major == 4 && minor >= 3);
+}
+const char* mode_name(ui::Screen screen) {
+    switch (screen) {
+    case ui::Screen::laboratory: return "Laboratorium CPU";
+    case ui::Screen::arena: return "Poligon CPU";
+    case ui::Screen::gpu_laboratory: return "Narzędzia aktywnego świata";
+    case ui::Screen::gpu_mission: return "Gra — aktywna scena";
+    default: return "Menu";
+    }
+}
+ui::Screen target_screen(ui::Action action, ui::Screen current) {
+    switch (action) {
+    case ui::Action::open_laboratory: return ui::Screen::laboratory;
+    case ui::Action::open_arena: return ui::Screen::arena;
+    case ui::Action::open_gpu: return ui::Screen::gpu_laboratory;
+    case ui::Action::open_mission: return ui::Screen::gpu_mission;
+    default: return current;
+    }
 }
 
 struct ApplicationAssets {
@@ -82,6 +109,7 @@ public:
           message_{std::move(message)},
           renderer_{gl_string(GL_RENDERER)},
           gl_version_{gl_string(GL_VERSION)},
+          gpu_available_{gl43_available()},
           physics_{config.physics},
           gpu_profiling_{config.profiling},
           execution_{config.execution},
@@ -107,6 +135,8 @@ public:
         const bool gpu_smoke = smoke_ == SmokeScenario::gpu_laboratory;
         const bool mission_smoke = smoke_ == SmokeScenario::mission;
         const bool session_smoke = smoke_ == SmokeScenario::session;
+        const bool mission_quick = smoke_ == SmokeScenario::mission_quick;
+        const bool fault_smoke = smoke_ == SmokeScenario::mode_faults;
         const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
         const bool start_in_arena = start_ == StartMode::cpu_arena;
         const bool start_gpu = start_ == StartMode::gpu_laboratory;
@@ -123,21 +153,28 @@ public:
             lab_controls_.scene = sim::Scene::dam_break;
             perform(ui::Action::open_laboratory);
         }
+        // Interactive starts fall back to the menu with the reason (e.g. OpenGL 3.3).
         if (start_gpu || gpu_smoke) {
-            if (!perform(ui::Action::open_gpu)) return std::unexpected{message_};
+            if (!perform(ui::Action::open_gpu) && gpu_smoke) return std::unexpected{message_};
         }
         if (gpu_smoke) {
             simulation_.reset({false, gpu::Scene::sand_water});
             gpu_controls_.scene = static_cast<int>(gpu::Scene::sand_water);
         }
-        if (start_mission || mission_smoke || session_smoke) {
-            if (!perform(ui::Action::open_mission)) return std::unexpected{message_};
+        if (start_mission || mission_smoke || session_smoke || mission_quick) {
+            if (!perform(ui::Action::open_mission) && !start_mission) return std::unexpected{message_};
         }
         // Keep the historical 60 FPS run at 900 frames, but let faster displays
         // execute the entire tick-based mission route before its final capture.
         constexpr unsigned mission_smoke_min_frames = 900;
         constexpr std::uint64_t mission_smoke_min_ticks = 1700;
         ScenarioRunner scenario{smoke_test, lab_smoke, gpu_smoke, mission_smoke, gpu_profiling_.collect, session_smoke};
+        scenario.mission_quick = mission_quick;
+        scenario.fault_smoke = fault_smoke;
+        if (fault_smoke) {
+            std::error_code ignored; // the test counts its own entries
+            std::filesystem::remove(store_.path().parent_path() / "errors.log", ignored);
+        }
         auto& visited_screens = scenario.visited_screens;
         auto& visited_themes = scenario.visited_themes;
         auto& frames = scenario.frames;
@@ -149,345 +186,368 @@ public:
         auto previous = SDL_GetTicksNS();
         const auto window_started = previous;
         while (running_) {
-            const auto frame_start = SDL_GetTicksNS();
-            const float frame_ms = static_cast<float>(frame_start - previous) / 1'000'000.0F;
-            previous = frame_start;
-            FrameProfile frame_profile;
-            std::optional<std::array<double, 12>> mission_frame;
-            auto phase_started = frame_start;
-            auto mark = [&](double& duration) {
+            // A failing mode (GPU world, CPU laboratory, arena) is closed and the menu
+            // shows the reason; window tests still fail on the first error.
+            try {
+                const auto frame_start = SDL_GetTicksNS();
+                const float frame_ms = static_cast<float>(frame_start - previous) / 1'000'000.0F;
+                previous = frame_start;
+                FrameProfile frame_profile;
+                std::optional<std::array<double, 12>> mission_frame;
+                auto phase_started = frame_start;
+                auto mark = [&](double& duration) {
+                    if (profile_frames) {
+                        const auto now = SDL_GetTicksNS();
+                        duration += static_cast<double>(now - phase_started) / 1e6;
+                        phase_started = now;
+                    }
+                };
                 if (profile_frames) {
-                    const auto now = SDL_GetTicksNS();
-                    duration += static_cast<double>(now - phase_started) / 1e6;
-                    phase_started = now;
+                    frame_profile.iteration = iterations++;
+                    frame_profile.frame = frames;
+                    frame_profile.screen = static_cast<int>(state_.screen);
+                    frame_profile.start_ns = frame_start;
+                    frame_profile.previous_interval_ms = frame_ms;
+                    frame_profile.frame_limit = unpaced_ ? 0U : static_cast<unsigned>(state_.applied.frame_limit);
                 }
-            };
-            if (profile_frames) {
-                frame_profile.iteration = iterations++;
-                frame_profile.frame = frames;
-                frame_profile.screen = static_cast<int>(state_.screen);
-                frame_profile.start_ns = frame_start;
-                frame_profile.previous_interval_ms = frame_ms;
-                frame_profile.frame_limit = unpaced_ ? 0U : static_cast<unsigned>(state_.applied.frame_limit);
-            }
-            mission_ticks_this_frame_ = 0;
-            gpu_ticks_this_frame_ = 0;
-            world_render_submit_ms_ = 0;
-            SDL_Event event;
-            while (SDL_PollEvent(&event)) {
-                gui_.process_event(event);
-                if (event.type == SDL_EVENT_QUIT
-                    || (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED
-                        && event.window.windowID == SDL_GetWindowID(window_.native())))
-                    running_ = false;
-            }
-            if (!running_) break;
-            mark(frame_profile.input_ms);
-            if (profile_frames) frame_profile.presentation = window_.presentation_info();
-            mark(frame_profile.metadata_ms);
-            if (window_.minimized()) {
-                if (lab_worker_) lab_worker_->set_active(false);
-                clock_.reset();
-                game_clock_.reset();
-                simulation_.suspend();
-                game_input_.clear();
+                mission_ticks_this_frame_ = 0;
+                gpu_ticks_this_frame_ = 0;
+                world_render_submit_ms_ = 0;
+                SDL_Event event;
+                while (SDL_PollEvent(&event)) {
+                    gui_.process_event(event);
+                    if (event.type == SDL_EVENT_QUIT
+                        || (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED
+                            && event.window.windowID == SDL_GetWindowID(window_.native())))
+                        running_ = false;
+                }
+                if (!running_) break;
+                mark(frame_profile.input_ms);
+                if (profile_frames) frame_profile.presentation = window_.presentation_info();
+                mark(frame_profile.metadata_ms);
+                if (window_.minimized()) {
+                    if (lab_worker_) lab_worker_->set_active(false);
+                    clock_.reset();
+                    game_clock_.reset();
+                    simulation_.suspend();
+                    game_input_.clear();
+                    if (profile_frames) {
+                        frame_profile.mission_tick = simulation_ ? simulation_->metrics().steps : 0;
+                        frame_profile.mission_pending_seconds = simulation_.clock().pending_seconds();
+                        frame_profile.mission_dropped_seconds = simulation_.clock().dropped_seconds();
+                    }
+                    mark(frame_profile.update_ms);
+                    SDL_Delay(30);
+                    mark(frame_profile.sleep_ms);
+                    if (profile_frames) append_frame_profile(frame_profile);
+                    continue;
+                }
+
+                scenario.before_frame(*this, frame_ms);
+                mark(frame_profile.scenario_ms);
+                if (profile_frames) frame_profile.screen = static_cast<int>(state_.screen);
+                gui_.set_scale(window_.display_scale(), state_.applied.ui_scale);
+                gui_.new_frame();
+                if (static_cast<std::size_t>(state_.screen) < visited_screens.size())
+                    visited_screens[static_cast<std::size_t>(state_.screen)] = true;
+                visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
+                const ui::FrameInfo info{gui_.scale(), frame_ms, renderer_, gl_version_, message_, gpu_available_};
+                mark(frame_profile.ui_prepare_ms);
+                // Render one coherent snapshot of actors and terrain. Input collected by
+                // the UI advances the next snapshot; no GPU view can mutate the world.
+                if (state_.screen == ui::Screen::arena) {
+                    const auto uploaded = upload_world(game_->world(), true);
+                    if (!uploaded) throw std::runtime_error{uploaded.error()};
+                    ++game_uploads_;
+                    if (cpu_vfx_enabled_) {
+                        auto& vfx = render_device_->vfx;
+                        vfx.set_options(vfx_options_);
+                        vfx.poll();
+                        vfx.cpu_canvas(canvas_.id(),
+                                       static_cast<unsigned>(
+                                               images_[static_cast<std::size_t>(state_.applied.map_theme)].handle),
+                                       static_cast<float>(game_clock_.fraction()));
+                    }
+                }
+                if (state_.screen == ui::Screen::laboratory) {
+                    if (lab_worker_) lab_snapshot_ = lab_worker_->snapshot();
+                    if (!lab_snapshot_->error.empty()) throw std::runtime_error{lab_snapshot_->error};
+                    if (last_lab_pixels_ != lab_snapshot_->pixels) {
+                        const auto uploaded = canvas_.update_rgba(std::as_bytes(std::span{*lab_snapshot_->pixels}));
+                        if (!uploaded) throw std::runtime_error{uploaded.error()};
+                        last_lab_pixels_ = lab_snapshot_->pixels;
+                        ++uploads_;
+                    }
+                    lab_controls_.recording = lab_snapshot_->recording;
+                }
+                mark(frame_profile.upload_ms);
+                ui::LaboratoryInput input;
+                std::optional<ui::LaboratoryFrame> lab;
+                if (state_.screen == ui::Screen::laboratory)
+                    lab.emplace(ui::LaboratoryFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
+                                                    *lab_snapshot_,
+                                                    lab_controls_,
+                                                    input,
+                                                    lab_snapshot_->step_ms,
+                                                    lab_snapshot_->overload_seconds});
+                ui::ArenaInput arena_input;
+                const bool focused = (SDL_GetWindowFlags(window_.native()) & SDL_WINDOW_INPUT_FOCUS) != 0;
+                std::optional<ui::ArenaFrame> arena;
+                if (state_.screen == ui::Screen::arena || state_.screen == ui::Screen::gpu_mission) {
+                    arena.emplace(ui::ArenaFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
+                                                 soldier_,
+                                                 images_[static_cast<std::size_t>(state_.applied.map_theme)],
+                                                 parts_,
+                                                 weapons_,
+                                                 state_.screen == ui::Screen::arena
+                                                         ? ui::ArenaView{*game_}
+                                                         : ui::ArenaView{simulation_->mission()},
+                                                 arena_input,
+                                                 focused});
+                    arena->scene_mission = state_.screen == ui::Screen::arena || simulation_.scene().mission;
+                    arena->paused = gpu_controls_.paused;
+                    if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_) {
+                        arena->shared_vfx = true;
+                    }
+                    if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_ && render_device_->vfx.enabled()) {
+                        arena->world = {render_device_->vfx.cpu_back(), 960, 576};
+                        arena->vfx_front = {render_device_->vfx.cpu_front(), 960, 576};
+                    }
+                    if (state_.screen == ui::Screen::gpu_mission) {
+                        arena->lighting_quality = &lighting_quality_;
+                        arena->camera = simulation_->camera_offset();
+                    }
+                    arena->vfx_quality = &gpu_controls_.vfx_quality;
+                    arena->effects_enabled = gpu_controls_.vfx_quality != 0;
+                }
+                double ui_poll_ms = 0;
+                gpu::PollTimings ui_poll;
+                if (state_.screen == ui::Screen::gpu_mission && simulation_) {
+                    const auto poll_started = gpu_profiling_.collect ? SDL_GetTicksNS() : std::uint64_t{0};
+                    simulation_->poll();
+                    arena->world = {simulation_->texture(), gpu::width * 3, gpu::height * 3};
+                    arena->game = ui::ArenaView{simulation_->mission()};
+                    if (gpu_profiling_.collect) {
+                        ui_poll_ms = static_cast<double>(SDL_GetTicksNS() - poll_started) / 1e6;
+                        ui_poll = simulation_->poll_timings();
+                    }
+                }
+                ui::GpuInput gpu_input;
+                std::optional<ui::GpuLaboratoryFrame> gpu_frame;
+                if (state_.screen == ui::Screen::gpu_laboratory && simulation_) {
+                    simulation_->poll();
+                    gpu_frame.emplace(ui::GpuLaboratoryFrame{{simulation_->texture(), gpu::width * 3, gpu::height * 3},
+                                                             simulation_->metrics(),
+                                                             gpu_controls_,
+                                                             gpu_input,
+                                                             simulation_.scene().mission,
+                                                             simulation_->mission(),
+                                                             simulation_.recording()});
+                }
+                mark(frame_profile.poll_ms);
+                if (gpu_frame) {
+                    gpu_frame->camera = simulation_->camera_offset();
+                    gpu_frame->thermal = &simulation_->thermal_totals();
+                    gpu_frame->thermal_memory = simulation_->thermal_memory();
+                    gpu_frame->inspection = &simulation_->thermal_inspection();
+                    gpu_frame->thermal_scene = simulation_.scene().thermal_scene;
+                }
+                if (gpu_frame && render_device_) {
+                    gpu_frame->vfx = &render_device_->vfx.stats();
+                    gpu_frame->vfx_memory = render_device_->vfx.memory_bytes();
+                }
+                const auto action = ui::draw(state_, info, images_, gui_.fonts(), lab ? &*lab : nullptr,
+                                             arena ? &*arena : nullptr, gpu_frame ? &*gpu_frame : nullptr);
+                if (state_.screen == ui::Screen::gpu_mission)
+                    gpu_controls_.lighting.quality = static_cast<gpu::LightingQuality>(lighting_quality_);
+                else
+                    lighting_quality_ = static_cast<int>(gpu_controls_.lighting.quality);
+                {
+                    auto saved = state_.applied;
+                    saved.lighting_quality = lighting_quality_;
+                    saved.bloom = gpu_controls_.lighting.bloom;
+                    saved.vignette = gpu_controls_.lighting.vignette;
+                    saved.camera_shake = gpu_controls_.lighting.shake;
+                    saved.aberration = gpu_controls_.lighting.aberration;
+                    if (saved != state_.applied) {
+                        state_.applied = saved;
+                        state_.draft = saved;
+                        settings_dirty_ = true;
+                    }
+                    // Written once the slider or combo edit ends, not on every dragged frame.
+                    if (!gui_.editing()) flush_settings();
+                }
+                vfx_options_.quality = static_cast<gpu::VfxQuality>(gpu_controls_.vfx_quality);
+                if (render_device_) render_device_->vfx.set_options(vfx_options_);
+                mark(frame_profile.ui_build_ms);
+                if (session_smoke) {
+                    if (scenario.injected_stroke) gpu_input.stroke = std::exchange(scenario.injected_stroke, {});
+                    gpu_input.step = std::exchange(scenario.injected_step, false);
+                }
+                if (scenario.injected_brush) gpu_input.thermal_brush = *std::exchange(scenario.injected_brush, {});
+                if (fault_screen_ == state_.screen) {
+                    fault_screen_.reset();
+                    throw std::runtime_error{"Wstrzyknięty błąd testowy trybu."};
+                }
+                if (simulation_) {
+                    thermal_options_.enabled = gpu_controls_.thermal_enabled;
+                    thermal_options_.radiation = gpu_controls_.thermal_radiation;
+                    simulation_.set_thermal_options(thermal_options_);
+                    simulation_->set_thermal_view(static_cast<gpu::ThermalView>(gpu_controls_.thermal_view));
+                    simulation_->set_render_options({static_cast<gpu::RenderQuality>(gpu_controls_.render_quality),
+                                                     false, gpu_controls_.lighting});
+                    simulation_->set_vfx_options({static_cast<gpu::VfxQuality>(gpu_controls_.vfx_quality), false});
+                    simulation_->set_background_texture(
+                            static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle));
+                }
+                if (gpu_frame) {
+                    update_gpu(gpu_input, static_cast<double>(frame_ms) / 1000.0,
+                               focused || gpu_smoke || session_smoke);
+                }
+                if (state_.screen == ui::Screen::laboratory) {
+                    const auto updated = update_lab(input, static_cast<double>(frame_ms) / 1000.0);
+                    if (!updated) throw std::runtime_error{updated.error()};
+                } else {
+                    if (lab_worker_) lab_worker_->set_active(false);
+                    clock_.reset();
+                    lab_controls_.previous.reset();
+                }
+                if (state_.screen == ui::Screen::gpu_mission && action != ui::Action::back) {
+                    update_mission(arena_input, static_cast<double>(frame_ms) / 1000,
+                                   focused || mission_smoke || session_smoke || mission_quick,
+                                   mission_smoke || session_smoke || mission_quick);
+                    if (mission_smoke) {
+                        const auto& metrics = simulation_->metrics();
+                        const bool timing_available = gpu::effective_timer_mode(gpu_profiling_) != gpu::TimerMode::off
+                                                   && metrics.timing_samples > 0;
+                        mission_frame = std::array<double, 12>{static_cast<double>(frames),
+                                                               frame_ms,
+                                                               metrics.gpu_ms,
+                                                               metrics.cpu_submit_ms,
+                                                               simulation_.clock().dropped_seconds(),
+                                                               ui_poll_ms,
+                                                               ui_poll.timers_ms,
+                                                               ui_poll.fence_ms,
+                                                               ui_poll.read_ms,
+                                                               mission_step_submit_ms_,
+                                                               timing_available ? 1.0 : 0.0,
+                                                               static_cast<double>(metrics.timing_samples)};
+                    }
+                } else if (state_.screen != ui::Screen::gpu_laboratory)
+                    simulation_.suspend();
+                if (state_.screen == ui::Screen::arena && action != ui::Action::back)
+                    update_game(arena_input, static_cast<double>(frame_ms) / 1000.0, focused, smoke_test);
+                else {
+                    game_clock_.reset();
+                    game_input_.clear();
+                }
+                mark(frame_profile.update_ms);
                 if (profile_frames) {
+                    frame_profile.world_render_ms = world_render_submit_ms_;
+                    frame_profile.update_ms -= world_render_submit_ms_;
+                    frame_profile.mission_ticks = mission_ticks_this_frame_;
+                    frame_profile.gpu_ticks = gpu_ticks_this_frame_;
                     frame_profile.mission_tick = simulation_ ? simulation_->metrics().steps : 0;
                     frame_profile.mission_pending_seconds = simulation_.clock().pending_seconds();
                     frame_profile.mission_dropped_seconds = simulation_.clock().dropped_seconds();
                 }
-                mark(frame_profile.update_ms);
-                SDL_Delay(30);
-                mark(frame_profile.sleep_ms);
-                if (profile_frames) append_frame_profile(frame_profile);
-                continue;
-            }
-
-            scenario.before_frame(*this, frame_ms);
-            mark(frame_profile.scenario_ms);
-            if (profile_frames) frame_profile.screen = static_cast<int>(state_.screen);
-            gui_.set_scale(window_.display_scale(), state_.applied.ui_scale);
-            gui_.new_frame();
-            if (static_cast<std::size_t>(state_.screen) < visited_screens.size())
-                visited_screens[static_cast<std::size_t>(state_.screen)] = true;
-            visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
-            const ui::FrameInfo info{gui_.scale(), frame_ms, renderer_, gl_version_, message_};
-            mark(frame_profile.ui_prepare_ms);
-            // Render one coherent snapshot of actors and terrain. Input collected by
-            // the UI advances the next snapshot; no GPU view can mutate the world.
-            if (state_.screen == ui::Screen::arena) {
-                const auto uploaded = upload_world(game_->world(), true);
-                if (!uploaded) return std::unexpected{uploaded.error()};
-                ++game_uploads_;
-                if (cpu_vfx_enabled_) {
-                    auto& vfx = render_device_->vfx;
-                    vfx.set_options(vfx_options_);
-                    vfx.poll();
-                    vfx.cpu_canvas(
-                            canvas_.id(),
-                            static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle),
-                            static_cast<float>(game_clock_.fraction()));
+                const bool duration_done =
+                        window_seconds_ && static_cast<double>(frame_start - window_started) / 1e9 >= window_seconds_;
+                const bool mission_final_frame = mission_smoke && (!window_seconds_ || duration_done)
+                                              && frames >= mission_smoke_min_frames - 1
+                                              && simulation_->metrics().steps >= mission_smoke_min_ticks;
+                if (gpu_input.save_recording) {
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
+                    const auto folder =
+                            store_.path().parent_path() / "recordings" / ("gpu-" + std::to_string(SDL_GetTicksNS()));
+                    const auto saved = simulation_.save_recording(folder);
+                    if (saved) last_recording_ = folder / "session.txt";
+                    message_ = saved ? "Zapisano nagranie w katalogu profilu: " + folder.filename().string()
+                                     : saved.error();
+                    mark(frame_profile.capture_ms);
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
                 }
-            }
-            if (state_.screen == ui::Screen::laboratory) {
-                if (lab_worker_) lab_snapshot_ = lab_worker_->snapshot();
-                if (!lab_snapshot_->error.empty()) return std::unexpected{lab_snapshot_->error};
-                if (last_lab_pixels_ != lab_snapshot_->pixels) {
-                    const auto uploaded = canvas_.update_rgba(std::as_bytes(std::span{*lab_snapshot_->pixels}));
-                    if (!uploaded) return std::unexpected{uploaded.error()};
-                    last_lab_pixels_ = lab_snapshot_->pixels;
-                    ++uploads_;
+                if (gpu_input.replay_recording) {
+                    if (last_recording_.empty())
+                        message_ = "Najpierw zapisz nagranie w tej sesji.";
+                    else {
+                        const auto replayed = simulation_.replay_recording(last_recording_);
+                        message_ = replayed ? "Odtworzono nagranie. Scena jest zatrzymana." : replayed.error();
+                        if (replayed) {
+                            gpu_controls_.paused = true;
+                            gpu_controls_.scene =
+                                    simulation_.scene().mission ? 12 : static_cast<int>(simulation_.scene().laboratory);
+                        }
+                    }
+                    mark(frame_profile.capture_ms);
                 }
-                lab_controls_.recording = lab_snapshot_->recording;
-            }
-            mark(frame_profile.upload_ms);
-            ui::LaboratoryInput input;
-            std::optional<ui::LaboratoryFrame> lab;
-            if (state_.screen == ui::Screen::laboratory)
-                lab.emplace(ui::LaboratoryFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
-                                                *lab_snapshot_,
-                                                lab_controls_,
-                                                input,
-                                                lab_snapshot_->step_ms,
-                                                lab_snapshot_->overload_seconds});
-            ui::ArenaInput arena_input;
-            const bool focused = (SDL_GetWindowFlags(window_.native()) & SDL_WINDOW_INPUT_FOCUS) != 0;
-            std::optional<ui::ArenaFrame> arena;
-            if (state_.screen == ui::Screen::arena || state_.screen == ui::Screen::gpu_mission) {
-                arena.emplace(ui::ArenaFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
-                                             soldier_,
-                                             images_[static_cast<std::size_t>(state_.applied.map_theme)],
-                                             parts_,
-                                             weapons_,
-                                             state_.screen == ui::Screen::arena ? ui::ArenaView{*game_}
-                                                                                : ui::ArenaView{simulation_->mission()},
-                                             arena_input,
-                                             focused});
-                arena->scene_mission = state_.screen == ui::Screen::arena || simulation_.scene().mission;
-                arena->paused = gpu_controls_.paused;
-                if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_) {
-                    arena->shared_vfx = true;
+                const bool capture_frame =
+                        (gpu_smoke && (window_seconds_ ? duration_done : frames == 230)) || mission_final_frame;
+                frame_profile.capture_performed =
+                        capture_frame || gpu_input.save_recording || gpu_input.replay_recording;
+                mark(frame_profile.metadata_ms);
+                if (capture_frame) {
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
+                    if (gpu_smoke) simulation_->save_image(store_.path().parent_path() / "gpu-preview.bmp");
+                    if (mission_smoke) simulation_->save_image(store_.path().parent_path() / "mission-preview.bmp");
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
+                    mark(frame_profile.capture_ms);
                 }
-                if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_ && render_device_->vfx.enabled()) {
-                    arena->world = {render_device_->vfx.cpu_back(), 960, 576};
-                    arena->vfx_front = {render_device_->vfx.cpu_front(), 960, 576};
-                }
-                if (state_.screen == ui::Screen::gpu_mission) {
-                    arena->lighting_quality = &lighting_quality_;
-                    arena->camera = simulation_->camera_offset();
-                }
-                arena->vfx_quality = &gpu_controls_.vfx_quality;
-                arena->effects_enabled = gpu_controls_.vfx_quality != 0;
-            }
-            double ui_poll_ms = 0;
-            gpu::PollTimings ui_poll;
-            if (state_.screen == ui::Screen::gpu_mission && simulation_) {
-                const auto poll_started = gpu_profiling_.collect ? SDL_GetTicksNS() : std::uint64_t{0};
-                simulation_->poll();
-                arena->world = {simulation_->texture(), gpu::width * 3, gpu::height * 3};
-                arena->game = ui::ArenaView{simulation_->mission()};
-                if (gpu_profiling_.collect) {
-                    ui_poll_ms = static_cast<double>(SDL_GetTicksNS() - poll_started) / 1e6;
-                    ui_poll = simulation_->poll_timings();
-                }
-            }
-            ui::GpuInput gpu_input;
-            std::optional<ui::GpuLaboratoryFrame> gpu_frame;
-            if (state_.screen == ui::Screen::gpu_laboratory && simulation_) {
-                simulation_->poll();
-                gpu_frame.emplace(ui::GpuLaboratoryFrame{{simulation_->texture(), gpu::width * 3, gpu::height * 3},
-                                                         simulation_->metrics(),
-                                                         gpu_controls_,
-                                                         gpu_input,
-                                                         simulation_.scene().mission,
-                                                         simulation_->mission(),
-                                                         simulation_.recording()});
-            }
-            mark(frame_profile.poll_ms);
-            if (gpu_frame) {
-                gpu_frame->camera = simulation_->camera_offset();
-                gpu_frame->thermal = &simulation_->thermal_totals();
-                gpu_frame->thermal_memory = simulation_->thermal_memory();
-                gpu_frame->inspection = &simulation_->thermal_inspection();
-            }
-            if (gpu_frame && render_device_) {
-                gpu_frame->vfx = &render_device_->vfx.stats();
-                gpu_frame->vfx_memory = render_device_->vfx.memory_bytes();
-            }
-            const auto action = ui::draw(state_, info, images_, gui_.fonts(), lab ? &*lab : nullptr,
-                                         arena ? &*arena : nullptr, gpu_frame ? &*gpu_frame : nullptr);
-            if (state_.screen == ui::Screen::gpu_mission)
-                gpu_controls_.lighting.quality = static_cast<gpu::LightingQuality>(lighting_quality_);
-            else
-                lighting_quality_ = static_cast<int>(gpu_controls_.lighting.quality);
-            {
-                auto saved = state_.applied;
-                saved.lighting_quality = lighting_quality_;
-                saved.bloom = gpu_controls_.lighting.bloom;
-                saved.vignette = gpu_controls_.lighting.vignette;
-                saved.camera_shake = gpu_controls_.lighting.shake;
-                saved.aberration = gpu_controls_.lighting.aberration;
-                if (saved != state_.applied) {
-                    state_.applied = saved;
-                    state_.draft = saved;
-                    const auto written = store_.save(saved);
-                    if (!written) message_ = written.error();
-                }
-            }
-            vfx_options_.quality = static_cast<gpu::VfxQuality>(gpu_controls_.vfx_quality);
-            if (render_device_) render_device_->vfx.set_options(vfx_options_);
-            mark(frame_profile.ui_build_ms);
-            if (session_smoke) {
-                if (scenario.injected_stroke) gpu_input.stroke = std::exchange(scenario.injected_stroke, {});
-                gpu_input.step = std::exchange(scenario.injected_step, false);
-            }
-            if (simulation_) {
-                thermal_options_.enabled = gpu_controls_.thermal_enabled;
-                thermal_options_.radiation = gpu_controls_.thermal_radiation;
-                simulation_.set_thermal_options(thermal_options_);
-                simulation_->set_thermal_view(static_cast<gpu::ThermalView>(gpu_controls_.thermal_view));
-                simulation_->set_render_options(
-                        {static_cast<gpu::RenderQuality>(gpu_controls_.render_quality), false, gpu_controls_.lighting});
-                simulation_->set_vfx_options({static_cast<gpu::VfxQuality>(gpu_controls_.vfx_quality), false});
-                simulation_->set_background_texture(
-                        static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle));
-            }
-            if (gpu_frame) {
-                update_gpu(gpu_input, static_cast<double>(frame_ms) / 1000.0, focused || gpu_smoke || session_smoke);
-            }
-            if (state_.screen == ui::Screen::laboratory) {
-                const auto updated = update_lab(input, static_cast<double>(frame_ms) / 1000.0);
-                if (!updated) return std::unexpected{updated.error()};
-            } else {
-                if (lab_worker_) lab_worker_->set_active(false);
-                clock_.reset();
-                lab_controls_.previous.reset();
-            }
-            if (state_.screen == ui::Screen::gpu_mission && action != ui::Action::back) {
-                update_mission(arena_input, static_cast<double>(frame_ms) / 1000,
-                               focused || mission_smoke || session_smoke, mission_smoke || session_smoke);
-                if (mission_smoke) {
-                    const auto& metrics = simulation_->metrics();
-                    const bool timing_available = gpu::effective_timer_mode(gpu_profiling_) != gpu::TimerMode::off
-                                               && metrics.timing_samples > 0;
-                    mission_frame = std::array<double, 12>{static_cast<double>(frames),
-                                                           frame_ms,
-                                                           metrics.gpu_ms,
-                                                           metrics.cpu_submit_ms,
-                                                           simulation_.clock().dropped_seconds(),
-                                                           ui_poll_ms,
-                                                           ui_poll.timers_ms,
-                                                           ui_poll.fence_ms,
-                                                           ui_poll.read_ms,
-                                                           mission_step_submit_ms_,
-                                                           timing_available ? 1.0 : 0.0,
-                                                           static_cast<double>(metrics.timing_samples)};
-                }
-            } else if (state_.screen != ui::Screen::gpu_laboratory)
-                simulation_.suspend();
-            if (state_.screen == ui::Screen::arena && action != ui::Action::back)
-                update_game(arena_input, static_cast<double>(frame_ms) / 1000.0, focused, smoke_test);
-            else {
-                game_clock_.reset();
-                game_input_.clear();
-            }
-            mark(frame_profile.update_ms);
-            if (profile_frames) {
-                frame_profile.world_render_ms = world_render_submit_ms_;
-                frame_profile.update_ms -= world_render_submit_ms_;
-                frame_profile.mission_ticks = mission_ticks_this_frame_;
-                frame_profile.gpu_ticks = gpu_ticks_this_frame_;
-                frame_profile.mission_tick = simulation_ ? simulation_->metrics().steps : 0;
-                frame_profile.mission_pending_seconds = simulation_.clock().pending_seconds();
-                frame_profile.mission_dropped_seconds = simulation_.clock().dropped_seconds();
-            }
-            const bool duration_done =
-                    window_seconds_ && static_cast<double>(frame_start - window_started) / 1e9 >= window_seconds_;
-            const bool mission_final_frame = mission_smoke && (!window_seconds_ || duration_done)
-                                          && frames >= mission_smoke_min_frames - 1
-                                          && simulation_->metrics().steps >= mission_smoke_min_ticks;
-            if (gpu_input.save_recording) {
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
-                const auto folder =
-                        store_.path().parent_path() / "recordings" / ("gpu-" + std::to_string(SDL_GetTicksNS()));
-                const auto saved = simulation_.save_recording(folder);
-                if (saved) last_recording_ = folder / "session.txt";
-                message_ =
-                        saved ? "Zapisano nagranie w katalogu profilu: " + folder.filename().string() : saved.error();
-                mark(frame_profile.capture_ms);
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
-            }
-            if (gpu_input.replay_recording) {
-                if (last_recording_.empty())
-                    message_ = "Najpierw zapisz nagranie w tej sesji.";
-                else {
-                    const auto replayed = simulation_.replay_recording(last_recording_);
-                    message_ = replayed ? "Odtworzono nagranie. Scena jest zatrzymana." : replayed.error();
-                    if (replayed) {
-                        gpu_controls_.paused = true;
-                        gpu_controls_.scene =
-                                simulation_.scene().mission ? 12 : static_cast<int>(simulation_.scene().laboratory);
+                window_.clear();
+                gui_.render();
+                if (simulation_) simulation_->invalidate_gl_state();
+                mark(frame_profile.gui_render_ms);
+                if (mission_final_frame) {
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
+                    int w{}, h{};
+                    SDL_GetWindowSizeInPixels(window_.native(), &w, &h);
+                    std::vector<std::uint32_t> capture(static_cast<std::size_t>(w) * h);
+                    glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, capture.data());
+                    for (int y = 0; y < h / 2; ++y)
+                        for (int x = 0; x < w; ++x) std::swap(capture[y * w + x], capture[(h - 1 - y) * w + x]);
+                    auto* surface = SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_RGBA32, capture.data(), w * 4);
+                    if (surface) {
+                        const auto path = (store_.path().parent_path() / "mission-window.bmp").u8string();
+                        SDL_SaveBMP(surface, reinterpret_cast<const char*>(path.c_str()));
+                        SDL_DestroySurface(surface);
                     }
                 }
-                mark(frame_profile.capture_ms);
-            }
-            const bool capture_frame =
-                    (gpu_smoke && (window_seconds_ ? duration_done : frames == 230)) || mission_final_frame;
-            frame_profile.capture_performed = capture_frame || gpu_input.save_recording || gpu_input.replay_recording;
-            mark(frame_profile.metadata_ms);
-            if (capture_frame) {
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
-                if (gpu_smoke) simulation_->save_image(store_.path().parent_path() / "gpu-preview.bmp");
-                if (mission_smoke) simulation_->save_image(store_.path().parent_path() / "mission-preview.bmp");
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
-                mark(frame_profile.capture_ms);
-            }
-            window_.clear();
-            gui_.render();
-            if (simulation_) simulation_->invalidate_gl_state();
-            mark(frame_profile.gui_render_ms);
-            if (mission_final_frame) {
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
-                int w{}, h{};
-                SDL_GetWindowSizeInPixels(window_.native(), &w, &h);
-                std::vector<std::uint32_t> capture(static_cast<std::size_t>(w) * h);
-                glReadPixels(0, 0, w, h, GL_RGBA, GL_UNSIGNED_BYTE, capture.data());
-                for (int y = 0; y < h / 2; ++y)
-                    for (int x = 0; x < w; ++x) std::swap(capture[y * w + x], capture[(h - 1 - y) * w + x]);
-                auto* surface = SDL_CreateSurfaceFrom(w, h, SDL_PIXELFORMAT_RGBA32, capture.data(), w * 4);
-                if (surface) {
-                    const auto path = (store_.path().parent_path() / "mission-window.bmp").u8string();
-                    SDL_SaveBMP(surface, reinterpret_cast<const char*>(path.c_str()));
-                    SDL_DestroySurface(surface);
+                if (mission_final_frame) {
+                    if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
+                    mark(frame_profile.capture_ms);
                 }
-            }
-            if (mission_final_frame) {
-                if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
-                mark(frame_profile.capture_ms);
-            }
-            if ((smoke_test || gpu_smoke || mission_smoke || session_smoke) && glGetError() != GL_NO_ERROR)
-                return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
-            mark(frame_profile.validation_ms);
-            window_.present();
-            mark(frame_profile.present_ms);
-            frame_profile.rendered = true;
-            if (action != ui::Action::none) perform(action);
-            ++frames;
-            if (smoke_test && frames >= 238) running_ = false;
-            if (lab_smoke && frames >= 300) running_ = false;
-            if (gpu_smoke && (window_seconds_ ? duration_done : frames >= 240)) running_ = false;
-            if (mission_final_frame || (session_smoke && frames >= 130)) running_ = false;
+                if ((smoke_test || gpu_smoke || mission_smoke || session_smoke || mission_quick || fault_smoke)
+                    && glGetError() != GL_NO_ERROR)
+                    return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
+                mark(frame_profile.validation_ms);
+                window_.present();
+                mark(frame_profile.present_ms);
+                frame_profile.rendered = true;
+                if (action != ui::Action::none) perform(action);
+                ++frames;
+                if (smoke_test && frames >= ScenarioRunner::menu_smoke_frames) running_ = false;
+                if (mission_quick && frames >= ScenarioRunner::mission_quick_frames) running_ = false;
+                if (fault_smoke && frames >= ScenarioRunner::fault_smoke_frames) running_ = false;
+                if (lab_smoke && frames >= 300) running_ = false;
+                if (gpu_smoke && (window_seconds_ ? duration_done : frames >= 240)) running_ = false;
+                if (mission_final_frame || (session_smoke && frames >= 130)) running_ = false;
 
-            mark(frame_profile.actions_ms);
-            if (!window_.vsync_enabled() && !unpaced_) {
-                const auto budget = static_cast<Uint64>(1'000'000'000 / state_.applied.frame_limit);
-                const auto elapsed = SDL_GetTicksNS() - frame_start;
-                if (elapsed < budget) SDL_DelayPrecise(budget - elapsed);
+                mark(frame_profile.actions_ms);
+                if (!window_.vsync_enabled() && !unpaced_) {
+                    const auto budget = static_cast<Uint64>(1'000'000'000 / state_.applied.frame_limit);
+                    const auto elapsed = SDL_GetTicksNS() - frame_start;
+                    if (elapsed < budget) SDL_DelayPrecise(budget - elapsed);
+                }
+                mark(frame_profile.sleep_ms);
+                if (mission_frame) mission_frames.push_back(*mission_frame);
+                if (profile_frames) append_frame_profile(frame_profile);
+            } catch (const std::exception& error) {
+                if (!recovers_mode_errors()) return std::unexpected{error.what()};
+                fail_mode(state_.screen, error.what());
+                ++frames; // the interrupted iteration still advances scripted scenarios
             }
-            mark(frame_profile.sleep_ms);
-            if (mission_frame) mission_frames.push_back(*mission_frame);
-            if (profile_frames) append_frame_profile(frame_profile);
         }
+        flush_settings();
         if (auto exported = scenario.write_frames(*this); !exported) return std::unexpected{exported.error()};
         if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::validation);
         if (lab_worker_) {
@@ -533,11 +593,7 @@ public:
 
 private:
     void ensure_render_device() {
-        if (render_device_) return;
-        GLint major{}, minor{};
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        glGetIntegerv(GL_MINOR_VERSION, &minor);
-        if (major < 4 || (major == 4 && minor < 3)) return;
+        if (render_device_ || !gpu_available_) return;
         render_device_ = std::make_shared<gpu::RenderDevice>(
                 utf8_path(SDL_GetBasePath()) / "assets/shaders",
                 shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{});
@@ -569,8 +625,12 @@ private:
             gpu_controls_.scene = 3;
             elapsed = 0;
         }
-        if (input.reset) {
-            simulation_.reset({gpu_controls_.scene == 12, static_cast<gpu::Scene>(std::min(gpu_controls_.scene, 11))});
+        if (input.select_scene || input.reset) {
+            // Reset restores the loaded scene, so a thermal scene stays a thermal scene.
+            simulation_.reset(input.select_scene
+                                      ? SceneConfiguration{gpu_controls_.scene == 12,
+                                                           static_cast<gpu::Scene>(std::min(gpu_controls_.scene, 11))}
+                                      : simulation_.scene());
             gpu_controls_.lost_seconds = 0;
             gpu_controls_.previous.reset();
             elapsed = 0;
@@ -692,12 +752,81 @@ private:
         return uploaded;
     }
 
+    [[nodiscard]] bool recovers_mode_errors() const {
+        return smoke_ == SmokeScenario::none || smoke_ == SmokeScenario::mode_faults;
+    }
+    void log_error(const std::string& text) const {
+        SDL_LogError(SDL_LOG_CATEGORY_APPLICATION, "%s", text.c_str());
+        std::ofstream log{store_.path().parent_path() / "errors.log", std::ios::app};
+        log << std::format("{:%F %T} {}\n", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()),
+                           text);
+    }
+    void flush_settings() {
+        if (!std::exchange(settings_dirty_, false)) return;
+        if (const auto written = store_.save(state_.applied); !written) message_ = written.error();
+    }
+    // Releases the failed mode and its resources and returns to the menu.
+    void fail_mode(ui::Screen mode, std::string_view what) {
+        gui_.abandon_frame();
+        log_error(std::format("{}: {}", mode_name(mode), what));
+        try {
+            switch (mode) {
+            case ui::Screen::laboratory:
+                lab_worker_.reset();
+                world_.reset();
+                recording_.reset();
+                lab_snapshot_.reset();
+                last_lab_pixels_.reset();
+                lab_controls_.recording = false;
+                lab_controls_.previous.reset();
+                clock_.reset();
+                break;
+            case ui::Screen::arena:
+                game_.reset();
+                cpu_vfx_enabled_ = false;
+                game_clock_.reset();
+                game_input_.clear();
+                break;
+            case ui::Screen::gpu_laboratory:
+            case ui::Screen::gpu_mission:
+                simulation_.close();
+                if (render_device_) render_device_->vfx.reset();
+                gpu_controls_.previous.reset();
+                break;
+            default: break;
+            }
+        } catch (const std::exception& error) {
+            log_error(std::format("{}: zwalnianie trybu: {}", mode_name(mode), error.what()));
+        }
+        state_.screen = ui::Screen::main_menu;
+        state_.draft = state_.applied;
+        message_ = std::format("Tryb „{}” zgłosił błąd i został zamknięty (wpis w errors.log w katalogu profilu): {}",
+                               mode_name(mode), what);
+        ++mode_failures_;
+    }
+
     bool perform(ui::Action action) {
+        try {
+            return perform_action(action);
+        } catch (const std::exception& error) {
+            if (!recovers_mode_errors()) throw;
+            fail_mode(target_screen(action, state_.screen), error.what());
+            return false;
+        }
+    }
+    bool perform_action(ui::Action action) {
         switch (action) {
         case ui::Action::none: break;
         case ui::Action::open_mission:
         case ui::Action::open_gpu: {
             const bool mission = action == ui::Action::open_mission;
+            if (!gpu_available_) {
+                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Poligon CPU, laboratorium "
+                                       "CPU i ustawienia działają normalnie.",
+                                       mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory),
+                                       gl_version_);
+                return false;
+            }
             const bool existing = bool(simulation_);
             const auto open_started = SDL_GetTicksNS();
             ensure_render_device();
@@ -773,6 +902,7 @@ private:
             message_.clear();
             break;
         case ui::Action::back:
+            flush_settings();
             simulation_.suspend();
             gpu_controls_.previous.reset();
             state_.draft = state_.applied;
@@ -783,7 +913,10 @@ private:
             state_.draft = core::Settings{};
             message_.clear();
             break;
-        case ui::Action::quit: running_ = false; break;
+        case ui::Action::quit:
+            flush_settings();
+            running_ = false;
+            break;
         case ui::Action::apply: {
             if (const auto checked = core::validate(state_.draft); !checked) {
                 message_ = checked.error();
@@ -801,6 +934,7 @@ private:
             gpu_controls_.lighting.shake = state_.applied.camera_shake;
             gpu_controls_.lighting.aberration = state_.applied.aberration;
             state_.diagnostics = state_.applied.show_diagnostics;
+            settings_dirty_ = false;
             if (const auto saved = store_.save(state_.applied); !saved) {
                 message_ = saved.error() + " Zmiany działają w bieżącej sesji.";
                 return false;
@@ -824,6 +958,10 @@ private:
     std::string message_;
     std::string renderer_;
     std::string gl_version_;
+    bool gpu_available_{};
+    bool settings_dirty_{};
+    unsigned mode_failures_{};
+    std::optional<ui::Screen> fault_screen_; // test hook: next frame on this screen throws
     std::unique_ptr<sim::World> world_;
     std::unique_ptr<sim::LaboratoryRunner> lab_worker_;
     std::shared_ptr<const sim::LaboratorySnapshot> lab_snapshot_;

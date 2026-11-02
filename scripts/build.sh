@@ -74,7 +74,7 @@ if [[ $task_skip_tests == false ]]; then
         ctest --test-dir "$task_build_directory" --output-on-failure -LE graphics
         if [[ $task_core_only == OFF && $task_test_suite == smoke ]]; then
             ctest --test-dir "$task_build_directory" --output-on-failure --parallel 1 \
-                -R '^(app\.opengl(33)?_smoke|gpu\.(platform_dispatch|gameplay|laboratory_ui))$'
+                -R '^(app\.(opengl(33)?_smoke|mode_faults)|gpu\.(platform_dispatch|gameplay|laboratory_ui|mission_ui_quick))$'
         fi
     fi
 fi

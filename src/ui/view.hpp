@@ -43,6 +43,7 @@ struct FrameInfo {
     std::string_view renderer;
     std::string_view gl_version;
     std::string_view message;
+    bool gpu_available{true}; // OpenGL 4.3 compute: GPU world, its tools and the mission
 };
 struct ViewState {
     Screen screen{Screen::main_menu};

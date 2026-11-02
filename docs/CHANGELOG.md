@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Stabilność dema
+
+Błąd w trybie (świat GPU, laboratorium CPU, poligon) nie kończy już programu: tryb zostaje zwolniony, menu pokazuje komunikat, a wpis trafia do `errors.log` w katalogu profilu. Suwaki przycinają wartości wpisane Ctrl+klikiem (wcześniej „kJ/s”, „Masa/s” i „Pędzel” termiki kończyły proces). Na OpenGL 3.3 pozycje wymagające 4.3 są wyszarzone z wyjaśnieniem, a `--mission`/`--gpu-laboratory` wracają do menu. „Reset sceny” przywraca ostatnio wczytaną scenę, także termiki. `settings.ini` zapisuje się po zakończeniu edycji suwaka, nie w każdej klatce. Testy: złoty wzorzec CPU (`sim.golden_master`), `ui.input_clamp`, `--smoke-test` odwiedza 8/8 ekranów, nowe `gpu.mission_ui_quick` i `app.mode_faults` (StrefaQA, także w CI). Symulacja bez zmian.
+
 ## Porządki — podział StrefaZero / StrefaQA
 
 `StrefaZero` zawiera grę i 10 opcji gracza (`--help`); walidacje, benchmarki, profile i pokrętła eksperymentów przeszły do osobnego programu `StrefaQA` (biblioteka `strefa_diagnostics`) z niezmienioną semantyką. CTest uruchamia tryby QA przez `StrefaQA` bez zmiany nazw, etykiet i limitów czasu; `app.opengl_smoke`, `app.opengl33_smoke` i `gpu.mission_ui` nadal sprawdzają `StrefaZero`. `Application` przyjmuje `LaunchConfig` zamiast 21 parametrów. Stan wyjściowy: [INVENTORY.md](maintenance/INVENTORY.md).

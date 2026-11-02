@@ -47,7 +47,8 @@ int LaunchOptions::test_count() const {
          + readback_test + readback_profile + execution_test + execution_profile + neighbor_test + neighbor_profile
          + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
          + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
-         + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check;
+         + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check
+         + mission_ui_smoke + fault_smoke;
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -62,6 +63,8 @@ SmokeScenario LaunchOptions::smoke_scenario() const {
     if (gpu_smoke_test) return SmokeScenario::gpu_laboratory;
     if (mission_smoke) return SmokeScenario::mission;
     if (session_smoke) return SmokeScenario::session;
+    if (mission_ui_smoke) return SmokeScenario::mission_quick;
+    if (fault_smoke) return SmokeScenario::mode_faults;
     return SmokeScenario::none;
 }
 std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, OptionScope scope) {
@@ -142,6 +145,10 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 return std::unexpected{"Jakość renderowania: basic, standard lub high."};
         } else if (argument == "--session-smoke-test")
             result.session_smoke = true;
+        else if (argument == "--mission-ui-smoke-test")
+            result.mission_ui_smoke = true;
+        else if (argument == "--mode-fault-test")
+            result.fault_smoke = true;
         else if (argument == "--shader-cache-check")
             result.cache_check = true;
         else if (argument == "--shader-cache" && i + 1 < argc) {
