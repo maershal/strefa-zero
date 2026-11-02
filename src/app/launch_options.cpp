@@ -116,6 +116,16 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 || result.benchmark_seconds > 600)
                 return std::unexpected{"Czas pomiaru sceny: 1–600 s."};
             result.benchmark_tuned = true;
+        } else if ((argument == "--repeat" || argument == "--loop-minutes") && i + 1 < argc) {
+            const bool repeat = argument == "--repeat";
+            const std::string_view value{argv[++i]};
+            unsigned& target = repeat ? result.benchmark_repeat : result.benchmark_loop_minutes;
+            const auto parsed = std::from_chars(value.data(), value.data() + value.size(), target);
+            if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || target < 1
+                || target > (repeat ? 1000U : 240U))
+                return std::unexpected{repeat ? "Liczba przebiegów (--repeat): 1–1000."
+                                              : "Czas pętli (--loop-minutes): 1–240 min."};
+            result.benchmark_tuned = true;
         } else if (argument == "--vsync" && i + 1 < argc) {
             const std::string_view value{argv[++i]};
             if (value != "on" && value != "off") return std::unexpected{"VSync benchmarku: on lub off."};
@@ -497,7 +507,9 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 "Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
     if (result.test_count() > 1) return std::unexpected{"Wybierz jeden rodzaj testu."};
     if (result.benchmark_tuned && result.benchmark_scenes.empty())
-        return std::unexpected{"Opcje --seconds i --vsync wymagają --scene-benchmark."};
+        return std::unexpected{"Opcje --seconds, --vsync, --repeat i --loop-minutes wymagają --scene-benchmark."};
+    if (result.benchmark_repeat > 1 && result.benchmark_loop_minutes)
+        return std::unexpected{"Wybierz --repeat albo --loop-minutes."};
     if (!result.benchmark_scenes.empty() && result.start_mode() != StartMode::menu)
         return std::unexpected{"Benchmark scen sam wybiera sceny; usuń opcje startowe."};
     if ((result.test_vsync.has_value() || result.test_frame_limit.has_value()) && !result.is_window_smoke())

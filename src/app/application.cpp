@@ -1242,9 +1242,10 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
              : window.vsync_enabled() ? "vsync"
                                       : "frame_limit")
          << "\ngpu_timer_mode=" << gpu::timer_mode_name(gpu::effective_timer_mode(base.profiling))
-         << "\nwarmup_seconds=" << warmup << "\nmeasure_seconds=" << seconds
-         << "\nscenes=" << options.benchmark_scenes.size() << "\nanchor_sdl_ns=" << anchor_sdl
-         << "\nanchor_utc_unix_ns=" << anchor_utc << "\nanchor_sdl_after_ns=" << anchor_sdl_after
+         << "\nwarmup_seconds=" << warmup << "\nmeasure_seconds=" << seconds << "\nrepeat=" << options.benchmark_repeat
+         << "\nloop_minutes=" << options.benchmark_loop_minutes << "\nscenes=" << options.benchmark_scenes.size()
+         << "\nanchor_sdl_ns=" << anchor_sdl << "\nanchor_utc_unix_ns=" << anchor_utc
+         << "\nanchor_sdl_after_ns=" << anchor_sdl_after
          << "\nutc_unix_ns=system_clock_after_frame_update_same_epoch_as_GpuTelemetry_csv"
          << "\nphysics_gpu_ms=commands_solver_diagnostics_thermal_tick"
          << "\npresentation_gpu_ms=thermal_presentation_lighting_tick_vfx_update_event_submit"
@@ -1254,57 +1255,73 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
          << "\nstatus=ok|invalid(window_hidden_minimized_or_occluded)|failed\n";
     frames_csv << benchmark_frames_header << '\n';
     summary_csv << benchmark_summary_header << '\n';
-    int failures = 0;
-    for (const auto& scene : options.benchmark_scenes) {
-        BenchmarkRun run;
-        run.scene = scene;
-        run.warmup_seconds = warmup;
-        run.measure_seconds = seconds;
-        auto config = base;
-        config.benchmark = &run;
-        config.thermal_scene = 0;
-        config.gpu_scene.reset();
-        config.lab_scene.reset();
-        switch (scene.kind) {
-        case BenchmarkScene::Kind::gpu:
-            config.start = StartMode::gpu_laboratory;
-            config.gpu_scene = scene.index;
+    int failures = 0, measured = 0;
+    const auto loop_started = SDL_GetTicksNS();
+    const bool looping = options.benchmark_repeat > 1 || options.benchmark_loop_minutes;
+    // One process for every pass: a process restart (fresh driver state, idle gap) cannot hide a slow regime.
+    for (unsigned pass = 1;; ++pass) {
+        if (options.benchmark_loop_minutes) {
+            const double minutes = static_cast<double>(SDL_GetTicksNS() - loop_started) / 6e10;
+            if (pass > 1 && minutes >= options.benchmark_loop_minutes) break;
+        } else if (pass > options.benchmark_repeat)
             break;
-        case BenchmarkScene::Kind::mission: config.start = StartMode::mission; break;
-        case BenchmarkScene::Kind::thermal:
-            config.start = StartMode::gpu_laboratory;
-            config.thermal_scene = scene.index;
-            config.thermal.enabled = true;
-            break;
-        case BenchmarkScene::Kind::lab:
-            config.start = StartMode::cpu_laboratory;
-            config.lab_scene = scene.index;
-            break;
+        if (looping) std::cout << std::format("Przebieg {}\n", pass) << std::flush;
+        for (const auto& scene : options.benchmark_scenes) {
+            BenchmarkRun run;
+            run.scene = scene;
+            run.warmup_seconds = warmup;
+            run.measure_seconds = seconds;
+            auto config = base;
+            config.benchmark = &run;
+            config.thermal_scene = 0;
+            config.gpu_scene.reset();
+            config.lab_scene.reset();
+            switch (scene.kind) {
+            case BenchmarkScene::Kind::gpu:
+                config.start = StartMode::gpu_laboratory;
+                config.gpu_scene = scene.index;
+                break;
+            case BenchmarkScene::Kind::mission: config.start = StartMode::mission; break;
+            case BenchmarkScene::Kind::thermal:
+                config.start = StartMode::gpu_laboratory;
+                config.thermal_scene = scene.index;
+                config.thermal.enabled = true;
+                break;
+            case BenchmarkScene::Kind::lab:
+                config.start = StartMode::cpu_laboratory;
+                config.lab_scene = scene.index;
+                break;
+            }
+            const auto id = scene.id();
+            // One failing scene is reported in its row; the remaining scenes are still measured.
+            try {
+                const auto result = run_scene(config);
+                if (result && *result != 0) return *result; // e.g. 77: no OpenGL 4.3 for any scene
+                if (!result && run.record.error.empty()) run.record.error = result.error();
+            } catch (const std::exception& error) {
+                run.record.error = error.what();
+            }
+            if (run.record.error.empty() && !run.completed) run.record.error = "pomiar przerwany przed końcem okna";
+            for (const auto& frame : run.record.frames) frames_csv << benchmark_frame_row(id, pass, frame) << '\n';
+            const bool gpu_physics = scene.kind != BenchmarkScene::Kind::lab;
+            auto summary =
+                    summarize(id, std::move(run.record), gpu_physics ? 1.0 / SimulationWorld::tick_seconds : 0.0);
+            summary.pass = pass;
+            failures += summary.status != BenchmarkStatus::ok;
+            ++measured;
+            summary_csv << benchmark_summary_row(summary) << '\n';
+            std::cout << benchmark_summary_line(summary) << std::endl;
         }
-        const auto id = scene.id();
-        // One failing scene is reported in its row; the remaining scenes are still measured.
-        try {
-            const auto result = run_scene(config);
-            if (result && *result != 0) return *result; // e.g. 77: no OpenGL 4.3 for any scene
-            if (!result && run.record.error.empty()) run.record.error = result.error();
-        } catch (const std::exception& error) {
-            run.record.error = error.what();
-        }
-        if (run.record.error.empty() && !run.completed) run.record.error = "pomiar przerwany przed końcem okna";
-        for (const auto& frame : run.record.frames) frames_csv << benchmark_frame_row(id, frame) << '\n';
-        const bool gpu_physics = scene.kind != BenchmarkScene::Kind::lab;
-        const auto summary =
-                summarize(id, std::move(run.record), gpu_physics ? 1.0 / SimulationWorld::tick_seconds : 0.0);
-        failures += summary.status != BenchmarkStatus::ok;
-        summary_csv << benchmark_summary_row(summary) << '\n';
-        std::cout << benchmark_summary_line(summary) << std::endl;
+        // Rows of finished passes survive a later crash or a TIMEOUT kill.
+        frames_csv.flush();
+        summary_csv.flush();
     }
     if (!frames_csv.flush() || !summary_csv.flush() || !info.flush())
         return std::unexpected{"Niepełny zapis wyników benchmarku scen."};
     if (failures) {
         std::cerr << std::format("Benchmark scen: {} z {} scen ze statusem innym niż ok (kolumna status w "
                                  "scene-benchmark.csv).\n",
-                                 failures, options.benchmark_scenes.size());
+                                 failures, measured);
         return 1;
     }
     return 0;

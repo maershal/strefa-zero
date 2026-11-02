@@ -109,7 +109,7 @@ int main() {
         hidden.frames[2].window.occluded = true;
         const auto invalid = strefa::app::summarize("gpu:rain", hidden, 120);
         check(invalid.status == BenchmarkStatus::invalid && invalid.occluded_frames == 1
-                      && strefa::app::benchmark_summary_row(invalid).find(",invalid,") != std::string::npos,
+                      && strefa::app::benchmark_summary_row(invalid).find(",1,invalid,") != std::string::npos,
               "An occluded window invalidates the scene");
         BenchmarkRecord failed;
         failed.error = "błąd, z przecinkiem; i średnikiem";
@@ -121,7 +121,7 @@ int main() {
         // Rows must keep the column count of their headers (scripts/profiling/soak.ps1 reads them by name).
         check(fields(strefa::app::benchmark_summary_row(summary)) == fields(strefa::app::benchmark_summary_header),
               "Summary row width");
-        check(fields(strefa::app::benchmark_frame_row("gpu:rain", record.frames[0]))
+        check(fields(strefa::app::benchmark_frame_row("gpu:rain", 1, record.frames[0]))
                       == fields(strefa::app::benchmark_frames_header),
               "Frame row width");
         check(strefa::app::benchmark_summary_line(summary).starts_with("gpu:rain"), "Summary line names the scene");

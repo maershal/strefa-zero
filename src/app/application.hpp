@@ -53,6 +53,8 @@ struct LaunchOptions {
     unsigned thermal_scene{};
     std::vector<BenchmarkScene> benchmark_scenes; // --scene-benchmark, one window run per scene
     unsigned benchmark_seconds{60};
+    unsigned benchmark_repeat{1};      // --repeat: passes over the scene list in one process
+    unsigned benchmark_loop_minutes{}; // --loop-minutes: start passes until this much time has passed
     bool benchmark_vsync{true}, benchmark_tuned{};
     bool thermal_check{}, thermal_benchmark{};
     gpu::VfxOptions gpu_vfx;

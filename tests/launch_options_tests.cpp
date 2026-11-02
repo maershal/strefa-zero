@@ -115,6 +115,11 @@ int main() {
                 {"--scene-benchmark", "mission,lab:demo", "--seconds", "5", "--vsync", "off", "--profile", "fixture"});
         check(tuned && tuned->benchmark_scenes.size() == 2 && tuned->benchmark_seconds == 5 && !tuned->benchmark_vsync,
               "--seconds and --vsync");
+        const auto repeated = parse({"--scene-benchmark", "mission", "--repeat", "3", "--profile", "fixture"});
+        const auto looped = parse({"--scene-benchmark", "mission", "--loop-minutes", "15", "--profile", "fixture"});
+        check(repeated && repeated->benchmark_repeat == 3 && looped && looped->benchmark_loop_minutes == 15
+                      && looped->benchmark_repeat == 1,
+              "--repeat and --loop-minutes");
         const auto sized =
                 parse({"--scene-benchmark", "mission", "--test-window-size", "1280", "720", "--profile", "fixture"});
         check(sized && sized->test_window_size.has_value() && (*sized->test_window_size)[0] == 1280,
@@ -124,6 +129,11 @@ int main() {
         const std::vector<std::vector<const char*>> bad_benchmarks{
                 {"--seconds", "5"},
                 {"--vsync", "off"},
+                {"--repeat", "2"},
+                {"--loop-minutes", "5"},
+                {"--scene-benchmark", "all", "--repeat", "0", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--loop-minutes", "241", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--repeat", "2", "--loop-minutes", "5", "--profile", "fixture"},
                 {"--scene-benchmark", "gpu:nope", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--seconds", "0", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--seconds", "601", "--profile", "fixture"},

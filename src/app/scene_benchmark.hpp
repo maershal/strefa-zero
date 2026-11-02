@@ -87,6 +87,7 @@ inline constexpr double early_phase_seconds = 10;
 
 struct BenchmarkSummary {
     std::string scene;
+    unsigned pass{1}; // --repeat / --loop-minutes: 1-based pass over the scene list
     BenchmarkStatus status{BenchmarkStatus::ok};
     std::string status_reason;
     std::size_t frames{};
@@ -111,11 +112,11 @@ struct BenchmarkSummary {
 [[nodiscard]] BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tick_rate);
 
 inline constexpr std::string_view benchmark_frames_header =
-        "scene,utc_unix_ns,sdl_ns,elapsed_seconds,frame_ms,ticks,dropped_seconds,pending_seconds,physics_samples,"
+        "scene,pass,utc_unix_ns,sdl_ns,elapsed_seconds,frame_ms,ticks,dropped_seconds,pending_seconds,physics_samples,"
         "physics_gpu_ms_sum,presentation_samples,presentation_gpu_ms_sum,render_samples,render_gpu_ms_sum,"
         "cpu_step_ms,visible,focused,minimized,occluded,route_reset";
 inline constexpr std::string_view benchmark_summary_header =
-        "scene,status,status_reason,frames,window_seconds,frame_median_ms,frame_p95_ms,frame_p99_ms,frame_max_ms,"
+        "scene,pass,status,status_reason,frames,window_seconds,frame_median_ms,frame_p95_ms,frame_p99_ms,frame_max_ms,"
         "frames_0_ticks,frame_median_0_ticks_ms,frames_1_tick,frame_median_1_tick_ms,frames_2plus_ticks,"
         "frame_median_2plus_ticks_ms,physics_samples,physics_truncated,physics_mean_ms,physics_median_ms,"
         "physics_p95_ms,physics_p99_ms,presentation_samples,presentation_truncated,presentation_mean_ms,"
@@ -126,7 +127,7 @@ inline constexpr std::string_view benchmark_summary_header =
         "backlog_max_seconds,early_frames,early_frame_median_ms,early_ticks_per_second,early_gpu_tick_mean_ms,"
         "late_frames,late_frame_median_ms,late_ticks_per_second,late_gpu_tick_mean_ms,hidden_frames,"
         "minimized_frames,occluded_frames,unfocused_frames,route_resets,start_utc_unix_ns,end_utc_unix_ns";
-[[nodiscard]] std::string benchmark_frame_row(std::string_view scene, const BenchmarkFrame&);
+[[nodiscard]] std::string benchmark_frame_row(std::string_view scene, unsigned pass, const BenchmarkFrame&);
 [[nodiscard]] std::string benchmark_summary_row(const BenchmarkSummary&);
 // One human-readable line per scene for stdout and the PR table.
 [[nodiscard]] std::string benchmark_summary_line(const BenchmarkSummary&);

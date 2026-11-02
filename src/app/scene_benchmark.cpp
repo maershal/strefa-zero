@@ -214,11 +214,11 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
     return result;
 }
 
-std::string benchmark_frame_row(std::string_view scene, const BenchmarkFrame& f) {
+std::string benchmark_frame_row(std::string_view scene, unsigned pass, const BenchmarkFrame& f) {
     return std::format(
-            "{},{},{},{:.6f},{:.4f},{},{:.6f},{:.6f},{},{:.4f},{},{:.4f},{},{:.4f},{:.4f},{:d},{:d},{:d},{:d},"
+            "{},{},{},{},{:.6f},{:.4f},{},{:.6f},{:.6f},{},{:.4f},{},{:.4f},{},{:.4f},{:.4f},{:d},{:d},{:d},{:d},"
             "{:d}",
-            scene, f.utc_unix_ns, f.sdl_ns, f.elapsed_seconds, f.frame_ms, f.ticks, f.dropped_seconds,
+            scene, pass, f.utc_unix_ns, f.sdl_ns, f.elapsed_seconds, f.frame_ms, f.ticks, f.dropped_seconds,
             f.pending_seconds, f.physics_samples, f.physics_gpu_ms, f.presentation_samples, f.presentation_gpu_ms,
             f.render_samples, f.render_gpu_ms, f.cpu_step_ms, f.window.visible, f.window.focused, f.window.minimized,
             f.window.occluded, f.route_reset);
@@ -232,19 +232,20 @@ std::string benchmark_summary_row(const BenchmarkSummary& s) {
         return std::format("{},{:.4f},{:.3f},{:.4f}", p.frames, p.frame_median_ms, p.ticks_per_second,
                            p.gpu_tick_mean_ms);
     };
-    return std::format("{},{},{},{},{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.4f},{},{:.4f},{},{:.4f},{},{},{},{:.3f},"
-                       "{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.3f},{:.3f},{:.6f},{:.6f},{:.6f},{},{},{},{},{},"
-                       "{},{},{},{}",
-                       s.scene, status_name(s.status), csv_text(s.status_reason), s.frames, s.window_seconds,
-                       s.frame_ms.median, s.frame_ms.p95, s.frame_ms.p99, s.frame_ms.max, s.by_ticks[0].frames,
-                       s.by_ticks[0].frame_median_ms, s.by_ticks[1].frames, s.by_ticks[1].frame_median_ms,
-                       s.by_ticks[2].frames, s.by_ticks[2].frame_median_ms, gpu(s.physics_gpu_ms, s.physics_truncated),
-                       gpu(s.presentation_gpu_ms, s.presentation_truncated), gpu(s.render_gpu_ms, s.render_truncated),
-                       s.gpu_ms_per_sim_second, s.gpu_ms_per_wall_second, s.budget_60fps, s.cpu_step_ms.median,
-                       s.cpu_step_ms.p95, s.ticks_mean, s.ticks_max, s.ticks_per_second, s.frames_per_second,
-                       s.dropped_seconds, s.pending_seconds.p95, s.pending_seconds.max, phase_cells(s.early),
-                       phase_cells(s.late), s.hidden_frames, s.minimized_frames, s.occluded_frames, s.unfocused_frames,
-                       s.route_resets, s.start_utc_unix_ns, s.end_utc_unix_ns);
+    return std::format(
+            "{},{},{},{},{},{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.4f},{},{:.4f},{},{:.4f},{},{},{},{:.3f},"
+            "{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.3f},{:.3f},{:.6f},{:.6f},{:.6f},{},{},{},{},{},"
+            "{},{},{},{}",
+            s.scene, s.pass, status_name(s.status), csv_text(s.status_reason), s.frames, s.window_seconds,
+            s.frame_ms.median, s.frame_ms.p95, s.frame_ms.p99, s.frame_ms.max, s.by_ticks[0].frames,
+            s.by_ticks[0].frame_median_ms, s.by_ticks[1].frames, s.by_ticks[1].frame_median_ms, s.by_ticks[2].frames,
+            s.by_ticks[2].frame_median_ms, gpu(s.physics_gpu_ms, s.physics_truncated),
+            gpu(s.presentation_gpu_ms, s.presentation_truncated), gpu(s.render_gpu_ms, s.render_truncated),
+            s.gpu_ms_per_sim_second, s.gpu_ms_per_wall_second, s.budget_60fps, s.cpu_step_ms.median, s.cpu_step_ms.p95,
+            s.ticks_mean, s.ticks_max, s.ticks_per_second, s.frames_per_second, s.dropped_seconds,
+            s.pending_seconds.p95, s.pending_seconds.max, phase_cells(s.early), phase_cells(s.late), s.hidden_frames,
+            s.minimized_frames, s.occluded_frames, s.unfocused_frames, s.route_resets, s.start_utc_unix_ns,
+            s.end_utc_unix_ns);
 }
 
 std::string benchmark_summary_line(const BenchmarkSummary& s) {
