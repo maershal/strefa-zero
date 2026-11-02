@@ -1187,10 +1187,7 @@ void ParticleWorld::set_thermal_view(ThermalView view) {
     if (impl_->thermal) impl_->thermal->view = view;
 }
 void ParticleWorld::set_thermal_brush(const ThermalBrush& brush) {
-    if (!std::ranges::all_of(brush.segment, [](float v) { return std::isfinite(v); }) || !std::isfinite(brush.radius)
-        || brush.radius < 1 || brush.radius > 16 || !std::isfinite(brush.rate) || brush.rate < 0 || brush.rate > 10000
-        || brush.tool > ThermalTool::steam)
-        throw std::invalid_argument{"Invalid thermal brush"};
+    if (!valid(brush)) throw std::invalid_argument{"Invalid thermal brush"};
     impl_->thermal_brush = brush;
 }
 const ThermalTotals& ParticleWorld::thermal_totals() const {

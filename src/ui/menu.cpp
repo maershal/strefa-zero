@@ -163,9 +163,9 @@ template<class T> void setting_widget(const meta::Field<core::Settings, T>& fiel
         if (field.key == "lighting_quality")
             ImGui::Combo("##value", &value, "Wyłączone\0Niskie\0Wysokie\0");
         else
-            ImGui::SliderInt("##value", &value, field.minimum, field.maximum);
+            ImGui::SliderInt("##value", &value, field.minimum, field.maximum, "%d", ImGuiSliderFlags_AlwaysClamp);
     } else if constexpr (std::is_same_v<T, float>) {
-        ImGui::SliderFloat("##value", &value, field.minimum, field.maximum, "%.2f");
+        ImGui::SliderFloat("##value", &value, field.minimum, field.maximum, "%.2f", ImGuiSliderFlags_AlwaysClamp);
     } else if constexpr (std::is_same_v<T, core::MapTheme>) {
         const auto index = static_cast<std::size_t>(value);
         if (ImGui::BeginCombo("##value", core::theme_names[index].data())) {

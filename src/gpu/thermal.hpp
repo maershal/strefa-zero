@@ -24,6 +24,14 @@ struct ThermalBrush {
     ThermalTool tool{};
     bool operator==(const ThermalBrush&) const = default;
 };
+inline constexpr float thermal_brush_min_radius = 1, thermal_brush_max_radius = 16, thermal_brush_max_rate = 10000;
+// The contract ParticleWorld::set_thermal_brush enforces; UI input is clamped to it.
+inline bool valid(const ThermalBrush& brush) {
+    return std::ranges::all_of(brush.segment, [](float v) { return std::isfinite(v); }) && std::isfinite(brush.radius)
+        && brush.radius >= thermal_brush_min_radius && brush.radius <= thermal_brush_max_radius
+        && std::isfinite(brush.rate) && brush.rate >= 0 && brush.rate <= thermal_brush_max_rate
+        && brush.tool <= ThermalTool::steam;
+}
 // Same material IDs and normalized mass/kJ units as sim/material.hpp.
 struct PhaseState {
     double temperature{}, liquid{}, vapor{};
