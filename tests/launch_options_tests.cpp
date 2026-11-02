@@ -101,6 +101,41 @@ int main() {
         }
         const auto thermal = parse({"--gpu-thermal-scene", "fire"});
         check(thermal && thermal->start_mode() == StartMode::gpu_laboratory, "Thermal scene starts the GPU laboratory");
+        check(thermal->thermal_scene == 1 && !parse({"--gpu-thermal-scene", "ice"}), "Thermal scene ids");
+        const auto gpu_scene = parse({"--gpu-scene", "dam-break"});
+        check(gpu_scene && gpu_scene->start_mode() == StartMode::gpu_laboratory && gpu_scene->gpu_scene == 5u
+                      && !gpu_scene->is_test(),
+              "--gpu-scene starts the GPU laboratory in that scene");
+        const auto lab_scene = parse({"--lab-scene", "wood-fire"});
+        check(lab_scene && lab_scene->start_mode() == StartMode::cpu_laboratory && lab_scene->lab_scene == 9u,
+              "--lab-scene starts the CPU laboratory in that scene");
+        check(!parse({"--gpu-scene", "nope"}) && !parse({"--lab-scene", "dam"}), "Unknown scene ids accepted");
+        check(!parse({"--gpu-scene", "rain", "--lab-scene", "demo"}), "Two start scenes accepted");
+        check(!parse({"--gpu-scene", "rain", "--gpu-thermal-scene", "fire"}), "GPU and thermal start scenes accepted");
+        // StrefaQA scene benchmark: one test with its own window pacing.
+        check(!parse({"--scene-benchmark", "all"}), "--scene-benchmark must require --profile");
+        const auto bench = parse({"--scene-benchmark", "all", "--profile", "fixture"});
+        check(bench && bench->test_count() == 1 && bench->benchmark_scenes.size() == 32
+                      && bench->benchmark_seconds == 60 && bench->benchmark_vsync && !bench->is_window_smoke()
+                      && bench->forces_test_pacing() && bench->requires_gl43()
+                      && bench->smoke_scenario() == SmokeScenario::scene_benchmark
+                      && bench->start_mode() == StartMode::menu,
+              "--scene-benchmark defaults");
+        const auto tuned = parse(
+                {"--scene-benchmark", "mission,lab:demo", "--seconds", "5", "--vsync", "off", "--profile", "fixture"});
+        check(tuned && tuned->benchmark_scenes.size() == 2 && tuned->benchmark_seconds == 5 && !tuned->benchmark_vsync,
+              "--seconds and --vsync");
+        const std::vector<std::vector<const char*>> bad_benchmarks{
+                {"--seconds", "5"},
+                {"--vsync", "off"},
+                {"--scene-benchmark", "gpu:nope", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--seconds", "0", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--seconds", "601", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--vsync", "maybe", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--mission", "--profile", "fixture"},
+                {"--scene-benchmark", "all", "--gpu-smoke-test", "--profile", "fixture"}};
+        for (const auto& bad : bad_benchmarks)
+            check(!parse(bad), std::string{"Invalid benchmark options accepted: "} + bad.front());
         const auto combined = parse({"--arena", "--smoke-test", "--profile", "fixture"});
         check(combined && combined->start_mode() == StartMode::cpu_arena
                       && combined->smoke_scenario() == SmokeScenario::menu,
@@ -113,6 +148,11 @@ int main() {
         for (const auto* flag :
              {"--mission", "--gpu-laboratory", "--laboratory", "--arena", "--opengl33", "--gl-debug"})
             check(bool(parse({flag}, player)), std::string{flag} + " must stay a player option");
+        check(bool(parse({"--gpu-scene", "oil-water"}, player)) && bool(parse({"--lab-scene", "wood-fire"}, player)),
+              "--gpu-scene and --lab-scene are player options");
+        check(!parse({"--scene-benchmark", "all", "--profile", "fixture"}, player)
+                      && !parse({"--gpu-thermal-scene", "fire"}, player),
+              "Benchmark and thermal scenes are StrefaQA only");
         for (const auto* flag : {"--smoke-test", "--mission-smoke-test"}) {
             const auto options = parse({flag, "--profile", "fixture"}, player);
             check(options && options->test_count() == 1, std::string{flag} + " must stay in StrefaZero");

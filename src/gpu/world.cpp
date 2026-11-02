@@ -275,6 +275,7 @@ struct ParticleWorld::Impl {
     bool fluids_enabled{}, grains_enabled{};
     struct Timer {
         GLuint id{}, start{};
+        GLuint presentation{}; // physics ticks only: second interval, from the physics end to the tick end
         bool pending{};
         unsigned generation{};
         TimerMode mode{TimerMode::elapsed};
@@ -283,7 +284,7 @@ struct ParticleWorld::Impl {
     unsigned render_cursor{};
     unsigned timer_cursor{}, timer_head{}, render_head{}, group_head{}, current{};
     Metrics metrics;
-    std::vector<double> timings, render_timings, cpu_timings;
+    std::vector<double> timings, presentation_timings, render_timings, cpu_timings;
     void reset_timer_queries(TimerMode mode) {
         // Query objects acquire an immutable target on first use. Recreate the
         // pools on mode changes, including pending results; deletion is deferred
@@ -292,16 +293,19 @@ struct ParticleWorld::Impl {
             for (auto& timer : *queue) {
                 if (timer.id) gl.DeleteQueries(1, &timer.id);
                 if (timer.start) gl.DeleteQueries(1, &timer.start);
+                if (timer.presentation) gl.DeleteQueries(1, &timer.presentation);
                 timer = {};
                 timer.mode = mode;
                 if (mode != TimerMode::off) gl.GenQueries(1, &timer.id);
                 if (mode == TimerMode::timestamp) gl.GenQueries(1, &timer.start);
+                if (mode != TimerMode::off && queue == &timers) gl.GenQueries(1, &timer.presentation);
             }
         timer_cursor = timer_head = render_cursor = render_head = 0;
-        metrics.gpu_ms = 0;
+        metrics.gpu_ms = metrics.physics_ms = metrics.presentation_ms = 0;
         metrics.render_ms = 0;
         metrics.timing_samples = 0;
         timings.clear();
+        presentation_timings.clear();
         render_timings.clear();
     }
     void reset_group_queries(bool enabled) {
@@ -324,6 +328,19 @@ struct ParticleWorld::Impl {
             gl.QueryCounter(timer.id, GL_TIMESTAMP);
         else
             gl.EndQuery(GL_TIME_ELAPSED);
+        if (timer.presentation) {
+            // The physics timestamp doubles as the start of the presentation interval.
+            if (timer.mode == TimerMode::elapsed) gl.BeginQuery(GL_TIME_ELAPSED, timer.presentation);
+            return;
+        }
+        timer.pending = true;
+        timer.generation = epoch;
+    }
+    void end_presentation_timer(Timer& timer) {
+        if (timer.mode == TimerMode::timestamp)
+            gl.QueryCounter(timer.presentation, GL_TIMESTAMP);
+        else
+            gl.EndQuery(GL_TIME_ELAPSED);
         timer.pending = true;
         timer.generation = epoch;
     }
@@ -333,6 +350,7 @@ struct ParticleWorld::Impl {
             for (const auto& timer : *queue) {
                 if (timer.id) gl.DeleteQueries(1, &timer.id);
                 if (timer.start) gl.DeleteQueries(1, &timer.start);
+                if (timer.presentation) gl.DeleteQueries(1, &timer.presentation);
             }
         for (const auto& timer : group_timers)
             if (timer.ids[0]) gl.DeleteQueries(6, timer.ids.data());
@@ -658,7 +676,7 @@ void ParticleWorld::load(std::span<const Grain> grains, std::span<const std::uin
     s.readback_age = 0;
     s.metrics.grains =
             static_cast<unsigned>(std::ranges::count_if(all, [](const Grain& p) { return p.motion[3] > .5F; }));
-    s.metrics.gpu_ms = 0;
+    s.metrics.gpu_ms = s.metrics.physics_ms = s.metrics.presentation_ms = 0;
     s.metrics.render_ms = 0;
     s.metrics.timing_samples = 0;
     s.metrics.water =
@@ -980,10 +998,7 @@ bool ParticleWorld::step() {
     }
     const auto diagnostics_end = stamp();
     if (grouped) s.gl.QueryCounter(group.ids[4], GL_TIMESTAMP);
-    if (measure) {
-        s.end_timer(timer);
-        s.timer_cursor = (s.timer_cursor + 1) % static_cast<unsigned>(s.timers.size());
-    }
+    if (measure) s.end_timer(timer);
     const auto timer_closed = stamp();
     if (s.thermal && s.thermal_config.enabled) s.thermal->presentation(s.renderer.lighting.thermal_image);
     s.gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
@@ -1006,6 +1021,10 @@ bool ParticleWorld::step() {
     if (s.mission_enabled) s.event_ring.submit(s.buffers[6], event_offset, s.epoch, s.gameplay.tick());
     ++s.metrics.steps;
     if (s.mission_enabled || diagnostic_due) s.stage_count(!s.mission_enabled);
+    if (measure) {
+        s.end_presentation_timer(timer);
+        s.timer_cursor = (s.timer_cursor + 1) % static_cast<unsigned>(s.timers.size());
+    }
     if (grouped) {
         s.gl.QueryCounter(group.ids[5], GL_TIMESTAMP);
         group.pending = true;
@@ -1059,8 +1078,8 @@ void ParticleWorld::poll(bool collect_hud) {
             return true;
         };
         const auto id = [](const auto& timer) {
-            if constexpr (requires { timer.id; })
-                return timer.id;
+            if constexpr (requires { timer.presentation; })
+                return timer.presentation ? timer.presentation : timer.id;
             else
                 return timer.ids.back();
         };
@@ -1075,11 +1094,13 @@ void ParticleWorld::poll(bool collect_hud) {
     };
     const auto scalar = [&](auto& queue, unsigned& head, bool rendering) {
         collect(queue, head, [&](auto& timer) {
-            GLuint64 ns{};
+            GLuint64 ns{}, presentation_ns{};
             s.gl.GetQueryObjectui64v(timer.id, GL_QUERY_RESULT, &ns);
+            if (timer.presentation) s.gl.GetQueryObjectui64v(timer.presentation, GL_QUERY_RESULT, &presentation_ns);
             if (timer.mode == TimerMode::timestamp) {
                 GLuint64 began{};
                 s.gl.GetQueryObjectui64v(timer.start, GL_QUERY_RESULT, &began);
+                if (timer.presentation) presentation_ns -= ns;
                 ns -= began;
             }
             if (timer.generation != s.epoch) {
@@ -1091,9 +1112,13 @@ void ParticleWorld::poll(bool collect_hud) {
                 s.metrics.render_ms = ms;
                 if (s.render_timings.size() < 10000) s.render_timings.push_back(ms);
             } else {
-                s.metrics.gpu_ms = ms;
+                const auto presentation_ms = static_cast<double>(presentation_ns) * 1e-6;
+                s.metrics.physics_ms = ms;
+                s.metrics.presentation_ms = presentation_ms;
+                s.metrics.gpu_ms = ms + presentation_ms;
                 ++s.metrics.timing_samples;
                 if (s.timings.size() < 10000) s.timings.push_back(ms);
+                if (s.presentation_timings.size() < 10000) s.presentation_timings.push_back(presentation_ms);
             }
         });
     };
@@ -1765,7 +1790,7 @@ std::expected<void, std::string> ParticleWorld::validate_gameplay_protocol(const
                 glFinish();
                 tick();
                 contract_csv << trial << ',' << i + 1 << ',' << metrics().cpu_submit_ms << ',' << metrics().gameplay_ms
-                             << ',' << metrics().gpu_ms << ',' << event_stats()[3] << '\n';
+                             << ',' << metrics().physics_ms << ',' << event_stats()[3] << '\n';
             }
             drain();
         }
@@ -2021,6 +2046,9 @@ void ParticleWorld::save_image(const std::filesystem::path& path) const {
 }
 std::vector<double> ParticleWorld::take_timings() {
     return std::exchange(impl_->timings, {});
+}
+std::vector<double> ParticleWorld::take_presentation_timings() {
+    return std::exchange(impl_->presentation_timings, {});
 }
 std::vector<std::array<float, 4>> ParticleWorld::read_fluid_terms() {
     auto& s = *impl_;

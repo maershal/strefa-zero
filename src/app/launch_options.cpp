@@ -1,5 +1,7 @@
 #include "app/application.hpp"
 #include "core/charconv.hpp"
+#include "gpu/world.hpp"
+#include "sim/world.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,6 +22,8 @@ constexpr std::array player_options{
         PlayerOption{"--mission", "", "start w misji GPU"},
         PlayerOption{"--gpu-laboratory", "", "start w laboratorium GPU"},
         PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
+        PlayerOption{"--gpu-scene", "<scena>", "start w scenie laboratorium GPU: "},
+        PlayerOption{"--lab-scene", "<scena>", "start w scenie laboratorium CPU: "},
         PlayerOption{"--arena", "", "start na poligonie CPU"},
         PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
         PlayerOption{"--gl-debug", "", "zapis komunikatów sterownika OpenGL do gl-debug.txt w katalogu profilu"},
@@ -27,6 +31,11 @@ constexpr std::array player_options{
         PlayerOption{"--mission-smoke-test", "", "test dymny misji GPU (wymaga --profile)"},
         PlayerOption{"--help", "", "ta pomoc"},
 };
+std::string join_ids(std::span<const char* const> ids) {
+    std::string text;
+    for (const auto* id : ids) text += (text.empty() ? "" : ", ") + std::string{id};
+    return text;
+}
 } // namespace
 std::string help_text(OptionScope scope) {
     std::string text = scope == OptionScope::player
@@ -36,7 +45,10 @@ std::string help_text(OptionScope scope) {
         std::string usage{option.name};
         if (!option.value.empty()) usage += " " + std::string{option.value};
         usage.resize(std::max<std::size_t>(usage.size() + 2, 24), ' ');
-        text += "  " + usage + std::string{option.description} + "\n";
+        std::string description{option.description};
+        if (option.name == "--gpu-scene") description += join_ids(gpu::scene_ids);
+        if (option.name == "--lab-scene") description += join_ids(sim::scene_ids);
+        text += "  " + usage + description + "\n";
     }
     if (scope == OptionScope::all)
         text += "Walidacje, benchmarki, profile i pokrętła GPU: README.md, sekcja StrefaQA.\n";
@@ -49,7 +61,7 @@ int LaunchOptions::test_count() const {
          + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
          + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
          + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check
-         + mission_ui_smoke + fault_smoke;
+         + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty();
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -66,6 +78,7 @@ SmokeScenario LaunchOptions::smoke_scenario() const {
     if (session_smoke) return SmokeScenario::session;
     if (mission_ui_smoke) return SmokeScenario::mission_quick;
     if (fault_smoke) return SmokeScenario::mode_faults;
+    if (!benchmark_scenes.empty()) return SmokeScenario::scene_benchmark;
     return SmokeScenario::none;
 }
 std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, OptionScope scope) {
@@ -99,19 +112,37 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         else if (argument == "--gpu-thermal-benchmark")
             result.thermal_benchmark = true;
         else if (argument == "--gpu-thermal-scene" && i + 1 < argc) {
-            const std::string_view scene{argv[++i]};
-            if (scene == "fire")
-                result.thermal_scene = 1;
-            else if (scene == "oil")
-                result.thermal_scene = 2;
-            else if (scene == "quench")
-                result.thermal_scene = 3;
-            else if (scene == "phases")
-                result.thermal_scene = 4;
-            else
-                return std::unexpected{"Scena termiki: fire, oil, quench, phases."};
+            const auto scene = find_scene_id(thermal_scene_ids, argv[++i], "termiki");
+            if (!scene) return std::unexpected{scene.error()};
+            result.thermal_scene = *scene + 1;
             result.gpu_thermal.enabled = true;
             result.start_in_gpu = true;
+        } else if (argument == "--gpu-scene" && i + 1 < argc) {
+            const auto scene = find_scene_id(gpu::scene_ids, argv[++i], "GPU");
+            if (!scene) return std::unexpected{scene.error()};
+            result.gpu_scene = *scene;
+            result.start_in_gpu = true;
+        } else if (argument == "--lab-scene" && i + 1 < argc) {
+            const auto scene = find_scene_id(sim::scene_ids, argv[++i], "laboratorium CPU");
+            if (!scene) return std::unexpected{scene.error()};
+            result.lab_scene = *scene;
+            result.start_in_laboratory = true;
+        } else if (argument == "--scene-benchmark" && i + 1 < argc) {
+            auto scenes = parse_benchmark_scenes(argv[++i]);
+            if (!scenes) return std::unexpected{scenes.error()};
+            result.benchmark_scenes = std::move(*scenes);
+        } else if (argument == "--seconds" && i + 1 < argc) {
+            const std::string_view value{argv[++i]};
+            const auto parsed = std::from_chars(value.data(), value.data() + value.size(), result.benchmark_seconds);
+            if (parsed.ec != std::errc{} || parsed.ptr != value.data() + value.size() || result.benchmark_seconds < 1
+                || result.benchmark_seconds > 600)
+                return std::unexpected{"Czas pomiaru sceny: 1–600 s."};
+            result.benchmark_tuned = true;
+        } else if (argument == "--vsync" && i + 1 < argc) {
+            const std::string_view value{argv[++i]};
+            if (value != "on" && value != "off") return std::unexpected{"VSync benchmarku: on lub off."};
+            result.benchmark_vsync = value == "on";
+            result.benchmark_tuned = true;
         } else if (argument == "--gpu-thermal" && i + 1 < argc) {
             const std::string_view mode{argv[++i]};
             if (mode != "on" && mode != "off") return std::unexpected{"Termika GPU: on lub off."};
@@ -485,6 +516,12 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         return std::unexpected{
                 "Profil kosztu ma stały protokół: elapsed, diagnostyka/sprzężenie ON, HUD auto/2, bez timerów grupowych."};
     if (result.test_count() > 1) return std::unexpected{"Wybierz jeden rodzaj testu."};
+    if (static_cast<int>(result.gpu_scene.has_value()) + (result.thermal_scene != 0) > 1)
+        return std::unexpected{"Wybierz jedną scenę startową."};
+    if (result.benchmark_tuned && result.benchmark_scenes.empty())
+        return std::unexpected{"Opcje --seconds i --vsync wymagają --scene-benchmark."};
+    if (!result.benchmark_scenes.empty() && result.start_mode() != StartMode::menu)
+        return std::unexpected{"Benchmark scen sam wybiera sceny; usuń opcje startowe."};
     if ((result.test_vsync.has_value() || result.test_frame_limit.has_value()) && !result.is_window_smoke())
         return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;

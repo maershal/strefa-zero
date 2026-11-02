@@ -201,7 +201,9 @@ public:
             report << "scene=" << (mission_smoke ? "mission" : "sand_water") << "\nframes=" << frames
                    << "\nmedian_ms=" << percentile(.5) << "\np95_ms=" << percentile(.95)
                    << "\np99_ms=" << percentile(.99) << "\nmax_ms=" << ui_frame_times.back()
-                   << "\nsteps=" << measured.metrics().steps << "\ngpu_step_ms=" << measured.metrics().gpu_ms
+                   << "\nsteps=" << measured.metrics().steps << "\ngpu_step_ms=" << measured.metrics().physics_ms
+                   << "\ngpu_presentation_ms=" << measured.metrics().presentation_ms
+                   << "\ngpu_tick_ms=" << measured.metrics().gpu_ms
                    << "\ngpu_render_ms=" << measured.metrics().render_ms
                    << "\ncpu_submit_ms=" << measured.metrics().cpu_submit_ms << "\npaused_ok=" << gpu_pause_ok
                    << "\ndropped_seconds="

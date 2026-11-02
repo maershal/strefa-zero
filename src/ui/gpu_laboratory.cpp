@@ -137,7 +137,8 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     ImGui::Text("Okno: %.1f FPS", ImGui::GetIO().Framerate);
     if (lab.clock) clock_stats(*lab.clock);
     if (ImGui::CollapsingHeader("Diagnostyka")) {
-        ImGui::Text("Krok GPU: %.3f ms | render %.3f ms", lab.metrics.gpu_ms, lab.metrics.render_ms);
+        ImGui::Text("Krok GPU: %.3f ms (fizyka %.3f, prezentacja %.3f) | render %.3f ms", lab.metrics.gpu_ms,
+                    lab.metrics.physics_ms, lab.metrics.presentation_ms, lab.metrics.render_ms);
         ImGui::Text("Kroki: %llu (1/120 s)", static_cast<unsigned long long>(lab.metrics.steps));
         ImGui::Text("Ściśnięcie cieczy maks.: %.1f%%", lab.metrics.max_compression * 100);
         tooltip("Błąd gęstości cieczy (PBF), próbka co 30 kroków. Nie jest ciśnieniem w Pa.");

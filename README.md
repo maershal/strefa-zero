@@ -46,6 +46,8 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 | Opcja | Znaczenie |
 | --- | --- |
 | `--mission`, `--gpu-laboratory`, `--laboratory`, `--arena` | Start bezpośrednio w trybie (zob. tabela wyżej). |
+| `--gpu-scene <scena>` | Start w scenie Laboratorium GPU: `avalanche`, `rain`, `mixed`, `empty`, `water-tank`, `dam-break`, `connected-vessels`, `oil-water`, `sand-water`, `hourglass`, `inverted-oil`, `oil-drop`. |
+| `--lab-scene <scena>` | Start w scenie Laboratorium CPU (identyfikatory jak w `StrefaPhysics --scene`, np. `wood-fire`, `dam-break`). |
 | `--profile <katalog>` | Katalog ustawień, nagrań i raportów (domyślnie profil użytkownika). |
 | `--opengl33` | Wymusza kontekst 3.3 (kontrola zgodności; tryby GPU niedostępne). |
 | `--gl-debug` | Zapisuje komunikaty sterownika OpenGL do `gl-debug.txt` w profilu. |
@@ -119,6 +121,9 @@ kodem 77, który CTest oznacza jako pominięty; ze zmienną `STREFA_REQUIRE_GL43
 kodem 1, więc brak GL 4.3 nie zostawia zielonego wyniku. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
 `--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`
 i kończą proces. Skrypty `scripts/profiling/*.ps1` przyjmują `-Executable StrefaQA.exe`.
+Pomiar scen w oknie: `StrefaQA --scene-benchmark <lista|all> [--seconds 60] [--vsync on|off] --profile <katalog>`
+(identyfikatory `gpu:<scena>`, `mission`, `thermal:<scena>`, `lab:<scena>`; wyniki w `scene-benchmark.csv`,
+procedura pomiaru: [GPU_CHECK.md](docs/maintenance/GPU_CHECK.md)).
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
 1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
 `errors.log`).

@@ -84,7 +84,7 @@ target_include_directories(strefa_gameplay PUBLIC src)
 target_link_libraries(strefa_gameplay PUBLIC strefa_options)
 
 # CLI options and session recordings; SDL/GL-free so CPU tests can link it.
-add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/session_recording.cpp)
+add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/scene_benchmark.cpp src/app/session_recording.cpp)
 target_link_libraries(strefa_launch PUBLIC strefa_core strefa_gameplay)
 
 add_library(strefa_game STATIC src/game/session.cpp)
@@ -199,6 +199,9 @@ if(BUILD_TESTING)
     add_executable(strefa_launch_options_tests tests/launch_options_tests.cpp)
     target_link_libraries(strefa_launch_options_tests PRIVATE strefa_launch)
     strefa_add_cpu_test(app.launch_options strefa_launch_options_tests unit)
+    add_executable(strefa_scene_benchmark_tests tests/scene_benchmark_tests.cpp)
+    target_link_libraries(strefa_scene_benchmark_tests PRIVATE strefa_launch)
+    strefa_add_cpu_test(app.scene_benchmark strefa_scene_benchmark_tests unit)
     add_executable(strefa_vfx_tests tests/vfx_tests.cpp)
     target_link_libraries(strefa_vfx_tests PRIVATE strefa_game strefa_launch)
     strefa_add_cpu_test(game.vfx_contract strefa_vfx_tests unit)
@@ -374,6 +377,9 @@ if(BUILD_TESTING)
         # mission_ui_quick 45.4 s, laboratory_ui 73.7 s); each writes progress.txt once per second.
         add_test(NAME gpu.mission_ui COMMAND strefa_zero --mission-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-profile)
         set_tests_properties(gpu.mission_ui PROPERTIES LABELS "integration;graphics;gpu;performance" TIMEOUT 120 SKIP_RETURN_CODE 77)
+        # Informational on software renderers: passes on complete output, never on timing thresholds.
+        add_test(NAME gpu.scene_benchmark COMMAND strefa_qa --scene-benchmark gpu:dam-break,mission,thermal:fire,lab:wood-fire --seconds 5 --vsync off --profile ${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile)
+        set_tests_properties(gpu.scene_benchmark PROPERTIES LABELS "integration;graphics;gpu;performance" TIMEOUT 180 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.mission_ui_quick COMMAND strefa_qa --mission-ui-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile)
         set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME app.mode_faults COMMAND strefa_qa --mode-fault-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mode-faults-profile)
