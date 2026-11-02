@@ -58,7 +58,7 @@ struct BenchmarkFrame {
     double physics_gpu_ms{}, presentation_gpu_ms{}, render_gpu_ms{}; // sums of this frame's samples
     double cpu_step_ms{};                                            // CPU laboratory: last tick on the worker thread
     WindowState window;
-    bool route_reset{}; // the mission route restarted in this frame (excluded from frame-time statistics)
+    bool route_reset{}; // this frame contains a mission route restart (excluded from frame-time statistics)
 };
 
 // Everything one scene produced: per-frame rows and every GPU sample of the measurement window.

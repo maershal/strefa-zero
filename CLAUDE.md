@@ -101,8 +101,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
   metric definitions (budget share, frames by tick count) in `docs/maintenance/GPU_CHECK.md`.
 - Laptop on AC power, balanced/high-performance plan recorded; start with a cooled GPU (idle >= 5 min, temperature noted).
 - A/B comparisons: >= 3 repetitions in ABBA order, same build flags, same window size and VSync setting.
-- Record telemetry for every run; discard runs whose windows show an active clock event reason other than `gpu_idle`
-  (`sw_power_cap`, `hw_*`, `sw_thermal_slowdown`) and say so in the report.
+- Record telemetry for every run; discard windows with `hw_*` or `sw_thermal_slowdown` active (`soak.ps1` marks them
+  `disqualified`) and say so. `sw_power_cap` is normal at a laptop's power limit: report it, compare at the same limit.
 - Mesa/llvmpipe numbers (CTest `gpu.scene_benchmark`) are informational only, never a basis for decisions.
 - Raw data goes to strefa-zero-measurements as above; the PR description gets a table of at most 10 rows.
 

@@ -9,7 +9,9 @@
 # Three independent criteria flag a scene measurement:
 #   relative   physics GPU median >= SlowFactor x the best pass of that scene in this soak;
 #   absolute   physics GPU median >= SlowFactor x the scene's median in -Baseline (a cooled reference run);
-#   telemetry  most samples not in P0, or the memory clock median below the session maximum.
+#   telemetry  most samples not in P0, or the memory clock median below 90% of the session maximum.
+# Windows with hw_* or sw_thermal_slowdown active are marked "disqualified" (CLAUDE.md, measurement protocol);
+# sw_power_cap is reported only, because a laptop GPU under load sits at its power limit.
 # -SingleProcess runs every pass in one StrefaQA process (--loop-minutes), so a process restart (fresh driver
 # state, idle gap) cannot end a slow regime between passes.
 param(
@@ -160,6 +162,7 @@ try {
 # --- Analysis --------------------------------------------------------------------------------------------------
 $samples = @(if ($telemetry -and (Test-Path -LiteralPath $telemetryPath)) { Import-GpuTelemetry $telemetryPath })
 $sessionMemoryMax = if ($samples.Count) { ($samples | Where-Object { $null -ne $_.memory_mhz } | Measure-Object memory_mhz -Maximum).Maximum } else { $null }
+$disqualifyingReasons = @('hw_slowdown', 'hw_thermal_slowdown', 'hw_power_brake_slowdown', 'sw_thermal_slowdown')
 $rows = [Collections.Generic.List[object]]::new()
 foreach ($run in $runs) {
     $csv = Join-Path $run.Directory 'scene-benchmark.csv'
@@ -171,8 +174,10 @@ foreach ($run in $runs) {
         $physics = Get-Number $scene.physics_median_ms
         $reference = if ($baselineMs.ContainsKey($scene.scene)) { $baselineMs[$scene.scene] } else { $null }
         $telemetrySlow = $false
+        $disqualified = $false
         if ($window.Samples) {
-            $telemetrySlow = $window.NonP0Share -ge 0.5 -or ($null -ne $sessionMemoryMax -and $window.MemoryMhzMedian -lt $sessionMemoryMax)
+            $telemetrySlow = $window.NonP0Share -ge 0.5 -or ($null -ne $sessionMemoryMax -and $window.MemoryMhzMedian -lt 0.9 * $sessionMemoryMax)
+            $disqualified = @($disqualifyingReasons | Where-Object { $window."Reason_$_" -gt 0 }).Count -gt 0
         }
         $rows.Add([pscustomobject][ordered]@{
                 pass = if ($null -ne $run.Pass) { $run.Pass } else { [int]$scene.pass }
@@ -184,7 +189,7 @@ foreach ($run in $runs) {
                 budget_60fps = Get-Number $scene.budget_60fps
                 ratio = $null; slow_relative = $false
                 baseline_ms = $reference; baseline_ratio = $null; slow_absolute = $false
-                slow_telemetry = $telemetrySlow; slow = $false
+                slow_telemetry = $telemetrySlow; slow = $false; disqualified = $disqualified
                 telemetry_samples = $window.Samples
                 graphics_mhz = if ($window.Samples) { $window.GraphicsMhzMedian } else { $null }
                 memory_mhz = if ($window.Samples) { $window.MemoryMhzMedian } else { $null }
@@ -215,7 +220,7 @@ $reasonNames = @('gpu_idle', 'applications_clocks_setting', 'sw_power_cap', 'hw_
     'hw_power_brake_slowdown', 'sw_thermal_slowdown', 'sync_boost')
 $columns = @('pass', 'scene', 'status', 'minute', 'physics_median_ms', 'presentation_median_ms', 'frame_median_ms',
     'physics_samples', 'budget_60fps', 'ratio', 'slow_relative', 'baseline_ms', 'baseline_ratio', 'slow_absolute',
-    'slow_telemetry', 'slow', 'telemetry_samples', 'graphics_mhz', 'memory_mhz', 'non_p0_share', 'power_w',
+    'slow_telemetry', 'slow', 'disqualified', 'telemetry_samples', 'graphics_mhz', 'memory_mhz', 'non_p0_share', 'power_w',
     'temperature_max_c', 'pstates', 'limiting_reasons')
 foreach ($reason in $reasonNames) {
     $columns += @{ n = "reason_$reason"; e = [scriptblock]::Create("if (`$_.telemetry_samples) { `$_.window.Reason_$reason }") }
@@ -268,7 +273,9 @@ if ($Baseline) {
 } else {
     $report.Add('- Bezwzględnie: nie sprawdzono (brak -Baseline).')
 }
-$report.Add((Get-FirstLine 'Telemetrycznie (większość próbek poza P0 albo zegar pamięci poniżej maksimum sesji)' @($rows | Where-Object slow_telemetry) $null))
+$report.Add((Get-FirstLine 'Telemetrycznie (większość próbek poza P0 albo zegar pamięci poniżej 90% maksimum sesji)' @($rows | Where-Object slow_telemetry) $null))
+$disqualifiedRows = @($rows | Where-Object disqualified)
+$report.Add("- Okna dyskwalifikujące (aktywne hw_* albo sw_thermal_slowdown): $($disqualifiedRows.Count) z $($rows.Count); nie nadają się do porównań A/B (protokół pomiaru w CLAUDE.md). sw_power_cap jest tylko raportowany.")
 $report.Add('')
 $report.Add('Kryterium telemetryczne oznacza też lekkie sceny, w których sterownik sam obniża P-stan; rozstrzyga zestawienie z kryteriami wydajności.')
 $report.Add('')

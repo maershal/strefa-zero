@@ -72,7 +72,7 @@ Pomiar sceny jest oznaczany według trzech niezależnych kryteriów:
 | --- | --- |
 | względne | mediana fizyki GPU ≥ 2× najlepszy przebieg tej sceny w soaku (`-SlowFactor`) |
 | bezwzględne | mediana fizyki GPU ≥ 2× mediana tej sceny w `-Baseline` |
-| telemetryczne | większość próbek poza P0 albo mediana zegara pamięci poniżej maksimum sesji |
+| telemetryczne | większość próbek poza P0 albo mediana zegara pamięci poniżej 90% maksimum sesji |
 
 Samo kryterium względne nie wykryje reżimu, który trwa od pierwszego przebiegu. Kryterium telemetryczne oznacza też
 lekkie sceny, w których sterownik sam obniża P-stan. Wyniki: `soak-report.md`, `soak-summary.csv`, `telemetry.csv`,
@@ -141,5 +141,7 @@ ticku.
 
 `telemetry.csv` ma te same znaczniki `utc_unix_ns` (UTC, ns od 1970), więc okno sceny łączy się z próbkami
 telemetrii przez zakres (`Get-GpuTelemetryWindow`). Powody ograniczenia zegara są w kolumnach `reason_*` (1 = aktywny).
-`gpu_idle` oznacza tylko, że GPU czekało na pracę; pozostałe powody (`sw_power_cap`, `hw_slowdown`,
-`hw_thermal_slowdown`, `hw_power_brake_slowdown`, `sw_thermal_slowdown`) dyskwalifikują pomiar do porównań.
+`gpu_idle` oznacza tylko, że GPU czekało na pracę. `sw_power_cap` to praca na limicie mocy, zwykła dla laptopa pod
+obciążeniem: raportuj go i porównuj pomiary przy tym samym limicie. `hw_slowdown`, `hw_thermal_slowdown`,
+`hw_power_brake_slowdown` i `sw_thermal_slowdown` dyskwalifikują okno do porównań; `soak.ps1` oznacza je kolumną
+`disqualified`.
