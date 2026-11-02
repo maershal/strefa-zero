@@ -55,7 +55,7 @@ void float_parsing() {
     const std::string_view huge{"1e999"};
     value = 3.0F;
     check(strefa::core::from_chars(huge.data(), huge.data() + huge.size(), value).ec == std::errc::result_out_of_range
-              && value == 3.0F,
+                  && value == 3.0F,
           "Overflow must report out of range and keep the value");
 }
 
