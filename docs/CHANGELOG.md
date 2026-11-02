@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Start w wybranej scenie
+
+`StrefaZero --scene gpu:<id>` startuje w scenie Laboratorium GPU, a `--scene lab:<id>` w scenie Laboratorium CPU (identyfikatory jak w `--scene-benchmark`; zły identyfikator wypisuje listę). Jedna opcja zajmuje jedno miejsce z limitu 15 opcji gracza (jest ich 11).
+
 ## Benchmark scen
 
 Jeden powtarzalny pomiar scen w oknie: `StrefaQA --scene-benchmark <lista|all> [--seconds 60] [--vsync on|off] [--repeat N | --loop-minutes M]` uruchamia każdą scenę (12 scen Laboratorium GPU, misja, 4 sceny termiki, 15 scen Laboratorium CPU) z ustawieniami domyślnymi w widocznym oknie i odrzuca rozgrzewkę. Zapisuje rozkład czasu klatki (także osobno dla klatek z 0, 1 i 2+ tickami), wszystkie próbki GPU fizyki, prezentacji i renderu (zbierane co klatkę, bez limitu 10 000), koszt GPU na sekundę symulacji i udział budżetu 60 FPS, fazy 0–10 s i dalszą, ticki, utracony czas, zaległość zegara i flagi okna SDL (`scene-benchmark.csv`, klatki w `scene-benchmark-frames.csv` ze znacznikiem `utc_unix_ns`). Scena z oknem ukrytym, zminimalizowanym lub zasłoniętym ma status `invalid`, a scena z błędem `failed`; przebieg trwa dalej i kończy się kodem 1. Trasa misji zaczyna się od nowa po 1340 tickach. `metrics.gpu_ms` obejmuje teraz cały tick (fizyka + prezentacja termiki, tick oświetlenia, aktualizacja VFX), a monitor spowolnienia GPU w HUD nadal porównuje samą fizykę; `take_timings()`, `gpu_step_ms` i kolumna `gpu_ms` w `metrics.csv` nagrań nadal mierzą samą fizykę, a `metrics.csv` ma nowe kolumny `gpu_physics_ms` i `gpu_tick_ms`. Windows: moduł telemetrii `scripts/profiling/GpuTelemetry.psm1` (pstate, zegary, moc, limit, temperatura, powody ograniczenia zegara) i `soak.ps1` (15 min scen GPU; kryterium względne, bezwzględne `-Baseline` i telemetryczne; `-SingleProcess`). Błąd składni opcji StrefaQA trafia na stderr zamiast okna dialogowego, a konsola Windows dostaje UTF-8. Procedura: [GPU_CHECK.md](maintenance/GPU_CHECK.md).

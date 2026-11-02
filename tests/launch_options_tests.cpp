@@ -102,6 +102,25 @@ int main() {
         const auto thermal = parse({"--gpu-thermal-scene", "fire"});
         check(thermal && thermal->start_mode() == StartMode::gpu_laboratory, "Thermal scene starts the GPU laboratory");
         check(thermal->thermal_scene == 1 && !parse({"--gpu-thermal-scene", "ice"}), "Thermal scene ids");
+        const auto gpu_scene = parse({"--scene", "gpu:dam-break"});
+        check(gpu_scene && gpu_scene->start_mode() == StartMode::gpu_laboratory && gpu_scene->gpu_scene == 5u
+                      && !gpu_scene->is_test(),
+              "--scene gpu:<id> starts the GPU laboratory in that scene");
+        const auto lab_scene = parse({"--scene", "lab:wood-fire"});
+        check(lab_scene && lab_scene->start_mode() == StartMode::cpu_laboratory && lab_scene->lab_scene == 9u,
+              "--scene lab:<id> starts the CPU laboratory in that scene");
+        for (const auto* bad : {"gpu:nope", "lab:dam", "dam-break", "cpu:demo", "gpu:", "mission"})
+            check(!parse({"--scene", bad}), std::string{"Invalid --scene accepted: "} + bad);
+        check(!parse({"--scene", "gpu:rain", "--scene", "lab:demo"}), "Two --scene options accepted");
+        const auto twice = parse({"--scene", "gpu:rain", "--scene", "gpu:nope"});
+        check(!twice && twice.error() == "Podaj --scene tylko raz.", "A repeated --scene is reported before its id");
+        check(strefa::app::help_text(strefa::app::OptionScope::player).find("--scene <gpu|lab>:<id>")
+                      != std::string::npos,
+              "--scene in StrefaZero --help");
+        check(!parse({"--scene", "lab:demo", "--mission"}), "--scene and another start mode accepted");
+        check(!parse({"--scene", "gpu:rain", "--gpu-thermal-scene", "fire"}), "GPU and thermal start scenes accepted");
+        check(!parse({"--scene", "gpu:rain", "--scene-benchmark", "all", "--profile", "fixture"}),
+              "--scene with --scene-benchmark accepted");
         // StrefaQA scene benchmark: one test with its own window pacing.
         check(!parse({"--scene-benchmark", "all"}), "--scene-benchmark must require --profile");
         const auto bench = parse({"--scene-benchmark", "all", "--profile", "fixture"});
@@ -154,6 +173,8 @@ int main() {
         for (const auto* flag :
              {"--mission", "--gpu-laboratory", "--laboratory", "--arena", "--opengl33", "--gl-debug"})
             check(bool(parse({flag}, player)), std::string{flag} + " must stay a player option");
+        check(bool(parse({"--scene", "gpu:oil-water"}, player)) && bool(parse({"--scene", "lab:wood-fire"}, player)),
+              "--scene is a player option");
         check(!parse({"--scene-benchmark", "all", "--profile", "fixture"}, player)
                       && !parse({"--gpu-thermal-scene", "fire"}, player),
               "Benchmark and thermal scenes are StrefaQA only");
