@@ -3,11 +3,14 @@ param(
     [string]$BuildDirectory,
     [string]$DependencyCache,
     [switch]$CoreOnly,
+    [ValidateSet('cpu','all')][string]$TestSuite = 'all',
     [switch]$SkipTests
 )
 $ErrorActionPreference = 'Stop'
 $taskProject = Split-Path -Parent $PSScriptRoot
-if (-not $BuildDirectory) { $BuildDirectory = Join-Path $taskProject "build\$($Configuration.ToLowerInvariant())" }
+if (-not $BuildDirectory) {
+    $BuildDirectory = Join-Path $taskProject "build\$($Configuration.ToLowerInvariant())$(if($CoreOnly){'-core'})"
+}
 $BuildDirectory = [System.IO.Path]::GetFullPath($BuildDirectory)
 
 if ($IsWindows -and -not (Get-Command cl -ErrorAction SilentlyContinue)) {
@@ -31,7 +34,9 @@ foreach ($taskTool in @('cmake','ninja')) {
     if (-not (Get-Command $taskTool -ErrorAction SilentlyContinue)) { throw "Missing tool: $taskTool" }
 }
 
-$taskConfigure = @('--preset',$(if($CoreOnly){'core-only'}else{$Configuration.ToLowerInvariant()}),'-B',$BuildDirectory,'-DSTREFA_WARNINGS_AS_ERRORS=ON')
+# The core-only preset inherits Debug; -Configuration still decides the build type.
+$taskConfigure = @('--preset',$(if($CoreOnly){'core-only'}else{$Configuration.ToLowerInvariant()}),'-B',$BuildDirectory,
+    "-DCMAKE_BUILD_TYPE=$Configuration",'-DSTREFA_WARNINGS_AS_ERRORS=ON')
 if ($DependencyCache) { $taskConfigure += "-DSTREFA_DOWNLOAD_CACHE=$([System.IO.Path]::GetFullPath($DependencyCache))" }
 Push-Location $taskProject
 try {
@@ -40,7 +45,13 @@ try {
     & cmake --build $BuildDirectory --parallel ([Math]::Min(8,[Environment]::ProcessorCount))
     if ($LASTEXITCODE -ne 0) { throw 'Build failed.' }
     if (-not $SkipTests) {
-        & ctest --test-dir $BuildDirectory --output-on-failure
+        # Graphics tests share RESOURCE_LOCK gpu, so -j only parallelises the CPU tests.
+        $taskTests = @('--test-dir',$BuildDirectory,'--output-on-failure','--parallel',[Environment]::ProcessorCount)
+        if ($TestSuite -eq 'cpu') { $taskTests += @('-LE','graphics') }
+        # MSVC hashes differ from the GCC golden master: excluded until P11,
+        # https://github.com/maershal/strefa-zero/issues/15 (same exclusion in .github/workflows/windows.yml).
+        if ($IsWindows) { $taskTests += @('-E','^sim\.golden_master$') }
+        & ctest @taskTests
         if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
     }
 } finally { Pop-Location }

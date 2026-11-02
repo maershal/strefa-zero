@@ -8,6 +8,7 @@ task_dependency_cache=
 task_core_only=OFF
 task_skip_tests=false
 task_test_suite=smoke
+task_junit_directory=
 task_jobs=${CMAKE_BUILD_PARALLEL_LEVEL:-4}
 task_cmake_arguments=()
 
@@ -17,10 +18,11 @@ Usage: ./scripts/build.sh [options]
   --configuration Release|Debug  Build configuration (default: Release)
   --build-dir PATH               Separate Linux build directory
   --dependency-cache PATH        Directory with pinned SDL3/ImGui archives
-  --jobs N                       Parallel compiler jobs (default: 4)
+  --jobs N                       Parallel compiler and CPU test jobs (default: 4)
   --core-only                    Build physics and CPU tests without SDL/OpenGL
   --test-suite cpu|smoke|all      CPU tests, CPU + window smoke tests, or full QA
   --skip-tests                   Build without running tests
+  --junit-dir PATH               Write a JUnit XML report per ctest run (cpu.xml, smoke.xml, graphics.xml)
   -h, --help                     Show this help
 Additional CMake options can follow --.
 Requires Linux, Bash, CMake >= 3.28, Ninja and a C++23 compiler (GCC >= 13).
@@ -29,7 +31,7 @@ HELP
 
 while (($#)); do
     case "$1" in
-        --configuration|--build-dir|--dependency-cache|--jobs|--test-suite)
+        --configuration|--build-dir|--dependency-cache|--jobs|--test-suite|--junit-dir)
             (($# >= 2)) || { echo "Missing value for $1" >&2; exit 2; }
             case "$1" in
                 --configuration) task_configuration=$2 ;;
@@ -37,6 +39,7 @@ while (($#)); do
                 --dependency-cache) task_dependency_cache=$2 ;;
                 --jobs) task_jobs=$2 ;;
                 --test-suite) task_test_suite=$2 ;;
+                --junit-dir) task_junit_directory=$2 ;;
             esac
             shift 2 ;;
         --core-only) task_core_only=ON; shift ;;
@@ -66,16 +69,30 @@ if [[ -n $task_dependency_cache ]]; then
 fi
 cmake "${task_configure[@]}" "${task_cmake_arguments[@]}"
 cmake --build "$task_build_directory" --parallel "$task_jobs"
+# CPU tests run in parallel; graphics tests share RESOURCE_LOCK gpu, so ctest runs them one at a time.
+task_failed=0
+run_tests() {
+    local task_report=$1
+    shift
+    local task_arguments=(--test-dir "$task_build_directory" --output-on-failure --parallel "$task_jobs" "$@")
+    if [[ -n $task_junit_directory ]]; then
+        task_arguments+=(--output-junit "$task_junit_directory/$task_report.xml")
+    fi
+    ctest "${task_arguments[@]}" || task_failed=1
+}
 if [[ $task_skip_tests == false ]]; then
     source "$task_project/scripts/linux-env.sh"
-    if [[ $task_test_suite == all ]]; then
-        ctest --test-dir "$task_build_directory" --output-on-failure --parallel 1
-    else
-        ctest --test-dir "$task_build_directory" --output-on-failure -LE graphics
-        if [[ $task_core_only == OFF && $task_test_suite == smoke ]]; then
-            ctest --test-dir "$task_build_directory" --output-on-failure --parallel 1 \
-                -R '^(app\.(opengl(33)?_smoke|mode_faults)|gpu\.(platform_dispatch|gameplay|laboratory_ui|mission_ui_quick))$'
-        fi
+    if [[ -n $task_junit_directory ]]; then
+        task_junit_directory=$(realpath -m -- "$task_junit_directory")
+        mkdir -p -- "$task_junit_directory"
     fi
+    run_tests cpu -LE graphics
+    if [[ $task_core_only == OFF ]]; then
+        case "$task_test_suite" in
+            smoke) run_tests smoke -L '^ci-smoke$' ;;
+            all) run_tests graphics -L '^graphics$' ;;
+        esac
+    fi
+    ((task_failed == 0)) || { echo 'Tests failed.' >&2; exit 1; }
 fi
 printf 'Build ready: %s\n' "$task_build_directory"
