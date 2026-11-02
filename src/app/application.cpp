@@ -44,13 +44,6 @@ std::string gl_string(GLenum name) {
     const auto* value = glGetString(name);
     return value ? reinterpret_cast<const char*>(value) : "unknown";
 }
-// The GPU world, its tools and the mission need OpenGL 4.3 compute shaders.
-bool gl43_available() {
-    GLint major{}, minor{};
-    glGetIntegerv(GL_MAJOR_VERSION, &major);
-    glGetIntegerv(GL_MINOR_VERSION, &minor);
-    return major > 4 || (major == 4 && minor >= 3);
-}
 const char* mode_name(ui::Screen screen) {
     switch (screen) {
     case ui::Screen::laboratory: return "Laboratorium CPU";
@@ -110,7 +103,7 @@ public:
           message_{std::move(message)},
           renderer_{gl_string(GL_RENDERER)},
           gl_version_{gl_string(GL_VERSION)},
-          gpu_available_{gl43_available()},
+          gpu_available_{platform::context_has_gl43()},
           physics_{config.physics},
           gpu_profiling_{config.profiling},
           execution_{config.execution},
@@ -1139,15 +1132,12 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     const char* base = SDL_GetBasePath();
     if (!base) return std::unexpected{"Nie można ustalić katalogu aplikacji."};
     const auto assets = utf8_path(base) / "assets";
-    if (options.requires_gl43()) {
-        GLint major{}, minor{};
-        glGetIntegerv(GL_MAJOR_VERSION, &major);
-        glGetIntegerv(GL_MINOR_VERSION, &minor);
-        if (major < 4 || (major == 4 && minor < 3)) {
-            std::ofstream{profile / "gpu-skipped.txt"}
-                    << "OpenGL 4.3 unavailable; GPU tests skipped, CPU mode remains supported.\n";
-            return 77;
-        }
+    if (options.requires_gl43() && !platform::context_has_gl43()) {
+        const int code = platform::missing_gl43_exit_code();
+        std::ofstream{profile / "gpu-skipped.txt"}
+                << (code == 77 ? "OpenGL 4.3 unavailable; GPU tests skipped, CPU mode remains supported.\n"
+                               : "OpenGL 4.3 unavailable; STREFA_REQUIRE_GL43=1, test failed.\nrequired=1\n");
+        return code;
     }
     if (testing && !options.is_window_smoke() && gl_debug) gl_debug->set_phase(platform::DebugPhase::validation);
     if (diagnostics)
