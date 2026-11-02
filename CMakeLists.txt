@@ -378,8 +378,15 @@ if(BUILD_TESTING)
         add_test(NAME gpu.mission_ui COMMAND strefa_zero --mission-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-profile)
         set_tests_properties(gpu.mission_ui PROPERTIES LABELS "integration;graphics;gpu;performance" TIMEOUT 120 SKIP_RETURN_CODE 77)
         # Informational on software renderers: passes on complete output, never on timing thresholds.
-        add_test(NAME gpu.scene_benchmark COMMAND strefa_qa --scene-benchmark gpu:dam-break,mission,thermal:fire,lab:wood-fire --seconds 5 --vsync off --profile ${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile)
-        set_tests_properties(gpu.scene_benchmark PROPERTIES LABELS "integration;graphics;gpu;performance" TIMEOUT 180 SKIP_RETURN_CODE 77)
+        # gpu.scene_benchmark_content then checks the CSV: visible window, frames, GPU samples, status ok.
+        add_test(NAME gpu.scene_benchmark COMMAND strefa_qa --scene-benchmark gpu:dam-break,lab:wood-fire --seconds 2
+            --vsync off --profile ${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile)
+        set_tests_properties(gpu.scene_benchmark PROPERTIES LABELS "integration;graphics;gpu;performance" TIMEOUT 120
+            SKIP_RETURN_CODE 77 FIXTURES_SETUP scene_benchmark_output)
+        add_test(NAME gpu.scene_benchmark_content COMMAND ${CMAKE_COMMAND}
+            -DPROFILE=${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/scene_benchmark_check.cmake)
+        set_tests_properties(gpu.scene_benchmark_content PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
+            FIXTURES_REQUIRED scene_benchmark_output)
         add_test(NAME gpu.mission_ui_quick COMMAND strefa_qa --mission-ui-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile)
         set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME app.mode_faults COMMAND strefa_qa --mode-fault-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mode-faults-profile)
@@ -399,7 +406,8 @@ if(BUILD_TESTING)
         # `ci-gl33` is the subset repeated under MESA_GL_VERSION_OVERRIDE=3.3.
         foreach(smoke_test app.opengl_smoke app.opengl33_smoke app.mode_faults gpu.platform_dispatch gpu.gameplay
             gpu.mission_ui_quick gpu.shader_cache gpu.lighting_pressure gpu.readback_ring gpu.instrumentation
-            gpu.renderer app.laboratory_responsiveness app.laboratory_four_threads)
+            gpu.renderer app.laboratory_responsiveness app.laboratory_four_threads gpu.scene_benchmark
+            gpu.scene_benchmark_content)
             set_property(TEST ${smoke_test} APPEND PROPERTY LABELS ci-smoke)
         endforeach()
         set_property(TEST app.opengl33_smoke app.mode_faults APPEND PROPERTY LABELS ci-gl33)

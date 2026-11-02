@@ -75,8 +75,9 @@ struct ApplicationAssets {
 struct BenchmarkRun {
     BenchmarkScene scene;
     double warmup_seconds{}, measure_seconds{};
-    std::vector<BenchmarkFrame> frames;
-    std::vector<double> physics_gpu_ms, presentation_gpu_ms, render_gpu_ms;
+    BenchmarkRecord record;
+    std::uint64_t measure_started_ns{};
+    std::array<std::uint64_t, 3> drops_at_start{}; // Metrics::*_timings_dropped when the window opened
     bool measuring{}, completed{};
 };
 
@@ -631,14 +632,32 @@ public:
 
 private:
     // --scene-benchmark: warm-up frames only advance the baselines; the measurement window
-    // records one row per frame and ends the loop.
+    // records one row per frame and ends the loop. GPU samples are drained every frame, so the
+    // 10 000-entry queues of ParticleWorld never fill and every sample has a frame time.
     void record_benchmark_frame(std::uint64_t frame_start, double frame_ms) {
         auto& run = *benchmark_;
+        // A mode failure returns to the menu; the scene fails instead of measuring the menu.
+        if (state_.screen == ui::Screen::main_menu) {
+            run.record.error = message_.empty() ? std::string{"tryb zamknięty przed końcem pomiaru"} : message_;
+            running_ = false;
+            return;
+        }
         if (!benchmark_started_ns_) benchmark_started_ns_ = frame_start;
         const double elapsed = static_cast<double>(frame_start - benchmark_started_ns_) / 1e9;
         BenchmarkFrame row;
         row.sdl_ns = frame_start;
         row.frame_ms = frame_ms;
+        const auto flags = SDL_GetWindowFlags(window_.native());
+        row.window = {(flags & SDL_WINDOW_HIDDEN) == 0, (flags & SDL_WINDOW_INPUT_FOCUS) != 0,
+                      (flags & SDL_WINDOW_MINIMIZED) != 0, (flags & SDL_WINDOW_OCCLUDED) != 0};
+        // The scripted mission route ends at scripted_mission_ticks; restart it so a long window
+        // keeps measuring the route instead of an idle scene.
+        if (run.scene.kind == BenchmarkScene::Kind::mission && simulation_
+            && simulation_->metrics().steps >= gpu::scripted_mission_ticks) {
+            simulation_.reset(simulation_.scene());
+            row.route_reset = true;
+            if (run.measuring) ++run.record.route_resets;
+        }
         double dropped = 0;
         if (state_.screen == ui::Screen::laboratory && lab_snapshot_) {
             const auto tick = lab_snapshot_->report.tick;
@@ -646,33 +665,54 @@ private:
             row.cpu_step_ms = lab_snapshot_->step_ms;
             dropped = lab_snapshot_->overload_seconds; // worker overrun, cumulative per scene
         } else if (simulation_) {
-            const auto& metrics = simulation_->metrics();
             row.ticks = mission_ticks_this_frame_ + gpu_ticks_this_frame_;
             row.pending_seconds = simulation_.clock().pending_seconds();
-            row.physics_gpu_ms = metrics.physics_ms;
-            row.presentation_gpu_ms = metrics.presentation_ms;
-            row.render_gpu_ms = metrics.render_ms;
             dropped = simulation_.clock().dropped_seconds();
         }
+        // A route restart resets the clock's counter; the difference never goes negative.
         row.dropped_seconds = std::max(0.0, dropped - std::exchange(benchmark_dropped_, dropped));
-        if (elapsed < run.warmup_seconds) return;
-        if (!std::exchange(run.measuring, true) && simulation_) {
-            static_cast<void>(simulation_->take_timings());
-            static_cast<void>(simulation_->take_presentation_timings());
-            static_cast<void>(simulation_->take_render_timings());
+        const bool last = elapsed >= run.warmup_seconds + run.measure_seconds;
+        if (simulation_) {
+            if (last) {
+                glFinish(); // completes the queries of ticks submitted inside the window
+                simulation_->poll(false);
+            }
+            const auto& metrics = simulation_->metrics();
+            const std::array drops{metrics.timings_dropped, metrics.presentation_timings_dropped,
+                                   metrics.render_timings_dropped};
+            auto physics = simulation_->take_timings();
+            auto presentation = simulation_->take_presentation_timings();
+            auto render = simulation_->take_render_timings();
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) {
+                run.drops_at_start = drops; // samples completed during warm-up are discarded above
+                return;
+            }
+            const auto append = [](std::vector<double>& all, const std::vector<double>& frame, unsigned& count,
+                                   double& sum) {
+                count = static_cast<unsigned>(frame.size());
+                for (const double ms : frame) sum += ms;
+                all.insert(all.end(), frame.begin(), frame.end());
+            };
+            auto& record = run.record;
+            append(record.physics_gpu_ms, physics, row.physics_samples, row.physics_gpu_ms);
+            append(record.presentation_gpu_ms, presentation, row.presentation_samples, row.presentation_gpu_ms);
+            append(record.render_gpu_ms, render, row.render_samples, row.render_gpu_ms);
+            record.physics_truncated = drops[0] != run.drops_at_start[0];
+            record.presentation_truncated = drops[1] != run.drops_at_start[1];
+            record.render_truncated = drops[2] != run.drops_at_start[2];
+        } else {
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) return;
         }
+        // The first measured frame only opens the window (GPU queues drained, baselines set).
+        if (!run.measure_started_ns) run.measure_started_ns = frame_start;
+        row.elapsed_seconds = static_cast<double>(frame_start - run.measure_started_ns) / 1e9;
         row.utc_unix_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
                                   std::chrono::system_clock::now().time_since_epoch())
                                   .count();
-        run.frames.push_back(row);
-        if (elapsed < run.warmup_seconds + run.measure_seconds) return;
-        if (simulation_) {
-            glFinish(); // completes the queries of ticks submitted inside the window
-            simulation_->poll(false);
-            run.physics_gpu_ms = simulation_->take_timings();
-            run.presentation_gpu_ms = simulation_->take_presentation_timings();
-            run.render_gpu_ms = simulation_->take_render_timings();
-        }
+        run.record.frames.push_back(row);
+        if (!last) return;
         run.completed = true;
         running_ = false;
     }
@@ -1173,11 +1213,31 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
     const auto anchor_utc = utc_unix_ns();
     const auto anchor_sdl_after = SDL_GetTicksNS();
     const auto presentation = window.presentation_info();
-    info << "schema=1\nbuild_version=" << build::version << "\ngl_vendor=" << gl_string(GL_VENDOR)
-         << "\ngl_renderer=" << gl_string(GL_RENDERER) << "\ngl_version=" << gl_string(GL_VERSION)
-         << "\nvsync_requested=" << options.benchmark_vsync << "\nvsync_enabled=" << window.vsync_enabled()
-         << "\nswap_interval=" << presentation.swap_interval << "\nrefresh_hz=" << window.refresh_hz()
-         << "\nwindow_pixels=" << presentation.pixel_width << 'x' << presentation.pixel_height << "\nframe_limiter="
+    const auto flags = SDL_GetWindowFlags(window.native());
+    int logical_width = 0, logical_height = 0;
+    SDL_GetWindowSize(window.native(), &logical_width, &logical_height);
+#ifdef NDEBUG
+    constexpr bool debug_build = false;
+#else
+    constexpr bool debug_build = true;
+#endif
+    info << "schema=2\nbuild_version=" << build::version << "\nndebug=" << !debug_build
+         << "\ngl_vendor=" << gl_string(GL_VENDOR) << "\ngl_renderer=" << gl_string(GL_RENDERER)
+         << "\ngl_version=" << gl_string(GL_VERSION) << "\nvsync_requested=" << options.benchmark_vsync
+         << "\nvsync_enabled=" << window.vsync_enabled() << "\nswap_interval=" << presentation.swap_interval
+         << "\nrefresh_hz=" << window.refresh_hz() << "\nwindow_pixels=" << presentation.pixel_width << 'x'
+         << presentation.pixel_height << "\nwindow_size=" << logical_width << 'x' << logical_height
+         << "\ndisplay_scale=" << SDL_GetWindowDisplayScale(window.native())
+         << "\nwindow_visible=" << ((flags & SDL_WINDOW_HIDDEN) == 0)
+         << "\nwindow_focused=" << ((flags & SDL_WINDOW_INPUT_FOCUS) != 0)
+         << "\nwindow_minimized=" << ((flags & SDL_WINDOW_MINIMIZED) != 0)
+         << "\nwindow_occluded=" << ((flags & SDL_WINDOW_OCCLUDED) != 0)
+         << "\nwater_quality=" << static_cast<int>(base.render.quality)
+         << "\nlighting_quality=" << static_cast<int>(base.render.lighting.quality)
+         << "\nvfx_quality=" << static_cast<int>(base.vfx.quality)
+         << "\nthermal=" << (base.thermal.enabled ? "on" : "off_except_thermal_scenes")
+         << "\nphysics_threads=" << base.physics.worker_threads << "\nsettings=defaults_core_Settings_no_settings_ini"
+         << "\nframe_limiter="
          << (base.unpaced             ? "off"
              : window.vsync_enabled() ? "vsync"
                                       : "frame_limit")
@@ -1189,9 +1249,12 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
          << "\nphysics_gpu_ms=commands_solver_diagnostics_thermal_tick"
          << "\npresentation_gpu_ms=thermal_presentation_lighting_tick_vfx_update_event_submit"
          << "\nrender_gpu_ms=world_render_pass\ngpu_distributions=all_completed_timer_queries_in_window"
-         << "\nlab_scenes=cpu_worker_thread_no_gpu_physics\n";
+         << "\nlab_scenes=cpu_worker_thread_no_gpu_physics" << "\nmission=scripted_route_restarted_every_"
+         << gpu::scripted_mission_ticks << "_ticks"
+         << "\nstatus=ok|invalid(window_hidden_minimized_or_occluded)|failed\n";
     frames_csv << benchmark_frames_header << '\n';
     summary_csv << benchmark_summary_header << '\n';
+    int failures = 0;
     for (const auto& scene : options.benchmark_scenes) {
         BenchmarkRun run;
         run.scene = scene;
@@ -1219,19 +1282,31 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
             break;
         }
         const auto id = scene.id();
-        const auto result = run_scene(config);
-        if (!result) return std::unexpected{std::format("{}: {}", id, result.error())};
-        if (*result != 0) return *result;
-        if (!run.completed || run.frames.empty())
-            return std::unexpected{std::format("{}: pomiar przerwany przed końcem okna pomiaru.", id)};
-        for (const auto& frame : run.frames) frames_csv << benchmark_frame_row(id, frame) << '\n';
-        const auto summary = summarize(id, run.frames, std::move(run.physics_gpu_ms),
-                                       std::move(run.presentation_gpu_ms), std::move(run.render_gpu_ms));
+        // One failing scene is reported in its row; the remaining scenes are still measured.
+        try {
+            const auto result = run_scene(config);
+            if (result && *result != 0) return *result; // e.g. 77: no OpenGL 4.3 for any scene
+            if (!result && run.record.error.empty()) run.record.error = result.error();
+        } catch (const std::exception& error) {
+            run.record.error = error.what();
+        }
+        if (run.record.error.empty() && !run.completed) run.record.error = "pomiar przerwany przed końcem okna";
+        for (const auto& frame : run.record.frames) frames_csv << benchmark_frame_row(id, frame) << '\n';
+        const bool gpu_physics = scene.kind != BenchmarkScene::Kind::lab;
+        const auto summary =
+                summarize(id, std::move(run.record), gpu_physics ? 1.0 / SimulationWorld::tick_seconds : 0.0);
+        failures += summary.status != BenchmarkStatus::ok;
         summary_csv << benchmark_summary_row(summary) << '\n';
         std::cout << benchmark_summary_line(summary) << std::endl;
     }
     if (!frames_csv.flush() || !summary_csv.flush() || !info.flush())
         return std::unexpected{"Niepełny zapis wyników benchmarku scen."};
+    if (failures) {
+        std::cerr << std::format("Benchmark scen: {} z {} scen ze statusem innym niż ok (kolumna status w "
+                                 "scene-benchmark.csv).\n",
+                                 failures, options.benchmark_scenes.size());
+        return 1;
+    }
     return 0;
 }
 
@@ -1279,7 +1354,8 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     }
     auto window = platform::Window::create(settings, !options.legacy_graphics, options.gl_debug);
     if (!window) return std::unexpected{window.error()};
-    if (testing && options.show_test_window) {
+    // The scene benchmark measures what a player sees: a hidden window takes a different presentation path.
+    if (testing && (options.show_test_window || scene_benchmark)) {
         window->show();
         SDL_RaiseWindow(window->native());
     }
