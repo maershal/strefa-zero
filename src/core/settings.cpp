@@ -1,4 +1,5 @@
 #include "core/settings.hpp"
+#include "core/charconv.hpp"
 
 #include <charconv>
 #include <cmath>
@@ -54,7 +55,7 @@ template<class T> bool decode(std::string_view text, T& destination) {
         return true;
     } else {
         T value{};
-        const auto result = std::from_chars(text.data(), text.data() + text.size(), value);
+        const auto result = core::from_chars(text.data(), text.data() + text.size(), value);
         if (result.ec != std::errc{} || result.ptr != text.data() + text.size()) return false;
         if constexpr (std::is_floating_point_v<T>)
             if (!std::isfinite(value)) return false;

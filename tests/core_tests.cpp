@@ -1,3 +1,4 @@
+#include "core/charconv.hpp"
 #include "core/settings.hpp"
 #include "platform/settings_store.hpp"
 
@@ -6,6 +7,8 @@
 #include <fstream>
 #include <iostream>
 #include <stdexcept>
+#include <string_view>
+#include <system_error>
 
 namespace {
 void check(bool condition, const char* message) {
@@ -35,6 +38,25 @@ void invalid_input() {
     strefa::core::Settings settings;
     settings.frame_limit = 0;
     check(!strefa::core::validate(settings).has_value(), "Zero frame limit must not reach the frame pacer");
+}
+
+// On libc++ before LLVM 20 these exercise the floating-point fallback of core::from_chars.
+void float_parsing() {
+    const auto parse = [](std::string_view text, float& value) {
+        const auto result = strefa::core::from_chars(text.data(), text.data() + text.size(), value);
+        return result.ec == std::errc{} && result.ptr == text.data() + text.size();
+    };
+    float value{};
+    check(parse("1.234567", value) && value == 1.234567F, "Decimal floats must parse exactly");
+    check(parse("-2.5e3", value) && value == -2500.0F, "Signed exponents must parse");
+    check(parse(".5", value) && value == 0.5F && parse("7.", value) && value == 7.0F, "Bare fractions must parse");
+    for (const auto text : {"", "+1", " 1", "1,5", "abc", "1e", "1e+", "0x10", "1.5f"})
+        check(!parse(text, value), "Malformed floats must be rejected");
+    const std::string_view huge{"1e999"};
+    value = 3.0F;
+    check(strefa::core::from_chars(huge.data(), huge.data() + huge.size(), value).ec == std::errc::result_out_of_range
+              && value == 3.0F,
+          "Overflow must report out of range and keep the value");
 }
 
 void quality_and_experimental() {
@@ -101,6 +123,7 @@ int main() {
     try {
         round_trip();
         invalid_input();
+        float_parsing();
         quality_and_experimental();
         replace_file();
         std::cout << "PASS: round-trip, invalid inputs, atomic replacement and corruption handling\n";
