@@ -650,13 +650,16 @@ private:
         const auto flags = SDL_GetWindowFlags(window_.native());
         row.window = {(flags & SDL_WINDOW_HIDDEN) == 0, (flags & SDL_WINDOW_INPUT_FOCUS) != 0,
                       (flags & SDL_WINDOW_MINIMIZED) != 0, (flags & SDL_WINDOW_OCCLUDED) != 0};
+        // frame_ms is the time since the previous frame started, so the reload of a restart made in
+        // the previous call shows up in this frame: flag this one, not the frame that requested it.
+        row.route_reset = std::exchange(benchmark_route_reset_pending_, false);
+        if (row.route_reset && run.measuring) ++run.record.route_resets;
         // The scripted mission route ends at scripted_mission_ticks; restart it so a long window
         // keeps measuring the route instead of an idle scene.
         if (run.scene.kind == BenchmarkScene::Kind::mission && simulation_
             && simulation_->metrics().steps >= gpu::scripted_mission_ticks) {
             simulation_.reset(simulation_.scene());
-            row.route_reset = true;
-            if (run.measuring) ++run.record.route_resets;
+            benchmark_route_reset_pending_ = true;
         }
         double dropped = 0;
         if (state_.screen == ui::Screen::laboratory && lab_snapshot_) {
@@ -749,7 +752,7 @@ private:
         speed_meter_.sample(wall, metrics.steps);
         const bool timed = metrics.timing_samples > 0;
         if (timed && metrics.timing_samples != last_timing_samples_)
-            gpu_monitor_.sample(scene_seconds_, metrics.gpu_ms);
+            gpu_monitor_.sample(scene_seconds_, metrics.physics_ms); // physics only: lighting/thermal do not trip it
         last_timing_samples_ = metrics.timing_samples;
         clock_stats_ = {speed_meter_.speed(SimulationWorld::tick_seconds), lost_seconds_, timed ? metrics.gpu_ms : 0,
                         gpu_monitor_.slowed()};
@@ -1191,6 +1194,7 @@ private:
     BenchmarkRun* benchmark_{};
     std::uint64_t benchmark_started_ns_{}, benchmark_lab_tick_{};
     double benchmark_dropped_{};
+    bool benchmark_route_reset_pending_{};
 };
 
 std::int64_t utc_unix_ns() {
