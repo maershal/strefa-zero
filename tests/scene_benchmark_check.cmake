@@ -2,6 +2,8 @@
 #   cmake -DPROFILE=<profile dir> -P tests/scene_benchmark_check.cmake
 # Every scene measured frames in a visible window with status ok; GPU scenes produced GPU samples.
 # No timing thresholds: the numbers are informational on every renderer.
+# 3.28 policies: empty CSV cells (e.g. status_reason) stay list elements (CMP0007).
+cmake_minimum_required(VERSION 3.28)
 if(NOT PROFILE)
     message(FATAL_ERROR "Brak -DPROFILE=<katalog profilu benchmarku>.")
 endif()
