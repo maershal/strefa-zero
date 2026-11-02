@@ -98,7 +98,7 @@ void LightingSystem::initialize(ShaderLibrary& library, const std::filesystem::p
                                               {{278, 117, 38, 1}, {.74F, 1.0F, .66F, 1}, {0, 2, 0, 2}}}};
     attach(field, 320, 192);
     if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error{"Incomplete I11 framebuffer"};
+        throw std::runtime_error{"Niekompletny bufor ramki oświetlenia."};
     state.framebuffer(0);
     set_lamps(defaults);
     reset(0);
@@ -125,10 +125,10 @@ void LightingSystem::reset(unsigned gen) {
     state.invalidate();
 }
 void LightingSystem::set_lamps(std::span<const PointLight> values) {
-    if (values.size() > 8) throw std::invalid_argument{"At most eight static lamps"};
+    if (values.size() > 8) throw std::invalid_argument{"Najwyżej osiem stałych lamp."};
     for (const auto& p : values)
         for (float f : p.position)
-            if (!std::isfinite(f)) throw std::invalid_argument{"Invalid lamp position"};
+            if (!std::isfinite(f)) throw std::invalid_argument{"Nieprawidłowa pozycja lampy."};
     const std::array<unsigned, 4> header{static_cast<unsigned>(values.size()), 0, 0, 0};
     lamp_count = header[0];
     gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, lamps);

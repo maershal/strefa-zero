@@ -12,7 +12,7 @@ UploadRing::~UploadRing() {
 void UploadRing::configure(DeviceStorageMode requested) {
     stats_.mode = resolve_device_storage(requested, gl_.persistent_storage);
     if (stats_.mode == DeviceStorageMode::immutable && !gl_.persistent_storage)
-        throw std::runtime_error{"Immutable device buffers require ARB_buffer_storage or OpenGL 4.4."};
+        throw std::runtime_error{"Stałe bufory urządzenia wymagają ARB_buffer_storage lub OpenGL 4.4."};
 }
 void UploadRing::allocate(GLuint destination, GLsizeiptr bytes) {
     gl_.BindBuffer(GL_SHADER_STORAGE_BUFFER, destination);
@@ -25,7 +25,8 @@ void UploadRing::allocate(GLuint destination, GLsizeiptr bytes) {
     stats_.device_bytes += static_cast<std::uint64_t>(bytes);
 }
 void UploadRing::write(GLuint destination, GLintptr offset, GLsizeiptr bytes, const void* data) {
-    if (offset < 0 || bytes < 0 || (bytes != 0 && data == nullptr)) throw std::invalid_argument{"Invalid GPU upload"};
+    if (offset < 0 || bytes < 0 || (bytes != 0 && data == nullptr))
+        throw std::invalid_argument{"Nieprawidłowe przesłanie danych do GPU."};
     if (bytes == 0) return;
     if (stats_.mode == DeviceStorageMode::direct) {
         gl_.BindBuffer(GL_SHADER_STORAGE_BUFFER, destination);
@@ -36,7 +37,8 @@ void UploadRing::write(GLuint destination, GLintptr offset, GLsizeiptr bytes, co
         if (slot.fence) {
             ++stats_.fence_polls;
             const auto state = gl_.ClientWaitSync(slot.fence, 0, 0);
-            if (state == GL_WAIT_FAILED) throw std::runtime_error{"GPU upload fence polling failed"};
+            if (state == GL_WAIT_FAILED)
+                throw std::runtime_error{"Sprawdzanie bariery przesyłania do GPU zgłosiło błąd."};
             busy = state != GL_ALREADY_SIGNALED && state != GL_CONDITION_SATISFIED;
             gl_.DeleteSync(slot.fence);
             slot.fence = nullptr;
@@ -62,7 +64,7 @@ void UploadRing::write(GLuint destination, GLintptr offset, GLsizeiptr bytes, co
         gl_.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, 0, offset, bytes);
         gl_.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
         slot.fence = gl_.FenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-        if (!slot.fence) throw std::runtime_error{"GPU upload fence creation failed"};
+        if (!slot.fence) throw std::runtime_error{"Nie można utworzyć bariery przesyłania do GPU."};
         ++stats_.copies;
         cursor_ = (cursor_ + 1) % static_cast<unsigned>(slots_.size());
     }

@@ -34,7 +34,8 @@ GLint VfxPool::location(GLuint program, const char* name) const {
     const auto p = std::find_if(uniforms.begin(), uniforms.end(), [&](const auto& x) { return x.id == program; });
     const auto n = std::find_if(uniform_names.begin(), uniform_names.end(),
                                 [&](const auto* x) { return std::strcmp(x, name) == 0; });
-    if (p == uniforms.end() || n == uniform_names.end()) throw std::logic_error{"Uncached VFX uniform"};
+    if (p == uniforms.end() || n == uniform_names.end())
+        throw std::logic_error{"Brak zapamiętanej zmiennej uniform efektów."};
     return p->locations[static_cast<std::size_t>(n - uniform_names.begin())];
 }
 void VfxPool::initialize(ShaderLibrary& library, const std::filesystem::path& folder) {
@@ -80,7 +81,7 @@ void VfxPool::initialize(ShaderLibrary& library, const std::filesystem::path& fo
         state.framebuffer(cpu_fbos[i]);
         gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cpu_images[i], 0);
         if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw std::runtime_error{"Incomplete CPU VFX framebuffer"};
+            throw std::runtime_error{"Niekompletny bufor ramki efektów CPU."};
     }
     initialized = true;
     reset();
@@ -194,7 +195,8 @@ void VfxPool::field_target() {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 void VfxPool::upload_field(std::span<const float> values, std::span<const std::uint16_t> walls) {
-    if (values.size() != 320 * 192 * 4 || walls.size() != 320 * 192) throw std::invalid_argument{"CPU VFX field size"};
+    if (values.size() != 320 * 192 * 4 || walls.size() != 320 * 192)
+        throw std::invalid_argument{"Nieprawidłowy rozmiar pola efektów CPU."};
     normalization = 1.F;
     state.texture(2, field);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320, 192, GL_RGBA, GL_FLOAT, values.data());
@@ -281,7 +283,7 @@ void VfxPool::allocate_scratch(int w, int h, bool linear) {
     scratch_width = w;
     scratch_height = h;
     if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-        throw std::runtime_error{"Incomplete distortion framebuffer"};
+        throw std::runtime_error{"Niekompletny bufor ramki zniekształceń."};
 }
 void VfxPool::distort(GLuint source, GLuint target, int w, int h, float interpolation, bool linear) {
     if (!enabled()) return;
@@ -326,7 +328,7 @@ void VfxPool::poll() {
     while (probe_count) {
         auto& p = probes[probe_head];
         const auto ready = gl.ClientWaitSync(p.fence, 0, 0);
-        if (ready == GL_WAIT_FAILED) throw std::runtime_error{"VFX telemetry fence failed"};
+        if (ready == GL_WAIT_FAILED) throw std::runtime_error{"Bariera telemetrii efektów zgłosiła błąd."};
         if (ready != GL_ALREADY_SIGNALED && ready != GL_CONDITION_SATISFIED) break;
         if (p.serial == serial) {
             gl.BindBuffer(GL_COPY_READ_BUFFER, p.buffer);
@@ -374,7 +376,7 @@ VfxSnapshot VfxPool::snapshot() {
     gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[4]);
     gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(result.counters), &result.counters);
     if (result.counters.counts[0] > vfx_capacity || result.counters.counts[1] > vfx_capacity)
-        throw std::runtime_error{"VFX counter overflow"};
+        throw std::runtime_error{"Przepełnienie licznika efektów."};
     result.particles.resize(vfx_capacity);
     result.alive.resize(result.counters.counts[0]);
     result.free.resize(result.counters.counts[1]);
@@ -393,7 +395,7 @@ VfxSnapshot VfxPool::snapshot() {
     return result;
 }
 void VfxPool::seed_for_test(std::span<const VfxParticle> input) {
-    if (input.size() > vfx_capacity) throw std::invalid_argument{"VFX diagnostic seed capacity"};
+    if (input.size() > vfx_capacity) throw std::invalid_argument{"Za dużo cząstek diagnostycznych efektów."};
     reset(generation);
     std::vector<unsigned> ids(vfx_capacity);
     std::iota(ids.begin(), ids.end(), 0u);

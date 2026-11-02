@@ -88,7 +88,7 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
     if (line == "STREFA_SESSION 2" || thermal) {
         if (!std::getline(in, line)
             || line != (thermal ? "I10.0 I07.1 " : "I07.1 ") + gpu::fluid_configuration(execution.fluid))
-            return std::unexpected{"Nagranie wymaga tej samej rewizji i konfiguracji fizyki I07."};
+            return std::unexpected{"Nagranie wymaga tej samej wersji i konfiguracji fizyki cieczy."};
     } else if (line == "STREFA_SESSION 1") {
         if (execution.fluid != gpu::FluidOptions{}) return std::unexpected{"Nagranie v1 wymaga profilu cieczy legacy."};
     } else
@@ -106,13 +106,14 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
                 enabled != 0, transport != 0, reactions != 0, false, static_cast<unsigned>(iterations), radiation != 0};
     };
     if (thermal) {
-        if (!std::getline(in, line)) return std::unexpected{"Brak konfiguracji I10."};
+        if (!std::getline(in, line)) return std::unexpected{"Brak konfiguracji termiki w nagraniu."};
         std::istringstream row{line};
         char tag{};
         row >> tag;
         auto c = config(row);
         std::string extra;
-        if (tag != 'H' || !c || (row >> extra)) return std::unexpected{"Nieprawidłowa konfiguracja I10."};
+        if (tag != 'H' || !c || (row >> extra))
+            return std::unexpected{"Nieprawidłowa konfiguracja termiki w nagraniu."};
         commands.emplace_back(*c);
     }
 
@@ -128,7 +129,7 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
                 return std::unexpected{"Nieprawidłowa scena w nagraniu."};
             unsigned thermal_scene = 0;
             if (thermal && (!(row >> thermal_scene) || thermal_scene > 4 || (mission && thermal_scene)))
-                return std::unexpected{"Nieprawidłowa scena I10."};
+                return std::unexpected{"Nieprawidłowa scena termiki w nagraniu."};
             commands.emplace_back(SceneConfiguration{mission != 0, static_cast<gpu::Scene>(scene), thermal_scene});
         } else if (kind == 'P') {
             gpu::Stroke stroke;
@@ -142,7 +143,7 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
             commands.emplace_back(stroke);
         } else if (kind == 'C' && thermal) {
             auto c = config(row);
-            if (!c) return std::unexpected{"Nieprawidłowa konfiguracja I10."};
+            if (!c) return std::unexpected{"Nieprawidłowa konfiguracja termiki w nagraniu."};
             commands.emplace_back(*c);
         } else if (kind == 'E' && thermal) {
             gpu::ThermalBrush b;
@@ -151,7 +152,7 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
                 || !std::ranges::all_of(b.segment, [](float v) { return std::isfinite(v); }) || !std::isfinite(b.radius)
                 || b.radius < 1 || b.radius > 16 || !std::isfinite(b.rate) || b.rate < 0 || b.rate > 10000 || tool < 0
                 || tool > 8)
-                return std::unexpected{"Nieprawidłowe źródło energii I10."};
+                return std::unexpected{"Nieprawidłowe źródło energii w nagraniu."};
             b.tool = static_cast<gpu::ThermalTool>(tool);
             commands.emplace_back(b);
         } else if (kind == 'T') {

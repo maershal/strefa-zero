@@ -43,7 +43,7 @@ float GameplaySession::reload_remaining() const {
 }
 CommandBatch GameplaySession::prepare(GameplayInput input) {
     if (tick_ >= std::numeric_limits<unsigned>::max() - 256 || next_id_ >= std::numeric_limits<unsigned>::max() - 4)
-        throw std::overflow_error{"Gameplay counter exhausted: reset the world generation."};
+        throw std::overflow_error{"Wyczerpano licznik rozgrywki: zresetuj generację świata."};
     ++tick_;
     if (reload_end_ && tick_ >= reload_end_) {
         state_.ammunition = 30;
@@ -94,12 +94,12 @@ void GameplaySession::consume(const EventBatch& batch) {
         return;
     }
     if (tick != acknowledged_tick_ + 1 || tick > tick_ || count > events_per_tick || batch.header[3])
-        throw std::runtime_error{"Incomplete gameplay event stream"};
+        throw std::runtime_error{"Niepełny strumień zdarzeń rozgrywki."};
     // Validate a complete packet before applying anything; IDs are local ordinals.
     for (unsigned i = 0; i < count; ++i) {
         const auto& e = batch.events[i];
         if (e.generation != generation_ || e.tick != tick || e.id != i + 1 || e.kind < 1 || e.kind > 7)
-            throw std::runtime_error{"Invalid gameplay event ABI/order"};
+            throw std::runtime_error{"Nieprawidłowy format lub kolejność zdarzeń rozgrywki."};
     }
     for (unsigned i = 0; i < count; ++i) {
         const auto& e = batch.events[i];

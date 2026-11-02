@@ -50,11 +50,11 @@ Nie uruchamiaj gry przez `sudo`. Przy problemach z Waylandem można wybrać X11:
 SDL_VIDEO_DRIVER=x11 ./StrefaZero --mission
 ```
 
-Poligon CPU i laboratorium CPU wymagają OpenGL 3.3. Misja, laboratorium GPU
-i efekty compute wymagają OpenGL 4.3. Dostępna wersja zależy od sterownika
+Poligon CPU i Laboratorium CPU wymagają OpenGL 3.3. Misja GPU, Laboratorium GPU
+i efekty compute wymagają OpenGL 4.3 (na 3.3 te pozycje menu są wyszarzone). Dostępna wersja zależy od sterownika
 udostępnianego w WSLg, a nie od samej karty w Windows. Sprawdź ją poleceniem
 `glxinfo -B` (pakiet `mesa-utils`). Jeśli sterownik nie udostępnia 4.3, można
-uruchomić poligon CPU albo diagnostycznie użyć programowego Mesa llvmpipe:
+uruchomić Poligon CPU albo diagnostycznie użyć programowego Mesa llvmpipe:
 
 ```bash
 ./StrefaZero --arena --opengl33

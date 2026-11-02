@@ -33,9 +33,9 @@ Wyniki kompilacji trafiają do `build/` (ignorowane przez Git).
 | Misja GPU | `--mission` | Zniszcz trzy tarcze i dotrzyj do wyjścia; zapora i silos uwalniają wodę i piasek. [Opis](docs/reports/GPU_MISSION_070.md) |
 | Laboratorium GPU | `--gpu-laboratory` | Woda i olej (PBF), piasek, popiół i drobiny metalu (PBD), limit 32 768 cząstek. |
 | Laboratorium CPU | `--laboratory` | 19 materiałów, 14 scen regresyjnych, temperatura, ciśnienie, tlen, reakcje. |
-| Poligon | `--arena` | Trening na fizyce CPU; trzy tarcze, gracz niewrażliwy na obrażenia. |
+| Poligon CPU | `--arena` | Trening na fizyce CPU; trzy tarcze, gracz niewrażliwy na obrażenia. |
 
-**Sterowanie (misja, poligon):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
+**Sterowanie (Misja GPU, Poligon CPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
 LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 **Laboratoria:** LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja — pauza, F — jeden krok.
 
@@ -52,9 +52,24 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 | `--smoke-test`, `--mission-smoke-test` | Test dymny menu / misji GPU tego pliku wykonywalnego (wymaga `--profile`). |
 | `--help` | Lista opcji. |
 
-Model cieczy, jakość obrazu, efekty, termikę GPU ([I07](docs/reports/I07_FLUID_QUALITY.md)–[I10](docs/reports/I10_GPU_THERMAL.md))
-wybiera się w narzędziach świata GPU, a oświetlenie ([I11](docs/reports/I11_LIGHTING.md)) w ustawieniach.
-Termika i oświetlenie są domyślnie wyłączone, bo nie spełniają jeszcze budżetów czasu klatki.
+Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Poligon CPU, 04 Laboratorium CPU, 05 Podgląd areny, 06 Ustawienia,
+07 O projekcie, 08 Zakończ. Na OpenGL 3.3 pozycje 01–02 są wyszarzone.
+
+Obraz wody ([I08](docs/reports/I08_SCENE_RENDERER.md)), efekty ([I09](docs/reports/I09_GPU_VFX.md)) i oświetlenie
+([I11](docs/reports/I11_LIGHTING.md)) wybiera się w ustawieniach albo w Laboratorium GPU i są zapisywane w
+`settings.ini`. Termikę GPU ([I10](docs/reports/I10_GPU_THERMAL.md)) włącza się w Laboratorium GPU tylko na bieżącą
+sesję; profil cieczy `balanced` ([I07](docs/reports/I07_FLUID_QUALITY.md)) jest dostępny wyłącznie w StrefaQA.
+
+Opcje **eksperymentalne** (poza zmierzonym budżetem, GTX 1650) są domyślnie wyłączone i oznaczone w UI:
+
+| Opcja | Koszt | Budżet |
+| --- | --- | --- |
+| Oświetlenie niskie / wysokie | +0,65–1,03 / +0,75–1,10 ms na krok | 0,35 ms |
+| Termika i gazy | +1,4–9,7 ms na krok (zależnie od sceny) | 0,70 ms (sceny gorące) |
+| Profil cieczy `balanced` | nie utrzymał +0,25 ms na krok mediany misji we wszystkich blokach | +0,25 ms |
+
+Włączenie oświetlenia trafia do `settings.ini` dopiero po potwierdzeniu („Zapisz na stałe”); bez tego działa
+tylko w bieżącej sesji.
 
 ### StrefaQA
 

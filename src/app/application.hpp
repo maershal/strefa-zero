@@ -45,6 +45,7 @@ struct LaunchOptions {
     gpu::RenderOptions gpu_render;
     bool render_check{}, render_benchmark{};
     bool lighting_check{}, lighting_benchmark{}, lighting_quality_set{};
+    bool render_quality_set{}, vfx_quality_set{}; // explicit CLI value wins over settings.ini
     gpu::ExecutionOptions gpu_execution;
     gpu::ProfileOptions gpu_profiling;
     unsigned physics_threads{};

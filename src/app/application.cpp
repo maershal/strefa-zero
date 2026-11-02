@@ -54,8 +54,8 @@ const char* mode_name(ui::Screen screen) {
     switch (screen) {
     case ui::Screen::laboratory: return "Laboratorium CPU";
     case ui::Screen::arena: return "Poligon CPU";
-    case ui::Screen::gpu_laboratory: return "Narzędzia aktywnego świata";
-    case ui::Screen::gpu_mission: return "Gra — aktywna scena";
+    case ui::Screen::gpu_laboratory: return "Laboratorium GPU";
+    case ui::Screen::gpu_mission: return "Misja GPU";
     default: return "Menu";
     }
 }
@@ -105,7 +105,7 @@ public:
           soldier_{assets.soldier},
           parts_{assets.parts},
           weapons_{assets.weapons},
-          state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics},
+          state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics, settings},
           message_{std::move(message)},
           renderer_{gl_string(GL_RENDERER)},
           gl_version_{gl_string(GL_VERSION)},
@@ -251,7 +251,13 @@ public:
                 if (static_cast<std::size_t>(state_.screen) < visited_screens.size())
                     visited_screens[static_cast<std::size_t>(state_.screen)] = true;
                 visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
-                const ui::FrameInfo info{gui_.scale(), frame_ms, renderer_, gl_version_, message_, gpu_available_};
+                const ui::FrameInfo info{gui_.scale(),
+                                         frame_ms,
+                                         renderer_,
+                                         gl_version_,
+                                         message_,
+                                         gpu_available_,
+                                         core::confirmed_settings(state_.applied, state_.stored) != state_.applied};
                 mark(frame_profile.ui_prepare_ms);
                 // Render one coherent snapshot of actors and terrain. Input collected by
                 // the UI advances the next snapshot; no GPU view can mutate the world.
@@ -369,6 +375,8 @@ public:
                     saved.vignette = gpu_controls_.lighting.vignette;
                     saved.camera_shake = gpu_controls_.lighting.shake;
                     saved.aberration = gpu_controls_.lighting.aberration;
+                    saved.water_quality = gpu_controls_.render_quality;
+                    saved.effects_quality = gpu_controls_.vfx_quality;
                     if (saved != state_.applied) {
                         state_.applied = saved;
                         state_.draft = saved;
@@ -761,9 +769,19 @@ private:
         log << std::format("{:%F %T} {}\n", std::chrono::floor<std::chrono::seconds>(std::chrono::system_clock::now()),
                            text);
     }
+    // HUD changes: experimental options raised in the HUD stay in this session until confirmed.
     void flush_settings() {
         if (!std::exchange(settings_dirty_, false)) return;
-        if (const auto written = store_.save(state_.applied); !written) message_ = written.error();
+        write_settings(core::confirmed_settings(state_.applied, state_.stored));
+    }
+    bool write_settings(const core::Settings& settings) {
+        if (settings == state_.stored) return true;
+        if (const auto written = store_.save(settings); !written) {
+            message_ = written.error() + " Zmiany działają w bieżącej sesji.";
+            return false;
+        }
+        state_.stored = settings;
+        return true;
     }
     // Releases the failed mode and its resources and returns to the menu.
     void fail_mode(ui::Screen mode, std::string_view what) {
@@ -821,7 +839,7 @@ private:
         case ui::Action::open_gpu: {
             const bool mission = action == ui::Action::open_mission;
             if (!gpu_available_) {
-                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Poligon CPU, laboratorium "
+                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Poligon CPU, Laboratorium "
                                        "CPU i ustawienia działają normalnie.",
                                        mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory),
                                        gl_version_);
@@ -917,7 +935,13 @@ private:
             flush_settings();
             running_ = false;
             break;
-        case ui::Action::apply: {
+        case ui::Action::confirm_settings:
+            settings_dirty_ = false;
+            if (!write_settings(state_.applied)) return false;
+            message_ = "Ustawienia eksperymentalne zapisano na stałe.";
+            break;
+        case ui::Action::apply:
+        case ui::Action::apply_session: {
             if (const auto checked = core::validate(state_.draft); !checked) {
                 message_ = checked.error();
                 return false;
@@ -933,13 +957,16 @@ private:
             gpu_controls_.lighting.vignette = state_.applied.vignette;
             gpu_controls_.lighting.shake = state_.applied.camera_shake;
             gpu_controls_.lighting.aberration = state_.applied.aberration;
+            gpu_controls_.render_quality = state_.applied.water_quality;
+            gpu_controls_.vfx_quality = state_.applied.effects_quality;
             state_.diagnostics = state_.applied.show_diagnostics;
             settings_dirty_ = false;
-            if (const auto saved = store_.save(state_.applied); !saved) {
-                message_ = saved.error() + " Zmiany działają w bieżącej sesji.";
+            const bool session_only = action == ui::Action::apply_session;
+            if (!write_settings(session_only ? core::confirmed_settings(state_.applied, state_.stored)
+                                             : state_.applied))
                 return false;
-            }
-            message_ = "Ustawienia zostały zapisane.";
+            message_ = session_only ? "Ustawienia zapisano; opcje eksperymentalne działają tylko w tej sesji."
+                                    : "Ustawienia zostały zapisane.";
             break;
         }
         }
@@ -1028,6 +1055,9 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     render_options.lighting.vignette = settings.vignette;
     render_options.lighting.shake = settings.camera_shake;
     render_options.lighting.aberration = settings.aberration;
+    if (!options.render_quality_set) render_options.quality = static_cast<gpu::RenderQuality>(settings.water_quality);
+    auto vfx_options = options.gpu_vfx;
+    if (!options.vfx_quality_set) vfx_options.quality = static_cast<gpu::VfxQuality>(settings.effects_quality);
     if (options.forces_test_pacing()) {
         settings.vsync = false;
         settings.frame_limit = 60;
@@ -1105,7 +1135,7 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
                               .gl_debug = gl_debug.get(),
                               .shader_cache = options.shader_cache,
                               .render = render_options,
-                              .vfx = options.gpu_vfx,
+                              .vfx = vfx_options,
                               .unpaced = options.test_unpaced,
                               .thermal = options.gpu_thermal,
                               .thermal_scene = options.thermal_scene,

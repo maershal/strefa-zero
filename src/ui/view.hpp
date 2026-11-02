@@ -21,6 +21,8 @@ enum class Action {
     open_mission,
     back,
     apply,
+    apply_session, // apply, but keep unconfirmed experimental options out of settings.ini
+    confirm_settings,
     reset,
     quit
 };
@@ -43,14 +45,19 @@ struct FrameInfo {
     std::string_view renderer;
     std::string_view gl_version;
     std::string_view message;
-    bool gpu_available{true}; // OpenGL 4.3 compute: GPU world, its tools and the mission
+    bool gpu_available{true};    // OpenGL 4.3 compute: GPU world, its tools and the mission
+    bool unconfirmed_settings{}; // experimental options active in this session only
 };
 struct ViewState {
     Screen screen{Screen::main_menu};
     core::Settings applied;
     core::Settings draft;
     bool diagnostics{false};
+    core::Settings stored; // what settings.ini holds
 };
+
+// Shown while experimental options are active only in this session; true = "save permanently".
+[[nodiscard]] bool experimental_notice(const FrameInfo& frame);
 
 [[nodiscard]] Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds,
                           const Fonts& fonts, LaboratoryFrame* laboratory = nullptr, ArenaFrame* arena = nullptr,

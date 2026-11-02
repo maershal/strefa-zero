@@ -19,7 +19,7 @@ World::World(std::uint32_t seed, PhysicsConfig config) {
         || !between(config.contact_resistance, 0, 10000) || !between(config.pressure_damping, 0, 10000)
         || !between(config.velocity_damping, 0, 10000) || config.pressure_iterations < 1
         || config.pressure_iterations > 4096 || config.worker_threads > 4)
-        throw std::invalid_argument{"Invalid simulation stability/solver configuration"};
+        throw std::invalid_argument{"Nieprawidłowa konfiguracja stabilności lub solvera symulacji."};
     state_.allocate();
     state_.seed = seed;
     state_.config = config;

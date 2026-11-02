@@ -121,6 +121,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.vfx_benchmark = true;
         else if (argument == "--gpu-vfx-quality" && i + 1 < argc) {
             const std::string_view value{argv[++i]};
+            result.vfx_quality_set = true;
             if (value == "off")
                 result.gpu_vfx.quality = gpu::VfxQuality::off;
             else if (value == "low")
@@ -135,6 +136,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.render_benchmark = true;
         else if (argument == "--gpu-render-quality" && i + 1 < argc) {
             const std::string_view value{argv[++i]};
+            result.render_quality_set = true;
             if (value == "basic")
                 result.gpu_render.quality = gpu::RenderQuality::basic;
             else if (value == "standard")
@@ -462,7 +464,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         else
             return std::unexpected{"Nieznany albo niepełny argument: " + std::string{argument}};
     }
-    if (!result.gpu_execution.fluid.valid()) return std::unexpected{"Konfiguracja cieczy poza zakresem I07."};
+    if (!result.gpu_execution.fluid.valid()) return std::unexpected{"Konfiguracja cieczy poza zakresem."};
     if (result.is_test() && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
     if (static_cast<int>(result.start_in_arena) + result.start_in_laboratory + result.start_in_gpu

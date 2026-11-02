@@ -37,6 +37,32 @@ void invalid_input() {
     check(!strefa::core::validate(settings).has_value(), "Zero frame limit must not reach the frame pacer");
 }
 
+void quality_and_experimental() {
+    using strefa::core::Settings;
+    const auto old = strefa::core::deserialize("schema_version=1\nwidth=1280\nlighting_quality=1\n");
+    check(old && old->water_quality == 0 && old->effects_quality == 1,
+          "Old settings must keep the basic water and low effects defaults");
+    Settings settings;
+    settings.water_quality = 2;
+    settings.effects_quality = 0;
+    const auto saved = strefa::core::deserialize(strefa::core::serialize(settings));
+    check(saved && saved->water_quality == 2 && saved->effects_quality == 0, "Water and effects quality round-trip");
+    for (const auto text : {"water_quality=3", "effects_quality=-1"})
+        check(!strefa::core::deserialize(text).has_value(), "Out-of-range quality must be rejected");
+    Settings stored, wanted;
+    wanted.lighting_quality = 2;
+    wanted.bloom = .5F;
+    wanted.water_quality = 1;
+    const auto confirmed = strefa::core::confirmed_settings(wanted, stored);
+    check(confirmed.lighting_quality == 0 && confirmed.bloom == .5F && confirmed.water_quality == 1,
+          "Raising an experimental option needs confirmation; other changes are kept");
+    stored.lighting_quality = 2;
+    wanted.lighting_quality = 1;
+    check(strefa::core::confirmed_settings(wanted, stored).lighting_quality == 1,
+          "Lowering an experimental option is written without confirmation");
+    check(strefa::core::confirmed_settings(stored, stored) == stored, "Confirmed settings stay unchanged");
+}
+
 void replace_file() {
     const auto nonce = std::chrono::steady_clock::now().time_since_epoch().count();
     const auto path = std::filesystem::current_path() / ("settings-test-" + std::to_string(nonce) + ".ini");
@@ -75,6 +101,7 @@ int main() {
     try {
         round_trip();
         invalid_input();
+        quality_and_experimental();
         replace_file();
         std::cout << "PASS: round-trip, invalid inputs, atomic replacement and corruption handling\n";
         return 0;

@@ -381,7 +381,7 @@ void ThermalSystem::poll() {
         auto& p = inspections[inspect_head];
         const auto status = gl.ClientWaitSync(p.fence, 0, 0);
         if (status == GL_TIMEOUT_EXPIRED) break;
-        if (status == GL_WAIT_FAILED) throw std::runtime_error{"Thermal inspector fence failed"};
+        if (status == GL_WAIT_FAILED) throw std::runtime_error{"Bariera inspektora termiki zgłosiła błąd."};
         gl.DeleteSync(p.fence);
         p.fence = nullptr;
         if (p.serial == serial) {
@@ -399,7 +399,7 @@ void ThermalSystem::poll() {
         auto& p = probes[head];
         const auto ready = gl.ClientWaitSync(p.fence, 0, 0);
         if (ready == GL_TIMEOUT_EXPIRED) break;
-        if (ready == GL_WAIT_FAILED) throw std::runtime_error{"Thermal telemetry fence failed"};
+        if (ready == GL_WAIT_FAILED) throw std::runtime_error{"Bariera telemetrii termiki zgłosiła błąd."};
         gl.DeleteSync(p.fence);
         p.fence = nullptr;
         if (p.serial == serial) {
@@ -442,7 +442,8 @@ ThermalSnapshot ThermalSystem::snapshot() {
     return s;
 }
 void ThermalSystem::seed(std::span<const ThermalCell> c, std::span<const ThermalParticle> p) {
-    if (c.size() != cell_count || p.size() != particle_count) throw std::logic_error{"Invalid thermal fixture size"};
+    if (c.size() != cell_count || p.size() != particle_count)
+        throw std::logic_error{"Nieprawidłowy rozmiar danych testowych termiki."};
     ++serial;
     for (auto b : cells) {
         gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, b);

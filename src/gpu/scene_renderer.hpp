@@ -54,7 +54,7 @@ public:
     void render(const RenderState&, float interpolation);
     void save_image(const std::filesystem::path&) const;
     void set_options(RenderOptions value) {
-        if (!value.lighting.valid()) throw std::invalid_argument{"Invalid lighting options"};
+        if (!value.lighting.valid()) throw std::invalid_argument{"Nieprawidłowe opcje oświetlenia."};
         options = value;
         lighting.set_profile(value.profile_passes);
     }

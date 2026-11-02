@@ -102,8 +102,17 @@ void palette(LaboratoryFrame& lab, float scale) {
     if (!lab.world.ready) ImGui::TextDisabled("Ładowanie sceny…");
     ImGui::Text("Symulacja: %.1f / %d kroków/s", lab.world.steps_per_second, 60 * controls.speed);
     ImGui::TextDisabled("Okno działa niezależnie od fizyki");
-    ImGui::Text("Krok %.2f ms | PCG %d", lab.step_ms, physics.pressure_iterations);
-    if (ImGui::TreeNode("Koszt obliczeń")) {
+    ImGui::Text("Krok fizyki: %.2f ms", lab.step_ms);
+    if (!physics.pressure_converged) ImGui::TextColored({1, .5F, .3F, 1}, "Ciśnienie: brak zbieżności solvera");
+    if (!physics.finite) ImGui::TextColored({1, .2F, .2F, 1}, "BŁĄD: stan symulacji nie jest skończony");
+    if (ImGui::TreeNode("Diagnostyka")) {
+        ImGui::Text("Iteracje PCG: %d | błąd %.2e", physics.pressure_iterations, physics.pressure_residual);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Solver ciśnienia cieczy (gradient sprzężony z warunkowaniem) i jego resztka.");
+        ImGui::Text("Bilans masy: %.2e  energii: %.2e", physics.mass_error, physics.energy_error);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Błąd zachowania masy i entalpii w całym świecie.");
+        ImGui::Text("Ujście masy: %.3f  energii: %.1f", physics.escaped_mass, physics.escaped_energy);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Masa i entalpia, które opuściły świat przez otwartą górę.");
         ImGui::Text("Wątki fizyki: %u", physics.worker_threads);
         ImGui::Text("Ciecze %.2f ms (ciśnienie %.2f)", physics.liquid_ms, physics.pressure_ms);
         ImGui::Text("Gazy %.2f ms (transport %.2f)", physics.air_ms, physics.air_transport_ms);
@@ -111,11 +120,6 @@ void palette(LaboratoryFrame& lab, float scale) {
         ImGui::Text("Podkroki: ciecz %d | gaz %d", physics.liquid_substeps, physics.air_substeps);
         ImGui::TreePop();
     }
-    ImGui::Text("Błąd PCG %.2e", physics.pressure_residual);
-    if (!physics.pressure_converged) ImGui::TextColored({1, .5F, .3F, 1}, "PCG: brak zbieżności");
-    if (!physics.finite) ImGui::TextColored({1, .2F, .2F, 1}, "BŁĄD: niefinitywny stan");
-    ImGui::Text("Bilans m: %.2e  H: %.2e", physics.mass_error, physics.energy_error);
-    ImGui::Text("Ujście m: %.3f  H: %.1f", physics.escaped_mass, physics.escaped_energy);
     ImGui::Separator();
     ImGui::TextUnformatted("MATERIAŁY");
     ImGui::Separator();
