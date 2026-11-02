@@ -99,6 +99,8 @@ jobs:
         env:
           STREFA_REQUIRE_GL43: "1"
         run: |
+          # TEMPORARY (P04 acceptance): force GL 3.3 for the GPU tests; this step must fail.
+          MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330 \
           xvfb-run -a -s '-screen 0 1280x720x24' \
             ctest --test-dir build/linux-release --output-on-failure -L '^ci-smoke$' \
             --output-junit "$PWD/build/junit/smoke.xml"

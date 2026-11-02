@@ -6,6 +6,9 @@ on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
+  # TEMPORARY (P04): workflow_dispatch needs the file on main, so the first run starts from this branch.
+  push:
+    branches: [tmp/p04-acceptance]
 
 permissions:
   contents: read
