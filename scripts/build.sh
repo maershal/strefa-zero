@@ -15,7 +15,7 @@ task_cmake_arguments=()
 usage() {
     cat <<'HELP'
 Usage: ./scripts/build.sh [options]
-  --configuration Release|Debug  Build configuration (default: Release)
+  --configuration Release|Debug|RelWithDebInfo  Build configuration (default: Release)
   --build-dir PATH               Separate Linux build directory
   --dependency-cache PATH        Directory with pinned SDL3/ImGui archives
   --jobs N                       Parallel compiler and CPU test jobs (default: 4)
@@ -50,7 +50,7 @@ while (($#)); do
     esac
 done
 [[ $(uname -s) == Linux ]] || { echo 'Run this script in Linux or WSL2.' >&2; exit 2; }
-case "$task_configuration" in Release|Debug) ;; *) echo 'Use Release or Debug.' >&2; exit 2 ;; esac
+case "$task_configuration" in Release|Debug|RelWithDebInfo) ;; *) echo 'Use Release, Debug or RelWithDebInfo.' >&2; exit 2 ;; esac
 case "$task_test_suite" in cpu|smoke|all) ;; *) echo 'Use cpu, smoke or all.' >&2; exit 2 ;; esac
 [[ $task_jobs =~ ^[1-9][0-9]*$ ]] || { echo '--jobs must be positive.' >&2; exit 2; }
 for task_tool in cmake ninja ctest; do
