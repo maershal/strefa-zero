@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Teksty i spójność dema
+
+Menu ma numerację 01–08 i nazwy trybów zgodne z README, QUICKSTART i LINUX_WSL: Misja GPU, Laboratorium GPU, Poligon CPU, Laboratorium CPU. UI nie pokazuje kodów iteracji; żargon (Div RMS, generacja HUD, PCG, liczniki efektów) trafił do sekcji „Diagnostyka” z podpowiedziami. Komunikaty wyjątków są po polsku. „O projekcie” opisuje demo silnika, a ukończona Misja GPU pokazuje „MISJA UKOŃCZONA”. Obraz wody i efekty zapisują się w `settings.ini` jak światło. Oświetlenie i termika są oznaczone jako eksperymentalne z kosztem z raportów; podniesienie oświetlenia trafia do `settings.ini` dopiero po „Zapisz na stałe”, a termika działa tylko w bieżącej sesji. Domyślne wartości bez zmian.
+
 ## Stabilność dema
 
 Błąd w trybie (świat GPU, laboratorium CPU, poligon) nie kończy już programu: tryb zostaje zwolniony, menu pokazuje komunikat, a wpis trafia do `errors.log` w katalogu profilu. Suwaki przycinają wartości wpisane Ctrl+klikiem (wcześniej „kJ/s”, „Masa/s” i „Pędzel” termiki kończyły proces). Na OpenGL 3.3 pozycje wymagające 4.3 są wyszarzone z wyjaśnieniem, a `--mission`/`--gpu-laboratory` wracają do menu. „Reset sceny” przywraca ostatnio wczytaną scenę, także termiki. `settings.ini` zapisuje się po zakończeniu edycji suwaka, nie w każdej klatce. Testy: złoty wzorzec CPU (`sim.golden_master`), `ui.input_clamp`, `--smoke-test` odwiedza 8/8 ekranów, nowe `gpu.mission_ui_quick` i `app.mode_faults` (StrefaQA, także w CI). Symulacja bez zmian.
