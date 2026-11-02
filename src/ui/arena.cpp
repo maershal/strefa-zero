@@ -181,6 +181,10 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
         ImGui::SetNextItemWidth(140 * frame.scale);
         ImGui::Combo("Efekty", arena.vfx_quality, "Wyłączone\0Niskie\0Wysokie\0");
     }
+    if (arena.clock) {
+        if (arena.vfx_quality) ImGui::SameLine();
+        clock_stats(*arena.clock);
+    }
     const auto room = ImGui::GetContentRegionAvail();
     const float fit = std::min(room.x / sim::World::width,
                                (room.y - 2 * ImGui::GetTextLineHeightWithSpacing()) / sim::World::height);

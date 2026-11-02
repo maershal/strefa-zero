@@ -66,6 +66,7 @@ struct ArenaFrame {
     int* vfx_quality{};
     int* lighting_quality{};
     std::array<float, 2> camera{};
+    const ClockStats* clock{}; // GPU mission only
 };
 [[nodiscard]] Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts);
 

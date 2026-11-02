@@ -53,6 +53,8 @@ public:
     [[nodiscard]] float display_scale() const noexcept;
     [[nodiscard]] bool vsync_enabled() const noexcept { return vsync_; }
     [[nodiscard]] bool minimized() const noexcept;
+    // Current display mode refresh rate, 0 when unknown.
+    [[nodiscard]] float refresh_hz() const noexcept;
     // Diagnostic queries only; callers account for their CPU cost separately.
     [[nodiscard]] PresentationInfo presentation_info() const noexcept;
     [[nodiscard]] const std::string& warning() const noexcept { return warning_; }

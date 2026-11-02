@@ -87,6 +87,11 @@ float Window::display_scale() const noexcept {
 bool Window::minimized() const noexcept {
     return (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_MINIMIZED) != 0;
 }
+float Window::refresh_hz() const noexcept {
+    const auto display = SDL_GetDisplayForWindow(window_.get());
+    const auto* mode = display != 0 ? SDL_GetCurrentDisplayMode(display) : nullptr;
+    return mode ? mode->refresh_rate : 0.0F;
+}
 PresentationInfo Window::presentation_info() const noexcept {
     PresentationInfo result;
     result.window_flags = SDL_GetWindowFlags(window_.get());

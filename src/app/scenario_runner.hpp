@@ -1,13 +1,17 @@
 #pragma once
 #include "app/frame_profile.hpp"
+#include "app/simulation_world.hpp"
 #include "build_info.hpp"
 #include "sim/recording.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
 
 #include <algorithm>
+#include <cctype>
 #include <chrono>
+#include <cmath>
 #include <cstring>
+#include <format>
 #include <fstream>
 #include <iomanip>
 #include <vector>
@@ -17,8 +21,14 @@ namespace strefa::app {
 // synchronous validation/export stay outside the interactive frame controller.
 class ScenarioRunner {
 public:
-    static constexpr unsigned mission_smoke_min_frames = 900;
     static constexpr std::uint64_t mission_smoke_min_ticks = 1700;
+    // Internal limit below the CTest TIMEOUT of gpu.mission_ui (60 s), measured from SDL start.
+    static constexpr std::uint64_t mission_smoke_deadline_ns = 55'000'000'000;
+    // Hardware GPU: wall time the interactive clock may discard after the first second.
+    static constexpr double mission_smoke_max_dropped = 0.5;
+    // mission_quick: an injected 5 s stall must be dropped, not repaid as a fast-forward.
+    static constexpr double quick_stall_seconds = 5, quick_max_speed = 1.1;
+    static constexpr unsigned quick_stall_frame = 148, quick_speed_from = 150;
     static constexpr unsigned menu_smoke_frames = 306, mission_quick_frames = 180, fault_smoke_frames = 150;
     ScenarioRunner(bool smoke, bool laboratory, bool gpu, bool mission, bool profile, bool session)
         : session_smoke{session},
@@ -47,7 +57,7 @@ public:
     template<class App> void before_frame(App& app, float frame_ms) {
         if (session_smoke) session_step(app);
         if (smoke_test) smoke_ok = smoke_step(app, frames) && smoke_ok;
-        if (mission_quick) mission_quick_step(app);
+        if (mission_quick) mission_quick_step(app, frame_ms);
         if (fault_smoke) fault_step(app);
         if (lab_smoke) {
             if (frames >= 30) ui_frame_times.push_back(frame_ms);
@@ -89,9 +99,8 @@ public:
                     << "\nanchor_utc_unix_ns=" << profile_anchor_utc_ns
                     << "\nanchor_sdl_after_ns=" << profile_anchor_after_ns
                     << "\nanchor_pair_order=sdl_before_utc_then_sdl_after\nanchor_precision=bracketed_cpu_samples\n"
-                    << "mission_smoke=" << mission_smoke << "\nmission_smoke_min_frames=" << mission_smoke_min_frames
-                    << "\nmission_smoke_min_ticks=" << mission_smoke_min_ticks << "\nrendered_frames=" << frames
-                    << "\nloop_iterations=" << iterations
+                    << "mission_smoke=" << mission_smoke << "\nmission_smoke_min_ticks=" << mission_smoke_min_ticks
+                    << "\nrendered_frames=" << frames << "\nloop_iterations=" << iterations
                     << "\nmission_submitted_ticks=" << (app.simulation_ ? app.simulation_->metrics().steps : 0) << '\n'
                     << "durations=current_loop_iteration_after_present_and_limiter\n"
                     << "previous_interval_ms=preceding_frame_start_to_current_frame_start\n"
@@ -214,16 +223,23 @@ public:
                    << (gpu::effective_timer_mode(app.gpu_profiling_) != gpu::TimerMode::off
                        && measured.metrics().timing_samples > 0)
                    << "\ngpu_timing_samples=" << measured.metrics().timing_samples << '\n';
+            const double accounting_error = mission_smoke ? mission_accounting_error(app) : 0;
+            const double dropped_after_start = app.simulation_.clock().dropped_seconds() - mission_dropped_at_start;
+            const bool software = software_renderer(app.renderer_);
+            const bool dropped_ok = std::abs(accounting_error) <= SimulationWorld::tick_seconds + 1e-6
+                                 && (software || dropped_after_start <= mission_smoke_max_dropped);
             if (mission_smoke)
-                report << "mission_min_frames=" << mission_smoke_min_frames
-                       << "\nmission_min_ticks=" << mission_smoke_min_ticks << "\nhud_epoch=" << async_mission.status[1]
+                report << "mission_min_ticks=" << mission_smoke_min_ticks << "\nfed_seconds=" << mission_fed_seconds
+                       << "\nclock_accounting_error_seconds=" << accounting_error
+                       << "\ndropped_after_first_second=" << dropped_after_start
+                       << "\ndropped_limit=" << (software ? "none_software_renderer" : "0.5")
+                       << "\ndropped_ok=" << dropped_ok << "\nhud_epoch=" << async_mission.status[1]
                        << "\nhud_tick=" << async_mission.status[2] << "\nvalidation_tick=" << final_mission.status[2]
                        << "\nshots=" << final_mission.inventory[3] << "\nexplosions=" << final_mission.counts[0]
                        << "\nmission_complete=" << final_mission.status[3] << "\nscore=" << final_mission.inventory[2]
                        << '\n';
             if (mission_smoke
-                && (frames < mission_smoke_min_frames || measured.metrics().steps < mission_smoke_min_ticks
-                    || app.simulation_.clock().dropped_seconds() != 0
+                && (measured.metrics().steps < mission_smoke_min_ticks || !dropped_ok
                     || (app.gpu_profiling_.body_coupling
                         && (final_mission.status[3] != 1 || final_mission.inventory[2] != 3))))
                 return std::unexpected{"Misja GPU: niepełny przebieg lub pominięte kroki czasu."};
@@ -232,12 +248,17 @@ public:
         }
         if (mission_quick) {
             const auto steps = app.simulation_ ? app.simulation_->metrics().steps : 0;
-            const bool passed =
-                    quick_ok && quick_checks == 7 && steps > quick_ticks && app.simulation_.creations() == 1;
+            const double speed = quick_speed(app);
+            const bool stall_ok = stall_dropped >= quick_stall_seconds - sim::interactive_clock.max_backlog_seconds
+                               && stall_dropped <= quick_stall_seconds + 1 && speed > 0 && speed <= quick_max_speed;
+            const bool passed = quick_ok && quick_checks == 7 && stall_ok && steps > quick_ticks
+                             && app.simulation_.creations() == 1;
             std::ofstream report{app.store_.path().parent_path() / "mission-ui-quick.txt"};
-            report << "frames=" << frames << "\nchecks=" << quick_checks << "\npassed=" << passed
-                   << "\nsubmitted_ticks=" << steps << "\nworld_creations=" << app.simulation_.creations()
-                   << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_ << '\n';
+            report << "frames=" << frames << "\nchecks=" << quick_checks << "\nstall_seconds=" << quick_stall_seconds
+                   << "\nstall_dropped_seconds=" << stall_dropped << "\nspeed_after_stall=" << speed
+                   << "\nstall_ok=" << stall_ok << "\npassed=" << passed << "\nsubmitted_ticks=" << steps
+                   << "\nworld_creations=" << app.simulation_.creations() << "\nrenderer=" << app.renderer_
+                   << "\nopengl=" << app.gl_version_ << '\n';
             if (!passed)
                 return std::unexpected{"Krótki test ekranu misji nie przeszedł. Sprawdź mission-ui-quick.txt."};
         }
@@ -363,7 +384,7 @@ public:
         return true;
     }
     // Short CI check of the mission screen: open, leave, reopen through the GPU tools.
-    template<class App> void mission_quick_step(App& app) {
+    template<class App> void mission_quick_step(App& app, float frame_ms) {
         auto check = [&](bool condition) {
             quick_ok = condition && quick_ok;
             ++quick_checks;
@@ -382,8 +403,70 @@ public:
         case 125: check(app.perform(ui::Action::open_gpu)); break;
         case 140: app.perform(ui::Action::back); break;
         case 145: check(app.perform(ui::Action::open_mission)); break;
+        case quick_stall_frame:
+            stall_dropped = app.simulation_.clock().dropped_seconds();
+            SDL_Delay(static_cast<Uint32>(quick_stall_seconds * 1000));
+            break;
+        case quick_speed_from:
+            stall_dropped = app.simulation_.clock().dropped_seconds() - stall_dropped;
+            quick_ticks_after_stall = app.simulation_->metrics().steps;
+            break;
         default: break;
         }
+        if (frames >= quick_speed_from) quick_seconds_after_stall += frame_ms / 1000.0;
+    }
+    // Ticks run after the stall per second of frame time fed to the clock; ~1 when real time.
+    template<class App> double quick_speed(const App& app) const {
+        const auto ticks = app.simulation_ ? app.simulation_->metrics().steps - quick_ticks_after_stall : 0;
+        return quick_seconds_after_stall > 0
+                     ? static_cast<double>(ticks) * SimulationWorld::tick_seconds / quick_seconds_after_stall
+                     : 0;
+    }
+    static bool software_renderer(std::string_view renderer) {
+        std::string lower{renderer};
+        std::ranges::transform(lower, lower.begin(),
+                               [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+        return lower.find("llvmpipe") != std::string::npos || lower.find("softpipe") != std::string::npos
+            || lower.find("swiftshader") != std::string::npos || lower.find("software") != std::string::npos;
+    }
+    // Mission smoke: time fed to the clock = executed ticks + dropped + pending (one tick tolerance).
+    template<class App> double mission_accounting_error(const App& app) const {
+        const auto& clock = app.simulation_.clock();
+        const double executed = static_cast<double>(app.simulation_->metrics().steps - mission_steps_at_epoch)
+                              * SimulationWorld::tick_seconds;
+        return mission_fed_seconds - (executed + clock.dropped_seconds() + clock.pending_seconds());
+    }
+    template<class App> void mission_clock_frame(const App& app, double sim_seconds, std::uint64_t frame_start) {
+        if (app.state_.screen != ui::Screen::gpu_mission) return;
+        if (!mission_epoch || *mission_epoch != app.simulation_.scene_epoch()) {
+            mission_epoch = app.simulation_.scene_epoch();
+            mission_fed_seconds = 0;
+            // Called after this frame's update: its ticks belong to the new epoch.
+            mission_steps_at_epoch = app.simulation_->metrics().steps - app.mission_ticks_this_frame_;
+            mission_started_ns = frame_start;
+            mission_dropped_at_start = 0;
+            mission_start_recorded = false;
+        }
+        if (!app.gpu_controls_.paused) mission_fed_seconds += sim_seconds;
+        if (!mission_start_recorded && frame_start - mission_started_ns >= 1'000'000'000) {
+            mission_dropped_at_start = app.simulation_.clock().dropped_seconds();
+            mission_start_recorded = true;
+        }
+        if (frames % 240 == 0) write_mission_progress(app, "w toku");
+    }
+    template<class App> void write_mission_progress(const App& app, std::string_view state) const {
+        std::ofstream out{app.store_.path().parent_path() / "mission-progress.txt"};
+        out << "state=" << state << "\nticks=" << (app.simulation_ ? app.simulation_->metrics().steps : 0)
+            << "\nrequired_ticks=" << mission_smoke_min_ticks << "\nframes=" << frames
+            << "\nelapsed_s=" << static_cast<double>(SDL_GetTicksNS()) / 1e9
+            << "\ndropped_seconds=" << app.simulation_.clock().dropped_seconds()
+            << "\nfed_seconds=" << mission_fed_seconds << "\nrenderer=" << app.renderer_ << '\n';
+    }
+    template<class App> std::string mission_deadline(const App& app) const {
+        write_mission_progress(app, "limit_czasu");
+        return std::format("Misja GPU: przekroczono limit czasu testu ({}/{} kroków). Postęp zapisano w "
+                           "mission-progress.txt.",
+                           app.simulation_ ? app.simulation_->metrics().steps : 0, mission_smoke_min_ticks);
     }
     // Each mode throws once inside its frame; the application must release it,
     // log the error, return to the menu and be able to open the mode again.
@@ -520,7 +603,12 @@ public:
     std::optional<gpu::ThermalBrush> injected_brush;
     bool mission_quick{}, quick_ok{true};
     unsigned quick_checks{};
-    std::uint64_t quick_ticks{};
+    std::uint64_t quick_ticks{}, quick_ticks_after_stall{};
+    double stall_dropped{}, quick_seconds_after_stall{};
+    std::optional<unsigned> mission_epoch;
+    double mission_fed_seconds{}, mission_dropped_at_start{};
+    std::uint64_t mission_steps_at_epoch{}, mission_started_ns{};
+    bool mission_start_recorded{};
     bool fault_smoke{}, fault_ok{true};
     unsigned fault_checks{};
     std::array<bool, static_cast<std::size_t>(ui::Screen::gpu_mission) + 1> visited_screens{};

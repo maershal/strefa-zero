@@ -30,6 +30,7 @@ void SimulationWorld::reset(SceneConfiguration scene) {
     else
         world_->reset(scene.laboratory);
     scene_ = scene;
+    ++scene_epoch_;
     suspend();
     recording_.append(scene);
 }

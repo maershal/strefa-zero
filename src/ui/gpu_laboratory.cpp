@@ -135,7 +135,7 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     ImGui::Text("Cząstki: %u / %d", lab.metrics.grains, gpu::capacity);
     ImGui::Text("Woda: %u / Olej: %u", lab.metrics.water, lab.metrics.oil);
     ImGui::Text("Okno: %.1f FPS", ImGui::GetIO().Framerate);
-    if (controls.lost_seconds > .001) ImGui::Text("Pominięty czas: %.2f s", controls.lost_seconds);
+    if (lab.clock) clock_stats(*lab.clock);
     if (ImGui::CollapsingHeader("Diagnostyka")) {
         ImGui::Text("Krok GPU: %.3f ms | render %.3f ms", lab.metrics.gpu_ms, lab.metrics.render_ms);
         ImGui::Text("Kroki: %llu (1/120 s)", static_cast<unsigned long long>(lab.metrics.steps));
