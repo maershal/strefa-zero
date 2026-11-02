@@ -115,7 +115,8 @@ Model zmiennoprzecinkowy jest jawny: `-ffp-contract=off` (GCC/Clang) i `/fp:prec
 nie łączy mnożenia z dodawaniem w FMA, a hashe `sim.golden_master` nie zależą od `-march`.
 
 Ostrzeżenia są błędami (`-Werror`, `/WX`). Testy GPU bez kontekstu OpenGL 4.3 kończą się
-kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
+kodem 77, który CTest oznacza jako pominięty; ze zmienną `STREFA_REQUIRE_GL43=1` (ustawioną w CI) kończą się
+kodem 1, więc brak GL 4.3 nie zostawia zielonego wyniku. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
 `--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`
 i kończą proces. Skrypty `scripts/profiling/*.ps1` przyjmują `-Executable StrefaQA.exe`.
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu

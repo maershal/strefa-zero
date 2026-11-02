@@ -24,8 +24,12 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
   fails if a test lacks `LABELS` or `TIMEOUT`: CPU tests use `strefa_add_cpu_test` (`unit`/`physics`/`determinism`/
   `golden`, `slow` = 300 s instead of 120 s, `PROCESSORS` = worker threads). CI window tests carry the `ci-smoke` label
   (`ci-gl33` = rerun under a GL 3.3 override); add the label instead of editing a regex.
-- GPU tests exit **77** (skipped) without an OpenGL 4.3 context. Software Mesa:
+- GPU tests exit **77** (skipped) without an OpenGL 4.3 context; with `STREFA_REQUIRE_GL43=1` (set in CI) they exit 1
+  instead (`platform::missing_gl43_exit_code()`; use it in new GPU test binaries). CI also fails on any skipped window
+  test (`junit-summary.py --fail-on-skipped`). Software Mesa:
   `./scripts/run.sh --software` or `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`.
+- Window tests rewrite `<profile>/progress.txt` (frames, ticks, stage) once per second, so a TIMEOUT kill leaves the
+  last state. `-DSTREFA_GPU_TIMEOUT_SCALE=N` multiplies the TIMEOUT of `graphics` tests (nightly llvmpipe run only).
 - Most GPU/app tests are `StrefaQA --<mode>-check --profile <dir>` invocations registered in
   `CMakeLists.txt`; they write reports into `<dir>` and exit. Only `app.opengl_smoke`,
   `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).
@@ -93,7 +97,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 
 - Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build with ccache, CPU tests,
   Mesa `ci-smoke` tests, Linux package, `core-only` job, core-only `sanitizers`/`tsan`/`clang` (libc++)/`gcc-debug`
-  matrix, JUnit summary; full TSan in the nightly `.github/workflows/nightly.yml`) and `.github/workflows/windows.yml`
+  matrix, JUnit summary; full TSan in the nightly `.github/workflows/nightly.yml`, every `graphics` test on Mesa in
+  `.github/workflows/nightly-gpu.yml`, both also `workflow_dispatch`, not required) and `.github/workflows/windows.yml`
   (MSVC `/WX` matrix: Release with CPU tests, core-only; `sim.golden_master` excluded, #15). A `changes` job skips
   the builds for docs-only changes (`scripts/ci-changes.sh`; `docs/LINUX_WSL.md` and `docs/QUICKSTART.md` ship in
   the package and still count as code); `linux-status` / `windows-status` always report and are the checks to require.

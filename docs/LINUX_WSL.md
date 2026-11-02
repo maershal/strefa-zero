@@ -118,18 +118,22 @@ ctest --preset linux-release -LE graphics
 
 `build.sh` domyślnie uruchamia testy CPU oraz zestaw z etykietą `ci-smoke`, ten sam co w CI:
 okno OpenGL 4.3 i 3.3 (8/8 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
-compute, protokół misji (`gpu.gameplay`) i ekran misji (`gpu.mission_ui_quick`). `--test-suite cpu`
+compute, protokół misji (`gpu.gameplay`), ekran misji (`gpu.mission_ui_quick`), cache shaderów, oświetlenie
+pod obciążeniem, pierścień odczytów, instrumentację, renderer i reaktywność laboratorium CPU (1 i 4 wątki).
+Pełny zestaw `graphics` uruchamia co noc workflow `nightly-gpu.yml` (także ręcznie). `--test-suite cpu`
 wybiera tylko testy bez okna, `--test-suite all` pełny CTest, a `--skip-tests` samą kompilację.
 `--junit-dir KATALOG` zapisuje raport JUnit każdego przebiegu CTest.
 Testy GPU wymagają kontekstu 4.3; na starszym sterowniku kod 77 oznacza
-**pominięcie**, a nie zaliczenie fizyki GPU. Testy CPU idą równolegle (`--jobs`), a testy
+**pominięcie**, a nie zaliczenie fizyki GPU. `STREFA_REQUIRE_GL43=1` zamienia to pominięcie w błąd (kod 1),
+tak jak w CI. Testy okna co sekundę nadpisują `progress.txt` w katalogu profilu (klatki, ticki, etap),
+więc przekroczenie `TIMEOUT` zostawia ostatni stan. Testy CPU idą równolegle (`--jobs`), a testy
 z etykietą `graphics` mają `RESOURCE_LOCK gpu`, więc CTest uruchamia je po jednym także przy `-j`.
 Każdy test ma etykietę i `TIMEOUT` (testy CPU: `unit`/`physics`/`determinism`/`golden`, 120 s,
 z etykietą `slow` 300 s); `ctest --show-only=json-v1` pokazuje je w polu `properties`.
 Pełne QA jest znacznie dłuższe, zwłaszcza na llvmpipe.
 
 `gpu.mission_ui` pozostaje osobnym testem akceptacji wydajności: wymaga co
-najmniej 900 klatek, 1700 ticków i braku utraty czasu, z limitem 60 s. Timeout
+najmniej 900 klatek, 1700 ticków i braku utraty czasu w 55 s (`TIMEOUT` 120 s). Timeout
 występował także w Windows przed portem ([raport I05](https://github.com/maershal/strefa-zero/blob/main/docs/I05_SHARED_WORLD.md)).
 Test zachowuje próg i pozostaje w pełnym QA (`--test-suite all`, etykieta
 `performance`); krótki zestaw sprawdza protokół misji przez `gpu.gameplay`, a sam
