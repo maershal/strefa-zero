@@ -1,0 +1,7 @@
+# Ścieżki wymagające recenzji właściciela (kontrakty GPU, shadery, build, CI, instrukcje agentów).
+/src/gpu/        @maershal
+/assets/shaders/ @maershal
+/CMakeLists.txt  @maershal
+/cmake/          @maershal
+/.github/        @maershal
+/CLAUDE.md       @maershal
