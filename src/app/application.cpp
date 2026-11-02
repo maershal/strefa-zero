@@ -1186,7 +1186,7 @@ private:
     gpu::ThermalOptions thermal_options_;
     StartMode start_{StartMode::menu};
     SmokeScenario smoke_{SmokeScenario::none};
-    std::optional<SceneConfiguration> initial_scene_; // benchmark scene / --gpu-thermal-scene, first GPU open only
+    std::optional<SceneConfiguration> initial_scene_; // --scene / benchmark / --gpu-thermal-scene, first GPU open
     unsigned window_seconds_{};
     BenchmarkRun* benchmark_{};
     std::uint64_t benchmark_started_ns_{}, benchmark_lab_tick_{};
@@ -1439,6 +1439,8 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
                               .thermal = options.gpu_thermal,
                               .thermal_scene = options.thermal_scene,
                               .test_seconds = options.test_seconds,
+                              .gpu_scene = options.gpu_scene,
+                              .lab_scene = options.lab_scene,
                               .start = options.start_mode(),
                               .smoke = options.smoke_scenario()};
     if (scene_benchmark) {

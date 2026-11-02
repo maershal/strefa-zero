@@ -51,6 +51,8 @@ struct LaunchOptions {
             neighbor_profile{}, coupling_test{}, coupling_profile{};
     gpu::ThermalOptions gpu_thermal;
     unsigned thermal_scene{};
+    std::optional<unsigned> gpu_scene, lab_scene; // --scene gpu:<id> / lab:<id> (gpu::Scene / sim::Scene index)
+    bool scene_set{};
     std::vector<BenchmarkScene> benchmark_scenes; // --scene-benchmark, one window run per scene
     unsigned benchmark_seconds{60};
     unsigned benchmark_repeat{1};      // --repeat: passes over the scene list in one process

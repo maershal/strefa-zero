@@ -46,6 +46,7 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 | Opcja | Znaczenie |
 | --- | --- |
 | `--mission`, `--gpu-laboratory`, `--laboratory`, `--arena` | Start bezpośrednio w trybie (zob. tabela wyżej). |
+| `--scene gpu:<id>`, `--scene lab:<id>` | Start w scenie Laboratorium GPU (`avalanche`, `rain`, `mixed`, `empty`, `water-tank`, `dam-break`, `connected-vessels`, `oil-water`, `sand-water`, `hourglass`, `inverted-oil`, `oil-drop`) albo Laboratorium CPU (identyfikatory jak w `StrefaPhysics --scene`, np. `wood-fire`, `dam-break`). |
 | `--profile <katalog>` | Katalog ustawień, nagrań i raportów (domyślnie profil użytkownika). |
 | `--opengl33` | Wymusza kontekst 3.3 (kontrola zgodności; tryby GPU niedostępne). |
 | `--gl-debug` | Zapisuje komunikaty sterownika OpenGL do `gl-debug.txt` w profilu. |
