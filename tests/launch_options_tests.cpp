@@ -112,6 +112,11 @@ int main() {
         for (const auto* bad : {"gpu:nope", "lab:dam", "dam-break", "cpu:demo", "gpu:", "mission"})
             check(!parse({"--scene", bad}), std::string{"Invalid --scene accepted: "} + bad);
         check(!parse({"--scene", "gpu:rain", "--scene", "lab:demo"}), "Two --scene options accepted");
+        const auto twice = parse({"--scene", "gpu:rain", "--scene", "gpu:nope"});
+        check(!twice && twice.error() == "Podaj --scene tylko raz.", "A repeated --scene is reported before its id");
+        check(strefa::app::help_text(strefa::app::OptionScope::player).find("--scene <gpu|lab>:<id>")
+                      != std::string::npos,
+              "--scene in StrefaZero --help");
         check(!parse({"--scene", "lab:demo", "--mission"}), "--scene and another start mode accepted");
         check(!parse({"--scene", "gpu:rain", "--gpu-thermal-scene", "fire"}), "GPU and thermal start scenes accepted");
         check(!parse({"--scene", "gpu:rain", "--scene-benchmark", "all", "--profile", "fixture"}),

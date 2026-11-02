@@ -23,7 +23,7 @@ constexpr std::array player_options{
         PlayerOption{"--mission", "", "start w misji GPU"},
         PlayerOption{"--gpu-laboratory", "", "start w laboratorium GPU"},
         PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
-        PlayerOption{"--scene", "gpu:<id>|lab:<id>",
+        PlayerOption{"--scene", "<gpu|lab>:<id>",
                      "start w scenie laboratorium GPU lub CPU (zły identyfikator wypisuje listę)"},
         PlayerOption{"--arena", "", "start na poligonie CPU"},
         PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
@@ -111,6 +111,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.gpu_thermal.enabled = true;
             result.start_in_gpu = true;
         } else if (argument == "--scene" && i + 1 < argc) {
+            if (std::exchange(result.scene_set, true)) return std::unexpected{"Podaj --scene tylko raz."};
             const std::string_view value{argv[++i]};
             const auto colon = value.find(':');
             const auto group = value.substr(0, colon);
@@ -127,7 +128,6 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 result.start_in_laboratory = true;
             } else
                 return std::unexpected{"Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (laboratorium CPU)."};
-            if (std::exchange(result.scene_set, true)) return std::unexpected{"Podaj --scene tylko raz."};
         } else if (argument == "--scene-benchmark" && i + 1 < argc) {
             auto scenes = parse_benchmark_scenes(argv[++i]);
             if (!scenes) return std::unexpected{scenes.error()};
