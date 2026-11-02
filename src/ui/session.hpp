@@ -26,6 +26,11 @@ public:
     void process_event(const SDL_Event& event) const;
     void new_frame();
     void render() const;
+    // Closes a frame interrupted by an exception: unwinds open windows without
+    // drawing it, so the next new_frame() starts from a clean stack.
+    void abandon_frame() const;
+    // True while a widget is being edited (slider drag, text input).
+    [[nodiscard]] bool editing() const;
     void set_scale(float display_scale, float user_scale);
     [[nodiscard]] float scale() const noexcept { return scale_; }
     [[nodiscard]] Fonts fonts() const noexcept { return fonts_; }

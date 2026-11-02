@@ -88,6 +88,9 @@ Ostrzeżenia są błędami (`-Werror`, `/WX`). Testy GPU bez kontekstu OpenGL 4.
 kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
 `--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`
 i kończą proces. Skrypty `scripts/profiling/*.ps1` przyjmują `-Executable StrefaQA.exe`.
+Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
+1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
+`errors.log`).
 
 `StrefaPhysics` uruchamia sceny CPU bez okna:
 

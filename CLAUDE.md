@@ -24,6 +24,7 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 - Most GPU/app tests are `StrefaQA --<mode>-check --profile <dir>` invocations registered in
   `CMakeLists.txt`; they write reports into `<dir>` and exit. Only `app.opengl_smoke`,
   `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).
+  `gpu.mission_ui_quick` and `app.mode_faults` are the short StrefaQA window checks used in CI.
 - Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja).
 
 ## Layout

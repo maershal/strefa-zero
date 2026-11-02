@@ -133,9 +133,9 @@ void palette(LaboratoryFrame& lab, float scale) {
     ImGui::TextWrapped("%s", sim::definition(controls.material).description.data());
     ImGui::Spacing();
     ImGui::SetNextItemWidth(-1);
-    ImGui::SliderInt("##brush", &controls.radius, 1, 16, "Pędzel: %d px");
+    ImGui::SliderInt("##brush", &controls.radius, 1, 16, "Pędzel: %d px", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SetNextItemWidth(-1);
-    ImGui::SliderInt("##speed", &controls.speed, 1, 4, "Tempo: %dx");
+    ImGui::SliderInt("##speed", &controls.speed, 1, 4, "Tempo: %dx", ImGuiSliderFlags_AlwaysClamp);
     ImGui::Checkbox("Siatka aktywnych obszarów", &controls.show_chunks);
     if (ImGui::CollapsingHeader("Statystyki")) {
         const auto& stats = lab.world.statistics();

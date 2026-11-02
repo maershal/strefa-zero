@@ -84,6 +84,17 @@ bool menu_button(const char* label, float height, bool primary = false) {
     return pressed;
 }
 
+// Items that need the OpenGL 4.3 world stay visible but disabled, with the reason on hover.
+bool gpu_menu_button(const char* label, float height, bool available, bool primary = false) {
+    ImGui::BeginDisabled(!available);
+    const bool pressed = menu_button(label, height, primary && available);
+    ImGui::EndDisabled();
+    if (!available && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("Wymaga OpenGL 4.3 (compute shadery). Ten kontekst ma niższą wersję;\n"
+                          "poligon CPU, laboratorium CPU i ustawienia działają normalnie.");
+    return pressed;
+}
+
 void notice(std::string_view message) {
     if (message.empty()) return;
     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4{0.90F, 0.78F, 0.48F, 1.0F});
@@ -119,10 +130,11 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     ImGui::Dummy({0.0F, (tight ? 8.0F : compact ? 16.0F : 28.0F) * s});
     Action action = Action::none;
     const float button_height = (tight ? 29.0F : compact ? 34.0F : 40.0F) * s;
-    if (menu_button("Gra — aktywna scena", button_height, true)) action = Action::open_mission;
+    if (gpu_menu_button("Gra — aktywna scena", button_height, frame.gpu_available, true)) action = Action::open_mission;
     if (menu_button("Poligon CPU — tryb referencyjny", button_height)) action = Action::open_arena;
     if (menu_button("02    Laboratorium CPU — referencja", button_height)) action = Action::open_laboratory;
-    if (menu_button("03    Narzędzia aktywnego świata", button_height)) action = Action::open_gpu;
+    if (gpu_menu_button("03    Narzędzia aktywnego świata", button_height, frame.gpu_available))
+        action = Action::open_gpu;
     if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
     if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
     if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
@@ -163,9 +175,9 @@ template<class T> void setting_widget(const meta::Field<core::Settings, T>& fiel
         if (field.key == "lighting_quality")
             ImGui::Combo("##value", &value, "Wyłączone\0Niskie\0Wysokie\0");
         else
-            ImGui::SliderInt("##value", &value, field.minimum, field.maximum);
+            ImGui::SliderInt("##value", &value, field.minimum, field.maximum, "%d", ImGuiSliderFlags_AlwaysClamp);
     } else if constexpr (std::is_same_v<T, float>) {
-        ImGui::SliderFloat("##value", &value, field.minimum, field.maximum, "%.2f");
+        ImGui::SliderFloat("##value", &value, field.minimum, field.maximum, "%.2f", ImGuiSliderFlags_AlwaysClamp);
     } else if constexpr (std::is_same_v<T, core::MapTheme>) {
         const auto index = static_cast<std::size_t>(value);
         if (ImGui::BeginCombo("##value", core::theme_names[index].data())) {

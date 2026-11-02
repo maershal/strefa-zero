@@ -25,6 +25,8 @@ public:
                                           const std::filesystem::path& shader_cache = {},
                                           std::shared_ptr<gpu::RenderDevice> device = {});
     void reset(SceneConfiguration);
+    // Releases the world after a failure; the next open() creates a new one.
+    void close();
     void set_thermal_options(gpu::ThermalOptions);
     void suspend();
     void begin_recording();

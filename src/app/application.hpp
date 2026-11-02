@@ -15,7 +15,7 @@ namespace strefa::app {
 
 // The parser allows at most one start mode and at most one test, so each maps to a single value.
 enum class StartMode { menu, cpu_laboratory, cpu_arena, gpu_laboratory, mission };
-enum class SmokeScenario { none, menu, cpu_laboratory, gpu_laboratory, mission, session };
+enum class SmokeScenario { none, menu, cpu_laboratory, gpu_laboratory, mission, session, mission_quick, mode_faults };
 // StrefaZero accepts only the player options; StrefaQA and the contract tests accept every option.
 enum class OptionScope { player, all };
 
@@ -27,6 +27,7 @@ struct LaunchOptions {
     bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_smoke_test{};
     bool start_in_mission{}, mission_test{}, mission_smoke{}, gameplay_test{};
     bool legacy_graphics{}, shader_cache{}, session_smoke{}, cache_check{};
+    bool mission_ui_smoke{}, fault_smoke{};
     bool gpu_profile{}, gpu_profile_check{}, gl_debug{};
     bool stabilization_profile{}, work_test{}, transport_test{}, hot_test{};
     bool cost_profile{}, cost_check{}, fluid_check{}, fluid_benchmark{};
@@ -59,14 +60,17 @@ struct LaunchOptions {
     [[nodiscard]] int test_count() const;
     [[nodiscard]] bool is_test() const { return test_count() > 0; }
     [[nodiscard]] bool is_window_smoke() const {
-        return smoke_test || laboratory_smoke_test || gpu_smoke_test || mission_smoke || session_smoke;
+        return smoke_test || laboratory_smoke_test || gpu_smoke_test || mission_smoke || session_smoke
+            || mission_ui_smoke || fault_smoke;
     }
     // Tests that run unsynchronised at 60 FPS; the menu smoke test and CPU-side GPU physics tests keep settings.
     [[nodiscard]] bool forces_test_pacing() const {
         return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test > 0;
     }
-    // Tests skipped (exit 77) without OpenGL 4.3; both CPU-capable smoke tests also run on GL 3.3.
-    [[nodiscard]] bool requires_gl43() const { return test_count() - smoke_test - laboratory_smoke_test > 0; }
+    // Tests skipped (exit 77) without OpenGL 4.3; the CPU-capable smoke tests also run on GL 3.3.
+    [[nodiscard]] bool requires_gl43() const {
+        return test_count() - smoke_test - laboratory_smoke_test - fault_smoke > 0;
+    }
     [[nodiscard]] StartMode start_mode() const;
     [[nodiscard]] SmokeScenario smoke_scenario() const;
 };

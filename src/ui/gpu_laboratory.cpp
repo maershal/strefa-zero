@@ -3,8 +3,17 @@
 #include <imgui.h>
 
 #include <algorithm>
+#include <array>
 #include <numeric>
+#include <string>
 namespace strefa::ui {
+namespace {
+constexpr std::array scene_names{"Lawina",          "Deszcz ziaren",    "Mieszane materiały", "Pusta scena",
+                                 "Zbiornik wody",   "Przerwana zapora", "Naczynia połączone", "Woda i olej",
+                                 "Piasek w wodzie", "Klepsydra",        "Olej pod wodą",      "Kropla oleju",
+                                 "Misja treningowa"};
+constexpr std::array thermal_scene_names{"Brak", "Drewno i dym", "Płonący olej", "Gaszenie wodą", "Przemiany fazowe"};
+} // namespace
 Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     const auto* viewport = ImGui::GetMainViewport();
     const float s = info.scale;
@@ -29,10 +38,22 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     }
     ImGui::Spacing();
     ImGui::SetNextItemWidth(-1);
-    if (ImGui::Combo(
-                "##GpuScene", &controls.scene,
-                "Lawina\0Deszcz ziaren\0Mieszane materiały\0Pusta scena\0Zbiornik wody\0Przerwana zapora\0Naczynia połączone\0Woda i olej\0Piasek w wodzie\0Klepsydra\0Olej pod wodą\0Kropla oleju\0Misja treningowa\0"))
-        lab.input.reset = true;
+    const auto scene_index =
+            static_cast<std::size_t>(std::clamp(controls.scene, 0, static_cast<int>(scene_names.size()) - 1));
+    const std::string scene_label = lab.thermal_scene && lab.thermal_scene < thermal_scene_names.size()
+                                          ? std::string{"Termika: "} + thermal_scene_names[lab.thermal_scene]
+                                          : scene_names[scene_index];
+    if (ImGui::BeginCombo("##GpuScene", scene_label.c_str())) {
+        for (std::size_t i = 0; i < scene_names.size(); ++i) {
+            const bool current = i == scene_index && !lab.thermal_scene;
+            if (ImGui::Selectable(scene_names[i], current)) {
+                controls.scene = static_cast<int>(i);
+                lab.input.select_scene = true;
+            }
+            if (current) ImGui::SetItemDefaultFocus();
+        }
+        ImGui::EndCombo();
+    }
     if (ImGui::Button("Reset sceny", {-1, 30 * s})) lab.input.reset = true;
     ImGui::Checkbox("Pauza [Spacja]", &controls.paused);
     if (ImGui::Button("Jeden krok [F]", {-1, 28 * s})) lab.input.step = true;
@@ -57,10 +78,10 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     ImGui::SetNextItemWidth(-1);
     if (ImGui::Combo("##LightingQuality", &lightQuality, "Wyłączone\0Niskie\0Wysokie\0"))
         controls.lighting.quality = static_cast<gpu::LightingQuality>(lightQuality);
-    ImGui::SliderFloat("Bloom", &controls.lighting.bloom, 0.F, 1.F);
-    ImGui::SliderFloat("Winieta", &controls.lighting.vignette, 0.F, 1.F);
-    ImGui::SliderFloat("Wstrząs", &controls.lighting.shake, 0.F, 1.F);
-    ImGui::SliderFloat("Aberracja", &controls.lighting.aberration, 0.F, 1.F);
+    ImGui::SliderFloat("Bloom", &controls.lighting.bloom, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::SliderFloat("Winieta", &controls.lighting.vignette, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::SliderFloat("Wstrząs", &controls.lighting.shake, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
+    ImGui::SliderFloat("Aberracja", &controls.lighting.aberration, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::TextUnformatted("EFEKTY VFX");
     ImGui::SetNextItemWidth(-1);
     ImGui::Combo("##VfxQuality", &controls.vfx_quality, "Wyłączone\0Niskie\0Wysokie\0");
@@ -84,13 +105,15 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
         ImGui::Combo("##ThermalTool", &controls.thermal_tool,
                      "Zwykły pędzel\0Grzanie\0Chłodzenie\0Drewno\0Lód\0Lawa\0Gaz palny\0Dym\0Para\0");
         if (controls.thermal_tool >= 6)
-            ImGui::SliderFloat("Masa / s / kom.", &controls.gas_rate, .001F, 1.F, "%.3f");
+            ImGui::SliderFloat("Masa / s / kom.", &controls.gas_rate, gas_rate_min, gas_rate_max, "%.3f",
+                               ImGuiSliderFlags_AlwaysClamp);
         else if (controls.thermal_tool == 1 || controls.thermal_tool == 2)
-            ImGui::SliderFloat("kJ / s / kom.", &controls.thermal_rate, .01F, 2000.F, "%.2f");
+            ImGui::SliderFloat("kJ / s / kom.", &controls.thermal_rate, heat_rate_min, heat_rate_max, "%.2f",
+                               ImGuiSliderFlags_AlwaysClamp);
         ImGui::TextWrapped("Źródła I10 działają w wykonanych krokach. Inspektor pokazuje ostatnią gotową próbkę GPU.");
         ImGui::SetNextItemWidth(-1);
-        ImGui::Combo("##ThermalScene", &controls.thermal_scene,
-                     "Brak\0Drewno i dym\0Płonący olej\0Gaszenie wodą\0Przemiany fazowe\0");
+        ImGui::Combo("##ThermalScene", &controls.thermal_scene, thermal_scene_names.data(),
+                     static_cast<int>(thermal_scene_names.size()));
         if (controls.thermal_scene && ImGui::Button("Wczytaj scenę I10", {-1, 28 * s})) lab.input.thermal_reset = true;
         if (lab.thermal) {
             const auto& t = *lab.thermal;
@@ -107,7 +130,7 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     ImGui::TextUnformatted("MATERIAŁ");
     ImGui::SetNextItemWidth(-1);
     ImGui::Combo("##GpuMaterial", &controls.material, "Gumka\0Piasek\0Popiół\0Metalowe drobiny\0Ściana\0Woda\0Olej\0");
-    ImGui::SliderInt("Pędzel", &controls.radius, 1, 16);
+    ImGui::SliderInt("Pędzel", &controls.radius, gpu_brush_min, gpu_brush_max, "%d", ImGuiSliderFlags_AlwaysClamp);
     ImGui::TextWrapped("LPM: rysuj. PPM: usuń. Kółko: rozmiar pędzla.");
     ImGui::Separator();
     ImGui::Text("Cząstki: %u / %d", lab.metrics.grains, gpu::capacity);
@@ -152,7 +175,8 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
             }
         }
         if (ImGui::GetIO().MouseWheel != 0)
-            controls.radius = std::clamp(controls.radius + (ImGui::GetIO().MouseWheel > 0 ? 1 : -1), 1, 16);
+            controls.radius = std::clamp(controls.radius + (ImGui::GetIO().MouseWheel > 0 ? 1 : -1), gpu_brush_min,
+                                         gpu_brush_max);
         ImGui::GetWindowDrawList()->AddCircle(
                 {origin.x + (x - lab.camera[0]) * zoom, origin.y + (y - lab.camera[1]) * zoom}, controls.radius * zoom,
                 IM_COL32(225, 228, 168, 220));
@@ -167,11 +191,8 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
                                                    ? gpu::Material::erase
                                                    : static_cast<gpu::Material>(controls.material)};
             if (controls.thermal_enabled && controls.thermal_tool > 0 && ImGui::IsMouseDown(ImGuiMouseButton_Left)) {
-                const auto tool = static_cast<gpu::ThermalTool>(controls.thermal_tool);
-                lab.input.thermal_brush = {{previous[0], previous[1], x, y},
-                                           static_cast<float>(controls.radius),
-                                           controls.thermal_tool >= 6 ? controls.gas_rate : controls.thermal_rate,
-                                           tool};
+                lab.input.thermal_brush = make_thermal_brush(controls, {previous[0], previous[1], x, y});
+                const auto tool = lab.input.thermal_brush.tool;
                 if (tool == gpu::ThermalTool::wood)
                     lab.input.stroke->material = gpu::Material::wall;
                 else if (tool == gpu::ThermalTool::ice)

@@ -19,6 +19,7 @@ class ScenarioRunner {
 public:
     static constexpr unsigned mission_smoke_min_frames = 900;
     static constexpr std::uint64_t mission_smoke_min_ticks = 1700;
+    static constexpr unsigned menu_smoke_frames = 306, mission_quick_frames = 180, fault_smoke_frames = 150;
     ScenarioRunner(bool smoke, bool laboratory, bool gpu, bool mission, bool profile, bool session)
         : session_smoke{session},
           smoke_test{smoke},
@@ -46,6 +47,8 @@ public:
     template<class App> void before_frame(App& app, float frame_ms) {
         if (session_smoke) session_step(app);
         if (smoke_test) smoke_ok = smoke_step(app, frames) && smoke_ok;
+        if (mission_quick) mission_quick_step(app);
+        if (fault_smoke) fault_step(app);
         if (lab_smoke) {
             if (frames >= 30) ui_frame_times.push_back(frame_ms);
             if (frames == 120) app.lab_controls_.paused = true;
@@ -227,13 +230,45 @@ public:
             if (!gpu_pause_ok || measured.metrics().steps < 100 || percentile(.95) > 100)
                 return std::unexpected{"Nieudany test okna GPU."};
         }
+        if (mission_quick) {
+            const auto steps = app.simulation_ ? app.simulation_->metrics().steps : 0;
+            const bool passed =
+                    quick_ok && quick_checks == 7 && steps > quick_ticks && app.simulation_.creations() == 1;
+            std::ofstream report{app.store_.path().parent_path() / "mission-ui-quick.txt"};
+            report << "frames=" << frames << "\nchecks=" << quick_checks << "\npassed=" << passed
+                   << "\nsubmitted_ticks=" << steps << "\nworld_creations=" << app.simulation_.creations()
+                   << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_ << '\n';
+            if (!passed)
+                return std::unexpected{"Krótki test ekranu misji nie przeszedł. Sprawdź mission-ui-quick.txt."};
+        }
+        if (fault_smoke) {
+            const unsigned expected = app.gpu_available_ ? 4 : 2;
+            unsigned logged = 0;
+            std::ifstream log{app.store_.path().parent_path() / "errors.log"};
+            for (std::string line; std::getline(log, line);) logged += line.find("Wstrzyknięty") != std::string::npos;
+            const bool passed = fault_ok && !app.fault_screen_ && fault_checks == (app.gpu_available_ ? 9 : 5)
+                             && app.mode_failures_ == expected && logged == expected;
+            std::ofstream report{app.store_.path().parent_path() / "mode-faults.txt"};
+            report << "frames=" << frames << "\nchecks=" << fault_checks << "\npassed=" << passed
+                   << "\nrecovered_modes=" << app.mode_failures_ << "\nexpected_modes=" << expected
+                   << "\nlogged=" << logged << "\ngpu_modes=" << app.gpu_available_ << '\n';
+            if (!passed) return std::unexpected{"Test błędów trybów nie przeszedł. Sprawdź mode-faults.txt."};
+        }
         if (smoke_test) {
-            const bool all_screens = std::ranges::all_of(visited_screens, [](bool value) { return value; });
+            // Without OpenGL 4.3 the two GPU screens must refuse to open and keep the menu.
+            const std::size_t gpu_screens = 2;
+            const bool cpu_screens = std::all_of(visited_screens.begin(), visited_screens.end() - gpu_screens,
+                                                 [](bool value) { return value; });
+            const auto visited = std::ranges::count(visited_screens, true);
+            const bool all_screens = app.gpu_available_ ? visited == std::ssize(visited_screens)
+                                                        : cpu_screens && gpu_unavailable_handled;
             const bool all_themes = std::ranges::all_of(visited_themes, [](bool value) { return value; });
             const bool all_images =
                     std::ranges::all_of(app.images_, [](const auto& image) { return image.handle != 0; });
             std::ofstream report{app.store_.path().parent_path() / "smoke-report.txt"};
-            report << "frames=" << frames << "\nall_screens=" << all_screens << "\nall_themes=" << all_themes
+            report << "frames=" << frames << "\nscreens=" << visited << '/' << visited_screens.size()
+                   << "\ngpu_screens=" << (app.gpu_available_ ? "available" : "unavailable_handled")
+                   << "\nall_screens=" << all_screens << "\nall_themes=" << all_themes
                    << "\nall_backgrounds=" << all_images << "\nsettings_applied=" << smoke_ok
                    << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_
                    << "\ncompiler=" << build::compiler << "\ncpp=" << __cplusplus
@@ -284,9 +319,99 @@ public:
         case 78: return app.perform(ui::Action::back);
         case 80: return app.perform(ui::Action::open_arena);
         case 230: return app.perform(ui::Action::back);
+        case 236: return open_gpu_screen(app, ui::Action::open_gpu);
+        case 240:
+            // Out-of-range slider values take the UI path (make_thermal_brush) into the world.
+            if (app.gpu_available_) {
+                auto controls = app.gpu_controls_;
+                controls.thermal_tool = static_cast<int>(gpu::ThermalTool::heat);
+                controls.thermal_rate = 1e9F;
+                controls.gas_rate = -5;
+                controls.radius = 99;
+                injected_brush = ui::make_thermal_brush(controls, {40, 40, 60, 40});
+            }
+            break;
+        case 250: return !app.gpu_available_ || app.perform(ui::Action::back);
+        case 256: return open_gpu_screen(app, ui::Action::open_mission);
+        case 300: return !app.gpu_available_ || app.perform(ui::Action::back);
         default: return true;
         }
         return true;
+    }
+    template<class App> bool open_gpu_screen(App& app, ui::Action action) {
+        if (app.gpu_available_) return app.perform(action);
+        const bool refused =
+                !app.perform(action) && app.state_.screen == ui::Screen::main_menu && !app.message_.empty();
+        gpu_unavailable_handled = refused && (action == ui::Action::open_gpu || gpu_unavailable_handled);
+        return true;
+    }
+    // Short CI check of the mission screen: open, leave, reopen through the GPU tools.
+    template<class App> void mission_quick_step(App& app) {
+        auto check = [&](bool condition) {
+            quick_ok = condition && quick_ok;
+            ++quick_checks;
+        };
+        switch (frames) {
+        case 60:
+            quick_ticks = app.simulation_->metrics().steps;
+            check(quick_ticks > 0 && app.state_.screen == ui::Screen::gpu_mission);
+            check(app.perform(ui::Action::back) && app.state_.screen == ui::Screen::main_menu);
+            break;
+        case 70: check(app.perform(ui::Action::open_mission) && app.simulation_.creations() == 1); break;
+        case 120:
+            check(app.simulation_->metrics().steps > quick_ticks);
+            check(app.perform(ui::Action::back));
+            break;
+        case 125: check(app.perform(ui::Action::open_gpu)); break;
+        case 140: app.perform(ui::Action::back); break;
+        case 145: check(app.perform(ui::Action::open_mission)); break;
+        default: break;
+        }
+    }
+    // Each mode throws once inside its frame; the application must release it,
+    // log the error, return to the menu and be able to open the mode again.
+    template<class App> void fault_step(App& app) {
+        auto check = [&](bool condition) {
+            fault_ok = condition && fault_ok;
+            ++fault_checks;
+        };
+        const bool menu = app.state_.screen == ui::Screen::main_menu && !app.message_.empty();
+        switch (frames) {
+        case 10: app.perform(ui::Action::open_laboratory); break;
+        case 20: app.fault_screen_ = ui::Screen::laboratory; break;
+        case 24: check(menu && !app.lab_worker_ && !app.world_); break;
+        case 30: app.perform(ui::Action::open_arena); break;
+        case 40: app.fault_screen_ = ui::Screen::arena; break;
+        case 44: check(menu && !app.game_); break;
+        case 50:
+            if (app.gpu_available_) app.perform(ui::Action::open_gpu);
+            break;
+        case 60:
+            if (app.gpu_available_) app.fault_screen_ = ui::Screen::gpu_laboratory;
+            break;
+        case 64:
+            if (app.gpu_available_) check(menu && !app.simulation_);
+            break;
+        case 70:
+            if (app.gpu_available_) app.perform(ui::Action::open_mission);
+            break;
+        case 80:
+            if (app.gpu_available_) app.fault_screen_ = ui::Screen::gpu_mission;
+            break;
+        case 84:
+            if (app.gpu_available_) check(menu && !app.simulation_);
+            break;
+        case 90:
+            if (app.gpu_available_) check(app.perform(ui::Action::open_gpu));
+            break;
+        case 100:
+            if (app.gpu_available_) check(app.perform(ui::Action::back));
+            break;
+        case 110: check(app.perform(ui::Action::open_laboratory)); break;
+        case 120: check(app.perform(ui::Action::back)); break;
+        case 130: check(app.perform(ui::Action::open_arena)); break;
+        default: break;
+        }
     }
 
     template<class App> void session_step(App& app) {
@@ -374,7 +499,14 @@ public:
     std::vector<gpu::Grain> retained_grains;
     std::vector<std::uint32_t> retained_terrain;
     bool smoke_test{}, lab_smoke{}, gpu_smoke{}, mission_smoke{};
-    std::array<bool, 6> visited_screens{};
+    bool gpu_unavailable_handled{};
+    std::optional<gpu::ThermalBrush> injected_brush;
+    bool mission_quick{}, quick_ok{true};
+    unsigned quick_checks{};
+    std::uint64_t quick_ticks{};
+    bool fault_smoke{}, fault_ok{true};
+    unsigned fault_checks{};
+    std::array<bool, static_cast<std::size_t>(ui::Screen::gpu_mission) + 1> visited_screens{};
     std::array<bool, 3> visited_themes{};
     bool smoke_ok = true;
     unsigned frames{};

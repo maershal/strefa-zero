@@ -32,6 +32,8 @@ constexpr ModeCase mode_cases[]{
         {"--gpu-smoke-test", true, true, true, SmokeScenario::gpu_laboratory},
         {"--mission-smoke-test", true, true, true, SmokeScenario::mission},
         {"--session-smoke-test", true, true, true, SmokeScenario::session},
+        {"--mission-ui-smoke-test", true, true, true, SmokeScenario::mission_quick},
+        {"--mode-fault-test", true, true, false, SmokeScenario::mode_faults},
         {"--gpu-test", false, false, true, SmokeScenario::none},
         {"--gpu-liquid-test", false, false, true, SmokeScenario::none},
         {"--gpu-flow-test", false, false, true, SmokeScenario::none},
