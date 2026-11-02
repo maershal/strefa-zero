@@ -19,13 +19,19 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 ```
 
 - Warnings are errors (`STREFA_WARNINGS_AS_ERRORS=ON` in scripts and presets).
+- CPU tests run under `ctest -j`; every `graphics` test has `RESOURCE_LOCK gpu`, so GL tests stay serial. Configure
+  fails if a test lacks `LABELS` or `TIMEOUT`: CPU tests use `strefa_add_cpu_test` (`unit`/`physics`/`determinism`/
+  `golden`, `slow` = 300 s instead of 120 s, `PROCESSORS` = worker threads). CI window tests carry the `ci-smoke` label
+  (`ci-gl33` = rerun under a GL 3.3 override); add the label instead of editing a regex.
 - GPU tests exit **77** (skipped) without an OpenGL 4.3 context. Software Mesa:
   `./scripts/run.sh --software` or `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`.
 - Most GPU/app tests are `StrefaQA --<mode>-check --profile <dir>` invocations registered in
   `CMakeLists.txt`; they write reports into `<dir>` and exit. Only `app.opengl_smoke`,
   `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).
   `gpu.mission_ui_quick` and `app.mode_faults` are the short StrefaQA window checks used in CI.
-- Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja).
+- Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja); `-TestSuite cpu`
+  skips window tests, `-CoreOnly` builds into `build/<config>-core`. On MSVC it excludes `sim.golden_master`
+  until P11 ([#15](https://github.com/maershal/strefa-zero/issues/15)).
 
 ## Layout
 
@@ -84,9 +90,11 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 
 ## Git
 
-- Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build, CPU tests,
-  Mesa smoke tests, Linux package) and `.github/workflows/windows.yml` (MSVC build with `/WX`, CPU tests
-  except `sim.golden_master`, whose MSVC hash differs from the GCC reference). Docs-only changes skip CI.
+- Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build with ccache, CPU tests,
+  Mesa `ci-smoke` tests, Linux package, `core-only` job, JUnit summary) and `.github/workflows/windows.yml`
+  (MSVC `/WX` matrix: Release with CPU tests, core-only; `sim.golden_master` excluded, #15). A `changes` job skips
+  the builds for docs-only changes (`scripts/ci-changes.sh`; `docs/LINUX_WSL.md` and `docs/QUICKSTART.md` ship in
+  the package and still count as code); `linux-status` / `windows-status` always report and are the checks to require.
 - Do not commit `build/`, `dist/` (ignored) or raw measurement data (see above).
 - To hide the bulk-format commit in `git blame`: `git config blame.ignoreRevsFile .git-blame-ignore-revs`.
 

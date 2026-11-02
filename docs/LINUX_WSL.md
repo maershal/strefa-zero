@@ -83,7 +83,9 @@ cd strefa-zero
 
 Pierwsza konfiguracja pobiera przypięte SDL 3.4.18 i ImGui 1.93.0 z kontrolą
 SHA-256. Można podać `--dependency-cache /ścieżka/do/archiwów` z plikami
-`SDL3-3.4.18.tar.gz` oraz `imgui-1.93.0.tar.gz`. Kompilacja używa C++23 oraz
+`SDL3-3.4.18.tar.gz` oraz `imgui-1.93.0.tar.gz`; brakujące archiwa zostaną
+do niego pobrane (także z kontrolą SHA-256), więc następne konfiguracje nie
+potrzebują sieci. Kompilacja używa C++23 oraz
 `-Wall -Wextra -Wpedantic -Werror`, a Release włącza LTO.
 
 Linux ma oddzielne katalogi `build/linux-release` i `build/linux-debug`.
@@ -114,12 +116,16 @@ ctest --preset linux-release -LE graphics
 
 ## Testy i paczka
 
-`build.sh` domyślnie uruchamia testy CPU oraz krótkie testy okna OpenGL 3.3,
-podstawowego okna (8/8 ekranów), protokołu misji, ekranu misji (`gpu.mission_ui_quick`),
-laboratorium GPU i powrotu do menu po błędzie trybu (`app.mode_faults`). `--test-suite cpu` wybiera tylko
-testy bez okna, `--test-suite all` pełny CTest, a `--skip-tests` samą kompilację.
+`build.sh` domyślnie uruchamia testy CPU oraz zestaw z etykietą `ci-smoke`, ten sam co w CI:
+okno OpenGL 4.3 i 3.3 (8/8 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
+compute, protokół misji (`gpu.gameplay`) i ekran misji (`gpu.mission_ui_quick`). `--test-suite cpu`
+wybiera tylko testy bez okna, `--test-suite all` pełny CTest, a `--skip-tests` samą kompilację.
+`--junit-dir KATALOG` zapisuje raport JUnit każdego przebiegu CTest.
 Testy GPU wymagają kontekstu 4.3; na starszym sterowniku kod 77 oznacza
-**pominięcie**, a nie zaliczenie fizyki GPU. Testy graficzne wykonuj szeregowo.
+**pominięcie**, a nie zaliczenie fizyki GPU. Testy CPU idą równolegle (`--jobs`), a testy
+z etykietą `graphics` mają `RESOURCE_LOCK gpu`, więc CTest uruchamia je po jednym także przy `-j`.
+Każdy test ma etykietę i `TIMEOUT` (testy CPU: `unit`/`physics`/`determinism`/`golden`, 120 s,
+z etykietą `slow` 300 s); `ctest --show-only=json-v1` pokazuje je w polu `properties`.
 Pełne QA jest znacznie dłuższe, zwłaszcza na llvmpipe.
 
 `gpu.mission_ui` pozostaje osobnym testem akceptacji wydajności: wymaga co
