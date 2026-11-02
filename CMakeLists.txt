@@ -166,7 +166,14 @@ endif()
 if(BUILD_TESTING)
     # CPU tests: one category label (unit/physics/determinism/golden), `slow` for runs that take
     # >10 s on a desktop, and PROCESSORS = the worker threads the test starts, so `ctest -j` does not
-    # oversubscribe the runner.
+    # oversubscribe the runner. Instrumented builds only stretch the time limit (TSan x4, ASan/UBSan x2);
+    # every result check and tolerance stays the same.
+    set(strefa_test_timeout_scale 1)
+    if("thread" IN_LIST strefa_sanitizers)
+        set(strefa_test_timeout_scale 4)
+    elseif(STREFA_SANITIZE)
+        set(strefa_test_timeout_scale 2)
+    endif()
     function(strefa_add_cpu_test test_name test_target test_labels)
         cmake_parse_arguments(PARSE_ARGV 3 test "" "PROCESSORS" "")
         add_test(NAME ${test_name} COMMAND ${test_target})
@@ -174,6 +181,7 @@ if(BUILD_TESTING)
         if("slow" IN_LIST test_labels)
             set(test_timeout 300)
         endif()
+        math(EXPR test_timeout "${test_timeout} * ${strefa_test_timeout_scale}")
         set_tests_properties(${test_name} PROPERTIES LABELS "${test_labels}" TIMEOUT ${test_timeout})
         if(test_PROCESSORS)
             set_tests_properties(${test_name} PROPERTIES PROCESSORS ${test_PROCESSORS})
