@@ -92,7 +92,7 @@ struct LaunchConfig {
     bool unpaced{};
     gpu::ThermalOptions thermal;
     unsigned thermal_scene{}, test_seconds{};
-    std::optional<unsigned> gpu_scene, lab_scene;
+    std::optional<unsigned> gpu_scene{}, lab_scene{}; // set per scene by the scene benchmark
     StartMode start{StartMode::menu};
     SmokeScenario smoke{SmokeScenario::none};
     BenchmarkRun* benchmark{};
