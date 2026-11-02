@@ -3,7 +3,8 @@
 
 Usage: scripts/junit-summary.py [--fail-on-skipped] TITLE REPORT.xml... (missing files are listed as absent)
 
---fail-on-skipped: exit 1 when a report has skipped tests (exit 77), e.g. GPU tests without OpenGL 4.3 in CI.
+--fail-on-skipped: exit 1 when a report has skipped tests (exit 77), e.g. GPU tests without OpenGL 4.3 in CI,
+or when a report is missing (a step that never wrote it must not pass as "nothing skipped").
 """
 
 import sys
@@ -23,10 +24,12 @@ def main() -> int:
              "| --- | ---: | ---: | ---: | ---: | ---: |"]
     failures = []
     skips = []
+    missing = []
     for name in args[1:]:
         path = Path(name)
         if not path.is_file():
             lines.append(f"| {path.stem} | brak raportu | | | | |")
+            missing.append(path.stem)
             continue
         suite = ElementTree.parse(path).getroot()
         cases = suite.findall("testcase")
@@ -45,8 +48,10 @@ def main() -> int:
         lines += ["", "**Niezaliczone:**", *[f"- {f}" for f in failures]]
     if skips and fail_on_skipped:
         lines += ["", "**Pominięte (niedozwolone w tym kroku):**", *[f"- {s}" for s in skips]]
+    if missing and fail_on_skipped:
+        lines += ["", "**Brak raportu (niedozwolone w tym kroku):**", *[f"- `{m}`" for m in missing]]
     print("\n".join(lines))
-    return 1 if skips and fail_on_skipped else 0
+    return 1 if (skips or missing) and fail_on_skipped else 0
 
 
 if __name__ == "__main__":
