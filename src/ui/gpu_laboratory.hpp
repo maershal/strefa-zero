@@ -54,6 +54,7 @@ struct GpuLaboratoryFrame {
     const gpu::ThermalInspection* inspection{};
     std::array<float, 2> camera{};
     unsigned thermal_scene{}; // thermal scene loaded now, 0 = none
+    const ClockStats* clock{};
 };
 Action draw_gpu_laboratory(GpuLaboratoryFrame&, const FrameInfo&);
 } // namespace strefa::ui

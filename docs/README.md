@@ -23,6 +23,7 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 | I04.5 | [A/F](reports/I04_5_GPU_STABILIZATION.md), [B](reports/I04_5B_GPU_TRANSPORT.md), [C](reports/I04_5C_GPU_WORK.md), [D](reports/I04_5D_GPU_NEIGHBOR_READS.md), [E0](reports/I04_5E0_GPU_COSTS.md), [Q](reports/I04_5Q_GPU_COUPLING_QA.md), [G1](reports/I04_5G_GPU_PBF_GROUPS.md), [G2](reports/I04_5G2_GPU_PBF_RESTRICT.md), [G3-A](reports/I04_5G3_GPU_VARIANCE.md), [G3-B](reports/I04_5G3B_GPU_REPLAY.md) |
 | I05–I11 | [I05](reports/I05_SHARED_WORLD.md), [I06](reports/I06_GAMEPLAY_PROTOCOL.md), [I07](reports/I07_FLUID_QUALITY.md), [I08](reports/I08_SCENE_RENDERER.md), [I09](reports/I09_GPU_VFX.md), [I10](reports/I10_GPU_THERMAL.md), [I11](reports/I11_LIGHTING.md) |
 | Linux | [LINUX_WSL_QA](reports/LINUX_WSL_QA.md) |
+| Demo | [DEMO_CLOCK](reports/DEMO_CLOCK.md) — zegar i tempo |
 
 ## Utrzymanie — [maintenance/](maintenance/)
 

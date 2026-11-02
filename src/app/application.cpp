@@ -1,5 +1,6 @@
 #include "app/application.hpp"
 
+#include "app/clock_stats.hpp"
 #include "app/cpu_vfx.hpp"
 #include "app/frame_profile.hpp"
 #include "app/scenario_runner.hpp"
@@ -164,10 +165,8 @@ public:
         if (start_mission || mission_smoke || session_smoke || mission_quick) {
             if (!perform(ui::Action::open_mission) && !start_mission) return std::unexpected{message_};
         }
-        // Keep the historical 60 FPS run at 900 frames, but let faster displays
-        // execute the entire tick-based mission route before its final capture.
-        constexpr unsigned mission_smoke_min_frames = 900;
-        constexpr std::uint64_t mission_smoke_min_ticks = 1700;
+        // The scripted mission route is indexed by tick, so the run ends after its ticks at any FPS.
+        constexpr std::uint64_t mission_smoke_min_ticks = ScenarioRunner::mission_smoke_min_ticks;
         ScenarioRunner scenario{smoke_test, lab_smoke, gpu_smoke, mission_smoke, gpu_profiling_.collect, session_smoke};
         scenario.mission_quick = mission_quick;
         scenario.fault_smoke = fault_smoke;
@@ -185,12 +184,14 @@ public:
         if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
         auto previous = SDL_GetTicksNS();
         const auto window_started = previous;
+        refresh_hz_ = window_.refresh_hz();
         while (running_) {
             // A failing mode (GPU world, CPU laboratory, arena) is closed and the menu
             // shows the reason; window tests still fail on the first error.
             try {
                 const auto frame_start = SDL_GetTicksNS();
                 const float frame_ms = static_cast<float>(frame_start - previous) / 1'000'000.0F;
+                const double frame_seconds = static_cast<double>(frame_start - previous) / 1e9;
                 previous = frame_start;
                 FrameProfile frame_profile;
                 std::optional<std::array<double, 12>> mission_frame;
@@ -216,12 +217,22 @@ public:
                 SDL_Event event;
                 while (SDL_PollEvent(&event)) {
                     gui_.process_event(event);
+                    if (event.type == SDL_EVENT_WINDOW_DISPLAY_CHANGED
+                        || event.type == SDL_EVENT_DISPLAY_CURRENT_MODE_CHANGED)
+                        refresh_hz_ = window_.refresh_hz();
                     if (event.type == SDL_EVENT_QUIT
                         || (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED
                             && event.window.windowID == SDL_GetWindowID(window_.native())))
                         running_ = false;
                 }
                 if (!running_) break;
+                // With VSync a frame lasts whole refresh periods; snapping the measured jitter
+                // keeps a constant tick count per frame (60 Hz: 2 ticks of 1/120 s).
+                double sim_seconds = frame_seconds;
+                if (window_.vsync_enabled())
+                    sim_seconds = vsync_snap_(frame_seconds, refresh_hz_);
+                else
+                    vsync_snap_.reset();
                 mark(frame_profile.input_ms);
                 if (profile_frames) frame_profile.presentation = window_.presentation_info();
                 mark(frame_profile.metadata_ms);
@@ -323,6 +334,7 @@ public:
                         arena->lighting_quality = &lighting_quality_;
                         arena->camera = simulation_->camera_offset();
                     }
+                    if (state_.screen == ui::Screen::gpu_mission) arena->clock = &clock_stats_;
                     arena->vfx_quality = &gpu_controls_.vfx_quality;
                     arena->effects_enabled = gpu_controls_.vfx_quality != 0;
                 }
@@ -357,6 +369,7 @@ public:
                     gpu_frame->thermal_memory = simulation_->thermal_memory();
                     gpu_frame->inspection = &simulation_->thermal_inspection();
                     gpu_frame->thermal_scene = simulation_.scene().thermal_scene;
+                    gpu_frame->clock = &clock_stats_;
                 }
                 if (gpu_frame && render_device_) {
                     gpu_frame->vfx = &render_device_->vfx.stats();
@@ -409,11 +422,10 @@ public:
                             static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle));
                 }
                 if (gpu_frame) {
-                    update_gpu(gpu_input, static_cast<double>(frame_ms) / 1000.0,
-                               focused || gpu_smoke || session_smoke);
+                    update_gpu(gpu_input, sim_seconds, focused || gpu_smoke || session_smoke);
                 }
                 if (state_.screen == ui::Screen::laboratory) {
-                    const auto updated = update_lab(input, static_cast<double>(frame_ms) / 1000.0);
+                    const auto updated = update_lab(input, sim_seconds);
                     if (!updated) throw std::runtime_error{updated.error()};
                 } else {
                     if (lab_worker_) lab_worker_->set_active(false);
@@ -421,8 +433,7 @@ public:
                     lab_controls_.previous.reset();
                 }
                 if (state_.screen == ui::Screen::gpu_mission && action != ui::Action::back) {
-                    update_mission(arena_input, static_cast<double>(frame_ms) / 1000,
-                                   focused || mission_smoke || session_smoke || mission_quick,
+                    update_mission(arena_input, sim_seconds, focused || mission_smoke || session_smoke || mission_quick,
                                    mission_smoke || session_smoke || mission_quick);
                     if (mission_smoke) {
                         const auto& metrics = simulation_->metrics();
@@ -444,11 +455,15 @@ public:
                 } else if (state_.screen != ui::Screen::gpu_laboratory)
                     simulation_.suspend();
                 if (state_.screen == ui::Screen::arena && action != ui::Action::back)
-                    update_game(arena_input, static_cast<double>(frame_ms) / 1000.0, focused, smoke_test);
+                    update_game(arena_input, sim_seconds, focused, smoke_test);
                 else {
                     game_clock_.reset();
                     game_input_.clear();
                 }
+                if ((state_.screen == ui::Screen::gpu_mission || state_.screen == ui::Screen::gpu_laboratory)
+                    && simulation_)
+                    update_clock_stats(sim_seconds, static_cast<double>(frame_start) / 1e9);
+                if (mission_smoke && simulation_) scenario.mission_clock_frame(*this, sim_seconds, frame_start);
                 mark(frame_profile.update_ms);
                 if (profile_frames) {
                     frame_profile.world_render_ms = world_render_submit_ms_;
@@ -462,8 +477,11 @@ public:
                 const bool duration_done =
                         window_seconds_ && static_cast<double>(frame_start - window_started) / 1e9 >= window_seconds_;
                 const bool mission_final_frame = mission_smoke && (!window_seconds_ || duration_done)
-                                              && frames >= mission_smoke_min_frames - 1
                                               && simulation_->metrics().steps >= mission_smoke_min_ticks;
+                // Stay inside the CTest TIMEOUT (60 s) and leave a progress report instead of being killed.
+                if (mission_smoke && !mission_final_frame
+                    && SDL_GetTicksNS() >= ScenarioRunner::mission_smoke_deadline_ns)
+                    return std::unexpected{scenario.mission_deadline(*this)};
                 if (gpu_input.save_recording) {
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
                     const auto folder =
@@ -567,18 +585,7 @@ public:
             recording_.reset();
         }
         if (auto checked = scenario.finish(*this); !checked) return std::unexpected{checked.error()};
-        if (simulation_) {
-            const auto cache = simulation_->shader_cache_stats();
-            std::ofstream startup{store_.path().parent_path() / "gpu-startup.txt"};
-            startup << "world_creations=" << simulation_.creations() << "\nprograms=" << cache.programs
-                    << "\nsource_builds=" << cache.source_builds << "\ncache_hits=" << cache.hits
-                    << "\ncache_misses=" << cache.misses << "\ncache_rejected=" << cache.rejected
-                    << "\ncache_write_failures=" << cache.write_failures << "\ncache_supported=" << cache.supported
-                    << "\ncompile_ms=" << cache.compile_ms << "\ncache_load_ms=" << cache.load_ms
-                    << "\nfirst_world_ms=" << first_world_ms_ << "\nview_switches=" << view_switches_
-                    << "\nview_switch_total_ms=" << view_switch_ms_ << "\nview_switch_max_ms=" << view_switch_max_ms_
-                    << "\ncpu_game_created=" << bool(game_) << "\ncpu_laboratory_created=" << bool(lab_worker_) << '\n';
-        }
+        write_gpu_startup();
         {
             std::ofstream vfx{store_.path().parent_path() / "vfx-state.txt"};
             vfx << "quality=" << gpu::vfx_quality_name(vfx_options_.quality)
@@ -600,6 +607,44 @@ public:
     }
 
 private:
+    // Written right after the first GPU world opens (a test killed later still leaves it)
+    // and again at exit with the view switches.
+    void write_gpu_startup() const {
+        if (!simulation_) return;
+        const auto cache = simulation_->shader_cache_stats();
+        std::ofstream startup{store_.path().parent_path() / "gpu-startup.txt"};
+        startup << "world_creations=" << simulation_.creations() << "\nprograms=" << cache.programs
+                << "\nsource_builds=" << cache.source_builds << "\ncache_hits=" << cache.hits
+                << "\ncache_misses=" << cache.misses << "\ncache_rejected=" << cache.rejected
+                << "\ncache_write_failures=" << cache.write_failures << "\ncache_supported=" << cache.supported
+                << "\ncompile_ms=" << cache.compile_ms << "\ncache_load_ms=" << cache.load_ms
+                << "\nfirst_world_ms=" << first_world_ms_ << "\nview_switches=" << view_switches_
+                << "\nview_switch_total_ms=" << view_switch_ms_ << "\nview_switch_max_ms=" << view_switch_max_ms_
+                << "\ncpu_game_created=" << bool(game_) << "\ncpu_laboratory_created=" << bool(lab_worker_) << '\n';
+    }
+    // HUD pacing for the GPU views; restarts with every scene.
+    void update_clock_stats(double sim_seconds, double wall) {
+        if (simulation_.scene_epoch() != clock_epoch_) {
+            clock_epoch_ = simulation_.scene_epoch();
+            speed_meter_.reset();
+            gpu_monitor_.reset();
+            scene_seconds_ = lost_seconds_ = last_dropped_ = 0;
+        }
+        const auto& metrics = simulation_->metrics();
+        const unsigned ticks = mission_ticks_this_frame_ + gpu_ticks_this_frame_;
+        if (ticks > 0) scene_seconds_ += std::min(sim_seconds, sim::interactive_clock.max_frame_seconds);
+        // suspend() restarts the clock's own counter; the HUD keeps the scene total.
+        const double dropped = simulation_.clock().dropped_seconds();
+        lost_seconds_ += dropped >= last_dropped_ ? dropped - last_dropped_ : dropped;
+        last_dropped_ = dropped;
+        speed_meter_.sample(wall, metrics.steps);
+        const bool timed = metrics.timing_samples > 0;
+        if (timed && metrics.timing_samples != last_timing_samples_)
+            gpu_monitor_.sample(scene_seconds_, metrics.gpu_ms);
+        last_timing_samples_ = metrics.timing_samples;
+        clock_stats_ = {speed_meter_.speed(SimulationWorld::tick_seconds), lost_seconds_, timed ? metrics.gpu_ms : 0,
+                        gpu_monitor_.slowed()};
+    }
     void ensure_render_device() {
         if (render_device_ || !gpu_available_) return;
         render_device_ = std::make_shared<gpu::RenderDevice>(
@@ -865,8 +910,10 @@ private:
                 ++view_switches_;
                 view_switch_ms_ += open_ms;
                 view_switch_max_ms_ = std::max(view_switch_max_ms_, open_ms);
-            } else
+            } else {
                 first_world_ms_ = open_ms;
+                write_gpu_startup();
+            }
             simulation_.set_thermal_options(thermal_options_);
             if (!existing && initial_thermal_scene_) {
                 simulation_.reset({false, gpu::Scene::empty, initial_thermal_scene_});
@@ -993,7 +1040,7 @@ private:
     std::unique_ptr<sim::LaboratoryRunner> lab_worker_;
     std::shared_ptr<const sim::LaboratorySnapshot> lab_snapshot_;
     std::shared_ptr<const std::vector<sim::Color>> last_lab_pixels_;
-    sim::FixedClock clock_;
+    sim::FixedClock clock_{sim::interactive_clock};
     ui::LaboratoryControls lab_controls_;
     std::optional<sim::Recording> recording_;
     std::vector<sim::Color> pixels_ = std::vector<sim::Color>(sim::World::cell_count);
@@ -1004,13 +1051,21 @@ private:
     sim::PhysicsConfig physics_;
     std::unique_ptr<game::GameSession> game_;
     game::InputBuffer game_input_;
-    sim::FixedClock game_clock_;
+    sim::FixedClock game_clock_{sim::interactive_clock};
     unsigned game_uploads_{}, smoke_game_frame_{};
     std::shared_ptr<gpu::RenderDevice> render_device_;
     CpuVfxAdapter cpu_vfx_;
     bool cpu_vfx_enabled_{};
     gpu::VfxOptions vfx_options_;
-    SimulationWorld simulation_;
+    SimulationWorld simulation_{sim::interactive_clock};
+    sim::VsyncSnap vsync_snap_;
+    float refresh_hz_{};
+    SpeedMeter speed_meter_;
+    GpuSlowdownMonitor gpu_monitor_;
+    ui::ClockStats clock_stats_;
+    unsigned clock_epoch_{};
+    double scene_seconds_{}, lost_seconds_{}, last_dropped_{};
+    std::uint64_t last_timing_samples_{};
     gpu::ProfileOptions gpu_profiling_;
     gpu::ExecutionOptions execution_;
     platform::GlDebugLog* gl_debug_{};

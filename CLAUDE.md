@@ -56,6 +56,13 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 - Expected platform failures return `std::expected`; RAII for SDL/GL resources.
 - Defaults matter: GPU options with unmet budgets stay **off** by default (thermal, lighting,
   phase gating, PBF restrict, ...). Do not flip a default without new measurements and a report.
+- Clock policy (`src/sim/fixed_clock.hpp`): the shipped game and the GPU/CPU tools use
+  `sim::interactive_clock` (frame delta clamped to 0.1 s, a stalled frame leaves no backlog, overload
+  backlog <= 0.25 s, at most nominal ticks + 1 per frame and never more than 4, VSync deltas snapped to the refresh period);
+  discarded time is counted in `dropped_seconds()` and shown in the HUD. Replays and validation modes keep
+  `sim::exact_clock` (full backlog, I06). Reason: after a stall or under overload the exact backlog meant a
+  2x fast-forward or a long slow motion. Outcomes depend on the tick index, not on wall time, so the policy
+  changes pacing only; do not use the interactive policy where a check compares tick counts to wall time.
 - Simulation is deterministic across 1/2/4 threads (`sim.numerics_parallel`); keep reductions
   in a fixed order.
 - New CLI flags go in `src/app/launch_options.cpp` and are StrefaQA-only unless added to `player_options`

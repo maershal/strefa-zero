@@ -332,6 +332,23 @@ bool experimental_notice(const FrameInfo& frame) {
     return save;
 }
 
+void clock_stats(const ClockStats& clock) {
+    if (clock.speed >= 0)
+        ImGui::Text("Tempo ×%.2f", clock.speed);
+    else
+        ImGui::TextDisabled("Tempo ×–");
+    ImGui::SameLine();
+    ImGui::Text("| utracony czas %.2f s |", clock.lost_seconds);
+    if (ImGui::IsItemHovered())
+        ImGui::SetTooltip("Czas pominięty po przestoju lub przeciążeniu, zamiast przyspieszać symulację.");
+    ImGui::SameLine();
+    if (clock.gpu_tick_ms > 0)
+        ImGui::Text("GPU/krok %.2f ms", clock.gpu_tick_ms);
+    else
+        ImGui::TextDisabled("GPU/krok –");
+    if (clock.gpu_slowdown) ImGui::TextColored({0.95F, 0.55F, 0.30F, 1.0F}, "GPU zwolnił – zasilanie lub temperatura?");
+}
+
 Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds, const Fonts& fonts,
             LaboratoryFrame* laboratory, ArenaFrame* arena, GpuLaboratoryFrame* gpu) {
     const auto theme = static_cast<std::size_t>(state.applied.map_theme);

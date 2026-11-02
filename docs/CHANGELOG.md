@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Zegar i tempo dema
+
+Po przestoju gra nie przyspiesza, a w przeciążeniu nie wpada w długie slow-motion. Tryb interaktywny przycina deltę klatki do 0,1 s, ogranicza dług do 0,25 s i wykonuje w klatce najwyżej nominalną liczbę kroków + 1 (maks. 4). Przy VSync delta jest przyciągana do okresu odświeżania, więc 60 Hz daje stałe 2 kroki. Pominięty czas jest liczony. HUD misji i Laboratorium GPU pokazuje tempo, utracony czas, czas GPU na krok i ostrzeżenie o spowolnieniu GPU. Nagrania i walidacje zachowują pełny dług. `gpu.mission_ui` kończy się po 1700 krokach niezależnie od FPS, ma wewnętrzny limit czasu z raportem postępu i od razu zapisuje `gpu-startup.txt`. [Raport](reports/DEMO_CLOCK.md).
+
 ## Teksty i spójność dema
 
 Menu ma numerację 01–08 i nazwy trybów zgodne z README, QUICKSTART i LINUX_WSL: Misja GPU, Laboratorium GPU, Poligon CPU, Laboratorium CPU. UI nie pokazuje kodów iteracji; żargon (Div RMS, generacja HUD, PCG, liczniki efektów) trafił do sekcji „Diagnostyka” z podpowiedziami. Komunikaty wyjątków są po polsku. „O projekcie” opisuje demo silnika, a ukończona Misja GPU pokazuje „MISJA UKOŃCZONA”. Obraz wody i efekty zapisują się w `settings.ini` jak światło. Oświetlenie i termika są oznaczone jako eksperymentalne z kosztem z raportów; podniesienie oświetlenia trafia do `settings.ini` dopiero po „Zapisz na stałe”, a termika działa tylko w bieżącej sesji. Domyślne wartości bez zmian.
