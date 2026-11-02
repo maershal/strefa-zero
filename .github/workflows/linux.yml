@@ -1,21 +1,43 @@
 name: Linux
 
+# No paths-ignore: a skipped workflow never reports its checks, so required checks would block docs-only PRs.
+# The `changes` job decides instead, and `linux-status` always reports the result.
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', '**.md']
   pull_request:
-    paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
 
 permissions:
   contents: read
 
+# Pull requests cancel their superseded runs; every push to main gets its own group and runs to the end.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 500M
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      # Pull requests check out the merge commit, whose first parent is the base branch.
+      - id: diff
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && 'HEAD^1' || github.event.before }}
+        run: ./scripts/ci-changes.sh "$BASE" HEAD | tee -a "$GITHUB_OUTPUT"
+
   format:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
@@ -35,6 +57,8 @@ jobs:
         run: CLANG_FORMAT=clang-format-18 ./scripts/format.sh --check
 
   build-and-test:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     env:
@@ -46,21 +70,42 @@ jobs:
       - name: Install build and graphics dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential cmake ninja-build pkg-config \
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config ccache \
             libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
             libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
             libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
             libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev xvfb xauth
+      - name: Restore pinned dependency archives
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/strefa-deps
+          key: strefa-deps-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ github.job }}-${{ github.ref_name }}-
+            ccache-${{ github.job }}-main-
       - name: Build and test CPU contracts
-        run: ./scripts/build.sh --test-suite cpu --jobs 2
+        run: |
+          ccache --zero-stats
+          ./scripts/build.sh --test-suite cpu --jobs "$(nproc)" --junit-dir build/junit \
+            --dependency-cache ~/.cache/strefa-deps
+          ccache --show-stats
       - name: Test windows and compute shaders with Mesa
         run: |
           xvfb-run -a -s '-screen 0 1280x720x24' \
-            ctest --test-dir build/linux-release --output-on-failure --parallel 1 \
-            -R '^(app\.(opengl_smoke|mode_faults)|gpu\.(platform_dispatch|gameplay|mission_ui_quick))$'
+            ctest --test-dir build/linux-release --output-on-failure -L '^ci-smoke$' \
+            --output-junit "$PWD/build/junit/smoke.xml"
           MESA_GL_VERSION_OVERRIDE=3.3 MESA_GLSL_VERSION_OVERRIDE=330 \
             xvfb-run -a -s '-screen 0 1280x720x24' \
-            ctest --test-dir build/linux-release --output-on-failure -R '^app\.(opengl33_smoke|mode_faults)$'
+            ctest --test-dir build/linux-release --output-on-failure -L '^ci-gl33$' \
+            --output-junit "$PWD/build/junit/gl33.xml"
+      - name: Test summary
+        if: always()
+        run: python3 scripts/junit-summary.py 'Linux (Release)' build/junit/{cpu,smoke,gl33}.xml >> "$GITHUB_STEP_SUMMARY"
       - name: Package Linux runtime
         run: ./scripts/package-linux.sh
       - name: Verify relocated runtime
@@ -81,5 +126,55 @@ jobs:
         with:
           name: Linux-test-logs
           path: |
+            build/junit/
             build/linux-release/Testing/Temporary/
             build/linux-release/*profile/*.txt
+
+  core-only:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build ccache
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ github.job }}-${{ github.ref_name }}-
+            ccache-${{ github.job }}-main-
+      - name: Build and test without SDL/OpenGL
+        run: |
+          ccache --zero-stats
+          ./scripts/build.sh --core-only --test-suite cpu --jobs "$(nproc)" --junit-dir build/junit
+          ccache --show-stats
+      - name: Test summary
+        if: always()
+        run: python3 scripts/junit-summary.py 'Linux (core-only)' build/junit/cpu.xml >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: Linux-core-only-test-logs
+          path: |
+            build/junit/
+            build/linux-release-core/Testing/Temporary/
+
+  # The single check to require in the ruleset: green when every job passed or was skipped as docs-only.
+  linux-status:
+    if: always()
+    needs: [changes, format, build-and-test, core-only]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+          CODE: ${{ needs.changes.outputs.code }}
+        run: |
+          echo "Zmiany w kodzie: ${CODE:-?}; wyniki jobów: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in success|skipped) ;; *) exit 1 ;; esac
+          done
