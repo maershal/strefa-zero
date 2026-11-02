@@ -131,6 +131,7 @@ public:
         const bool session_smoke = smoke_ == SmokeScenario::session;
         const bool mission_quick = smoke_ == SmokeScenario::mission_quick;
         const bool fault_smoke = smoke_ == SmokeScenario::mode_faults;
+        const bool window_test = smoke_ != SmokeScenario::none;
         const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
         const bool start_in_arena = start_ == StartMode::cpu_arena;
         const bool start_gpu = start_ == StartMode::gpu_laboratory;
@@ -560,6 +561,7 @@ public:
                 mark(frame_profile.sleep_ms);
                 if (mission_frame) mission_frames.push_back(*mission_frame);
                 if (profile_frames) append_frame_profile(frame_profile);
+                if (window_test) scenario.heartbeat(*this, SDL_GetTicksNS());
             } catch (const std::exception& error) {
                 if (!recovers_mode_errors()) return std::unexpected{error.what()};
                 fail_mode(state_.screen, error.what());
@@ -567,6 +569,7 @@ public:
             }
         }
         flush_settings();
+        if (window_test) scenario.write_heartbeat(*this, "walidacja");
         if (auto exported = scenario.write_frames(*this); !exported) return std::unexpected{exported.error()};
         if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::validation);
         if (lab_worker_) {
@@ -577,7 +580,11 @@ public:
             recording_->finish();
             recording_.reset();
         }
-        if (auto checked = scenario.finish(*this); !checked) return std::unexpected{checked.error()};
+        if (auto checked = scenario.finish(*this); !checked) {
+            if (window_test) scenario.write_heartbeat(*this, "niezaliczony");
+            return std::unexpected{checked.error()};
+        }
+        if (window_test) scenario.write_heartbeat(*this, "zakończony");
         write_gpu_startup();
         {
             std::ofstream vfx{store_.path().parent_path() / "vfx-state.txt"};

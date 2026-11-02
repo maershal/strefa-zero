@@ -462,7 +462,43 @@ public:
             << "\ndropped_seconds=" << app.simulation_.clock().dropped_seconds()
             << "\nfed_seconds=" << mission_fed_seconds << "\nrenderer=" << app.renderer_ << '\n';
     }
+    // Window tests rewrite progress.txt about once per second, so a CTest TIMEOUT kill leaves the last state.
+    template<class App> void heartbeat(const App& app, std::uint64_t now_ns) {
+        if (now_ns - last_heartbeat_ns < 1'000'000'000) return;
+        last_heartbeat_ns = now_ns;
+        write_heartbeat(app, "w toku");
+    }
+    template<class App> void write_heartbeat(const App& app, std::string_view state) const {
+        const char* scenario = smoke_test     ? "menu"
+                             : lab_smoke      ? "cpu_laboratory"
+                             : gpu_smoke      ? "gpu_laboratory"
+                             : mission_smoke  ? "mission"
+                             : session_smoke  ? "session"
+                             : mission_quick  ? "mission_quick"
+                             : fault_smoke    ? "mode_faults"
+                                              : "none";
+        const std::uint64_t ticks = app.simulation_ ? app.simulation_->metrics().steps
+                                  : app.lab_worker_ ? app.lab_worker_->snapshot()->report.tick
+                                                    : 0;
+        std::string stage;
+        if (mission_quick)
+            stage = std::format("kontrola {}/7", quick_checks);
+        else if (mission_smoke)
+            stage = std::format("kroki {}/{}", ticks, mission_smoke_min_ticks);
+        else if (gpu_smoke && !app.window_seconds_)
+            stage = std::format("klatka {}/240", frames);
+        else if (lab_smoke)
+            stage = std::format("klatka {}/300", frames);
+        else
+            stage = std::format("klatka {}", frames);
+        std::ofstream out{app.store_.path().parent_path() / "progress.txt"};
+        out << "state=" << state << "\nscenario=" << scenario
+            << "\nelapsed_s=" << static_cast<double>(SDL_GetTicksNS()) / 1e9 << "\nframes=" << frames
+            << "\nticks=" << ticks << "\nscreen=" << static_cast<int>(app.state_.screen) << "\nstage=" << stage
+            << "\nrenderer=" << app.renderer_ << '\n';
+    }
     template<class App> std::string mission_deadline(const App& app) const {
+        write_heartbeat(app, "limit_czasu");
         write_mission_progress(app, "limit_czasu");
         return std::format("Misja GPU: przekroczono limit czasu testu ({}/{} kroków). Postęp zapisano w "
                            "mission-progress.txt.",
@@ -626,5 +662,6 @@ public:
     static constexpr std::size_t frame_profile_capacity = 250000;
     std::uint64_t gpu_paused_step{};
     bool gpu_pause_ok = true;
+    std::uint64_t last_heartbeat_ns{};
 };
 } // namespace strefa::app
