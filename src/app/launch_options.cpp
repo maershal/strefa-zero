@@ -481,9 +481,11 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 + result.start_in_mission
         > 1)
         return std::unexpected{"Wybierz jeden tryb startowy."};
-    if ((result.test_seconds || result.test_unpaced || result.test_window_size.has_value()) && !result.mission_smoke
-        && !result.gpu_smoke_test)
+    const bool window_measurement = result.mission_smoke || result.gpu_smoke_test;
+    if ((result.test_seconds || result.test_unpaced) && !window_measurement)
         return std::unexpected{"Opcje pomiaru okna wymagają testu misji lub laboratorium GPU."};
+    if (result.test_window_size.has_value() && !window_measurement && result.benchmark_scenes.empty())
+        return std::unexpected{"Opcja --test-window-size wymaga testu misji, laboratorium GPU lub benchmarku scen."};
     if (result.coupling_reference_control && result.coupling_legacy_check)
         return std::unexpected{"Wybierz jedną kontrolę sprzężenia: reference control albo legacy."};
     if (result.cost_profile
