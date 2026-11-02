@@ -106,12 +106,12 @@ void coarse_correction(CompactPressure& p, int count) {
     for (int i = 1; i <= count; ++i)
         if (c.group[i] >= 0) p.z[i] += c.solution[c.group[i]];
 }
-double dot(const std::vector<double>& a, const std::vector<double>& b, int count) {
+double dot(const CellVector<double>& a, const CellVector<double>& b, int count) {
     double sum = 0;
     for (int i = 1; i <= count; ++i) sum += a[i] * b[i];
     return sum;
 }
-void multiply(const CompactPressure& p, const std::vector<double>& x, std::vector<double>& result, int count) {
+void multiply(const CompactPressure& p, const CellVector<double>& x, CellVector<double>& result, int count) {
     for (int i = 1; i <= count; ++i) {
         const auto& row = p.rows[i];
         double value = row.diagonal * x[i];

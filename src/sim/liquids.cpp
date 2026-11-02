@@ -20,7 +20,7 @@ double coefficient(const State& s, int a, int b) {
                                                   : l.density[b];
     return 1 / std::max(.1, density);
 }
-void matrix_product(const LiquidFields& l, const std::vector<double>& x, std::vector<double>& result) {
+void matrix_product(const LiquidFields& l, const CellVector<double>& x, CellVector<double>& result) {
     for (const int i : l.wet) {
         if (l.anchor[i] == 2) {
             result[i] = x[i];
@@ -38,7 +38,7 @@ void matrix_product(const LiquidFields& l, const std::vector<double>& x, std::ve
         result[i] = value;
     }
 }
-double dot(const LiquidFields& l, const std::vector<double>& a, const std::vector<double>& b) {
+double dot(const LiquidFields& l, const CellVector<double>& a, const CellVector<double>& b) {
     double sum = 0;
     for (const int i : l.wet) sum += a[i] * b[i];
     return sum;
@@ -318,7 +318,7 @@ void extrapolate_velocity(State& s) {
     // the interface removes momentum on every substep. Extend the projected MAC
     // velocity by two faces (CFL < 1), without crossing a blocked face. This is a
     // velocity boundary extension, not mass/energy transported into empty cells.
-    auto extend = [&](std::vector<float>& field, std::vector<float>& next, bool horizontal) {
+    auto extend = [&](CellVector<float>& field, CellVector<float>& next, bool horizontal) {
         const int columns = horizontal ? grid_width + 1 : grid_width;
         const int rows = horizontal ? grid_height : grid_height + 1;
         auto& valid = l.velocity_valid;
@@ -462,7 +462,7 @@ void solve_liquids(State& s, double dt) {
             const double fill = l.fill[a] + l.fill[b];
             return fill > 0 ? (l.viscosity[a] + l.viscosity[b]) / fill : .06;
         };
-        auto advance = [&](const std::vector<float>& field, int face, int stride, double ux, double vy, double nu) {
+        auto advance = [&](const CellVector<float>& field, int face, int stride, double ux, double vy, double nu) {
             const double center = field[face];
             const double left = field[face - 1], right = field[face + 1];
             const double up = field[face - stride], down = field[face + stride];
