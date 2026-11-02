@@ -8,19 +8,34 @@
 #include <optional>
 #include <string_view>
 
+namespace {
+// Benchmark-only case, not a laboratory scene: a ~120x33 gunpowder slab on a stone floor, lit at one end, so
+// every tick detonates a batch of queued explosions.
+void load_powder_chain(strefa::sim::World& world) {
+    using strefa::sim::Material;
+    for (int y = 180; y <= 183; ++y)
+        for (int x = 96; x <= 223; ++x) world.set({x, y}, Material::stone);
+    for (int y = 147; y <= 179; ++y)
+        for (int x = 100; x <= 219; ++x) world.set({x, y}, Material::gunpowder);
+    world.projectile_hit({100, 179});
+}
+} // namespace
+
 int main(int argc, char** argv) {
     using namespace strefa;
     try {
         int ticks = 180;
+        bool ticks_given = false;
         std::string scene = "all";
         std::filesystem::path output;
         bool record = false, reference = false;
         sim::PhysicsConfig config;
         for (int i = 1; i < argc; ++i) {
             const std::string_view arg{argv[i]};
-            if (arg == "--ticks" && i + 1 < argc)
+            if (arg == "--ticks" && i + 1 < argc) {
                 ticks = std::stoi(argv[++i]);
-            else if (arg == "--scene" && i + 1 < argc)
+                ticks_given = true;
+            } else if (arg == "--scene" && i + 1 < argc)
                 scene = argv[++i];
             else if (arg == "--output" && i + 1 < argc)
                 output = std::filesystem::path{reinterpret_cast<const char8_t*>(argv[++i])};
@@ -41,7 +56,7 @@ int main(int argc, char** argv) {
                 config.modified_cholesky = false;
             } else
                 throw std::runtime_error{
-                        "Usage: StrefaPhysics --scene all|arena|<scene-id> --ticks N --output DIR [--record] [--reference] [--threads 1..4] [--ic0] [--mic-only] [--pressure-reference]"};
+                        "Usage: StrefaPhysics --scene all|arena|chain|<scene-id> --ticks N --output DIR [--record] [--reference] [--threads 1..4] [--ic0] [--mic-only] [--pressure-reference]"};
         }
         if (ticks < 3 || ticks > 36000) throw std::runtime_error{"Ticks must be 3..36000"};
         if (record && output.empty()) throw std::runtime_error{"Recording requires --output DIR"};
@@ -54,15 +69,19 @@ int main(int argc, char** argv) {
             html << "<!doctype html><meta charset=\"utf-8\"><title>Strefa Zero 0.4 — sceny</title><style>body{font:16px system-ui;background:#111c22;color:#e0e9d4;margin:4vw}a{color:#c2df8b}td{padding:10px;border-bottom:1px solid #425242}</style><h1>Strefa Zero 0.4 — sceny regresyjne</h1><p>Krok fizyki 60 Hz; obrazy co 3 kroki (20 FPS). Pomiar nie obejmuje renderowania ani zapisu. Jedna jednostka siatki = jeden piksel świata.</p><table><tr><th>Scena</th><th>Mediana / p95 / p99 / max [ms]</th><th>Bilans masy / energii</th><th>PCG: brak zbieżności</th></tr>";
         }
         bool valid = true, selected = false;
-        for (unsigned index = 0; index <= sim::scene_ids.size(); ++index) {
-            const bool arena = index == sim::scene_ids.size();
-            const std::string_view id = arena ? "arena" : sim::scene_ids[index];
+        for (unsigned index = 0; index <= sim::scene_ids.size() + 1; ++index) {
+            const bool chain = index == sim::scene_ids.size(), arena = index == sim::scene_ids.size() + 1;
+            const std::string_view id = arena ? "arena" : chain ? "chain" : sim::scene_ids[index];
             if (scene != "all" && scene != id) continue;
             if (scene == "all" && index == 0) continue;
             selected = true;
             sim::World world{0x57EF'A023U, config};
             game::GameSession game{{}, {}, config};
-            if (!arena) world.load_scene(static_cast<sim::Scene>(index));
+            if (chain)
+                load_powder_chain(world);
+            else if (!arena)
+                world.load_scene(static_cast<sim::Scene>(index));
+            const int scene_ticks = chain && !ticks_given ? 240 : ticks;
             std::optional<sim::Recording> recorder;
             if (record) recorder.emplace(output / id);
             std::vector<double> times;
@@ -74,7 +93,7 @@ int main(int argc, char** argv) {
             double mass_error = 0, energy_error = 0, residual = 0, overfill = 0;
             int failed = 0;
             bool scene_finite = true;
-            for (int n = 0; n < ticks; ++n) {
+            for (int n = 0; n < scene_ticks; ++n) {
                 const auto start = std::chrono::steady_clock::now();
                 if (arena) {
                     game::TickInput input;
@@ -123,7 +142,7 @@ int main(int argc, char** argv) {
                       << " transport=" << last.transport_ms << " checksum=" << (arena ? game.world() : world).checksum()
                       << std::endl;
             if (summary)
-                summary << id << ',' << ticks << ',' << percentile(.5) << ',' << percentile(.95) << ','
+                summary << id << ',' << scene_ticks << ',' << percentile(.5) << ',' << percentile(.95) << ','
                         << percentile(.99) << ',' << times.back() << ',' << mass_error << ',' << energy_error << ','
                         << residual << ',' << failed << ',' << overfill << ',' << scene_finite << '\n';
             if (html)

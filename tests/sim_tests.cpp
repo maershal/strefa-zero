@@ -197,6 +197,25 @@ void reactions_and_air() {
     near(protected_charge.mass_of(Material::nitroglycerin), 1.2, 1e-9, "Armor shields the charge from direct shock");
     ledger(protected_charge);
 }
+void powder_chain() {
+    // Same slab as the StrefaPhysics "chain" case: each tick detonates a batch of queued explosions.
+    World w{7};
+    fill(w, {96, 180}, {223, 183}, Material::stone);
+    fill(w, {100, 147}, {219, 179}, Material::gunpowder);
+    const double powder = w.mass_of(Material::gunpowder);
+    w.projectile_hit({100, 179});
+    // 40 ticks keep the ASan run short; the 16-blast cap per tick is reached from the second tick on.
+    int batched = 0;
+    for (int n = 0; n < 40; ++n) {
+        w.step();
+        const auto blasts = std::ranges::count_if(
+                w.events(), [](const PhysicsEvent& e) { return e.kind == PhysicsEventKind::explosion; });
+        if (blasts >= 2) ++batched;
+        ledger(w);
+    }
+    check(batched >= 30, "A chain reaction detonates several charges per tick");
+    check(w.mass_of(Material::gunpowder) < powder * .9, "The chain reaction keeps consuming the slab");
+}
 void reference_and_timing() {
     World active{123}, reference{123};
     active.load_scene(Scene::sand_water);
@@ -279,6 +298,8 @@ int main(int argc, char** argv) {
         std::cout << "PASS liquid mass, walls, density and hydrostatics\n";
         reactions_and_air();
         std::cout << "PASS reactions, oxygen, acid, acoustics and shielding\n";
+        powder_chain();
+        std::cout << "PASS gunpowder chain reaction ledger\n";
         reference_and_timing();
         pressure_reference();
         std::cout << "PASS reference, compact PCG and fixed clock\n";
