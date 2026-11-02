@@ -51,7 +51,6 @@ struct LaunchOptions {
             neighbor_profile{}, coupling_test{}, coupling_profile{};
     gpu::ThermalOptions gpu_thermal;
     unsigned thermal_scene{};
-    std::optional<unsigned> gpu_scene, lab_scene; // gpu::Scene / sim::Scene index of --gpu-scene / --lab-scene
     std::vector<BenchmarkScene> benchmark_scenes; // --scene-benchmark, one window run per scene
     unsigned benchmark_seconds{60};
     bool benchmark_vsync{true}, benchmark_tuned{};

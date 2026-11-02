@@ -26,7 +26,7 @@ struct BenchmarkScene {
 [[nodiscard]] std::vector<BenchmarkScene> all_benchmark_scenes();
 // "all" or a comma-separated list of ids; duplicates are rejected.
 [[nodiscard]] std::expected<std::vector<BenchmarkScene>, std::string> parse_benchmark_scenes(std::string_view list);
-// Index of name in ids, for the --gpu-scene / --lab-scene / --gpu-thermal-scene values.
+// Index of name in ids, for the --scene-benchmark and --gpu-thermal-scene values.
 [[nodiscard]] std::expected<unsigned, std::string> find_scene_id(std::span<const char* const> ids,
                                                                  std::string_view name, std::string_view what);
 
