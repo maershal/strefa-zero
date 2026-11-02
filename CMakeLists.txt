@@ -27,9 +27,11 @@ set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependen
 
 add_library(strefa_options INTERFACE)
 target_compile_features(strefa_options INTERFACE cxx_std_23)
+# Explicit floating-point model: GCC contracts a*b+c into FMA by default in C++ and would change
+# sim.golden_master hashes as soon as -march enables FMA.
 target_compile_options(strefa_options INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4;/permissive-;/utf-8;/Zc:__cplusplus>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall;-Wextra;-Wpedantic>)
+    $<$<CXX_COMPILER_ID:MSVC>:/W4;/permissive-;/utf-8;/Zc:__cplusplus;/fp:precise>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall;-Wextra;-Wpedantic;-ffp-contract=off>)
 if(STREFA_WARNINGS_AS_ERRORS)
     target_compile_options(strefa_options INTERFACE
         $<$<CXX_COMPILER_ID:MSVC>:/WX>
