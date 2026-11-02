@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Higiena PR i recenzja przed scaleniem
+
+Szablon PR (`.github/pull_request_template.md`) wymaga sekcji Goal / Changes / Tests / Risks / Out of scope, deklaracji dotkniętych kontraktów, listy testów GPU nieuruchomionych lokalnie i kontroli przed scaleniem. Workflow `pr-hygiene` (`scripts/pr-hygiene.sh`) zawodzi przy brakującej sekcji, dodanym pliku > 1 MB, surowych danych pomiarowych w repozytorium i zmianie > 800 linii kodu bez etykiety `large-pr-approved`. `/review-pr <numer>` uruchamia subagenta `pr-reviewer` (tylko odczyt) i publikuje recenzję jako komentarz. `CODEOWNERS` obejmuje `src/gpu`, shadery, CMake, `.github` i `CLAUDE.md`. Kod gry bez zmian.
+
 ## Zegar i tempo dema
 
 Po przestoju gra nie przyspiesza, a w przeciążeniu nie wpada w długie slow-motion. Tryb interaktywny przycina deltę klatki do 0,1 s, ogranicza dług do 0,25 s i wykonuje w klatce najwyżej nominalną liczbę kroków + 1 (maks. 4). Przy VSync delta jest przyciągana do okresu odświeżania, więc 60 Hz daje stałe 2 kroki. Pominięty czas jest liczony. HUD misji i Laboratorium GPU pokazuje tempo, utracony czas, czas GPU na krok i ostrzeżenie o spowolnieniu GPU. Nagrania i walidacje zachowują pełny dług. `gpu.mission_ui` kończy się po 1700 krokach niezależnie od FPS, ma wewnętrzny limit czasu z raportem postępu i od razu zapisuje `gpu-startup.txt`. [Raport](reports/DEMO_CLOCK.md).
