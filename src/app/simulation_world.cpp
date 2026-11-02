@@ -132,10 +132,13 @@ std::expected<void, std::string> SimulationWorld::save_recording(const std::file
         const auto& m = world_->metrics();
         const auto& hud = world_->mission();
         std::ofstream csv{folder / "metrics.csv"};
-        csv << "submitted_tick,hud_generation,hud_tick,score,ammo,particles,water,oil,gpu_ms,cpu_submit_ms\n"
+        // gpu_ms keeps its historical meaning (physics part of the tick); gpu_tick_ms adds thermal
+        // presentation, the lighting tick and the VFX update (Metrics::gpu_ms).
+        csv << "submitted_tick,hud_generation,hud_tick,score,ammo,particles,water,oil,gpu_ms,cpu_submit_ms,"
+               "gpu_physics_ms,gpu_tick_ms\n"
             << m.steps << ',' << hud.status[1] << ',' << hud.status[2] << ',' << hud.inventory[2] << ','
-            << hud.inventory[0] << ',' << m.grains << ',' << m.water << ',' << m.oil << ',' << m.gpu_ms << ','
-            << m.cpu_submit_ms << '\n';
+            << hud.inventory[0] << ',' << m.grains << ',' << m.water << ',' << m.oil << ',' << m.physics_ms << ','
+            << m.cpu_submit_ms << ',' << m.physics_ms << ',' << m.gpu_ms << '\n';
         if (!csv) return std::unexpected{"Niepełny eksport CSV."};
         // Explicit image capture is a separate UI action, outside physics timing.
         world_->save_image(folder / "preview.bmp");

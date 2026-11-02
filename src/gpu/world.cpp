@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <bit>
+#include <cassert>
 #include <cmath>
 #include <cstring>
 #include <deque>
@@ -283,6 +284,7 @@ struct ParticleWorld::Impl {
     std::array<Timer, 32> timers{}, render_timers{};
     unsigned render_cursor{};
     unsigned timer_cursor{}, timer_head{}, render_head{}, group_head{}, current{};
+    bool elapsed_active{}; // a GL_TIME_ELAPSED query is open (begin_timer .. end_*_timer)
     Metrics metrics;
     std::vector<double> timings, presentation_timings, render_timings, cpu_timings;
     void reset_timer_queries(TimerMode mode) {
@@ -318,19 +320,28 @@ struct ParticleWorld::Impl {
         group_profiles.clear();
     }
     void begin_timer(Timer& timer) {
+        // GL allows one active GL_TIME_ELAPSED query; nesting is a GL_INVALID_OPERATION.
+        assert(!elapsed_active && "begin_timer with a GL_TIME_ELAPSED query still active");
         if (timer.mode == TimerMode::timestamp)
             gl.QueryCounter(timer.start, GL_TIMESTAMP);
-        else
+        else {
             gl.BeginQuery(GL_TIME_ELAPSED, timer.id);
+            elapsed_active = true;
+        }
     }
     void end_timer(Timer& timer) {
         if (timer.mode == TimerMode::timestamp)
             gl.QueryCounter(timer.id, GL_TIMESTAMP);
-        else
+        else {
             gl.EndQuery(GL_TIME_ELAPSED);
+            elapsed_active = false;
+        }
         if (timer.presentation) {
             // The physics timestamp doubles as the start of the presentation interval.
-            if (timer.mode == TimerMode::elapsed) gl.BeginQuery(GL_TIME_ELAPSED, timer.presentation);
+            if (timer.mode == TimerMode::elapsed) {
+                gl.BeginQuery(GL_TIME_ELAPSED, timer.presentation);
+                elapsed_active = true;
+            }
             return;
         }
         timer.pending = true;
@@ -339,11 +350,27 @@ struct ParticleWorld::Impl {
     void end_presentation_timer(Timer& timer) {
         if (timer.mode == TimerMode::timestamp)
             gl.QueryCounter(timer.presentation, GL_TIMESTAMP);
-        else
+        else {
             gl.EndQuery(GL_TIME_ELAPSED);
+            elapsed_active = false;
+        }
         timer.pending = true;
         timer.generation = epoch;
     }
+    // Closes a GL_TIME_ELAPSED query left open when step() or render() exits early (exception or
+    // failed submission), so the next begin_timer does not nest queries. The interval is discarded:
+    // its timer slot never becomes pending.
+    struct ElapsedQueryGuard {
+        Impl& impl;
+        explicit ElapsedQueryGuard(Impl& owner) : impl{owner} {}
+        ElapsedQueryGuard(const ElapsedQueryGuard&) = delete;
+        ElapsedQueryGuard& operator=(const ElapsedQueryGuard&) = delete;
+        ~ElapsedQueryGuard() {
+            if (!impl.elapsed_active) return;
+            impl.gl.EndQuery(GL_TIME_ELAPSED);
+            impl.elapsed_active = false;
+        }
+    };
     ~Impl() {
         gl.observe(nullptr);
         for (const auto* queue : {&timers, &render_timers})
@@ -896,6 +923,7 @@ bool ParticleWorld::step() {
         else
             ++s.calls.timer_skips;
     }
+    const Impl::ElapsedQueryGuard elapsed_guard{s};
     if (measure) s.begin_timer(timer);
     double upload_ms = 0;
     const auto prepare_start = stamp();
@@ -1110,15 +1138,24 @@ void ParticleWorld::poll(bool collect_hud) {
             const auto ms = static_cast<double>(ns) * 1e-6;
             if (rendering) {
                 s.metrics.render_ms = ms;
-                if (s.render_timings.size() < 10000) s.render_timings.push_back(ms);
+                if (s.render_timings.size() < 10000)
+                    s.render_timings.push_back(ms);
+                else
+                    ++s.metrics.render_timings_dropped;
             } else {
                 const auto presentation_ms = static_cast<double>(presentation_ns) * 1e-6;
                 s.metrics.physics_ms = ms;
                 s.metrics.presentation_ms = presentation_ms;
                 s.metrics.gpu_ms = ms + presentation_ms;
                 ++s.metrics.timing_samples;
-                if (s.timings.size() < 10000) s.timings.push_back(ms);
-                if (s.presentation_timings.size() < 10000) s.presentation_timings.push_back(presentation_ms);
+                if (s.timings.size() < 10000)
+                    s.timings.push_back(ms);
+                else
+                    ++s.metrics.timings_dropped;
+                if (s.presentation_timings.size() < 10000)
+                    s.presentation_timings.push_back(presentation_ms);
+                else
+                    ++s.metrics.presentation_timings_dropped;
             }
         });
     };
@@ -1177,6 +1214,7 @@ void ParticleWorld::render(float alpha) {
                 s.hit_started[i] ? std::max(0.F, 1.F - static_cast<float>(now - s.hit_started[i]) / 150000000.F) : 0.F;
     }
 
+    const Impl::ElapsedQueryGuard elapsed_guard{s};
     if (measure) s.begin_timer(timer);
     s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     s.renderer.lighting.impulse = s.mission_enabled ? std::clamp(s.snapshot.flash[3] / .3F, 0.F, 1.F) : 0.F;

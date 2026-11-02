@@ -61,6 +61,8 @@ struct Metrics {
     unsigned grains{}, water{}, oil{};
     float max_compression{};
     std::uint64_t timing_samples{};
+    // Samples lost because a take_*_timings() queue was full (10 000 entries); cumulative per world.
+    std::uint64_t timings_dropped{}, presentation_timings_dropped{}, render_timings_dropped{};
 };
 
 struct NeighborSnapshot {
@@ -185,7 +187,8 @@ private:
     explicit ParticleWorld(std::shared_ptr<RenderDevice>);
     std::unique_ptr<Impl> impl_;
 };
-MissionInput scripted_mission_input(unsigned tick); // regression route, also used by UI smoke test
+MissionInput scripted_mission_input(unsigned tick);      // regression route, also used by UI smoke test
+inline constexpr unsigned scripted_mission_ticks = 1340; // the route is idle from this tick on
 std::expected<void, std::string> validate_fluid_quality(const std::filesystem::path& shaders,
                                                         const std::filesystem::path& output, const ExecutionOptions&,
                                                         bool benchmark);

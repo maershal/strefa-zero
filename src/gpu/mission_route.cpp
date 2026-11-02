@@ -10,7 +10,7 @@ MissionInput scripted_mission_input(unsigned tick) {
     if (tick < 850) return {0, 276, 177, fire};
     if (tick < 880) return {0, 230, 125, reload};
     if (tick < 1100) return {0, 230, 125, fire};
-    if (tick < 1340) return {1, 308, 177, (tick < 1260 ? jet : 0U) | (tick == 1100 ? jump : 0U)};
+    if (tick < scripted_mission_ticks) return {1, 308, 177, (tick < 1260 ? jet : 0U) | (tick == 1100 ? jump : 0U)};
     return {0, 308, 177, 0};
 }
 } // namespace strefa::gpu

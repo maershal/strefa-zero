@@ -25,6 +25,7 @@ void drain(ParticleWorld& world) {
 }
 void clear_samples(ParticleWorld& world) {
     static_cast<void>(world.take_timings());
+    static_cast<void>(world.take_presentation_timings());
     static_cast<void>(world.take_cpu_timings());
     static_cast<void>(world.take_render_timings());
     static_cast<void>(world.take_step_profiles());
@@ -110,16 +111,23 @@ void check_timer_modes(ParticleWorld& world, std::ostream& report) {
         }
         drain(world);
         const auto calls = world.counters() - before;
-        const auto physics = world.take_timings(), render = world.take_render_timings();
+        const auto metrics = world.metrics();
+        const auto physics = world.take_timings(), presentation = world.take_presentation_timings();
+        const auto render = world.take_render_timings();
         const auto groups = world.take_group_profiles();
         if (mode == TimerMode::off) {
-            require(physics.empty() && render.empty() && groups.empty(), "Disabled timers produced GPU samples");
+            require(physics.empty() && presentation.empty() && render.empty() && groups.empty(),
+                    "Disabled timers produced GPU samples");
             require(calls.timer_submissions == 0 && calls.query_polls == 0 && calls.query_results == 0,
                     "Disabled timers still submit or poll queries");
         } else {
             require(physics.size() == 4 && render.size() == 4 && groups.size() == 4,
                     "Timer mode lost completed queries");
-            for (const auto* samples : {&physics, &render})
+            // Every tick query carries both intervals; gpu_ms is exactly their sum.
+            require(presentation.size() == physics.size(), "Presentation samples do not match physics samples");
+            require(metrics.gpu_ms == metrics.physics_ms + metrics.presentation_ms,
+                    "gpu_ms is not physics_ms + presentation_ms");
+            for (const auto* samples : {&physics, &presentation, &render})
                 for (double ms : *samples)
                     require(std::isfinite(ms) && ms >= 0, "Timer mode returned invalid elapsed time");
             // Leave queries in flight. Reconfiguration must neither reuse an
@@ -134,8 +142,8 @@ void check_timer_modes(ParticleWorld& world, std::ostream& report) {
             const auto disabled = world.counters() - disabled_before;
             require(disabled.timer_submissions == 0 && disabled.query_polls == 0 && disabled.query_results == 0,
                     "Legacy timer disable did not override group timers");
-            require(world.take_timings().empty() && world.take_render_timings().empty()
-                            && world.take_group_profiles().empty(),
+            require(world.take_timings().empty() && world.take_presentation_timings().empty()
+                            && world.take_render_timings().empty() && world.take_group_profiles().empty(),
                     "Old timer mode survived disable");
             world.set_profile_options(ProfileOptions{.collect = true, .group_timers = true, .timer_mode = mode});
             world.step();
@@ -149,7 +157,8 @@ void check_timer_modes(ParticleWorld& world, std::ostream& report) {
         }
         require(glGetError() == GL_NO_ERROR, "OpenGL query target error while changing timer modes");
         report << "timer_mode_" << timer_mode_name(mode)
-               << "=passed (physics, render, groups, off override, pending-mode change, reset)\n";
+               << "=passed (physics, presentation, gpu_ms sum, render, groups, off override, pending-mode change, "
+                  "reset)\n";
     }
 }
 void check_instrumentation(ParticleWorld& world, std::ostream& report) {
