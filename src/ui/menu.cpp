@@ -91,7 +91,7 @@ bool gpu_menu_button(const char* label, float height, bool available, bool prima
     ImGui::EndDisabled();
     if (!available && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         ImGui::SetTooltip("Wymaga OpenGL 4.3 (compute shadery). Ten kontekst ma niższą wersję;\n"
-                          "poligon CPU, laboratorium CPU i ustawienia działają normalnie.");
+                          "Poligon CPU, Laboratorium CPU i ustawienia działają normalnie.");
     return pressed;
 }
 
@@ -125,20 +125,20 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     }
     ImGui::Dummy({0.0F, 6.0F * s});
     ImGui::PushStyleColor(ImGuiCol_Text, muted);
-    ImGui::TextWrapped("Wybierz pole walki. Przygotuj się do wejścia.");
+    ImGui::TextWrapped("Demo silnika symulacji materiałów. Wybierz tryb.");
     ImGui::PopStyleColor();
     ImGui::Dummy({0.0F, (tight ? 8.0F : compact ? 16.0F : 28.0F) * s});
     Action action = Action::none;
     const float button_height = (tight ? 29.0F : compact ? 34.0F : 40.0F) * s;
-    if (gpu_menu_button("Gra — aktywna scena", button_height, frame.gpu_available, true)) action = Action::open_mission;
-    if (menu_button("Poligon CPU — tryb referencyjny", button_height)) action = Action::open_arena;
-    if (menu_button("02    Laboratorium CPU — referencja", button_height)) action = Action::open_laboratory;
-    if (gpu_menu_button("03    Narzędzia aktywnego świata", button_height, frame.gpu_available))
-        action = Action::open_gpu;
-    if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
-    if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
-    if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
-    if (menu_button("07    Zakończ", button_height)) action = Action::quit;
+    // Mode names match README.md, docs/QUICKSTART.md and docs/LINUX_WSL.md.
+    if (gpu_menu_button("01    Misja GPU", button_height, frame.gpu_available, true)) action = Action::open_mission;
+    if (gpu_menu_button("02    Laboratorium GPU", button_height, frame.gpu_available)) action = Action::open_gpu;
+    if (menu_button("03    Poligon CPU", button_height)) action = Action::open_arena;
+    if (menu_button("04    Laboratorium CPU", button_height)) action = Action::open_laboratory;
+    if (menu_button("05    Podgląd areny", button_height)) action = Action::open_preview;
+    if (menu_button("06    Ustawienia", button_height)) action = Action::open_settings;
+    if (menu_button("07    O projekcie", button_height)) action = Action::open_about;
+    if (menu_button("08    Zakończ", button_height)) action = Action::quit;
     ImGui::Dummy({0.0F, 14.0F * s});
     notice(frame.message);
     ImGui::TextDisabled("v%s  /  F1 — diagnostyka", build::version.data());
@@ -172,8 +172,10 @@ template<class T> void setting_widget(const meta::Field<core::Settings, T>& fiel
     if constexpr (std::is_same_v<T, bool>) {
         ImGui::Checkbox("##value", &value);
     } else if constexpr (std::is_same_v<T, int>) {
-        if (field.key == "lighting_quality")
+        if (field.key == "lighting_quality" || field.key == "effects_quality")
             ImGui::Combo("##value", &value, "Wyłączone\0Niskie\0Wysokie\0");
+        else if (field.key == "water_quality")
+            ImGui::Combo("##value", &value, "Podstawowy\0Standardowy\0Wysoki\0");
         else
             ImGui::SliderInt("##value", &value, field.minimum, field.maximum, "%d", ImGuiSliderFlags_AlwaysClamp);
     } else if constexpr (std::is_same_v<T, float>) {
@@ -209,6 +211,8 @@ Action settings(ViewState& state, const FrameInfo& frame, const Fonts& fonts) {
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
             ImGui::TextUnformatted(field.label.data(), field.label.data() + field.label.size());
+            if (field.key == "lighting_quality" && ImGui::IsItemHovered())
+                ImGui::SetTooltip("%s", core::lighting_cost.data());
             ImGui::TableSetColumnIndex(1);
             ImGui::SetNextItemWidth(-FLT_MIN);
             ImGui::BeginDisabled(field.key == "frame_limit" && state.draft.vsync);
@@ -222,7 +226,32 @@ Action settings(ViewState& state, const FrameInfo& frame, const Fonts& fonts) {
     notice(frame.message);
     ImGui::Separator();
     Action action = Action::none;
-    if (ImGui::Button("Zastosuj", {144.0F * s, 42.0F * s})) action = Action::apply;
+    // Raising an experimental option asks before it goes to settings.ini.
+    if (ImGui::Button("Zastosuj", {144.0F * s, 42.0F * s})) {
+        if (core::confirmed_settings(state.draft, state.stored) == state.draft)
+            action = Action::apply;
+        else
+            ImGui::OpenPopup("Opcje eksperymentalne");
+    }
+    if (ImGui::BeginPopupModal("Opcje eksperymentalne", nullptr, ImGuiWindowFlags_AlwaysAutoResize)) {
+        ImGui::PushTextWrapPos(420.0F * s);
+        ImGui::TextUnformatted("Oświetlenie przekracza zmierzony budżet wydajności.");
+        ImGui::TextColored(muted, "%s", core::lighting_cost.data());
+        ImGui::TextUnformatted("Zapisać je na stałe, czy włączyć tylko w tej sesji?");
+        ImGui::PopTextWrapPos();
+        if (ImGui::Button("Zapisz na stałe")) {
+            action = Action::apply;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Tylko w tej sesji")) {
+            action = Action::apply_session;
+            ImGui::CloseCurrentPopup();
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Anuluj")) ImGui::CloseCurrentPopup();
+        ImGui::EndPopup();
+    }
     ImGui::SameLine();
     if (ImGui::Button("Domyślne", {120.0F * s, 42.0F * s})) action = Action::reset;
     ImGui::SameLine();
@@ -233,19 +262,22 @@ Action settings(ViewState& state, const FrameInfo& frame, const Fonts& fonts) {
 
 Action about(const FrameInfo& frame, const Fonts& fonts) {
     begin_card("About", 640.0F, 470.0F, frame.scale);
-    ImGui::TextColored(accent, "STREFA ZERO   /   0.7");
-    heading(fonts, "Początek operacji", 34.0F);
+    ImGui::TextColored(accent, "STREFA ZERO   /   DEMO SILNIKA");
+    heading(fonts, "O projekcie", 34.0F);
     ImGui::Spacing();
     ImGui::PushTextWrapPos(0.0F);
-    ImGui::TextUnformatted("Wojskowa strzelanka 2D z pikselową oprawą i światem budowanym z materiałów.");
+    ImGui::TextUnformatted("Prototyp silnika 2D z symulacją materiałów: ciecze i ziarna liczone na GPU oraz "
+                           "referencyjny model cieplno-chemiczny na CPU. Misja i poligon pokazują silnik w ruchu.");
     ImGui::Spacing();
-    ImGui::TextColored(muted, "W tej wersji");
-    ImGui::BulletText("Okno, menu i ustawienia obrazu");
-    ImGui::BulletText("Trzy motywy pola walki");
-    ImGui::BulletText("Poligon: ruch, plecak odrzutowy, karabin i granaty");
-    ImGui::BulletText("Laboratorium: 19 materiałów oraz gumka");
-    ImGui::BulletText("Temperatura, ciśnienie, reakcje i sceny testowe");
-    ImGui::BulletText("Laboratorium GPU: ciecze PBF, ziarna i kontakty");
+    ImGui::TextColored(muted, "Tryby");
+    ImGui::BulletText("Misja GPU: tarcze, wyjście, niszczone przegrody, woda i piasek");
+    ImGui::BulletText("Laboratorium GPU: ciecze PBF, ziarna PBD, nagrania, termika eksperymentalna");
+    ImGui::BulletText("Poligon CPU: ruch, plecak odrzutowy, karabin i granaty na fizyce CPU");
+    ImGui::BulletText("Laboratorium CPU: 19 materiałów, temperatura, ciśnienie i reakcje");
+    ImGui::Spacing();
+    ImGui::TextColored(muted, "Ograniczenia");
+    ImGui::BulletText("Tryby GPU wymagają OpenGL 4.3; na 3.3 działają tryby CPU");
+    ImGui::BulletText("Oświetlenie i termika są eksperymentalne (poza budżetem wydajności)");
     ImGui::Spacing();
     ImGui::TextDisabled("C++23  /  SDL3  /  Dear ImGui  /  OpenGL");
     ImGui::TextDisabled("Czcionki: Barlow — SIL Open Font License.");
@@ -289,6 +321,16 @@ void diagnostics(ViewState& state, const FrameInfo& frame) {
 }
 
 } // namespace
+
+bool experimental_notice(const FrameInfo& frame) {
+    if (!frame.unconfirmed_settings) return false;
+    ImGui::PushTextWrapPos(0.0F);
+    ImGui::TextColored({0.90F, 0.78F, 0.48F, 1.0F}, "Opcje eksperymentalne działają tylko w tej sesji.");
+    ImGui::PopTextWrapPos();
+    const bool save = ImGui::Button("Zapisz na stałe");
+    if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", core::lighting_cost.data());
+    return save;
+}
 
 Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds, const Fonts& fonts,
             LaboratoryFrame* laboratory, ArenaFrame* arena, GpuLaboratoryFrame* gpu) {

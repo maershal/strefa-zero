@@ -143,7 +143,7 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     bool tools = false;
     if (arena.game.gpu) {
         ImGui::SameLine();
-        tools = ImGui::Button("Narzędzia świata");
+        tools = ImGui::Button("Laboratorium GPU");
         ImGui::SameLine();
         arena.input.toggle_pause = ImGui::Button(arena.paused ? "Wznów" : "Pauza");
     }
@@ -166,13 +166,17 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
                                        : "POLIGON CPU / żołnierz niewrażliwy na obrażenia");
     if (arena.game.finished) {
         ImGui::PushFont(fonts.heading, 22);
-        ImGui::TextWrapped("POLIGON UKOŃCZONY  /  F5 — kolejna próba");
+        ImGui::TextWrapped("%s", arena.game.gpu ? "MISJA UKOŃCZONA  /  F5 — kolejna próba"
+                                                : "POLIGON UKOŃCZONY  /  F5 — kolejna próba");
         ImGui::PopFont();
     }
     if (arena.lighting_quality) {
         ImGui::SetNextItemWidth(120 * frame.scale);
-        ImGui::Combo("Światło", arena.lighting_quality, "Wyłączone\0Niskie\0Wysokie\0");
+        ImGui::Combo("Światło (eksp.)", arena.lighting_quality, "Wyłączone\0Niskie\0Wysokie\0");
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", core::lighting_cost.data());
     }
+    bool confirm = false;
+    if (arena.lighting_quality) confirm = experimental_notice(frame);
     if (arena.vfx_quality) {
         ImGui::SetNextItemWidth(140 * frame.scale);
         ImGui::Combo("Efekty", arena.vfx_quality, "Wyłączone\0Niskie\0Wysokie\0");
@@ -230,7 +234,8 @@ Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts)
     ImGui::PopStyleColor();
     ImGui::PopItemFlag();
     ImGui::End();
-    return back || ImGui::IsKeyPressed(ImGuiKey_Escape, false) ? Action::back : tools ? Action::open_gpu : Action::none;
+    if (back || ImGui::IsKeyPressed(ImGuiKey_Escape, false)) return Action::back;
+    return tools ? Action::open_gpu : confirm ? Action::confirm_settings : Action::none;
 }
 
 } // namespace strefa::ui

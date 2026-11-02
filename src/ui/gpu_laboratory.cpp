@@ -1,5 +1,7 @@
 #include "ui/gpu_laboratory.hpp"
 
+#include "core/settings.hpp"
+
 #include <imgui.h>
 
 #include <algorithm>
@@ -13,6 +15,10 @@ constexpr std::array scene_names{"Lawina",          "Deszcz ziaren",    "Mieszan
                                  "Piasek w wodzie", "Klepsydra",        "Olej pod wodą",      "Kropla oleju",
                                  "Misja treningowa"};
 constexpr std::array thermal_scene_names{"Brak", "Drewno i dym", "Płonący olej", "Gaszenie wodą", "Przemiany fazowe"};
+void tooltip(std::string_view text) {
+    if (ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
+        ImGui::SetTooltip("%.*s", static_cast<int>(text.size()), text.data());
+}
 } // namespace
 Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     const auto* viewport = ImGui::GetMainViewport();
@@ -25,16 +31,16 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     auto& controls = lab.controls;
     ImGui::BeginChild("GpuControls", {265 * s, 0}, ImGuiChildFlags_Borders);
     ImGui::TextUnformatted("LABORATORIUM GPU");
-    ImGui::TextDisabled("Wspólna scena / I05");
+    ImGui::TextDisabled("Świat wspólny z Misją GPU");
+    tooltip("Laboratorium GPU i Misja GPU pokazują ten sam świat. Przełączanie nie resetuje sceny.");
     ImGui::Separator();
     if (ImGui::Button("Wróć do menu", {-1, 32 * s})) action = Action::back;
-    if (ImGui::Button("Widok gry", {-1, 30 * s})) action = Action::open_mission;
+    if (ImGui::Button("Widok gry (Misja GPU)", {-1, 30 * s})) action = Action::open_mission;
     if (lab.mission) {
         ImGui::Text("Misja: %u/3 | amunicja %u", lab.state.inventory[2], lab.state.inventory[0]);
         ImGui::Text("Postać %.1f, %.1f", lab.state.actor[0], lab.state.actor[1]);
-        ImGui::Text("HP tarcz: %.0f / %.0f / %.0f", lab.state.targets[0][2], lab.state.targets[1][2],
+        ImGui::Text("Wytrzymałość tarcz: %.0f / %.0f / %.0f", lab.state.targets[0][2], lab.state.targets[1][2],
                     lab.state.targets[2][2]);
-        ImGui::TextDisabled("HUD: generacja %u / krok %u", lab.state.status[1], lab.state.status[2]);
     }
     ImGui::Spacing();
     ImGui::SetNextItemWidth(-1);
@@ -68,34 +74,29 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
         ImGui::TextUnformatted(info.message.data(), info.message.data() + info.message.size());
         ImGui::PopTextWrapPos();
     }
+    if (experimental_notice(info)) action = Action::confirm_settings;
     ImGui::Separator();
     ImGui::TextUnformatted("OBRAZ WODY");
     ImGui::SetNextItemWidth(-1);
     ImGui::Combo("##RenderQuality", &controls.render_quality, "Podstawowy\0Standardowy\0Wysoki\0");
     ImGui::Separator();
-    ImGui::TextUnformatted("ŚWIATŁO / I11");
+    ImGui::TextUnformatted("ŚWIATŁO (eksperymentalne)");
+    tooltip(core::lighting_cost);
     int lightQuality = static_cast<int>(controls.lighting.quality);
     ImGui::SetNextItemWidth(-1);
     if (ImGui::Combo("##LightingQuality", &lightQuality, "Wyłączone\0Niskie\0Wysokie\0"))
         controls.lighting.quality = static_cast<gpu::LightingQuality>(lightQuality);
+    tooltip(core::lighting_cost);
     ImGui::SliderFloat("Bloom", &controls.lighting.bloom, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SliderFloat("Winieta", &controls.lighting.vignette, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SliderFloat("Wstrząs", &controls.lighting.shake, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
     ImGui::SliderFloat("Aberracja", &controls.lighting.aberration, 0.F, 1.F, "%.3f", ImGuiSliderFlags_AlwaysClamp);
-    ImGui::TextUnformatted("EFEKTY VFX");
+    ImGui::TextUnformatted("EFEKTY");
     ImGui::SetNextItemWidth(-1);
     ImGui::Combo("##VfxQuality", &controls.vfx_quality, "Wyłączone\0Niskie\0Wysokie\0");
-    if (lab.vfx) {
-        const auto& v = *lab.vfx;
-        ImGui::Text("VFX: %u / 16384 | wolne %u", v.counts[0], v.counts[1]);
-        ImGui::Text("Rysowane: %u | ograniczone emitery %u", v.layers[0] + v.layers[1] + v.layers[2], v.clock[2]);
-        ImGui::Text("Szczyt: %u | odrzucone %llu", v.counts[3],
-                    static_cast<unsigned long long>(
-                            std::accumulate(v.rejected.begin(), v.rejected.end(), std::uint64_t{})));
-        ImGui::Text("Pamięć VFX: %.2f MiB", static_cast<double>(lab.vfx_memory) / (1024 * 1024));
-    }
     ImGui::Separator();
-    ImGui::Checkbox("Termika i gazy I10", &controls.thermal_enabled);
+    ImGui::Checkbox("Termika i gazy (eksperymentalne)", &controls.thermal_enabled);
+    tooltip(std::string{core::thermal_cost} + "\nWłączenie działa tylko w tej sesji i nie trafia do ustawień.");
     if (controls.thermal_enabled) {
         ImGui::Checkbox("Promieniowanie do otoczenia", &controls.thermal_radiation);
         ImGui::SetNextItemWidth(-1);
@@ -110,22 +111,20 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
         else if (controls.thermal_tool == 1 || controls.thermal_tool == 2)
             ImGui::SliderFloat("kJ / s / kom.", &controls.thermal_rate, heat_rate_min, heat_rate_max, "%.2f",
                                ImGuiSliderFlags_AlwaysClamp);
-        ImGui::TextWrapped("Źródła I10 działają w wykonanych krokach. Inspektor pokazuje ostatnią gotową próbkę GPU.");
+        ImGui::TextWrapped("Źródła ciepła i gazu działają tylko w wykonanych krokach symulacji. Podgląd pod kursorem "
+                           "pokazuje ostatnią gotową próbkę.");
         ImGui::SetNextItemWidth(-1);
         ImGui::Combo("##ThermalScene", &controls.thermal_scene, thermal_scene_names.data(),
                      static_cast<int>(thermal_scene_names.size()));
-        if (controls.thermal_scene && ImGui::Button("Wczytaj scenę I10", {-1, 28 * s})) lab.input.thermal_reset = true;
+        if (controls.thermal_scene && ImGui::Button("Wczytaj scenę termiki", {-1, 28 * s}))
+            lab.input.thermal_reset = true;
         if (lab.thermal) {
             const auto& t = *lab.thermal;
-            ImGui::Text("Masa %.3f | H %.1f kJ", t.mass, t.enthalpy);
+            ImGui::Text("Masa %.3f | entalpia %.1f kJ", t.mass, t.enthalpy);
             ImGui::Text("Tlen %.4f | para %.4f", t.oxygen, t.steam);
             ImGui::Text("Dym %.4f | paliwo %.4f", t.smoke, t.fuel);
-            ImGui::Text("Div RMS %.4f", t.divergence_l2);
-            ImGui::Text("Stan: krok %llu | %.1f MiB", static_cast<unsigned long long>(t.tick),
-                        static_cast<double>(lab.thermal_memory) / (1024 * 1024));
         }
     }
-    ImGui::Text("Render GPU: %.3f ms", lab.metrics.render_ms);
     ImGui::Separator();
     ImGui::TextUnformatted("MATERIAŁ");
     ImGui::SetNextItemWidth(-1);
@@ -135,15 +134,37 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     ImGui::Separator();
     ImGui::Text("Cząstki: %u / %d", lab.metrics.grains, gpu::capacity);
     ImGui::Text("Woda: %u / Olej: %u", lab.metrics.water, lab.metrics.oil);
-    ImGui::Text("Ściśnięcie maks.: %.1f%%", lab.metrics.max_compression * 100);
-    if (ImGui::IsItemHovered()) ImGui::SetTooltip("Błąd gęstości PBF, próbka co 30 kroków. Nie jest ciśnieniem w Pa.");
-    ImGui::Text("Krok GPU: %.3f ms", lab.metrics.gpu_ms);
-    ImGui::Text("Czas kroku: 1/120 s / %llu", static_cast<unsigned long long>(lab.metrics.steps));
     ImGui::Text("Okno: %.1f FPS", ImGui::GetIO().Framerate);
     if (controls.lost_seconds > .001) ImGui::Text("Pominięty czas: %.2f s", controls.lost_seconds);
+    if (ImGui::CollapsingHeader("Diagnostyka")) {
+        ImGui::Text("Krok GPU: %.3f ms | render %.3f ms", lab.metrics.gpu_ms, lab.metrics.render_ms);
+        ImGui::Text("Kroki: %llu (1/120 s)", static_cast<unsigned long long>(lab.metrics.steps));
+        ImGui::Text("Ściśnięcie cieczy maks.: %.1f%%", lab.metrics.max_compression * 100);
+        tooltip("Błąd gęstości cieczy (PBF), próbka co 30 kroków. Nie jest ciśnieniem w Pa.");
+        if (lab.mission) {
+            ImGui::Text("HUD: generacja %u / krok %u", lab.state.status[1], lab.state.status[2]);
+            tooltip("Numer ostatniej odczytanej próbki stanu misji z GPU i krok, z którego pochodzi.");
+        }
+        if (controls.thermal_enabled && lab.thermal) {
+            const auto& t = *lab.thermal;
+            ImGui::Text("Div RMS %.4f", t.divergence_l2);
+            tooltip("Średnia kwadratowa dywergencji pola gazu po projekcji ciśnienia: im mniej, tym dokładniej.");
+            ImGui::Text("Termika: krok %llu | %.1f MiB", static_cast<unsigned long long>(t.tick),
+                        static_cast<double>(lab.thermal_memory) / (1024 * 1024));
+        }
+        if (lab.vfx) {
+            const auto& v = *lab.vfx;
+            ImGui::Text("Efekty: %u / 16384 | wolne %u", v.counts[0], v.counts[1]);
+            ImGui::Text("Rysowane: %u | ograniczone emitery %u", v.layers[0] + v.layers[1] + v.layers[2], v.clock[2]);
+            ImGui::Text("Szczyt: %u | odrzucone %llu", v.counts[3],
+                        static_cast<unsigned long long>(
+                                std::accumulate(v.rejected.begin(), v.rejected.end(), std::uint64_t{})));
+            ImGui::Text("Pamięć efektów: %.2f MiB", static_cast<double>(lab.vfx_memory) / (1024 * 1024));
+        }
+    }
     ImGui::Spacing();
-    ImGui::TextWrapped(
-            "Woda i olej: solver PBF na GPU. I10: zachowawczy transport gazów, ciepło i wybrane reakcje. Model CPU jest narzędziem referencyjnym.");
+    ImGui::TextWrapped("Woda i olej: cząstki cieczy na GPU (PBF). Termika: transport ciepła i gazów z wybranymi "
+                       "reakcjami. Laboratorium CPU jest modelem referencyjnym.");
     ImGui::EndChild();
     ImGui::SameLine();
     ImGui::BeginChild("GpuCanvas", {0, 0});

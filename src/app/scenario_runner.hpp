@@ -268,6 +268,7 @@ public:
             std::ofstream report{app.store_.path().parent_path() / "smoke-report.txt"};
             report << "frames=" << frames << "\nscreens=" << visited << '/' << visited_screens.size()
                    << "\ngpu_screens=" << (app.gpu_available_ ? "available" : "unavailable_handled")
+                   << "\nexperimental_confirmation=" << (!app.gpu_available_ || experimental_ok)
                    << "\nall_screens=" << all_screens << "\nall_themes=" << all_themes
                    << "\nall_backgrounds=" << all_images << "\nsettings_applied=" << smoke_ok
                    << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_
@@ -279,10 +280,10 @@ public:
             report << "layered_parts=" << (app.parts_.handle != 0) << "\nweapon_atlas=" << (app.weapons_.handle != 0)
                    << "\nphysics_finite=" << app.world_->statistics().finite
                    << "\ngame_physics_finite=" << app.game_->world().statistics().finite << '\n';
-            if (!all_screens || !all_themes || !all_images || !smoke_ok || app.uploads_ == 0 || !app.smoke_lab_ok_
-                || !app.soldier_.handle || !app.parts_.handle || !app.weapons_.handle
-                || !app.world_->statistics().finite || !app.game_->world().statistics().finite || app.game_uploads_ == 0
-                || app.game_->shots_fired() == 0 || app.game_->explosions() != 1)
+            if (!all_screens || (app.gpu_available_ && !experimental_ok) || !all_themes || !all_images || !smoke_ok
+                || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.soldier_.handle || !app.parts_.handle
+                || !app.weapons_.handle || !app.world_->statistics().finite || !app.game_->world().statistics().finite
+                || app.game_uploads_ == 0 || app.game_->shots_fired() == 0 || app.game_->explosions() != 1)
                 return std::unexpected{"Niepełny wynik testu aplikacji. Sprawdź smoke-report.txt."};
         }
         return {};
@@ -330,6 +331,22 @@ public:
                 controls.radius = 99;
                 injected_brush = ui::make_thermal_brush(controls, {40, 40, 60, 40});
             }
+            break;
+        case 242:
+            // Raising lighting in the HUD stays in the session until "Zapisz na stałe".
+            if (app.gpu_available_) app.gpu_controls_.lighting.quality = gpu::LightingQuality::low;
+            break;
+        case 244:
+            if (app.gpu_available_) {
+                experimental_ok = app.state_.applied.lighting_quality == 1 && app.state_.stored.lighting_quality == 0;
+                experimental_ok = app.perform(ui::Action::confirm_settings) && experimental_ok
+                               && app.state_.stored.lighting_quality == 1;
+                app.gpu_controls_.lighting.quality = gpu::LightingQuality::off;
+            }
+            break;
+        case 246:
+            // Lowering is written without confirmation.
+            if (app.gpu_available_) experimental_ok = experimental_ok && app.state_.stored.lighting_quality == 0;
             break;
         case 250: return !app.gpu_available_ || app.perform(ui::Action::back);
         case 256: return open_gpu_screen(app, ui::Action::open_mission);
@@ -499,7 +516,7 @@ public:
     std::vector<gpu::Grain> retained_grains;
     std::vector<std::uint32_t> retained_terrain;
     bool smoke_test{}, lab_smoke{}, gpu_smoke{}, mission_smoke{};
-    bool gpu_unavailable_handled{};
+    bool gpu_unavailable_handled{}, experimental_ok{};
     std::optional<gpu::ThermalBrush> injected_brush;
     bool mission_quick{}, quick_ok{true};
     unsigned quick_checks{};
