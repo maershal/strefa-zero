@@ -1,37 +1,76 @@
 name: Windows
 
+# No paths-ignore (see linux.yml): `changes` skips the build for docs-only changes, `windows-status` always reports.
 on:
   push:
     branches: [main]
-    paths-ignore: ['docs/**', '**.md']
   pull_request:
-    paths-ignore: ['docs/**', '**.md']
   workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event_name == 'pull_request' && github.ref || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    outputs:
+      code: ${{ steps.diff.outputs.code }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: diff
+        env:
+          BASE: ${{ github.event_name == 'pull_request' && 'HEAD^1' || github.event.before }}
+        run: ./scripts/ci-changes.sh "$BASE" HEAD | tee -a "$GITHUB_OUTPUT"
+
   msvc:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: msvc (${{ matrix.name }})
     runs-on: windows-2025
     timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The runner has no OpenGL 4.3 context, so the app build runs only the CPU suite.
+          - name: Release
+            arguments: -Configuration Release -TestSuite cpu
+            directory: build/release
+          # Windows definition of done (CLAUDE.md).
+          - name: core-only
+            arguments: -Configuration Release -CoreOnly
+            directory: build/release-core
     defaults:
       run:
         shell: pwsh
     steps:
       - uses: actions/checkout@v7
-      - name: Build with MSVC (warnings as errors)
-        run: ./scripts/build.ps1 -Configuration Release -SkipTests
-      # The runner has no OpenGL 4.3 context, so only the CPU suite runs (same filter as build.sh --test-suite cpu).
-      # sim.golden_master is excluded until its MSVC hash mismatch (also on main, GCC reference) is resolved.
-      - name: Test CPU contracts
-        run: ctest --test-dir build/release --output-on-failure -LE graphics -E '^sim\.golden_master$'
+      # build.ps1 excludes sim.golden_master on MSVC until P11 (issue #15).
+      - name: Build with MSVC (warnings as errors) and test CPU contracts
+        run: ./scripts/build.ps1 ${{ matrix.arguments }}
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
-          name: Windows-test-logs
-          path: build/release/Testing/Temporary/
+          name: Windows-${{ matrix.name }}-test-logs
+          path: ${{ matrix.directory }}/Testing/Temporary/
+
+  windows-status:
+    if: always()
+    needs: [changes, msvc]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Wyniki jobów: $RESULTS"
+          for result in $RESULTS; do
+            case "$result" in success|skipped) ;; *) exit 1 ;; esac
+          done
