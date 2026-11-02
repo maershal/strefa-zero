@@ -1,6 +1,7 @@
 #include "sim/physics.hpp"
 
 #include <algorithm>
+#include <cassert>
 #include <cmath>
 
 namespace strefa::sim::detail {
@@ -108,14 +109,20 @@ double visibility(const State& s, Point from, Point to) noexcept {
         }
     }
 }
-void detonate(State& s, const ExplosionCommand& blast) {
-    struct Hit {
-        int index;
-        double weight, transmission;
-        int dx, dy;
-    };
-    std::vector<Hit> hits;
-    double sum = 0;
+namespace {
+struct BlastHit {
+    int index;
+    double weight, transmission;
+    int dx, dy;
+};
+struct BlastPlan {
+    ExplosionCommand command;
+    std::vector<BlastHit> hits;
+    double sum{};
+};
+// Reads only mass and material (visibility) – fields that apply_blast never writes.
+BlastPlan plan_blast(const State& s, const ExplosionCommand& blast) {
+    BlastPlan plan{blast, {}, 0};
     for (int y = -blast.radius; y <= blast.radius; ++y)
         for (int x = -blast.radius; x <= blast.radius; ++x) {
             const Point p{blast.center.x + x, blast.center.y + y};
@@ -123,11 +130,30 @@ void detonate(State& s, const ExplosionCommand& blast) {
             if (!contains(p) || distance > blast.radius) continue;
             const double transmission = visibility(s, blast.center, p);
             const double weight = std::max(0.0, 1 - distance / (blast.radius + 1)) * transmission;
-            hits.push_back({cell_index(p), weight, transmission, x, y});
-            sum += weight;
+            plan.hits.push_back({cell_index(p), weight, transmission, x, y});
+            plan.sum += weight;
         }
-    if (sum <= 0) return;
-    refresh_thermal(s);
+    return plan;
+}
+#ifndef NDEBUG
+// Same sum as refresh_thermal; capacity depends only on mass, material, liquid volume and dissolved mass.
+bool capacity_fresh(const State& s, int i) {
+    double capacity = s.mass[i] * properties(s.material[i]).heat_capacity + s.dissolved[i];
+    for (std::size_t c = 0; c < liquid_materials.size(); ++c) {
+        const auto m = liquid_materials[c];
+        const double mass = s.liquid.volume[c][i] * properties(m).density;
+        capacity += mass * properties(m).heat_capacity;
+    }
+    return std::abs(capacity - s.capacity[i]) <= 1e-12 * std::max(1.0, std::abs(capacity));
+}
+#endif
+// Contract: a blast reads capacity, mass, material, liquid volume, dissolved mass and visibility, and writes only
+// energy channels, air energy, product gas mass, pressure_source, shock, loose, vx/vy and face velocities. It never
+// changes the inputs of capacity, barrier, receiver or visibility, so plans and the capacity cache stay valid for a
+// whole batch and refresh_thermal is not needed between blasts.
+void apply_blast(State& s, const BlastPlan& plan) {
+    const auto& blast = plan.command;
+    assert(capacity_fresh(s, cell_index(blast.center)));
     if (blast.gas_mass > 0) {
         const int target = receiver(s, cell_index(blast.center));
         s.air.mass[gi(Gas::products)][target] += blast.gas_mass;
@@ -136,9 +162,10 @@ void detonate(State& s, const ExplosionCommand& blast) {
         s.budget.injected_mass += blast.gas_mass;
         s.budget.source_energy += energy;
     }
-    for (const auto& hit : hits) {
+    for (const auto& hit : plan.hits) {
         const int i = hit.index;
-        const double heat = blast.energy * hit.weight / sum;
+        assert(capacity_fresh(s, i));
+        const double heat = blast.energy * hit.weight / plan.sum;
         if (s.capacity[i] > 0)
             add_matter_heat(s, i, heat);
         else
@@ -175,6 +202,25 @@ void detonate(State& s, const ExplosionCommand& blast) {
     s.heat_awake = true;
     s.events.push_back(
             {blast.id, s.report.tick, PhysicsEventKind::explosion, blast.center, static_cast<float>(blast.pressure)});
+}
+} // namespace
+void detonate_pending(State& s, int limit) {
+    const auto count = std::min(s.explosions.size(), static_cast<std::size_t>(std::max(0, limit)));
+    if (count == 0) return;
+    std::vector<BlastPlan> plans;
+    plans.reserve(count);
+    for (std::size_t n = 0; n < count; ++n) plans.push_back(plan_blast(s, s.explosions[n]));
+    s.explosions.erase(s.explosions.begin(), s.explosions.begin() + static_cast<std::ptrdiff_t>(count));
+    // Blasts with no reachable cell are no-ops. A single refresh right before the last effective blast leaves the
+    // temperature cache and wake flags exactly as a refresh before every blast did (see apply_blast's contract).
+    std::size_t last = count;
+    for (std::size_t n = 0; n < count; ++n)
+        if (plans[n].sum > 0) last = n;
+    for (std::size_t n = 0; n < count; ++n) {
+        if (plans[n].sum <= 0) continue;
+        if (n == last) refresh_thermal(s);
+        apply_blast(s, plans[n]);
+    }
 }
 void react_materials(State& s, double dt) {
     s.reaction_awake.fill(false);

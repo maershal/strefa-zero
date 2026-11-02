@@ -218,7 +218,8 @@ void solve_compact_pressure(State& s);
 void solve_air(State& s, double dt);
 void react_materials(State& s, double dt);
 void move_powders(State& s, double dt, bool full_scan);
-void detonate(State& s, const ExplosionCommand& explosion);
+// Applies up to limit queued explosions in order (one refresh_thermal per batch).
+void detonate_pending(State& s, int limit);
 void update_report(State& s);
 double visibility(const State& s, Point from, Point to) noexcept;
 void convert_solid(State& s, int i, Material material);
