@@ -1,0 +1,52 @@
+name: Nightly
+
+# Full ThreadSanitizer run of every CPU test (~24 min CPU); pull requests run only the TSan subset in linux.yml.
+on:
+  schedule:
+    - cron: '30 2 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CMAKE_C_COMPILER_LAUNCHER: ccache
+  CMAKE_CXX_COMPILER_LAUNCHER: ccache
+  CCACHE_DIR: ${{ github.workspace }}/.ccache
+  CCACHE_MAXSIZE: 500M
+
+jobs:
+  tsan-full:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build ccache
+      # TSan shadow memory fails with the 32-bit mmap randomization of the runner kernel.
+      - name: Limit mmap randomization for sanitizers
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-tsan-full-${{ github.sha }}
+          restore-keys: |
+            ccache-tsan-full-
+            ccache-tsan-main-
+      - name: Build and run every CPU test under TSan
+        run: |
+          ccache --zero-stats
+          ./scripts/build.sh --core-only --configuration RelWithDebInfo --test-suite cpu --jobs "$(nproc)" \
+            --build-dir build/tsan --junit-dir build/junit -- -DSTREFA_SANITIZE=thread
+          ccache --show-stats
+      - name: Test summary
+        if: always()
+        run: python3 scripts/junit-summary.py 'Linux (TSan, pełny)' build/junit/cpu.xml >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: Linux-tsan-full-test-logs
+          path: |
+            build/junit/
+            build/tsan/Testing/Temporary/

@@ -13,6 +13,7 @@ keep new docs, UI strings and error messages in Polish, code identifiers and com
 ./scripts/build.sh                    # + window/GPU smoke tests (needs a display; WSLg works)
 ./scripts/build.sh --test-suite all   # full QA, ~70 tests, many minutes, needs GL 4.3
 ./scripts/build.sh --core-only        # no SDL/OpenGL
+./scripts/build.sh --core-only --configuration RelWithDebInfo --build-dir build/asan -- -DSTREFA_SANITIZE=address,undefined
 ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   # one test
 ./scripts/format.sh                   # clang-format all C++ (CI runs --check)
 ./scripts/lint.sh [files...]          # clang-tidy, advisory
@@ -91,7 +92,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 ## Git
 
 - Default branch `main`; CI is `.github/workflows/linux.yml` (format check, build with ccache, CPU tests,
-  Mesa `ci-smoke` tests, Linux package, `core-only` job, JUnit summary) and `.github/workflows/windows.yml`
+  Mesa `ci-smoke` tests, Linux package, `core-only` job, core-only `sanitizers`/`tsan`/`clang` (libc++)/`gcc-debug`
+  matrix, JUnit summary; full TSan in the nightly `.github/workflows/nightly.yml`) and `.github/workflows/windows.yml`
   (MSVC `/WX` matrix: Release with CPU tests, core-only; `sim.golden_master` excluded, #15). A `changes` job skips
   the builds for docs-only changes (`scripts/ci-changes.sh`; `docs/LINUX_WSL.md` and `docs/QUICKSTART.md` ship in
   the package and still count as code); `linux-status` / `windows-status` always report and are the checks to require.

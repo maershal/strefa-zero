@@ -24,12 +24,37 @@ option(STREFA_BUILD_APP "Build the SDL3 / OpenGL application" ON)
 option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
 set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependency archives")
+set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: address, undefined, thread")
+
+# Sanitizers apply to every target, so the whole process (including fetched dependencies) is instrumented.
+if(STREFA_SANITIZE)
+    if(MSVC)
+        message(FATAL_ERROR "STREFA_SANITIZE jest obsługiwane tylko przez GCC i Clang.")
+    endif()
+    string(REPLACE "," ";" strefa_sanitizers "${STREFA_SANITIZE}")
+    foreach(strefa_sanitizer IN LISTS strefa_sanitizers)
+        if(NOT strefa_sanitizer MATCHES "^(address|undefined|thread)$")
+            message(FATAL_ERROR "Nieznany sanitizer w STREFA_SANITIZE: '${strefa_sanitizer}' "
+                                "(dozwolone: address, undefined, thread).")
+        endif()
+    endforeach()
+    if("thread" IN_LIST strefa_sanitizers AND "address" IN_LIST strefa_sanitizers)
+        message(FATAL_ERROR "STREFA_SANITIZE: thread nie łączy się z address.")
+    endif()
+    add_compile_options(-fsanitize=${STREFA_SANITIZE} -fno-omit-frame-pointer -D_GLIBCXX_ASSERTIONS)
+    add_link_options(-fsanitize=${STREFA_SANITIZE})
+    if("undefined" IN_LIST strefa_sanitizers)
+        add_compile_options(-fno-sanitize-recover=undefined)
+    endif()
+endif()
 
 add_library(strefa_options INTERFACE)
 target_compile_features(strefa_options INTERFACE cxx_std_23)
+# Explicit floating-point model: GCC contracts a*b+c into FMA by default in C++ and would change
+# sim.golden_master hashes as soon as -march enables FMA.
 target_compile_options(strefa_options INTERFACE
-    $<$<CXX_COMPILER_ID:MSVC>:/W4;/permissive-;/utf-8;/Zc:__cplusplus>
-    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall;-Wextra;-Wpedantic>)
+    $<$<CXX_COMPILER_ID:MSVC>:/W4;/permissive-;/utf-8;/Zc:__cplusplus;/fp:precise>
+    $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Wall;-Wextra;-Wpedantic;-ffp-contract=off>)
 if(STREFA_WARNINGS_AS_ERRORS)
     target_compile_options(strefa_options INTERFACE
         $<$<CXX_COMPILER_ID:MSVC>:/WX>
@@ -141,7 +166,14 @@ endif()
 if(BUILD_TESTING)
     # CPU tests: one category label (unit/physics/determinism/golden), `slow` for runs that take
     # >10 s on a desktop, and PROCESSORS = the worker threads the test starts, so `ctest -j` does not
-    # oversubscribe the runner.
+    # oversubscribe the runner. Instrumented builds only stretch the time limit (TSan x4, ASan/UBSan x2);
+    # every result check and tolerance stays the same.
+    set(strefa_test_timeout_scale 1)
+    if("thread" IN_LIST strefa_sanitizers)
+        set(strefa_test_timeout_scale 4)
+    elseif(STREFA_SANITIZE)
+        set(strefa_test_timeout_scale 2)
+    endif()
     function(strefa_add_cpu_test test_name test_target test_labels)
         cmake_parse_arguments(PARSE_ARGV 3 test "" "PROCESSORS" "")
         add_test(NAME ${test_name} COMMAND ${test_target})
@@ -149,6 +181,7 @@ if(BUILD_TESTING)
         if("slow" IN_LIST test_labels)
             set(test_timeout 300)
         endif()
+        math(EXPR test_timeout "${test_timeout} * ${strefa_test_timeout_scale}")
         set_tests_properties(${test_name} PROPERTIES LABELS "${test_labels}" TIMEOUT ${test_timeout})
         if(test_PROCESSORS)
             set_tests_properties(${test_name} PROPERTIES PROCESSORS ${test_PROCESSORS})

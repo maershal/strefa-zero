@@ -99,6 +99,21 @@ i `src/app/launch_options.cpp`. Przykłady pokręteł startowych:
 ./scripts/lint.sh                       # clang-tidy (.clang-tidy)
 ```
 
+Sanitizery GCC/Clang włącza opcja CMake `STREFA_SANITIZE` (lista po przecinku: `address`, `undefined`,
+`thread`; `thread` nie łączy się z `address`). Dodaje ona też `-fno-omit-frame-pointer` i `-D_GLIBCXX_ASSERTIONS`,
+a z `undefined` — `-fno-sanitize-recover=undefined`. W takiej kompilacji limity czasu testów CPU rosną
+(TSan ×4, ASan/UBSan ×2); progi i tolerancje wyników się nie zmieniają. Tak samo budują joby CI `sanitizers` i `tsan`:
+
+```bash
+ASAN_OPTIONS=detect_leaks=1:detect_stack_use_after_return=1 ./scripts/build.sh --core-only \
+    --configuration RelWithDebInfo --test-suite cpu --build-dir build/asan -- -DSTREFA_SANITIZE=address,undefined
+./scripts/build.sh --core-only --configuration RelWithDebInfo --test-suite cpu --build-dir build/tsan \
+    -- -DSTREFA_SANITIZE=thread                                 # pełny TSan: ok. 24 min CPU
+```
+
+Model zmiennoprzecinkowy jest jawny: `-ffp-contract=off` (GCC/Clang) i `/fp:precise` (MSVC), więc kompilator
+nie łączy mnożenia z dodawaniem w FMA, a hashe `sim.golden_master` nie zależą od `-march`.
+
 Ostrzeżenia są błędami (`-Werror`, `/WX`). Testy GPU bez kontekstu OpenGL 4.3 kończą się
 kodem 77, który CTest oznacza jako pominięty. Tryby kontrolne `StrefaQA` (`--gpu-*-check`,
 `--mission-test`, `--lab-smoke-test` …) i smoke testy `StrefaZero` zapisują raporty w `--profile`

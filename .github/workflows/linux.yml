@@ -163,10 +163,83 @@ jobs:
             build/junit/
             build/linux-release-core/Testing/Temporary/
 
+  # Core-only variants: sanitizers, a TSan subset (full TSan runs nightly), Clang + libc++ and GCC Debug.
+  # Debug builds keep assert() and other NDEBUG-dependent paths that the Release jobs never compile.
+  core-variants:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    name: ${{ matrix.job }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - job: sanitizers
+            configuration: RelWithDebInfo
+            cmake: -DSTREFA_SANITIZE=address,undefined
+          - job: tsan
+            configuration: RelWithDebInfo
+            cmake: -DSTREFA_SANITIZE=thread
+            tests: -R '^sim\.(numerics_parallel|laboratory_worker|golden_master)$'
+          # Debug keeps NDEBUG undefined; -O2 instead of -O0 keeps golden_master and game.training within
+          # their time limits (at -O0 they need 85% of them on an 8-core desktop).
+          # libc++ 18 ships std::jthread/std::stop_token only with -fexperimental-library.
+          - job: clang
+            configuration: Debug
+            packages: clang-18 libc++-18-dev libc++abi-18-dev
+            cmake: >-
+              -DCMAKE_C_COMPILER=clang-18 -DCMAKE_CXX_COMPILER=clang++-18 -DCMAKE_CXX_FLAGS_DEBUG='-g -O2'
+              -DCMAKE_CXX_FLAGS='-stdlib=libc++ -fexperimental-library'
+              -DCMAKE_EXE_LINKER_FLAGS='-stdlib=libc++ -fexperimental-library'
+          - job: gcc-debug
+            configuration: Debug
+            cmake: -DCMAKE_CXX_FLAGS_DEBUG='-g -O2'
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build dependencies
+        run: sudo apt-get update && sudo apt-get install -y build-essential cmake ninja-build ccache ${{ matrix.packages }}
+      # ASan/TSan shadow memory fails with the 32-bit mmap randomization of the runner kernel.
+      - name: Limit mmap randomization for sanitizers
+        if: contains(matrix.cmake, 'STREFA_SANITIZE')
+        run: sudo sysctl -w vm.mmap_rnd_bits=28
+      - name: Restore compiler cache
+        uses: actions/cache@v6
+        with:
+          path: .ccache
+          key: ccache-${{ matrix.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ matrix.job }}-${{ github.ref_name }}-
+            ccache-${{ matrix.job }}-main-
+      - name: Build without SDL/OpenGL
+        run: |
+          ccache --zero-stats
+          ./scripts/build.sh --core-only --configuration ${{ matrix.configuration }} --skip-tests \
+            --jobs "$(nproc)" --build-dir build/ci -- ${{ matrix.cmake }}
+          ccache --show-stats
+      - name: Run CPU tests
+        env:
+          ASAN_OPTIONS: ${{ contains(matrix.cmake, 'address') && 'detect_leaks=1:detect_stack_use_after_return=1' || '' }}
+          UBSAN_OPTIONS: ${{ contains(matrix.cmake, 'undefined') && 'print_stacktrace=1' || '' }}
+        run: |
+          mkdir -p build/junit
+          ctest --test-dir build/ci --output-on-failure --parallel "$(nproc)" -LE graphics \
+            --output-junit "$PWD/build/junit/cpu.xml" ${{ matrix.tests }}
+      - name: Test summary
+        if: always()
+        run: python3 scripts/junit-summary.py 'Linux (${{ matrix.job }})' build/junit/cpu.xml >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: Linux-${{ matrix.job }}-test-logs
+          path: |
+            build/junit/
+            build/ci/Testing/Temporary/
+
   # The single check to require in the ruleset: green when every job passed or was skipped as docs-only.
   linux-status:
     if: always()
-    needs: [changes, format, build-and-test, core-only]
+    needs: [changes, format, build-and-test, core-only, core-variants]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:

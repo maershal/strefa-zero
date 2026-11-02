@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "core/charconv.hpp"
 
 #include <algorithm>
 #include <array>
@@ -205,7 +206,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                    && i + 1 < argc) {
             const std::string_view v{argv[++i]};
             float value{};
-            const auto parsed = std::from_chars(v.data(), v.data() + v.size(), value);
+            const auto parsed = core::from_chars(v.data(), v.data() + v.size(), value);
             if (parsed.ec != std::errc{} || parsed.ptr != v.data() + v.size() || !std::isfinite(value))
                 return std::unexpected{"Nieprawidłowy współczynnik cieczy."};
             auto& f = result.gpu_execution.fluid;
