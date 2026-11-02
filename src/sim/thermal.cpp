@@ -7,7 +7,7 @@
 
 namespace strefa::sim::detail {
 namespace {
-template<class T> void cells(std::vector<T>& values, int count = grid_cells) {
+template<class T> void cells(CellVector<T>& values, int count = grid_cells) {
     values.resize(count);
 }
 void equilibrate_phase(State& s, int i, Material solid, Material liquid, double transition, double latent) {
@@ -84,6 +84,7 @@ void AirFields::allocate() {
     cells(next_v, vertical_faces);
 }
 void State::allocate() {
+    reset_cell_colours();
     heat_fluxes.reserve(grid_cells * 7);
     heat_load.resize(grid_cells * 2);
     heat_delta.resize(grid_cells * 2);

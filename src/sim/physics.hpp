@@ -1,4 +1,5 @@
 #pragma once
+#include "sim/cell_vector.hpp"
 #include "sim/executor.hpp"
 #include "sim/material.hpp"
 
@@ -125,9 +126,9 @@ struct CompactPressure {
         int count{}, band{};
         bool ready{};
     } coarse;
-    std::vector<int> index;
+    CellVector<int> index;
     std::vector<PressureRow> rows;
-    std::vector<double> x, b, r, z, direction, product;
+    CellVector<double> x, b, r, z, direction, product;
     void allocate();
 };
 struct LiquidFields {
@@ -142,14 +143,14 @@ struct LiquidFields {
     bool solutes{};
     int min_x{}, max_x{}, min_y{}, max_y{};
     CompactPressure compact;
-    std::array<std::vector<double>, liquid_materials.size()> volume, energy;
-    std::vector<float> u, v, next_u, next_v;
-    std::vector<unsigned char> velocity_valid, velocity_next_valid;
-    std::vector<double> pressure, density, fill, capacity, viscosity;
-    std::vector<double> diagonal, right, down, rhs, r, z, direction, product, inverse_factor;
+    std::array<CellVector<double>, liquid_materials.size()> volume, energy;
+    CellVector<float> u, v, next_u, next_v;
+    CellVector<unsigned char> velocity_valid, velocity_next_valid;
+    CellVector<double> pressure, density, fill, capacity, viscosity;
+    CellVector<double> diagonal, right, down, rhs, r, z, direction, product, inverse_factor;
     std::vector<int> wet;
-    std::vector<unsigned char> mask, anchor;
-    std::vector<double> delta_volume, delta_energy, outflow;
+    CellVector<unsigned char> mask, anchor;
+    CellVector<double> delta_volume, delta_energy, outflow;
     void allocate();
 };
 struct AirFields {
@@ -158,14 +159,14 @@ struct AirFields {
         double fraction{};
     };
     std::vector<Flow> flows;
-    std::array<std::vector<double>, gas_count + 1> delta;
-    std::array<std::vector<double>, gas_count> diffusion_energy;
-    std::vector<unsigned char> open;
-    std::array<std::vector<double>, gas_count> mass;
-    std::vector<double> energy, temperature, capacity, pressure_source;
-    std::vector<float> pressure, next_pressure, u, v, next_u, next_v;
-    std::vector<float> buoyancy;
-    std::vector<double> scalar_delta, outflow;
+    std::array<CellVector<double>, gas_count + 1> delta;
+    std::array<CellVector<double>, gas_count> diffusion_energy;
+    CellVector<unsigned char> open;
+    std::array<CellVector<double>, gas_count> mass;
+    CellVector<double> energy, temperature, capacity, pressure_source;
+    CellVector<float> pressure, next_pressure, u, v, next_u, next_v;
+    CellVector<float> buoyancy;
+    CellVector<double> scalar_delta, outflow;
     void allocate();
 };
 struct State {
@@ -175,13 +176,13 @@ struct State {
         double heat{};
     };
     std::vector<HeatFlux> heat_fluxes;
-    std::vector<double> heat_load, heat_delta;
-    std::vector<Material> material;
-    std::vector<std::uint8_t> shade, loose, burning;
-    std::vector<double> mass, energy, fuel, acid_capacity, dissolved, temperature, capacity;
-    std::vector<float> vx, vy, offset_x, offset_y;
-    std::vector<float> shock; // One-tick condensed-phase shock load; not hydrostatic pressure.
-    std::vector<std::uint64_t> updated;
+    CellVector<double> heat_load, heat_delta;
+    CellVector<Material> material;
+    CellVector<std::uint8_t> shade, loose, burning;
+    CellVector<double> mass, energy, fuel, acid_capacity, dissolved, temperature, capacity;
+    CellVector<float> vx, vy, offset_x, offset_y;
+    CellVector<float> shock; // One-tick condensed-phase shock load; not hydrostatic pressure.
+    CellVector<std::uint64_t> updated;
     std::array<bool, 240> movement_awake{}, thermal_awake{}, reaction_awake{}, next_awake{};
     LiquidFields liquid;
     AirFields air;
