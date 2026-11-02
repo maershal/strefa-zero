@@ -1,3 +1,4 @@
+#Requires -Version 7.2
 # GPU telemetry for the Windows profiling scripts (NVIDIA, nvidia-smi).
 #
 #   Import-Module (Join-Path $PSScriptRoot 'GpuTelemetry.psm1')
@@ -217,6 +218,7 @@ function Get-GpuTelemetryWindow {
     $temperatures = & $values 'temperature_c'
     $result.TemperatureCMax = if ($temperatures.Count) { ($temperatures | Measure-Object -Maximum).Maximum } else { $null }
     $result.Pstates = (@($inside | ForEach-Object { $_.pstate } | Sort-Object -Unique) -join '/')
+    $result.NonP0Share = [Math]::Round(@($inside | Where-Object { $_.pstate -ne 'P0' }).Count / $inside.Count, 3)
     $limiting = @()
     foreach ($reason in $script:Reasons) {
         $share = (@($inside | Where-Object { $_."reason_$reason" -eq 1 }).Count) / $inside.Count
