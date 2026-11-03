@@ -35,7 +35,7 @@ struct LaunchOptions {
     bool smoke_test{false};
     bool laboratory_smoke_test{false};
     bool start_in_laboratory{false};
-    bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_smoke_test{};
+    bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_brush_test{}, gpu_smoke_test{};
     bool start_in_mission{}, mission_test{}, mission_smoke{}, gameplay_test{};
     bool legacy_graphics{}, shader_cache{}, session_smoke{}, cache_check{};
     bool mission_ui_smoke{}, fault_smoke{};
@@ -84,7 +84,7 @@ struct LaunchOptions {
     }
     // Tests that run unsynchronised at 60 FPS; the menu smoke test and CPU-side GPU physics tests keep settings.
     [[nodiscard]] bool forces_test_pacing() const {
-        return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test > 0;
+        return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test - gpu_brush_test > 0;
     }
     // Tests skipped (exit 77) without OpenGL 4.3; the CPU-capable smoke tests also run on GL 3.3.
     [[nodiscard]] bool requires_gl43() const {

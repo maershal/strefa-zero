@@ -132,7 +132,7 @@ if(STREFA_BUILD_APP)
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
     target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu PRIVATE SDL3::SDL3 OpenGL::GL)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
@@ -402,6 +402,12 @@ if(BUILD_TESTING)
         set_tests_properties(gpu.flow_behaviour PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 600 SKIP_RETURN_CODE 77)
         set_tests_properties(gpu.liquid_physics PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 240 SKIP_RETURN_CODE 77)
         set_tests_properties(gpu.granular_physics PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 180 SKIP_RETURN_CODE 77)
+        # Brush counts after fixtures and scene resets must equal a fresh world's (history-dependent spawn bug).
+        add_test(NAME gpu.brush_history COMMAND strefa_qa --gpu-brush-check --profile ${CMAKE_CURRENT_BINARY_DIR}/brush-history-profile)
+        add_test(NAME gpu.brush_history_sorted_aos COMMAND strefa_qa --gpu-brush-check --gpu-neighbors sorted --gpu-layout aos
+            --profile ${CMAKE_CURRENT_BINARY_DIR}/brush-history-sorted-aos-profile)
+        set_tests_properties(gpu.brush_history gpu.brush_history_sorted_aos PROPERTIES LABELS "integration;graphics;gpu"
+            TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.laboratory_ui COMMAND strefa_qa --gpu-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/gpu-ui-profile)
         set_tests_properties(gpu.laboratory_ui PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 150 SKIP_RETURN_CODE 77)
         add_test(NAME app.opengl33_smoke COMMAND strefa_zero --smoke-test --opengl33 --profile ${CMAKE_CURRENT_BINARY_DIR}/legacy-smoke-profile)

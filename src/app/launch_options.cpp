@@ -48,12 +48,12 @@ std::string help_text(OptionScope scope) {
 }
 int LaunchOptions::test_count() const {
     return static_cast<int>(smoke_test) + laboratory_smoke_test + gpu_test + gpu_liquid_test + gpu_flow_test
-         + gpu_smoke_test + mission_test + mission_smoke + gpu_profile + stabilization_profile + gpu_profile_check
-         + readback_test + readback_profile + execution_test + execution_profile + neighbor_test + neighbor_profile
-         + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile + cost_check
-         + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check + lighting_benchmark
-         + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke + cache_check
-         + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty();
+         + gpu_brush_test + gpu_smoke_test + mission_test + mission_smoke + gpu_profile + stabilization_profile
+         + gpu_profile_check + readback_test + readback_profile + execution_test + execution_profile + neighbor_test
+         + neighbor_profile + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile
+         + cost_check + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check
+         + lighting_benchmark + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke
+         + cache_check + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty();
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -283,6 +283,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.gpu_liquid_test = true;
         else if (argument == "--gpu-flow-test")
             result.gpu_flow_test = true;
+        else if (argument == "--gpu-brush-check")
+            result.gpu_brush_test = true;
         else if (argument == "--gpu-smoke-test")
             result.gpu_smoke_test = true;
         else if (argument == "--opengl33")

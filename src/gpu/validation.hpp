@@ -12,6 +12,8 @@ std::expected<void, std::string> validate_mission(ParticleWorld&, const std::fil
 std::expected<void, std::string> validate_granular(ParticleWorld&, const std::filesystem::path& output);
 std::expected<void, std::string> validate_liquids(ParticleWorld&, const std::filesystem::path& output);
 std::expected<void, std::string> validate_flow(ParticleWorld&, const std::filesystem::path& output);
+// The brush must spawn the same count after fixtures and scene resets as in a fresh world.
+std::expected<void, std::string> validate_brush_history(ParticleWorld&, const std::filesystem::path& output);
 std::expected<void, std::string> profile_gpu(ParticleWorld&, const std::filesystem::path& output,
                                              bool check_only = false);
 std::expected<void, std::string> profile_stabilization(ParticleWorld&, const std::filesystem::path& output,
