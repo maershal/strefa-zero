@@ -140,14 +140,16 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 - Review: `/review-pr <number>` after the last push. It waits for `gh pr checks --watch`, the `pr-reviewer` subagent
   reads the diff before the description and every commit since the previous automatic review, and the result is
   posted as a comment review. Findings of severity `minor` and up that a later push leaves unfixed become issues
-  labelled `review-followup`, linked from the PR; so does every "Out of scope" item. Every item under "Pre-merge
-  checks" must be checked.
-- Ruleset `main` (GitHub › Settings › Rules; set by the owner, not by an agent): changes only through a PR, required
-  checks `linux-status`, `windows-status` and `hygiene` on an up-to-date branch, squash merge only, linear history, no
-  force push or deletion, head branch deleted after merge.
-- Merging: never on an agent's own decision. Only after the owner accepts the PR (in the PR or in the chat for that
-  PR) run `gh pr merge <number> --squash --auto`; GitHub merges once the required checks pass. Do not merge while CI
-  is red or not finished.
+  labelled `review-followup`, linked from the PR. Every "Out of scope" item gets its own issue before the PR is
+  opened (pr-hygiene checks the `#NNN`). Every item under "Pre-merge checks" must be checked.
+- Ruleset `main`, target state (GitHub › Settings › Rules; set by the owner, not by an agent; not enforced yet, #31):
+  changes only through a PR, required checks `linux-status`, `windows-status` and `hygiene` on an up-to-date branch,
+  squash merge only, linear history, no force push or deletion, head branch deleted after merge.
+- Merging: never on an agent's own decision, only after the owner accepts the PR (in the PR or in the chat for that
+  PR), and always as a squash. While the ruleset is not enforced, `--auto` has no required checks to wait for and
+  merges at once: wait until `gh pr checks <number>` shows no pending check (rerun `--watch` while any is pending) and
+  every check passed, then run `gh pr merge <number> --squash`. Once the ruleset is enforced
+  (`gh api repos/{owner}/{repo}/rulesets` shows `enforcement: active`), use `gh pr merge <number> --squash --auto`.
 
 ## Definition of done
 
