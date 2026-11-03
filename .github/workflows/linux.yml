@@ -51,6 +51,10 @@ jobs:
             echo "$bad"
             exit 1
           fi
+      - name: Test CI and PR hygiene scripts
+        run: |
+          ./scripts/test-ci-changes.sh
+          ./scripts/test-pr-hygiene.sh
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format-18
       - name: Check C++ formatting
