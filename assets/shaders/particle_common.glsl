@@ -126,7 +126,8 @@ bool bodyFluidCandidate(vec2 p){
 #endif
 }
 #if SORTED_NEIGHBORS
-uint cellStart(uint c){return c==CELL_COUNT?aliveCount:cells[START_BASE+c]+cells[BLOCK_OFFSET_BASE+c/256u];}
+// cells[2] is the particle count of the build. The live aliveCount grows while a spawn pass iterates the index.
+uint cellStart(uint c){return c==CELL_COUNT?cells[2]:cells[START_BASE+c]+cells[BLOCK_OFFSET_BASE+c/256u];}
 #endif
 void storeParticle(uint id,Grain p){
     writeParticle(id,p);
@@ -144,6 +145,14 @@ void storeParticle(uint id,Grain p){
     // only cause a redundant atomicMax, never lower the conservative bound.
     uint bound=floatBitsToUint(ceil((moved+.0001)*16)/16);
     if(bound>cells[0])atomicMax(cells[0],bound);
+#endif
+}
+// A particle created into a free slot is not in the current index: it needs no cache entry, and its stale
+// anchor (a former occupant's) must not raise the reuse bound that concurrent queries of the same pass read.
+void spawnParticle(uint id,Grain p){
+    writeParticle(id,p);
+#if REUSE_NEIGHBORS
+    anchors[id]=vec4(p.position.xy,p.residual.xy);
 #endif
 }
 // Each row is one contiguous range in the globally sorted cell ordering.
