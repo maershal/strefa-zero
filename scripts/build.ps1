@@ -48,9 +48,6 @@ try {
         # Graphics tests share RESOURCE_LOCK gpu, so -j only parallelises the CPU tests.
         $taskTests = @('--test-dir',$BuildDirectory,'--output-on-failure','--parallel',[Environment]::ProcessorCount)
         if ($TestSuite -eq 'cpu') { $taskTests += @('-LE','graphics') }
-        # MSVC hashes differ from the GCC golden master: excluded until P11,
-        # https://github.com/maershal/strefa-zero/issues/15 (same exclusion in .github/workflows/windows.yml).
-        if ($IsWindows) { $taskTests += @('-E','^sim\.golden_master$') }
         & ctest @taskTests
         if ($LASTEXITCODE -ne 0) { throw 'Tests failed.' }
     }
