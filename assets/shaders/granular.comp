@@ -72,7 +72,7 @@ void main(){
         END_NEIGHBOR
         uint slot=atomicAdd(requested,1u);if(slot>=freeCount)return;
         Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,inverseMass(material),material);p.contact=vec4(0,0,pos);p.residual=vec4(0);
-        storeParticle(uint(slots[slot]),p);atomicAdd(aliveCount,1u);
+        spawnParticle(uint(slots[slot]),p);atomicAdd(aliveCount,1u);
         if(material==5)atomicAdd(waterCount,1u);if(material==6)atomicAdd(oilCount,1u);return;
     }
     if(id>=uint(N))return;

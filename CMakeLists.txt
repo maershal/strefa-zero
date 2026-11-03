@@ -25,10 +25,12 @@ option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
 set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependency archives")
 set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: address, undefined, thread")
-# Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run); result checks stay the same.
+# Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run) and, through the environment variable of the
+# same name, the in-app deadline of gpu.mission_ui; result checks stay the same.
 set(STREFA_GPU_TIMEOUT_SCALE 1 CACHE STRING "Integer multiplier for the TIMEOUT of graphics tests")
-if(NOT STREFA_GPU_TIMEOUT_SCALE MATCHES "^[1-9][0-9]*$")
-    message(FATAL_ERROR "STREFA_GPU_TIMEOUT_SCALE musi być dodatnią liczbą całkowitą.")
+# The same bound as app::gpu_timeout_scale(), so the CTest TIMEOUT and the in-app deadline always scale together.
+if(NOT STREFA_GPU_TIMEOUT_SCALE MATCHES "^[1-9][0-9]*$" OR STREFA_GPU_TIMEOUT_SCALE GREATER 100)
+    message(FATAL_ERROR "STREFA_GPU_TIMEOUT_SCALE musi być liczbą całkowitą od 1 do 100.")
 endif()
 
 # Sanitizers apply to every target, so the whole process (including fetched dependencies) is instrumented.
@@ -132,7 +134,7 @@ if(STREFA_BUILD_APP)
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
     target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu PRIVATE SDL3::SDL3 OpenGL::GL)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
@@ -402,6 +404,12 @@ if(BUILD_TESTING)
         set_tests_properties(gpu.flow_behaviour PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 600 SKIP_RETURN_CODE 77)
         set_tests_properties(gpu.liquid_physics PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 240 SKIP_RETURN_CODE 77)
         set_tests_properties(gpu.granular_physics PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 180 SKIP_RETURN_CODE 77)
+        # Brush counts after fixtures and scene resets must equal a fresh world's (history-dependent spawn bug).
+        add_test(NAME gpu.brush_history COMMAND strefa_qa --gpu-brush-check --profile ${CMAKE_CURRENT_BINARY_DIR}/brush-history-profile)
+        add_test(NAME gpu.brush_history_sorted_aos COMMAND strefa_qa --gpu-brush-check --gpu-neighbors sorted --gpu-layout aos
+            --profile ${CMAKE_CURRENT_BINARY_DIR}/brush-history-sorted-aos-profile)
+        set_tests_properties(gpu.brush_history gpu.brush_history_sorted_aos PROPERTIES LABELS "integration;graphics;gpu"
+            TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.laboratory_ui COMMAND strefa_qa --gpu-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/gpu-ui-profile)
         set_tests_properties(gpu.laboratory_ui PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 150 SKIP_RETURN_CODE 77)
         add_test(NAME app.opengl33_smoke COMMAND strefa_zero --smoke-test --opengl33 --profile ${CMAKE_CURRENT_BINARY_DIR}/legacy-smoke-profile)
@@ -412,10 +420,14 @@ if(BUILD_TESTING)
         foreach(smoke_test app.opengl_smoke app.opengl33_smoke app.mode_faults gpu.platform_dispatch gpu.gameplay
             gpu.mission_ui_quick gpu.shader_cache gpu.lighting_pressure gpu.readback_ring gpu.instrumentation
             gpu.renderer app.laboratory_responsiveness app.laboratory_four_threads gpu.scene_benchmark_clean
-            gpu.scene_benchmark gpu.scene_benchmark_content)
+            gpu.scene_benchmark gpu.scene_benchmark_content gpu.brush_history)
             set_property(TEST ${smoke_test} APPEND PROPERTY LABELS ci-smoke)
         endforeach()
         set_property(TEST app.opengl33_smoke app.mode_faults APPEND PROPERTY LABELS ci-gl33)
+        # Verdict includes a wall-clock threshold (UI frame p95 <= 100 ms, mission deadline): junit-summary.py lists
+        # these failures apart from functional ones, since a software renderer misses them by design.
+        set_property(TEST app.laboratory_responsiveness app.laboratory_four_threads gpu.laboratory_ui gpu.thermal_ui
+            gpu.mission_ui APPEND PROPERTY LABELS perf-wallclock)
     endif()
 
     # One GL context at a time: graphics tests stay serial under `ctest -j`. Every test must declare
@@ -430,6 +442,8 @@ if(BUILD_TESTING)
         if("graphics" IN_LIST test_labels)
             math(EXPR test_timeout "${test_timeout} * ${STREFA_GPU_TIMEOUT_SCALE}")
             set_tests_properties(${strefa_test} PROPERTIES RESOURCE_LOCK gpu TIMEOUT ${test_timeout})
+            set_property(TEST ${strefa_test} APPEND PROPERTY ENVIRONMENT
+                STREFA_GPU_TIMEOUT_SCALE=${STREFA_GPU_TIMEOUT_SCALE})
         endif()
     endforeach()
 endif()

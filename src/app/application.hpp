@@ -35,7 +35,7 @@ struct LaunchOptions {
     bool smoke_test{false};
     bool laboratory_smoke_test{false};
     bool start_in_laboratory{false};
-    bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_smoke_test{};
+    bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_brush_test{}, gpu_smoke_test{};
     bool start_in_mission{}, mission_test{}, mission_smoke{}, gameplay_test{};
     bool legacy_graphics{}, shader_cache{}, session_smoke{}, cache_check{};
     bool mission_ui_smoke{}, fault_smoke{};
@@ -84,7 +84,7 @@ struct LaunchOptions {
     }
     // Tests that run unsynchronised at 60 FPS; the menu smoke test and CPU-side GPU physics tests keep settings.
     [[nodiscard]] bool forces_test_pacing() const {
-        return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test > 0;
+        return test_count() - smoke_test - gpu_test - gpu_liquid_test - gpu_flow_test - gpu_brush_test > 0;
     }
     // Tests skipped (exit 77) without OpenGL 4.3; the CPU-capable smoke tests also run on GL 3.3.
     [[nodiscard]] bool requires_gl43() const {
@@ -101,6 +101,9 @@ using DiagnosticRunner = std::function<std::optional<std::expected<int, std::str
 [[nodiscard]] std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv,
                                                                       OptionScope scope = OptionScope::all);
 [[nodiscard]] std::string help_text(OptionScope scope);
+// Value of STREFA_GPU_TIMEOUT_SCALE (set by CMake on every `graphics` test): a positive integer that stretches
+// in-app test deadlines like the CTest TIMEOUT. Unset, empty or invalid text means 1.
+[[nodiscard]] unsigned gpu_timeout_scale(const char* text);
 [[nodiscard]] std::expected<int, std::string> run(const LaunchOptions& options,
                                                   const DiagnosticRunner& diagnostics = {});
 // Shared main() of StrefaZero and StrefaQA: parses options, reports errors and runs the application.

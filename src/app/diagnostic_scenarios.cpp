@@ -87,11 +87,12 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
         if (!result) return std::unexpected{result.error()};
         return 0;
     }
-    if (options.gpu_test || options.gpu_liquid_test || options.gpu_flow_test || options.mission_test
-        || options.gpu_profile || options.stabilization_profile || options.gpu_profile_check || options.readback_test
-        || options.readback_profile || options.execution_test || options.execution_profile || options.neighbor_test
-        || options.neighbor_profile || options.coupling_test || options.coupling_profile || options.work_test
-        || options.transport_test || options.hot_test || options.cost_profile || options.cost_check) {
+    if (options.gpu_test || options.gpu_liquid_test || options.gpu_flow_test || options.gpu_brush_test
+        || options.mission_test || options.gpu_profile || options.stabilization_profile || options.gpu_profile_check
+        || options.readback_test || options.readback_profile || options.execution_test || options.execution_profile
+        || options.neighbor_test || options.neighbor_profile || options.coupling_test || options.coupling_profile
+        || options.work_test || options.transport_test || options.hot_test || options.cost_profile
+        || options.cost_check) {
         auto world = gpu::ParticleWorld::create(assets / "shaders", options.gpu_execution, options.gpu_profiling);
         if (!world) return std::unexpected{world.error()};
         (*world)->set_thermal_options(options.gpu_thermal);
@@ -108,6 +109,7 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
         const auto validated = options.gameplay_test   ? (*world)->validate_gameplay_protocol(profile)
                              : options.mission_test    ? gpu::validate_mission(**world, profile)
                              : options.gpu_flow_test   ? gpu::validate_flow(**world, profile)
+                             : options.gpu_brush_test  ? gpu::validate_brush_history(**world, profile)
                              : options.gpu_liquid_test ? gpu::validate_liquids(**world, profile)
                                                        : gpu::validate_granular(**world, profile);
         if (!validated) return std::unexpected{validated.error()};

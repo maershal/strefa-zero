@@ -35,7 +35,8 @@ void main(){
     }
     if(operation==3){
         uint count=lane<240u?cells[BLOCK_BASE+lane]:0u;prefix(count);
-        if(lane<240u)cells[BLOCK_OFFSET_BASE+lane]=scan[lane]-count;return;
+        if(lane<240u)cells[BLOCK_OFFSET_BASE+lane]=scan[lane]-count;
+        if(lane==255u)cells[2]=scan[lane];return; // particles in this build: end of the last cell
     }
     if(operation==5||operation==7){
         if(id>=aliveCount)return;id=slots[N+id];if(operation==5&&id>=256u)return;

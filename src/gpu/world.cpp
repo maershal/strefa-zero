@@ -696,6 +696,12 @@ void ParticleWorld::load(std::span<const Grain> grains, std::span<const std::uin
     s.bins_valid = false;
     const std::array<GLuint, 16> neighbor_zero{};
     s.upload(2, 0, sizeof(neighbor_zero), neighbor_zero.data());
+    // A loaded scene must not inherit list state from the previous one: free/active slot lists, the sorted
+    // order with its reverse map and reuse anchors (or the linked lists). rebuild_active() below refills the
+    // slot lists; the index is rebuilt before its first use.
+    const std::vector<std::byte> list_zero(std::max<std::size_t>(capacity * 8, s.body_offset()));
+    s.upload(5, 0, static_cast<GLsizeiptr>(capacity * 8), list_zero.data());
+    s.upload(3, 0, static_cast<GLsizeiptr>(s.body_offset()), list_zero.data());
     s.renderer.reset_profiles();
     s.presented_hp = {3, 3, 3};
     s.hit_started = {};
