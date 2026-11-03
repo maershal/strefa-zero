@@ -29,8 +29,7 @@ constexpr float brush_x = 160, brush_y = 30, brush_radius = 6;
 unsigned expected_brush_count() {
     unsigned count = 0;
     for (int y = 0; y < height; ++y)
-        for (int x = 0; x < width; ++x)
-            count += std::hypot(x + .5 - brush_x, y + .5 - brush_y) <= brush_radius;
+        for (int x = 0; x < width; ++x) count += std::hypot(x + .5 - brush_x, y + .5 - brush_y) <= brush_radius;
     return count;
 }
 } // namespace
