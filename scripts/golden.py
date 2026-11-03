@@ -35,17 +35,17 @@ def report(old, new, title):
     for key in sorted(set(old) | set(new)):
         before, after = old.get(key), new.get(key)
         if before != after:
-            runs.setdefault(key[:2], []).append((key[2], before or "—", after or "—"))
+            runs.setdefault(key[:2], []).append((key[2], before or "-", after or "-"))
     total = len({key[:2] for key in set(old) | set(new)})
     lines = [f"### {title}", ""]
     if not runs:
         lines.append(f"No differences ({total} runs, {len(new)} values).")
         return "\n".join(lines), 0
-    lines += [f"{len(runs)} of {total} runs differ.", "", "| Case | Threads | Changed fields | Before → after |",
+    lines += [f"{len(runs)} of {total} runs differ.", "", "| Case | Threads | Changed fields | Before -> after |",
               "|------|---------|----------------|----------------|"]
     for (name, threads), fields in runs.items():
         names = ", ".join(field for field, _, _ in fields)
-        values = "<br>".join(f"{field}: `{b}` → `{a}`" for field, b, a in fields)
+        values = "<br>".join(f"{field}: `{b}` -> `{a}`" for field, b, a in fields)
         lines.append(f"| {name} | {threads} | {names} | {values} |")
     return "\n".join(lines), len(runs)
 
@@ -61,7 +61,7 @@ def main():
     if args.compare:
         _, old = parse(args.compare[0].read_text(encoding="utf-8"))
         _, new = parse(args.compare[1].read_text(encoding="utf-8"))
-        text, changed = report(old, new, f"{args.compare[0]} → {args.compare[1]}")
+        text, changed = report(old, new, f"{args.compare[0]} -> {args.compare[1]}")
         print(text)
         return 1 if changed else 0
 
