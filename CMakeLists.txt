@@ -25,7 +25,8 @@ option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
 set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependency archives")
 set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: address, undefined, thread")
-# Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run); result checks stay the same.
+# Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run) and, through the environment variable of the
+# same name, the in-app deadline of gpu.mission_ui; result checks stay the same.
 set(STREFA_GPU_TIMEOUT_SCALE 1 CACHE STRING "Integer multiplier for the TIMEOUT of graphics tests")
 if(NOT STREFA_GPU_TIMEOUT_SCALE MATCHES "^[1-9][0-9]*$")
     message(FATAL_ERROR "STREFA_GPU_TIMEOUT_SCALE musi być dodatnią liczbą całkowitą.")
@@ -436,6 +437,8 @@ if(BUILD_TESTING)
         if("graphics" IN_LIST test_labels)
             math(EXPR test_timeout "${test_timeout} * ${STREFA_GPU_TIMEOUT_SCALE}")
             set_tests_properties(${strefa_test} PROPERTIES RESOURCE_LOCK gpu TIMEOUT ${test_timeout})
+            set_property(TEST ${strefa_test} APPEND PROPERTY ENVIRONMENT
+                STREFA_GPU_TIMEOUT_SCALE=${STREFA_GPU_TIMEOUT_SCALE})
         endif()
     endforeach()
 endif()

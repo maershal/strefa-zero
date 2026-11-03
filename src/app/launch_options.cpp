@@ -536,5 +536,12 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         return std::unexpected{"Opcje --test-vsync i --test-frame-limit wymagają testu okna."};
     return result;
 }
+unsigned gpu_timeout_scale(const char* text) {
+    if (!text) return 1;
+    const std::string_view value{text};
+    unsigned scale{};
+    const auto [end, error] = std::from_chars(value.data(), value.data() + value.size(), scale);
+    return error == std::errc{} && end == value.data() + value.size() && scale > 0 && scale <= 100 ? scale : 1;
+}
 
 } // namespace strefa::app

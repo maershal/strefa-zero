@@ -23,7 +23,7 @@ class ScenarioRunner {
 public:
     static constexpr std::uint64_t mission_smoke_min_ticks = 1700;
     // Internal limit, measured from SDL start, that ends gpu.mission_ui with a progress report well before its
-    // CTest TIMEOUT (120 s) kills it.
+    // CTest TIMEOUT (120 s) kills it. Both grow with STREFA_GPU_TIMEOUT_SCALE (see mission_deadline_ns).
     static constexpr std::uint64_t mission_smoke_deadline_ns = 55'000'000'000;
     // Hardware GPU: wall time the interactive clock may discard after the first second.
     static constexpr double mission_smoke_max_dropped = 0.5;
@@ -36,7 +36,8 @@ public:
           smoke_test{smoke},
           lab_smoke{laboratory},
           gpu_smoke{gpu},
-          mission_smoke{mission} {
+          mission_smoke{mission},
+          mission_deadline_ns{mission_smoke_deadline_ns * gpu_timeout_scale(SDL_getenv("STREFA_GPU_TIMEOUT_SCALE"))} {
         profile_frames = profile;
         if (profile) {
             frame_profiles.reserve(1024);
@@ -454,6 +455,7 @@ public:
         std::ofstream out{app.store_.path().parent_path() / "mission-progress.txt"};
         out << "state=" << state << "\nticks=" << (app.simulation_ ? app.simulation_->metrics().steps : 0)
             << "\nrequired_ticks=" << mission_smoke_min_ticks << "\nframes=" << frames
+            << "\ndeadline_s=" << static_cast<double>(mission_deadline_ns) / 1e9
             << "\nelapsed_s=" << static_cast<double>(SDL_GetTicksNS()) / 1e9
             << "\ndropped_seconds=" << app.simulation_.clock().dropped_seconds()
             << "\nfed_seconds=" << mission_fed_seconds << "\nrenderer=" << app.renderer_ << '\n';
@@ -627,6 +629,7 @@ public:
     std::vector<gpu::Grain> retained_grains;
     std::vector<std::uint32_t> retained_terrain;
     bool smoke_test{}, lab_smoke{}, gpu_smoke{}, mission_smoke{};
+    std::uint64_t mission_deadline_ns{};
     bool gpu_unavailable_handled{}, experimental_ok{};
     std::optional<gpu::ThermalBrush> injected_brush;
     bool mission_quick{}, quick_ok{true};

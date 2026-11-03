@@ -453,9 +453,8 @@ public:
                         window_seconds_ && static_cast<double>(frame_start - window_started) / 1e9 >= window_seconds_;
                 const bool mission_final_frame = mission_smoke && (!window_seconds_ || duration_done)
                                               && simulation_->metrics().steps >= mission_smoke_min_ticks;
-                // Stay inside the CTest TIMEOUT (60 s) and leave a progress report instead of being killed.
-                if (mission_smoke && !mission_final_frame
-                    && SDL_GetTicksNS() >= ScenarioRunner::mission_smoke_deadline_ns)
+                // Stay inside the CTest TIMEOUT and leave a progress report instead of being killed.
+                if (mission_smoke && !mission_final_frame && SDL_GetTicksNS() >= scenario.mission_deadline_ns)
                     return std::unexpected{scenario.mission_deadline(*this)};
                 if (gpu_input.save_recording) {
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);

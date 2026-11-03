@@ -75,6 +75,11 @@ constexpr ModeCase mode_cases[]{
 
 int main() {
     try {
+        using strefa::app::gpu_timeout_scale;
+        check(gpu_timeout_scale(nullptr) == 1 && gpu_timeout_scale("") == 1 && gpu_timeout_scale("3") == 3
+                      && gpu_timeout_scale("0") == 1 && gpu_timeout_scale("-2") == 1 && gpu_timeout_scale("2x") == 1
+                      && gpu_timeout_scale("1000") == 1,
+              "STREFA_GPU_TIMEOUT_SCALE must accept only a positive integer up to 100");
         const auto plain = parse({});
         check(plain && !plain->is_test() && plain->test_count() == 0 && !plain->is_window_smoke()
                       && !plain->forces_test_pacing() && !plain->requires_gl43()

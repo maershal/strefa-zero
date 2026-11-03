@@ -101,6 +101,9 @@ using DiagnosticRunner = std::function<std::optional<std::expected<int, std::str
 [[nodiscard]] std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv,
                                                                       OptionScope scope = OptionScope::all);
 [[nodiscard]] std::string help_text(OptionScope scope);
+// Value of STREFA_GPU_TIMEOUT_SCALE (set by CMake on every `graphics` test): a positive integer that stretches
+// in-app test deadlines like the CTest TIMEOUT. Unset, empty or invalid text means 1.
+[[nodiscard]] unsigned gpu_timeout_scale(const char* text);
 [[nodiscard]] std::expected<int, std::string> run(const LaunchOptions& options,
                                                   const DiagnosticRunner& diagnostics = {});
 // Shared main() of StrefaZero and StrefaQA: parses options, reports errors and runs the application.
