@@ -103,14 +103,18 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   lines with the 2.65/3.3125 inverse-mass literals, `std::array<GLuint, 8>`, `unsigned& current|bank`, GLSL lines
   > 200 characters. Definitions are in the script; `--report` prints every value and edge.
 - `strefa_zero_qa_symbols`: `nm -C` lines matching `Benchmark|ScenarioRunner|write_profile_samples` in `StrefaZero`
-  built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable).
+  built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable). It is measured only on
+  Linux/WSL2 with the GCC of the `ubuntu-24.04` runner (needs `nm` and an ELF binary; MSVC builds have no equivalent).
+  On Windows, take the value from the step's log (`strefa_zero_qa_symbols = N`) and edit the JSON by hand. A runner
+  image with a new GCC can move the count without a code change; record the new value in its own PR.
 - Every value may only go down. A larger value or a new edge fails; a smaller one fails too until it is written back
   with `python3 scripts/check_architecture.py --update` (`--symbols <StrefaZero>` for the symbol count) in the same PR.
   On a PR the job also runs `--base origin/main`, so raising the allowlist or a budget in the PR itself fails.
   Raising one needs the owner's approval comment in the PR and the `architecture-debt-approved` label (set by the
-  owner, never by an agent; rerun the job afterwards), which drops only the `--base` comparison.
-- `scripts/test-check-architecture.sh` (job `format`) injects violations into a copy of the tree. The acceptance run of
-  PR K04 pushed an artificial violation commit and reverted it; see that PR for the failing job.
+  owner, never by an agent), which drops only the `--base` comparison. The job reads the labels when it runs, so a
+  re-run of the `architecture` job after setting the label is enough.
+- `scripts/test-check-architecture.sh` (job `format`) injects violations into a copy of the tree and checks the reported
+  reason. Acceptance in #42: an artificial violation commit failed the `architecture` job and was then reverted.
 
 ## Measurement data
 

@@ -68,9 +68,11 @@ RULES = [
 ]
 RULE_EXEMPT = {"gpu": {"app", "qa"}, "sim": {"app", "qa", "tools"}, "qa": set()}
 
+# Literal measures ignore comments (size literals, inverse masses). World size 320x192 with an optional u/f/.0 suffix.
 SIZE_LITERAL = re.compile(r"(?<![\w.])(?:320|192)(?:\.0*)?[uUfF]?(?![\w.])")
 # Inverse masses of sand (2.65) and oil (3.3125) written as literals instead of coming from a material table.
-# Lines computing an expected value from them are test oracles, not definitions.
+# Lines that mention "expected" (any case) are test oracles derived from them and are not counted; a new definition
+# must not hide behind that word.
 INVERSE_MASS = re.compile(r"(?<![\w.])(?:2\.65|3\.3125)[fF]?(?![\w.])")
 SHADER_SUFFIXES = (".comp", ".frag", ".vert", ".glsl")
 
@@ -156,7 +158,7 @@ def violations():
     unknown = sorted(t for t in sources if t.startswith("strefa_") and not t.endswith("_tests")
                      and t not in TARGET_MODULE and t not in EXTERNAL_TARGETS)
     if unknown:
-        sys.exit(f"Nieznany target CMake: {', '.join(unknown)}. Dopisz jego moduł do TARGET_MODULE w {rel(pathlib.Path(__file__))}.")
+        sys.exit(f"Nieznany target CMake: {', '.join(unknown)}. Dopisz jego moduł do TARGET_MODULE w scripts/check_architecture.py.")
     module = file_modules(sources)
     found = {}
     for path in source_files("src"):
@@ -265,7 +267,7 @@ def launch_option_bools():
     return len(set(re.findall(r"\bresult\.(\w+) = true;", read("src/app/launch_options.cpp"))))
 
 
-def count(pattern, files, comments=True):
+def count(pattern, files, comments=True):  # comments=False strips // and /* */ first
     total = 0
     for path in files:
         text = path.read_text(encoding="utf-8")
@@ -295,8 +297,8 @@ def metrics():
         "application_run_lines": function_lines("src/app/application.cpp", "std::expected<int, std::string> run() {"),
         "launch_options_bools": launch_option_bools(),
         "inl_includes": count(re.compile(r'^\s*#\s*include\s+"[^"]+\.inl"', re.M), cpp),
-        "size_literals_cpp": count(SIZE_LITERAL, cpp + source_files("tests")),
-        "size_literals_glsl": count(SIZE_LITERAL, glsl),
+        "size_literals_cpp": count(SIZE_LITERAL, cpp + source_files("tests"), comments=False),
+        "size_literals_glsl": count(SIZE_LITERAL, glsl, comments=False),
         "inverse_mass_literal_lines": inverse_mass_lines(),
         "raw_ssbo_arrays": count(re.compile(r"std::array<GLuint,\s*8>"), cpp),
         "unsigned_ref_banks": count(re.compile(r"\bunsigned\s*&\s*(?:current|bank)\b"), cpp),
