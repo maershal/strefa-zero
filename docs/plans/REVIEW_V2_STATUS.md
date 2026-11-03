@@ -24,16 +24,19 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | --- | --- | --- | --- |
 | Termika i gazy GPU (koszt, zachowanie, projekt v2) | §3, §5.3 | §2 N8, §3.6 | — |
 | Rejestr materiałów, codegen TOML → C++/GLSL | §4.2, §8.1 | §3.3, faza B | §3.1 |
-| Stan materiału GPU, przemiany, `BirthDeathPass` | §4.2, §8.2 | §3.4, faza E | §0 |
+| Stan materiału GPU, przemiany, `BirthDeathPass` | §4.2, §8.2 | §3.4, faza E | §3.2 |
 | Rozbiór `ParticleWorld`, `PassTable`, QA poza produkcją | §4 | §1 A1/A3/A5/A10, §3.5, faza C | — |
 | Aplikacja, tryby, laboratorium jedno GPU, GL 3.3 | §4.2, §7 | §3.8, faza D | §1.1 |
-| Nowe materiały, reakcje, wybuchy v2 | §8.2–§8.6 | §3.3 | §1.1, §2 |
+| Nowe materiały, reakcje (kandydaci, macierz interakcji) | §8.2–§8.5 | §3.3 | §3.2–§3.4, §4 |
+| Wybuchy v2 | §8.6 | — | §5 |
 | Błędy wyroczni CPU (wisząca skorupa, grzałka, mgiełka, kwas, gaz) | §1 | — | §1.2 |
-| UI laboratorium | §9 | §3.8 | §1.1 |
-| Persystencja, nagrania v4, undo | §9 U9–U10 | §3.9 | — |
+| UI laboratorium | §9 | §3.8 | §6 |
+| Gra (obrażenia, broń materiałowa, ruch) | §7 | — | §7 |
+| Persystencja, nagrania v4, undo | §9 U9–U10 | §3.9 | §6 U10–U11 |
 | Shadery (podział, `#line`, hot-reload, glslang) | §6 | §1 A11, §3.10 | — |
-| Bryły sztywne | §4.2 | §3.7 | — |
-| Biblioteki | §10 | §4 | §0 p. 6 |
+| Bryły sztywne | §4.2 | §3.7 | §4 F8 |
+| Biblioteki | §10 | §4 | §8 |
+| Roadmapa laboratorium (fazy F0–F4) | §11 | §5 | §9 |
 | Proces, CI, testy | §2, §6 | §2 N7, N10 | — |
 
 ## Status (na `9339c1a`)

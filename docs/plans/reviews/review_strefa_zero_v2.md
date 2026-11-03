@@ -567,16 +567,14 @@ Zasady:
 
 ### 8.4 Interakcje rdzenia wizji
 
-> [!NOTE]
-> Macierz odtworzona z rozsypanej tabeli oryginału; komórki dopasowano do kolumn według sensu i interakcji z §8.3.
-> Puste pole = brak wpisu w oryginale.
+Pełna wersja z tempami: [lab_features.md §3.4](lab_features.md#34-interakcje-rdzenia-wizji-a--b).
 
-| A \ B | woda | ziemia | piasek | kamień | metal | drewno | rośliny | lód, śnieg | sól |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **kwas** | rozcieńczenie | → ∅ | → ∅ | → ∅ (wolno) | H₂ + sól (termika v2) | → ∅ (wolno) | | topi | — |
-| **ług** | rozcieńczenie | — | — | — | H₂ z aluminium (termika v2) | → ∅ (wolno) | — | — | — |
-| **woda** | — | błoto | mokry piasek | erozja przy szybkim nurcie | rdza (bardzo wolno) | gasi, nasiąka | | zamarza (termika v2) | solanka |
-| **lawa** | obsydian + para | wypala; cegła (termika v2) | szkło (termika v2) | topi (termika v2) | topi (termika v2) | zapala | | woda + para | topi (termika v2) |
+| A \ B | woda | ziemia | piasek | kamień | metal | drewno / rośliny | lód / śnieg | sól |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **kwas** | rozcieńczenie | → ∅ | → ∅ | → ∅ (wolno) | H₂ + sól (termika v2) | → ∅ (wolno) | topi | — |
+| **ług** | rozcieńczenie | — | — | — | H₂ z aluminium (termika v2) | → ∅ (wolno) | — | — |
+| **woda** | — | błoto | mokry piasek | erozja przy szybkim nurcie | rdza (bardzo wolno) | gasi, nasiąka | zamarza (termika v2) | solanka |
+| **lawa** | obsydian + para | wypala; cegła (termika v2) | szkło (termika v2) | topi (termika v2) | topi (termika v2) | zapala | woda + para | topi (termika v2) |
 
 Do tego kwas + ług → solanka + ciepło (neutralizacja).
 
