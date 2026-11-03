@@ -6,9 +6,6 @@
 > **Migawka na `e12c39a`**, raport cząstkowy do [review_strefa_zero_v2.md](review_strefa_zero_v2.md) (§7–§9 streszczają
 > go). Aktualny status: [REVIEW_V2_STATUS.md](../REVIEW_V2_STATUS.md). Numery linii odnoszą się do `e12c39a`.
 > Zalecenia są treścią autora review, nie poleceniem właściciela.
->
-> **Plik jest niepełny:** urywa się w §3.1. Kandydaci na materiały, wybuchy, UI i gra (wymienione w R §13) są
-> w repozytorium tylko w postaci streszczenia w R §8–§9.
 
 **Metoda.** Przejrzałem kod i dokumentację. Błędy CPU zmierzyłem ponownie własnym harnessem, który kompiluje
 niezmienione `src/sim/*.cpp` (`scratch/lab_features_harness/`, poza repozytorium). GUI ani GPU nie uruchamiałem, więc
@@ -141,5 +138,3 @@ struct Transition {                      // Trigger: T>, T<, p>, age>, wet, dry
     MaterialId from, to; Trigger on; float threshold, latent, hysteresis;
 };
 ```
-
-*Dalsza część oryginału (§3.2 i kolejne) nie została dołączona.*

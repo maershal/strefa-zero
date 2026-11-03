@@ -764,13 +764,13 @@ K26 → K27 → K28 → K29 → K30 → K31 (16 promptów). Jeśli masz pod ręk
 ## 13. Załączniki
 
 Raporty cząstkowe autora review (po polsku, z dowodami `plik:linia` na `e12c39a`). Poza
-[architecture_v2.md](architecture_v2.md) i początkiem [lab_features.md](lab_features.md) nie ma ich w repozytorium:
+[architecture_v2.md](architecture_v2.md) i [lab_features.md](lab_features.md) nie ma ich w repozytorium:
 
 - `pull_requests_v2.md`: PR-y #13–#22, stan uwag do #13, CI, proces, follow-upy F1–F11.
 - `build_test.md`: buildy, testy, czasy CPU, 17 arkuszy obrazów, diagnoza ognia GPU, ponowna weryfikacja błędów.
 - `gpu_thermal_gas.md`: model kosztu operacja po operacji, ograniczenia zachowania, projekt GPU-first, 12 PR-ów
   migracji, 15 szybkich zysków.
-- [lab_features.md](lab_features.md) (do §3.1): inwentarz, luki względem wizji, 30 kandydatów na materiały, wybuchy, UI, gra.
+- [lab_features.md](lab_features.md): inwentarz, luki względem wizji, 30 kandydatów na materiały, wybuchy, UI, gra.
 - [architecture_v2.md](architecture_v2.md): delta A1–A12, N1–N10, architektura docelowa, biblioteki, roadmapa A–E,
   budżety CI.
 

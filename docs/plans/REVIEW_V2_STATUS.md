@@ -3,7 +3,7 @@
 Baza review: `e12c39a` (2026-11-03). Status sprawdzony na `9339c1a` (2026-11-04).
 Źródła (migawki, numery linii z `e12c39a`): [review_strefa_zero_v2.md](reviews/review_strefa_zero_v2.md) (dalej
 **R**), [architecture_v2.md](reviews/architecture_v2.md) (dalej **A**) i [lab_features.md](reviews/lab_features.md)
-(dalej **L**, raport cząstkowy o laboratorium, urwany w §3.1).
+(dalej **L**, raport cząstkowy o laboratorium).
 
 Ten plik jest ładowany do kontekstu agentów przez `CLAUDE.md`. Trzymaj go krótkim (≤ 150 linii): szczegóły są
 w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
