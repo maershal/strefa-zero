@@ -1,4 +1,3 @@
-#include "app/diagnostic_scenarios.hpp" // TEMPORARY: K04 acceptance, reverted in the next commit
 #include "build_info.hpp"
 #include "ui/arena.hpp"
 #include "ui/gpu_laboratory.hpp"
