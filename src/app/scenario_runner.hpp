@@ -297,12 +297,12 @@ public:
                    << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_
                    << "\ncompiler=" << build::compiler << "\ncpp=" << __cplusplus
                    << "\nsimulation_uploads=" << app.uploads_ << "\nsimulation_pause_step=" << app.smoke_lab_ok_
-                   << "\nactor_atlas=" << (app.soldier_.handle != 0) << '\n';
+                   << '\n';
             report << "layered_parts=" << (app.parts_.handle != 0) << "\nweapon_atlas=" << (app.weapons_.handle != 0)
                    << "\nphysics_finite=" << app.world_->statistics().finite << '\n';
             if (!all_screens || (app.gpu_available_ && !experimental_ok) || !all_themes || !all_images || !smoke_ok
-                || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.soldier_.handle || !app.parts_.handle
-                || !app.weapons_.handle || !app.world_->statistics().finite)
+                || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.parts_.handle || !app.weapons_.handle
+                || !app.world_->statistics().finite)
                 return std::unexpected{"Niepełny wynik testu aplikacji. Sprawdź smoke-report.txt."};
         }
         return {};

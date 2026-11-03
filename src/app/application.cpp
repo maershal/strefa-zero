@@ -66,7 +66,7 @@ ui::Screen target_screen(ui::Action action, ui::Screen current) {
 struct ApplicationAssets {
     std::array<ui::Image, 3> backgrounds;
     platform::Texture& canvas;
-    ui::Image soldier, parts, weapons;
+    ui::Image parts, weapons;
 };
 
 // One --scene-benchmark scene: settings in, collected frames and GPU samples out.
@@ -108,7 +108,6 @@ public:
           store_{store},
           images_{assets.backgrounds},
           canvas_{assets.canvas},
-          soldier_{assets.soldier},
           parts_{assets.parts},
           weapons_{assets.weapons},
           state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics, settings},
@@ -1043,7 +1042,6 @@ private:
     const platform::SettingsStore& store_;
     std::array<ui::Image, 3> images_;
     platform::Texture& canvas_;
-    ui::Image soldier_;
     ui::Image parts_, weapons_;
     ui::ViewState state_;
     bool running_{true}, unpaced_{};
@@ -1320,10 +1318,6 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     auto canvas =
             platform::Texture::create_rgba(sim::World::width, sim::World::height, std::as_bytes(std::span{blank}));
     if (!canvas) return std::unexpected{canvas.error()};
-    auto soldier = platform::Texture::load_bmp(assets / "actors" / "soldier_pl.bmp");
-    if (!soldier) return std::unexpected{soldier.error()};
-    if (soldier->width() != 128 || soldier->height() != 192)
-        return std::unexpected{"Atlas żołnierza wymaga rozmiaru 128 × 192."};
     auto parts = platform::Texture::load_bmp(assets / "actors" / "parts.bmp");
     auto weapons = platform::Texture::load_bmp(assets / "weapons" / "weapons.bmp");
     if (!parts || !weapons) return std::unexpected{"Brak atlasu części postaci lub broni."};
@@ -1332,7 +1326,6 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     physics.worker_threads = options.physics_threads;
     const ApplicationAssets application_assets{images,
                                                *canvas,
-                                               {soldier->id(), soldier->width(), soldier->height()},
                                                {parts->id(), parts->width(), parts->height()},
                                                {weapons->id(), weapons->width(), weapons->height()}};
     const LaunchConfig config{.physics = physics,
