@@ -2161,3 +2161,4 @@ void ParticleWorld::project_liquids_for_test(unsigned iterations) {
 #include "gpu/thermal_benchmark.inl"
 #include "gpu/thermal_scenes.inl"
 #include "gpu/thermal_validation.inl"
+// TEMPORARY: K04 acceptance, reverted in the next commit
