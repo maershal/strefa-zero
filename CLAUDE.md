@@ -131,11 +131,23 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
   Do not merge before CI is green. Add new `*.sh` files with `git update-index --chmod=+x`
   (CI rejects tracked `.sh` files that are not 100755, except the sourced `scripts/linux-env.sh`).
 - Fill in `.github/pull_request_template.md` (all sections, contracts touched, GPU tests not run locally).
-  `.github/workflows/pr-hygiene.yml` (`scripts/pr-hygiene.sh`, runnable locally) fails on a missing section, an added
-  file > 1 MB, raw data (`docs/measurements/**`, `*.csv`/`*.bmp` outside `assets/`) or > 800 changed code lines
-  without the `large-pr-approved` label.
-- Before merging run `/review-pr <number>` (subagent `pr-reviewer`, posts a comment review). Do not merge while CI
-  is red or not finished. Every item under "Pre-merge checks" in the PR description must be checked.
+  `.github/workflows/pr-hygiene.yml` (`scripts/pr-hygiene.sh`, runnable locally, tests in
+  `scripts/test-pr-hygiene.sh`) fails on a missing section, a checked contract without the URL of the owner's
+  approval comment on its line, an "Out of scope" item without its issue (`#NNN`), a change under `src/` without a
+  `docs/CHANGELOG.md` entry, an added file > 1 MB, raw data (`docs/measurements/**`, `*.csv`/`*.bmp` outside
+  `assets/`) or > 800 changed code lines (files marked `linguist-generated` in `.gitattributes` do not count) without
+  the `large-pr-approved` label.
+- Review: `/review-pr <number>` after the last push. It waits for `gh pr checks --watch`, the `pr-reviewer` subagent
+  reads the diff before the description and every commit since the previous automatic review, and the result is
+  posted as a comment review. Findings of severity `minor` and up that a later push leaves unfixed become issues
+  labelled `review-followup`, linked from the PR; so does every "Out of scope" item. Every item under "Pre-merge
+  checks" must be checked.
+- Ruleset `main` (GitHub › Settings › Rules; set by the owner, not by an agent): changes only through a PR, required
+  checks `linux-status`, `windows-status` and `hygiene` on an up-to-date branch, squash merge only, linear history, no
+  force push or deletion, head branch deleted after merge.
+- Merging: never on an agent's own decision. Only after the owner accepts the PR (in the PR or in the chat for that
+  PR) run `gh pr merge <number> --squash --auto`; GitHub merges once the required checks pass. Do not merge while CI
+  is red or not finished.
 
 ## Definition of done
 
