@@ -23,6 +23,8 @@ endif()
 option(STREFA_BUILD_APP "Build the SDL3 / OpenGL application" ON)
 option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
+# OFF only for the QA symbol count of scripts/check_architecture.py: LTO inlines and drops symbols unpredictably.
+option(STREFA_IPO "Link Release targets with interprocedural optimization when supported" ON)
 set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependency archives")
 set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: address, undefined, thread")
 # Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run) and, through the environment variable of the
@@ -454,7 +456,7 @@ endif()
 
 include(CheckIPOSupported)
 check_ipo_supported(RESULT STREFA_IPO_SUPPORTED OUTPUT STREFA_IPO_MESSAGE)
-if(STREFA_IPO_SUPPORTED)
+if(STREFA_IPO AND STREFA_IPO_SUPPORTED)
     foreach(own_target strefa_sim strefa_game strefa_launch strefa_physics strefa_core strefa_storage
         strefa_platform strefa_gpu strefa_ui strefa_app strefa_diagnostics strefa_zero strefa_qa strefa_core_tests strefa_sim_tests strefa_game_tests strefa_laboratory_tests strefa_numerics_tests strefa_clock_tests)
         if(TARGET ${own_target})
