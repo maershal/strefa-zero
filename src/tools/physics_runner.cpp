@@ -1,3 +1,4 @@
+#include "sim/fixtures.hpp"
 #include "sim/recording.hpp"
 
 #include <algorithm>
@@ -6,19 +7,6 @@
 #include <iostream>
 #include <optional>
 #include <string_view>
-
-namespace {
-// Benchmark-only case, not a laboratory scene: a ~120x33 gunpowder slab on a stone floor, lit at one end, so
-// every tick detonates a batch of queued explosions.
-void load_powder_chain(strefa::sim::World& world) {
-    using strefa::sim::Material;
-    for (int y = 180; y <= 183; ++y)
-        for (int x = 96; x <= 223; ++x) world.set({x, y}, Material::stone);
-    for (int y = 147; y <= 179; ++y)
-        for (int x = 100; x <= 219; ++x) world.set({x, y}, Material::gunpowder);
-    world.projectile_hit({100, 179});
-}
-} // namespace
 
 int main(int argc, char** argv) {
     using namespace strefa;
@@ -76,7 +64,7 @@ int main(int argc, char** argv) {
             selected = true;
             sim::World world{0x57EF'A023U, config};
             if (chain)
-                load_powder_chain(world);
+                sim::load_powder_chain(world);
             else
                 world.load_scene(static_cast<sim::Scene>(index));
             const int scene_ticks = chain && !ticks_given ? 240 : ticks;

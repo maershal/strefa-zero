@@ -77,7 +77,8 @@ target_link_libraries(strefa_storage PUBLIC strefa_core)
 
 find_package(Threads REQUIRED)
 add_library(strefa_sim STATIC src/sim/world.cpp src/sim/thermal.cpp src/sim/liquids.cpp
-    src/sim/air.cpp src/sim/reactions.cpp src/sim/motion.cpp src/sim/scenes.cpp src/sim/recording.cpp src/sim/laboratory.cpp src/sim/pressure.cpp)
+    src/sim/air.cpp src/sim/reactions.cpp src/sim/motion.cpp src/sim/scenes.cpp src/sim/recording.cpp src/sim/laboratory.cpp src/sim/pressure.cpp
+    src/sim/fixtures.cpp)
 target_include_directories(strefa_sim PUBLIC src)
 target_link_libraries(strefa_sim PUBLIC strefa_options Threads::Threads)
 
