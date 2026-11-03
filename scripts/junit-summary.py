@@ -7,8 +7,8 @@ Usage: scripts/junit-summary.py [--fail-on-skipped] TITLE REPORT.xml... (missing
 or when a report is missing (a step that never wrote it must not pass as "nothing skipped").
 
 Failures of tests labelled `perf-wallclock` (CTest LABELS, written by ctest as the `cmake_labels` property) are
-listed apart from functional failures: their verdict includes a wall-clock threshold that a software renderer
-such as llvmpipe misses by design. The exit status does not depend on that split.
+listed apart from functional failures: their verdict includes a wall-clock threshold (UI frame p95, judged only on
+hardware renderers, or the mission deadline). The exit status does not depend on that split.
 """
 
 import sys
@@ -62,7 +62,7 @@ def main() -> int:
     if failures:
         lines += ["", "**Niezaliczone (funkcjonalne):**", *[f"- {f}" for f in failures]]
     if perf_failures:
-        lines += ["", f"**Niezaliczone progi czasu ściennego (`{PERF_LABEL}`, na rendererze programowym oczekiwane):**",
+        lines += ["", f"**Niezaliczone progi czasu ściennego (`{PERF_LABEL}`):**",
                   *[f"- {f}" for f in perf_failures]]
     if skips and fail_on_skipped:
         lines += ["", "**Pominięte (niedozwolone w tym kroku):**", *[f"- {s}" for s in skips]]

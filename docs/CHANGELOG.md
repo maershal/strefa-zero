@@ -9,7 +9,9 @@ Pędzel GPU tworzył zależnie od historii świata i kolejności wątków mniej 
 - koniec indeksu to liczba cząstek z jego budowy;
 - `load()` (więc i `reset()`) zeruje listy slotów i indeks sąsiadów.
 
-Nowe testy `gpu.brush_history` i `gpu.brush_history_sorted_aos` (`StrefaQA --gpu-brush-check`) porównują pędzel po historii fikstur z liczbą komórek. `STREFA_GPU_TIMEOUT_SCALE` wydłuża też wewnętrzny limit `gpu.mission_ui`. `nightly-gpu.yml` dzieli testy `graphics` na 4 części według czasów poprzedniego przebiegu i przy porażce otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Testy z progiem czasu ściennego mają etykietę `perf-wallclock` i podsumowanie wymienia je osobno. Progi testów bez zmian.
+Nowe testy `gpu.brush_history` i `gpu.brush_history_sorted_aos` (`StrefaQA --gpu-brush-check`) porównują pędzel po historii fikstur z liczbą komórek. `STREFA_GPU_TIMEOUT_SCALE` wydłuża też wewnętrzny limit `gpu.mission_ui`. `nightly-gpu.yml` dzieli testy `graphics` na 4 części według czasów poprzedniego przebiegu i przy porażce otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Testy z progiem czasu ściennego mają etykietę `perf-wallclock` i podsumowanie wymienia je osobno.
+
+Na rendererze programowym (llvmpipe, softpipe, SwiftShader) testy okna (`gpu.laboratory_ui`, `gpu.thermal_ui`, `gpu.mission_ui`, `app.laboratory_*`) nadal mierzą p95 klatki UI, ale nie oceniają go. Raport ma wtedy `p95_limit=none_software_renderer`, tak jak `dropped_limit` w misji. Wszystkie kryteria funkcjonalne zostają, a na sprzętowym GPU próg 100 ms obowiązuje bez zmian (zgoda właściciela w PR #24).
 
 ## Usunięcie Poligonu CPU
 
