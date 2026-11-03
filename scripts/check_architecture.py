@@ -399,8 +399,8 @@ def main():
         return 0
 
     if lowered:
-        errors += [f"{line}: dług spadł, zapisz to przez `python3 scripts/check_architecture.py --update`"
-                   + (f" --symbols {args.symbols}" if args.symbols else "") for line in lowered]
+        update = "python3 scripts/check_architecture.py --update" + (f" --symbols {args.symbols}" if args.symbols else "")
+        errors += [f"{line}: dług spadł, zapisz to przez `{update}`" for line in lowered]
     if errors:
         print("Strażnik architektury: " + str(len(errors)) + " błąd(y)", file=sys.stderr)
         for error in errors:
