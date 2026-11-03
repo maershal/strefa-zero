@@ -1,0 +1,12 @@
+# Known layer violations (scripts/check_architecture.py). This list may only shrink.
+# <kind> <from> <to> <edges>: include = distinct (file, header) pairs, link = target_link_libraries entries.
+# Lower a count (or delete the line) with `python3 scripts/check_architecture.py --update` when you fix one.
+include gpu game 3
+include gpu sim 1
+include launch gpu 3
+include launch sim 2
+include ui gpu 2
+include ui sim 2
+link game sim 1
+link gpu game 1
+link ui sim 1

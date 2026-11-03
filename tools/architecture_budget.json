@@ -1,0 +1,17 @@
+{
+  "world_cpp_lines": 2163,
+  "world_tu_lines": 4223,
+  "particle_world_public_decls": 88,
+  "particle_world_test_hooks": 31,
+  "application_cpp_lines": 1359,
+  "application_run_lines": 446,
+  "launch_options_bools": 55,
+  "inl_includes": 8,
+  "size_literals_cpp": 105,
+  "size_literals_glsl": 75,
+  "inverse_mass_literal_lines": 25,
+  "raw_ssbo_arrays": 27,
+  "unsigned_ref_banks": 5,
+  "glsl_lines_over_200": 59,
+  "strefa_zero_qa_symbols": 35
+}

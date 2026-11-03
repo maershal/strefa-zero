@@ -18,6 +18,7 @@ descriptions in English.
 ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   # one test
 ./scripts/format.sh                   # clang-format all C++ (CI runs --check)
 ./scripts/lint.sh [files...]          # clang-tidy, advisory
+python3 scripts/check_architecture.py [--report|--update]   # layer rules + size budgets (CI job `architecture`)
 python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenerate/compare tests/golden/<toolchain>.txt
 ```
 
@@ -86,6 +87,34 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 - New CLI flags go in `src/app/launch_options.cpp` and are StrefaQA-only unless added to `player_options`
   (keep StrefaZero under 15 options; `app.launch_options` checks it). New check modes go in
   `run_diagnostic_scenario` and need a CTest entry running `strefa_qa` with `SKIP_RETURN_CODE 77` and a `gpu` label.
+
+## Architecture ratchet
+
+`scripts/check_architecture.py` stops architectural debt from growing; it fails CI, it does not fix anything.
+
+- Layer rules on the `#include` graph of `src/` and on `target_link_libraries` (module = CMake target of the file;
+  headers follow their `.cpp`, else their directory; `strefa_launch` = `launch`, `strefa_diagnostics`/`StrefaQA` =
+  `qa`). Forbidden: `gpu` -> `game`/`ui`/`app`/`sim`; `sim` -> `gpu`/`ui`/`app`; anything -> `gpu` except `app` and
+  `qa`; anything -> `sim` except `app`, `qa`, `tools`; anything -> `qa`. Today's violations are counted per edge in
+  `tools/architecture_allowlist.txt`.
+- `tools/architecture_budget.json`: sizes measured on `main` (e12c39a values, except the three that #24 raised):
+  `world.cpp` and its translation unit with the `.inl` files, `ParticleWorld` public declarations and test hooks,
+  `application.cpp` and `Application::run()`, parser booleans, `.inl` includes, 320/192 literals (C++ incl. tests, GLSL),
+  lines with the 2.65/3.3125 inverse-mass literals, `std::array<GLuint, 8>`, `unsigned& current|bank`, GLSL lines
+  > 200 characters. Definitions are in the script; `--report` prints every value and edge.
+- `strefa_zero_qa_symbols`: `nm -C` lines matching `Benchmark|ScenarioRunner|write_profile_samples` in `StrefaZero`
+  built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable). It is measured only on
+  Linux/WSL2 with the GCC of the `ubuntu-24.04` runner (needs `nm` and an ELF binary; MSVC builds have no equivalent).
+  On Windows, take the value from the step's log (`strefa_zero_qa_symbols = N`) and edit the JSON by hand. A runner
+  image with a new GCC can move the count without a code change; record the new value in its own PR.
+- Every value may only go down. A larger value or a new edge fails; a smaller one fails too until it is written back
+  with `python3 scripts/check_architecture.py --update` (`--symbols <StrefaZero>` for the symbol count) in the same PR.
+  On a PR the job also runs `--base origin/main`, so raising the allowlist or a budget in the PR itself fails.
+  Raising one needs the owner's approval comment in the PR and the `architecture-debt-approved` label (set by the
+  owner, never by an agent), which drops only the `--base` comparison. The job reads the labels when it runs, so a
+  re-run of the `architecture` job after setting the label is enough.
+- `scripts/test-check-architecture.sh` (job `format`) injects violations into a copy of the tree and checks the reported
+  reason. Acceptance in #42: an artificial violation commit failed the `architecture` job and was then reverted.
 
 ## Measurement data
 
