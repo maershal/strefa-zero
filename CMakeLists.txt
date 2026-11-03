@@ -77,7 +77,8 @@ target_link_libraries(strefa_storage PUBLIC strefa_core)
 
 find_package(Threads REQUIRED)
 add_library(strefa_sim STATIC src/sim/world.cpp src/sim/thermal.cpp src/sim/liquids.cpp
-    src/sim/air.cpp src/sim/reactions.cpp src/sim/motion.cpp src/sim/scenes.cpp src/sim/recording.cpp src/sim/laboratory.cpp src/sim/pressure.cpp)
+    src/sim/air.cpp src/sim/reactions.cpp src/sim/motion.cpp src/sim/scenes.cpp src/sim/recording.cpp src/sim/laboratory.cpp src/sim/pressure.cpp
+    src/sim/fixtures.cpp)
 target_include_directories(strefa_sim PUBLIC src)
 target_link_libraries(strefa_sim PUBLIC strefa_options Threads::Threads)
 
@@ -182,8 +183,8 @@ if(BUILD_TESTING)
         set(strefa_test_timeout_scale 2)
     endif()
     function(strefa_add_cpu_test test_name test_target test_labels)
-        cmake_parse_arguments(PARSE_ARGV 3 test "" "PROCESSORS" "")
-        add_test(NAME ${test_name} COMMAND ${test_target})
+        cmake_parse_arguments(PARSE_ARGV 3 test "" "PROCESSORS" "ARGS")
+        add_test(NAME ${test_name} COMMAND ${test_target} ${test_ARGS})
         set(test_timeout 120)
         if("slow" IN_LIST test_labels)
             set(test_timeout 300)
@@ -228,7 +229,10 @@ if(BUILD_TESTING)
     strefa_add_cpu_test(sim.numerics_parallel strefa_numerics_tests determinism PROCESSORS 4)
     add_executable(strefa_golden_master_tests tests/golden_master_tests.cpp)
     target_link_libraries(strefa_golden_master_tests PRIVATE strefa_sim)
-    strefa_add_cpu_test(sim.golden_master strefa_golden_master_tests "golden;determinism;slow" PROCESSORS 4)
+    # References per toolchain in tests/golden/; on a mismatch the actual values land next to the CTest logs.
+    strefa_add_cpu_test(sim.golden_master strefa_golden_master_tests "golden;determinism;slow" PROCESSORS 4
+        ARGS --golden-dir ${CMAKE_SOURCE_DIR}/tests/golden
+             --actual ${CMAKE_BINARY_DIR}/Testing/Temporary/golden-actual.txt)
     add_executable(strefa_game_tests tests/game_tests.cpp)
     target_link_libraries(strefa_game_tests PRIVATE strefa_game)
     strefa_add_cpu_test(game.input_pose strefa_game_tests unit)

@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Złoty wzorzec v2
+
+`sim.golden_master` obejmuje teraz partię wybuchów (`chain`: płyta prochu z `StrefaPhysics`, przeniesiona do `sim/fixtures.hpp`) i gałąź „odprysk” `projectile_hit` (`chip`: pocisk w drewno), obie przy 1 i 4 wątkach, obok sześciu scen. Zamiast jednego hasha każdy przebieg zapisuje osobne skróty pól (materiał, masa, entalpia, gazy, prędkości, reszta) i dawny `checksum`; dawne wartości sześciu scen się nie zmieniły. Wzorce leżą w `tests/golden/<toolchain>.txt` (gcc, clang, msvc), bo test porównuje surowe bity IEEE, a biblioteki matematyczne kompilatorów się różnią. Porażka wymienia przypadek i zmienione pola oraz zapisuje `Testing/Temporary/golden-actual.txt`, a `scripts/golden.py` regeneruje wzorzec i wypisuje raport różnic. Test działa też na MSVC ([#15](https://github.com/maershal/strefa-zero/issues/15)). Warunek wejścia `detonate_pending` (świeża pojemność cieplna) jest opisany w `physics.hpp`, a test sprawdza go po każdym ticku także w Release (`World::detonation_ready`). Na 5eec70c (przed CPU-01/CPU-02) wszystkie skróty są identyczne, więc P06 jest bitowo neutralny. Symulacja bez zmian.
+
 ## Pędzel GPU niezależny od historii świata, podzielony nocny przebieg GPU
 
 Pędzel GPU tworzył zależnie od historii świata i kolejności wątków mniej cząstek niż komórek w obrysie (na llvmpipe 111 lub 103 zamiast 112). Przyczyna: tworzenie w wolnym slocie podnosiło granicę ponownego użycia indeksu sąsiadów o odległość od kotwicy poprzedniego właściciela slotu. Okno zapytań innych kandydatów tego samego przebiegu sięgało wtedy ostatniego wiersza siatki. Tam koniec zakresu brał bieżący `aliveCount`, który rośnie podczas tworzenia, więc kandydaci porównywali się z nieaktualnymi wpisami `order[]`. Teraz:

@@ -399,46 +399,101 @@ bool World::chunk_awake(int index) const noexcept {
         && (state_.movement_awake[index] || state_.next_awake[index] || state_.thermal_awake[index]
             || state_.reaction_awake[index]);
 }
-std::uint64_t World::checksum() const noexcept {
+namespace {
+// FNV-1a over raw IEEE bits; checksum() and digests() hash the same fields in different groupings.
+struct Fnv {
     std::uint64_t hash = 14695981039346656037ULL;
-    auto add = [&](std::uint64_t value) {
+    void add(std::uint64_t value) noexcept {
         hash ^= value;
         hash *= 1099511628211ULL;
-    };
-    auto values = [&](const auto& a) {
+    }
+    void values(const auto& a) noexcept {
         for (const auto value : a) {
             if constexpr (sizeof(value) == 8)
                 add(std::bit_cast<std::uint64_t>(value));
             else
                 add(std::bit_cast<std::uint32_t>(value));
         }
-    };
-    add(state_.report.tick);
-    add(state_.next_event);
-    for (auto m : state_.material) add(static_cast<unsigned>(m));
-    for (const auto* a : {&state_.loose, &state_.burning, &state_.shade})
-        for (auto v : *a) add(v);
-    values(state_.liquid.pressure);
-    values(state_.air.pressure_source);
-    for (const auto& e : state_.explosions) {
-        add(e.id);
-        add(e.center.x);
-        add(e.center.y);
-        add(e.radius);
-        add(std::bit_cast<std::uint64_t>(e.energy));
-        add(std::bit_cast<std::uint64_t>(e.pressure));
-        add(std::bit_cast<std::uint64_t>(e.impulse));
     }
-    for (const auto* a :
-         {&state_.mass, &state_.energy, &state_.fuel, &state_.acid_capacity, &state_.dissolved, &state_.air.energy})
-        values(*a);
-    for (const auto& a : state_.liquid.volume) values(a);
-    for (const auto& a : state_.liquid.energy) values(a);
-    for (const auto& a : state_.air.mass) values(a);
-    for (const auto* a : {&state_.vx, &state_.vy, &state_.offset_x, &state_.offset_y, &state_.air.u, &state_.air.v,
-                          &state_.air.pressure, &state_.liquid.u, &state_.liquid.v, &state_.shock})
-        values(*a);
-    return hash;
+    void flags(const State& s) noexcept {
+        for (auto m : s.material) add(static_cast<unsigned>(m));
+        for (const auto* a : {&s.loose, &s.burning, &s.shade})
+            for (auto v : *a) add(v);
+    }
+    void explosions(const State& s) noexcept {
+        for (const auto& e : s.explosions) {
+            add(e.id);
+            add(e.center.x);
+            add(e.center.y);
+            add(e.radius);
+            add(std::bit_cast<std::uint64_t>(e.energy));
+            add(std::bit_cast<std::uint64_t>(e.pressure));
+            add(std::bit_cast<std::uint64_t>(e.impulse));
+        }
+    }
+};
+} // namespace
+std::uint64_t World::checksum() const noexcept {
+    const auto& s = state_;
+    Fnv h;
+    h.add(s.report.tick);
+    h.add(s.next_event);
+    h.flags(s);
+    h.values(s.liquid.pressure);
+    h.values(s.air.pressure_source);
+    h.explosions(s);
+    for (const auto* a : {&s.mass, &s.energy, &s.fuel, &s.acid_capacity, &s.dissolved, &s.air.energy}) h.values(*a);
+    for (const auto& a : s.liquid.volume) h.values(a);
+    for (const auto& a : s.liquid.energy) h.values(a);
+    for (const auto& a : s.air.mass) h.values(a);
+    for (const auto* a : {&s.vx, &s.vy, &s.offset_x, &s.offset_y, &s.air.u, &s.air.v, &s.air.pressure, &s.liquid.u,
+                          &s.liquid.v, &s.shock})
+        h.values(*a);
+    return h.hash;
+}
+bool World::detonation_ready() const noexcept {
+    if (state_.thermal_dirty) return false;
+    for (int i = 0; i < grid_cells; ++i)
+        if (!capacity_fresh(state_, i)) return false;
+    return true;
+}
+StateDigests World::digests() const noexcept {
+    const auto& s = state_;
+    StateDigests out{};
+    auto group = [&](DigestField field, auto&& hash) {
+        Fnv h;
+        hash(h);
+        out[static_cast<std::size_t>(field)] = h.hash;
+    };
+    group(DigestField::material, [&](Fnv& h) {
+        h.add(s.report.tick);
+        h.add(s.next_event);
+        h.flags(s);
+    });
+    group(DigestField::mass, [&](Fnv& h) {
+        for (const auto* a : {&s.mass, &s.fuel, &s.acid_capacity, &s.dissolved}) h.values(*a);
+        for (const auto& a : s.liquid.volume) h.values(a);
+    });
+    group(DigestField::enthalpy, [&](Fnv& h) {
+        h.values(s.energy);
+        for (const auto& a : s.liquid.energy) h.values(a);
+        h.values(s.air.energy);
+    });
+    group(DigestField::gases, [&](Fnv& h) {
+        for (const auto& a : s.air.mass) h.values(a);
+        h.values(s.air.pressure);
+        h.values(s.air.pressure_source);
+    });
+    group(DigestField::velocity, [&](Fnv& h) {
+        for (const auto* a : {&s.vx, &s.vy, &s.offset_x, &s.offset_y, &s.liquid.u, &s.liquid.v, &s.air.u, &s.air.v})
+            h.values(*a);
+    });
+    group(DigestField::other, [&](Fnv& h) {
+        h.values(s.liquid.pressure);
+        h.values(s.shock);
+        h.explosions(s);
+    });
+    return out;
 }
 void World::render(std::span<Color, cell_count> pixels, bool transparent, RenderMode mode) const {
     const auto& s = state_;

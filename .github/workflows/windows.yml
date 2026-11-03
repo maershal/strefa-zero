@@ -52,7 +52,7 @@ jobs:
         shell: pwsh
     steps:
       - uses: actions/checkout@v7
-      # build.ps1 excludes sim.golden_master on MSVC until P11 (issue #15).
+      # sim.golden_master runs against tests/golden/msvc.txt (closes #15).
       - name: Build with MSVC (warnings as errors) and test CPU contracts
         run: ./scripts/build.ps1 ${{ matrix.arguments }}
       - uses: actions/upload-artifact@v7

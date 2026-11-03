@@ -18,6 +18,7 @@ descriptions in English.
 ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   # one test
 ./scripts/format.sh                   # clang-format all C++ (CI runs --check)
 ./scripts/lint.sh [files...]          # clang-tidy, advisory
+python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenerate/compare tests/golden/<toolchain>.txt
 ```
 
 - Warnings are errors (`STREFA_WARNINGS_AS_ERRORS=ON` in scripts and presets).
@@ -38,8 +39,11 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
   `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).
   `gpu.mission_ui_quick` and `app.mode_faults` are the short StrefaQA window checks used in CI.
 - Windows: `./scripts/build.ps1 -Configuration Release` (PowerShell 7, VS Build Tools, Ninja); `-TestSuite cpu`
-  skips window tests, `-CoreOnly` builds into `build/<config>-core`. On MSVC it excludes `sim.golden_master`
-  until P11 ([#15](https://github.com/maershal/strefa-zero/issues/15)).
+  skips window tests, `-CoreOnly` builds into `build/<config>-core`.
+- `sim.golden_master` compares per-field digests (material, mass, enthalpy, gases, velocity, other, plus the legacy
+  checksum) with `tests/golden/<toolchain>.txt` (`gcc`, `clang`, `msvc`; raw IEEE bits, libm differs per toolchain).
+  A failure names the case and fields and writes `Testing/Temporary/golden-actual.txt`; `scripts/golden.py` rewrites
+  the reference and prints a Markdown diff for the PR.
 
 ## Layout
 
@@ -114,7 +118,7 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
   Mesa `ci-smoke` tests, Linux package, `core-only` job, core-only `sanitizers`/`tsan`/`clang` (libc++)/`gcc-debug`
   matrix, JUnit summary; full TSan in the nightly `.github/workflows/nightly.yml`, every `graphics` test on Mesa in
   `.github/workflows/nightly-gpu.yml`, both also `workflow_dispatch`, not required) and `.github/workflows/windows.yml`
-  (MSVC `/WX` matrix: Release with CPU tests, core-only; `sim.golden_master` excluded, #15). A `changes` job skips
+  (MSVC `/WX` matrix: Release with CPU tests, core-only, both incl. `sim.golden_master`). A `changes` job skips
   the builds for docs-only changes (`scripts/ci-changes.sh`; `docs/LINUX_WSL.md` and `docs/QUICKSTART.md` ship in
   the package and still count as code); `linux-status` / `windows-status` always report and are the checks to require.
 - Do not commit `build/`, `dist/` (ignored) or raw measurement data (see above).
@@ -144,3 +148,5 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 - SSBO bindings 0-7, the 64-byte particle ABI, `WorldCommand`/`WorldEvent` (64 B, align 16);
   recordings v1-v3 must stay readable. The GL 3.3 fallback changes only with explicit approval.
 - Never relax test thresholds or tolerances to make a test pass; report the failure instead.
+- Removing a `sim.golden_master` case requires a replacement case covering the same path, or the owner's approval
+  in a PR comment. A reference change needs the `scripts/golden.py` report and its reason in the PR description.

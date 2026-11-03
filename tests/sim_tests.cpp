@@ -1,4 +1,5 @@
 #include "sim/fixed_clock.hpp"
+#include "sim/fixtures.hpp"
 #include "sim/world.hpp"
 
 #include <algorithm>
@@ -198,12 +199,11 @@ void reactions_and_air() {
     ledger(protected_charge);
 }
 void powder_chain() {
-    // Same slab as the StrefaPhysics "chain" case: each tick detonates a batch of queued explosions.
+    // Same slab as the StrefaPhysics "chain" case: each tick detonates a batch of queued explosions. Lighting the
+    // slab only heats one cell, so the mass read after load_powder_chain is the full slab.
     World w{7};
-    fill(w, {96, 180}, {223, 183}, Material::stone);
-    fill(w, {100, 147}, {219, 179}, Material::gunpowder);
+    load_powder_chain(w);
     const double powder = w.mass_of(Material::gunpowder);
-    w.projectile_hit({100, 179});
     // 40 ticks keep the ASan run short; the 16-blast cap per tick is reached from the second tick on.
     int batched = 0;
     for (int n = 0; n < 40; ++n) {
