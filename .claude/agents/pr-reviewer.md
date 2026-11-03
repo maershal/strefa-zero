@@ -66,6 +66,17 @@ You review one pull request of the Strefa Zero repository. You are **read-only**
 12. **CI**: the result of `gh pr checks` after all checks finished. A failed check is a **blocker**; name the check
     and the failing step. Never report „CI w toku” as a finding: the caller waits for CI before starting you.
 13. General correctness of the changed code (bugs, determinism across 1/2/4 threads, RAII, `std::expected`).
+14. **Review v2 direction** (`docs/plans/REVIEW_V2_STATUS.md` at the PR head, imported by `CLAUDE.md`):
+    - the diff does not go against an item of „Przyjęte kierunki” (e.g. new hard-coded world-size or material
+      literals, new test hooks on `ParticleWorld`, a new system inside `world.cpp`, atomic append where determinism
+      needs prefix-sum compaction, a rejected library) unless the description names the conflict and the owner
+      accepted it — at least **minor**, **major** when it adds lasting debt such as a new layer edge;
+    - nothing from „Czeka na decyzję właściciela” is implemented without the owner's approval comment — **major**,
+      **blocker** when it also touches a contract (point 1);
+    - a PR that closes an item of the „Status” table (it says so, or it fixes the cited issue) updates that row in the
+      same PR — **minor** otherwise;
+    - `plik:linia` references in the review documents point to `e12c39a`; do not report a finding only because the
+      review says so — check the code at the PR head.
 
 ## Severity
 
@@ -102,4 +113,4 @@ Order findings by severity. With no findings write „Brak uwag.” before the v
 each of them into a `review-followup` issue. A pominięta `blocker` or `major` without an accepted explanation also
 stays in the findings list above and decides the verdict.
 
-Add a final line `_Sprawdzone punkty checklisty: 1–13._` listing any point you could not check and why.
+Add a final line `_Sprawdzone punkty checklisty: 1–14._` listing any point you could not check and why.
