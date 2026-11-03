@@ -119,7 +119,8 @@ ctest --preset linux-release -LE graphics
 `build.sh` domyślnie uruchamia testy CPU oraz zestaw z etykietą `ci-smoke`, ten sam co w CI:
 okno OpenGL 4.3 i 3.3 (7/7 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
 compute, protokół misji (`gpu.gameplay`), ekran misji (`gpu.mission_ui_quick`), cache shaderów, oświetlenie
-pod obciążeniem, pierścień odczytów, instrumentację, renderer i reaktywność laboratorium CPU (1 i 4 wątki).
+pod obciążeniem, pierścień odczytów, instrumentację, renderer, reaktywność laboratorium CPU (1 i 4 wątki)
+i pędzel GPU po historii fikstur (`gpu.brush_history`).
 Pełny zestaw `graphics` uruchamia co noc workflow `nightly-gpu.yml` (także ręcznie) w czterech równoległych
 częściach. Porażka nocnego przebiegu otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Porażki progów
 czasu ściennego (etykieta `perf-wallclock`) podsumowanie wymienia osobno. `--test-suite cpu`

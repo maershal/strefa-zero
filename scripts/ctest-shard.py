@@ -44,7 +44,8 @@ def groups(tests: list[dict]) -> list[list[str]]:
     owner = {}
     for test in tests:
         props = properties(test)
-        for fixture in props.get("FIXTURES_SETUP", []) + props.get("FIXTURES_REQUIRED", []):
+        fixtures = props.get("FIXTURES_SETUP", []) + props.get("FIXTURES_CLEANUP", []) + props.get("FIXTURES_REQUIRED", [])
+        for fixture in fixtures:
             if fixture in owner:
                 parent[find(test["name"])] = find(owner[fixture])
             else:

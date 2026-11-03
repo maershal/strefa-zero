@@ -28,8 +28,9 @@ set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: addr
 # Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run) and, through the environment variable of the
 # same name, the in-app deadline of gpu.mission_ui; result checks stay the same.
 set(STREFA_GPU_TIMEOUT_SCALE 1 CACHE STRING "Integer multiplier for the TIMEOUT of graphics tests")
-if(NOT STREFA_GPU_TIMEOUT_SCALE MATCHES "^[1-9][0-9]*$")
-    message(FATAL_ERROR "STREFA_GPU_TIMEOUT_SCALE musi być dodatnią liczbą całkowitą.")
+# The same bound as app::gpu_timeout_scale(), so the CTest TIMEOUT and the in-app deadline always scale together.
+if(NOT STREFA_GPU_TIMEOUT_SCALE MATCHES "^[1-9][0-9]*$" OR STREFA_GPU_TIMEOUT_SCALE GREATER 100)
+    message(FATAL_ERROR "STREFA_GPU_TIMEOUT_SCALE musi być liczbą całkowitą od 1 do 100.")
 endif()
 
 # Sanitizers apply to every target, so the whole process (including fetched dependencies) is instrumented.
@@ -419,7 +420,7 @@ if(BUILD_TESTING)
         foreach(smoke_test app.opengl_smoke app.opengl33_smoke app.mode_faults gpu.platform_dispatch gpu.gameplay
             gpu.mission_ui_quick gpu.shader_cache gpu.lighting_pressure gpu.readback_ring gpu.instrumentation
             gpu.renderer app.laboratory_responsiveness app.laboratory_four_threads gpu.scene_benchmark_clean
-            gpu.scene_benchmark gpu.scene_benchmark_content)
+            gpu.scene_benchmark gpu.scene_benchmark_content gpu.brush_history)
             set_property(TEST ${smoke_test} APPEND PROPERTY LABELS ci-smoke)
         endforeach()
         set_property(TEST app.opengl33_smoke app.mode_faults APPEND PROPERTY LABELS ci-gl33)

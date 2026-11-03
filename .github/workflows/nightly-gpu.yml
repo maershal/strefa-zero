@@ -132,7 +132,7 @@ jobs:
             !build/linux-release/*profile/**/*.bmp
 
   report:
-    needs: graphics
+    needs: [build, graphics]
     if: always()
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -142,20 +142,25 @@ jobs:
       issues: write
     steps:
       - uses: actions/checkout@v7
+      # A failed build or cancelled shards leave no JUnit: the summary then lists the reports as missing.
       - uses: actions/download-artifact@v8
+        continue-on-error: true
         with:
           pattern: nightly-gpu-junit-*
           merge-multiple: true
           path: build/junit
       # Lists wall-clock threshold failures (CTest label perf-wallclock) apart from functional ones.
       - name: Test summary
+        if: always()
         run: |
+          mkdir -p build/junit
           python3 scripts/junit-summary.py 'Linux (Mesa, wszystkie testy graphics)' \
             $(seq -f 'build/junit/graphics-%g.xml' 1 "$SHARDS") | tee build/summary.md >> "$GITHUB_STEP_SUMMARY"
       # Like linux.yml: a skip that does not depend on the GL version (e.g. gpu.shader_cache) must not leave the
       # run green, nor may a shard that never wrote its report.
       - name: Require no skipped graphics tests
         id: skipped
+        if: always()
         run: python3 scripts/junit-summary.py --fail-on-skipped 'Mesa' $(seq -f 'build/junit/graphics-%g.xml' 1 "$SHARDS")
       - name: Keep test durations for the next split
         if: always()
@@ -170,7 +175,8 @@ jobs:
       - name: Open or update the nightly issue
         if: >-
           always()
-          && (needs.graphics.result != 'success' || steps.skipped.outcome == 'failure')
+          && (needs.build.result != 'success' || needs.graphics.result != 'success'
+              || steps.skipped.outcome == 'failure')
           && (github.event_name == 'schedule' || inputs.report_issue)
         env:
           GH_TOKEN: ${{ github.token }}
@@ -180,7 +186,8 @@ jobs:
           {
             echo "Nocny przebieg GPU [#$GITHUB_RUN_NUMBER]($run_url) na \`$GITHUB_REF_NAME\` ($GITHUB_SHA) nie przeszedł."
             echo
-            cat build/summary.md
+            cat build/summary.md 2>/dev/null \
+              || echo "Brak podsumowania JUnit (build: ${{ needs.build.result }}, graphics: ${{ needs.graphics.result }})."
             echo
             echo "**Artefakty** (raporty JUnit, profile, progress.txt):"
             gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
