@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Usunięcie Poligonu CPU
+
+Poligon CPU (`--arena`, pozycja menu 03) był drugą, równoległą grą na modelu CPU: gracz, pociski, granaty i tarcze w `game::GameSession`, z osobnym adapterem efektów GPU. Jego rolę przejęła Misja GPU, więc usunięto ekran, opcję `--arena`, `game::GameSession`, adapter `CpuVfxAdapter` i jego kontrolę w `--gpu-vfx-check` (`cpu-vfx-tests.txt`, `cpu-vfx-samples.csv`) oraz scenę `arena` w `StrefaPhysics` (pakiet CI sprawdza teraz `--scene chain`). Menu ma pozycje 01–07; StrefaZero ma 10 opcji gracza. Model CPU, Laboratorium CPU, `--scene lab:<id>` i GPU bez zmian. `sim.golden_master` traci przypadek `arena_session`; sześć hashy scen pozostaje bez zmian. `game.training` zastąpił krótszy `game.input_pose` (bufor wejścia, IK), `game.vfx_contract` porównuje lekkie i pełne próbki cieczy na scenie laboratorium zamiast świata poligonu. Smoke test menu odwiedza 7/7 ekranów, `app.mode_faults` sprawdza 3 tryby (bez GPU: 1). Kolumna `screen` w `frame-profile.csv` numeruje ekrany GPU o jeden niżej (Laboratorium GPU 5, Misja GPU 6). Ścieżka zdarzeń CPU w `VfxPool` (`cpu_canvas`, `cpuSource` w `vfx_events.comp`) pozostaje do osobnego usunięcia.
+
 ## Start w wybranej scenie
 
 `StrefaZero --scene gpu:<id>` startuje w scenie Laboratorium GPU, a `--scene lab:<id>` w scenie Laboratorium CPU (identyfikatory jak w `--scene-benchmark`; zły identyfikator wypisuje listę). Jedna opcja zajmuje jedno miejsce z limitu 15 opcji gracza (jest ich 11).

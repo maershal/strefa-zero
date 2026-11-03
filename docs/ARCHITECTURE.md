@@ -14,7 +14,7 @@ Lista aktywnych ID i komendy indirect powstają po zmianie przynależności czą
 
 ## Backend GPU
 
-`gpu::ParticleWorld` (`gpu/world.hpp`) zarządza rezydentnymi buforami cząstek, edycjami, kontaktami PBD, cieczami PBF i teksturą wyniku. Mnożniki/gęstości PBF są w osobnym SSBO. Cząstka ma 64-bajtowe ABI z kompensowaną pozycją. Pole kolizji ziaren używa kubicznie interpolowanej odległości ze znakiem, a ciecz zachowuje dokładne granice AABB. Szczegóły korekty ciśnienia Spiky i parowej kohezji: [przegląd 0.6.1](reports/PHYSICS_REVIEW_061.md). SDL/OpenGL pozostają na wątku okna. CPU przekazuje komendy, a pomiary oraz małe podsumowanie liczników i sesji odbiera asynchronicznie; pełne odczyty stanu należą do walidacji. Oba widoki GPU używają jednego zegara 120 Hz w `SimulationWorld` oraz interpolacji. Gra i narzędzia działają z polityką `interactive_clock`: delta klatki jest przycinana do 0,1 s, klatka po przestoju nie zostawia długu, dług z przeciążenia jest ograniczony do 0,25 s, a w klatce zleca się najwyżej nominalną liczbę kroków + 1 (maks. 4). Przy VSync delta jest przyciągana do okresu odświeżania (60 Hz: stałe 2 kroki). Pominięty czas jest liczony i widoczny w HUD. Odtwarzanie nagrań i tryby walidacji zachowują pełny dług (`exact_clock`, decyzja I06). Po wyczerpaniu kolejki zdarzeń niezlecone kroki i pojedyncze żądanie kroku pozostają oczekujące. Pauza i utrata fokusu są jawnym zawieszeniem zegara. CPU zachowuje alias `FixedClock` (60 Hz / 8 kroków); Poligon CPU i Laboratorium CPU używają go z tą samą polityką interaktywną.
+`gpu::ParticleWorld` (`gpu/world.hpp`) zarządza rezydentnymi buforami cząstek, edycjami, kontaktami PBD, cieczami PBF i teksturą wyniku. Mnożniki/gęstości PBF są w osobnym SSBO. Cząstka ma 64-bajtowe ABI z kompensowaną pozycją. Pole kolizji ziaren używa kubicznie interpolowanej odległości ze znakiem, a ciecz zachowuje dokładne granice AABB. Szczegóły korekty ciśnienia Spiky i parowej kohezji: [przegląd 0.6.1](reports/PHYSICS_REVIEW_061.md). SDL/OpenGL pozostają na wątku okna. CPU przekazuje komendy, a pomiary oraz małe podsumowanie liczników i sesji odbiera asynchronicznie; pełne odczyty stanu należą do walidacji. Oba widoki GPU używają jednego zegara 120 Hz w `SimulationWorld` oraz interpolacji. Gra i narzędzia działają z polityką `interactive_clock`: delta klatki jest przycinana do 0,1 s, klatka po przestoju nie zostawia długu, dług z przeciążenia jest ograniczony do 0,25 s, a w klatce zleca się najwyżej nominalną liczbę kroków + 1 (maks. 4). Przy VSync delta jest przyciągana do okresu odświeżania (60 Hz: stałe 2 kroki). Pominięty czas jest liczony i widoczny w HUD. Odtwarzanie nagrań i tryby walidacji zachowują pełny dług (`exact_clock`, decyzja I06). Po wyczerpaniu kolejki zdarzeń niezlecone kroki i pojedyncze żądanie kroku pozostają oczekujące. Pauza i utrata fokusu są jawnym zawieszeniem zegara. CPU zachowuje alias `FixedClock` (60 Hz / 8 kroków); Laboratorium CPU używa go z tą samą polityką interaktywną.
 
 Ziarna i ciecze GPU mają wspólny stan; pełny model termochemiczny CPU zachowuje odrębny świat. CPU/MAC i GPU/PBF są różnymi solverami. Pełne tablice cząstek pozostają na GPU; między CPU i GPU przechodzą małe pakiety komend i zdarzeń. Kontrakty, modele, wyniki i plan kolejnych etapów: [GPU_LIQUIDS.md](reports/GPU_LIQUIDS.md); historia etapu 0.5: [GPU_MIGRATION.md](reports/GPU_MIGRATION.md).
 
@@ -26,7 +26,7 @@ Podkrok GPU: predykcja → odbudowa list sąsiadów → gęstość/λ → korekt
 
 `strefa_sim` jest niezależnym od SDL modelem świata. `World` udostępnia edycję, próbkę pól, dostarczenie energii, kolejkę eksplozji z identyfikatorami, raport i renderowanie do tablicy RGBA. `physics.hpp` zawiera wewnętrzny stan SoA i deklaracje systemów; `thermal.cpp`, `liquids.cpp`, `air.cpp`, `reactions.cpp` i `motion.cpp` realizują osobne odpowiedzialności. `scenes.cpp` opisuje sceny, `recording.cpp` eksportuje wyniki. Nie ma odwołań do UI ani GPU w kroku fizyki.
 
-`strefa_game` łączy świat z graczem, pociskami, granatami i tarczami. `animation.hpp` wyznacza czystą funkcją pozę i analityczne dwuczłonowe IK. `strefa_ui` odczytuje stałe widoki modelu i emituje intencje. `app/application.cpp` tworzy referencje CPU leniwie, a wspólny świat GPU posiada poprzez `SimulationWorld`. Laboratorium CPU i poligon CPU mają odrębny stan; gra i narzędzia GPU współdzielą aktywną scenę.
+`strefa_game` zawiera bufor wejścia (`InputBuffer`) i stan postaci dla HUD; `strefa_gameplay` — reguły misji. Poligon CPU (osobna gra na modelu CPU) usunięto; model CPU pozostaje referencją dla Laboratorium CPU, termiki GPU (tabela materiałów) i testów. `animation.hpp` wyznacza czystą funkcją pozę i analityczne dwuczłonowe IK. `strefa_ui` odczytuje stałe widoki modelu i emituje intencje. `app/application.cpp` tworzy referencje CPU leniwie, a wspólny świat GPU posiada poprzez `SimulationWorld`. Laboratorium CPU ma odrębny stan; gra i narzędzia GPU współdzielą aktywną scenę.
 
 ## Kolejność kroku
 
@@ -47,11 +47,11 @@ SDL, okno/kontekst, tekstury i sesja ImGui używają RAII. Fabryki i oczekiwane 
 
 Ustawienia nadal korzystają ze schematu typowanego `meta::Field` i stabilnych kluczy zapisu. C++26 reflection jest opcjonalnym eksperymentem, poza wymaganiami gry. Nie dodano kontenera usług, ogólnego event busa ani ECS. Nowe zależności runtime nie są potrzebne.
 
-`FixedClock` ma limit ośmiu kroków nadrabiania. Raportuje pominięty czas, pauza zeruje akumulator, a utrata fokusu czy minimalizacja zatrzymuje poligon i usuwa wejście. Jednorazowe akcje przechodzą przez `InputBuffer`, więc nie giną przy renderowaniu bez kroku fizyki.
+`FixedClock` ma limit ośmiu kroków nadrabiania. Raportuje pominięty czas, pauza zeruje akumulator, a utrata fokusu czy minimalizacja zatrzymuje zegar i usuwa wejście. Jednorazowe akcje przechodzą przez `InputBuffer`, więc nie giną przy renderowaniu bez kroku fizyki.
 
 ## Testy
 
-`core.settings` — parsowanie, walidacja i zapis. `sim.materials` — bilanse, entalpia, topienie/krzepnięcie, hydrostatyka, naczynia, cienkie ściany, mieszaniny, tlen, kwas, fala, osłona, silne źródła i porównanie skanowania proszków. `game.training` — wejście, kolizje, kurs, broń, tarcze, granat, 30/60/144 FPS oraz więzy animacji. `app.opengl_smoke` — sześć ekranów, trzy tła, atlas części/broni, pauza i kroki, strzały i eksplozja na prawdziwym OpenGL. Sceny CLI i natywna kontrola okna uzupełniają testy.
+`core.settings` — parsowanie, walidacja i zapis. `sim.materials` — bilanse, entalpia, topienie/krzepnięcie, hydrostatyka, naczynia, cienkie ściany, mieszaniny, tlen, kwas, fala, osłona, silne źródła i porównanie skanowania proszków. `game.input_pose` — bufor wejścia i więzy animacji. `app.opengl_smoke` — wszystkie ekrany, trzy tła, atlas części/broni, pauza i kroki na prawdziwym OpenGL. Sceny CLI i natywna kontrola okna uzupełniają testy.
 
 ## Wątek laboratorium
 
@@ -59,7 +59,7 @@ Ustawienia nadal korzystają ze schematu typowanego `meta::Field` i stabilnych k
 
 `std::jthread` i stop_token zapewniają wybudzenie, zatrzymanie i dołączenie wątku przed zniszczeniem zasobów. Nagranie jest finalizowane przez właściciela świata. Po wyjściu z laboratorium i minimalizacji obliczenia są zatrzymywane; jeden rozpoczęty krok może jeszcze dobiec końca. Kolejka ma limit 512 poleceń i jawny komunikat przeciążenia. Nie łączymy krzywych pędzla w prosty odcinek, aby nie gubić kształtu rysowania.
 
-Laboratorium wykonuje najwyżej jeden krok w iteracji roboczej, bez kumulowania długu czasu. Poligon nadal używa swojego FixedClock. Synchroniczna ścieżka testu sześciu ekranów jest zachowana; oddzielny test app.laboratory_responsiveness uruchamia produkcyjną ścieżkę z wątkiem i mierzy rzeczywiste odstępy klatek okna.
+Laboratorium wykonuje najwyżej jeden krok w iteracji roboczej, bez kumulowania długu czasu. Synchroniczna ścieżka testu sześciu ekranów jest zachowana; oddzielny test app.laboratory_responsiveness uruchamia produkcyjną ścieżkę z wątkiem i mierzy rzeczywiste odstępy klatek okna.
 
 `pressure.cpp` przechowuje wektory PCG w zwartej numeracji mokrych komórek, a sąsiedztwo operatora jest buforowane przed iteracjami. Poprzedni solver pozostaje do niezależnego porównania. Nowe testy obejmują zgodność obu solverów, niezmienność opublikowanych obrazów, próbkę inspektora, pojedyncze kroki, reset i zamknięcie wątku.
 
@@ -75,7 +75,7 @@ Niezmienne `ExecutionOptions::fluid` jest częścią konfiguracji świata i nagr
 
 ## I09: wspólna prezentacja VFX
 
-`RenderDevice` posiada pożyczony kontekst urządzenia, bibliotekę programów i jedną pulę VFX. `ParticleWorld` przyjmuje współdzielone urządzenie; stare wywołania create zachowują zgodność. Adapter poligonu CPU używa tego samego urządzenia bez tworzenia świata GPU. VFX mają własne bufory, kursor zdarzeń, zegar ticków i pole 320 × 192. Nie potwierdzają EventRing ani nie zapisują do świata. `World::sample_fluid` jest lekkim, tylko odczytowym widokiem danych CPU dla prezentacji. GPU wykorzystuje punktowy wariant kernela splatu I08; pierwotny renderer wody zachowuje swój przebieg. Rozmiar WorldEvent i kontrakt nagrań pozostają bez zmian. [Kontrakt i odbiór I09](reports/I09_GPU_VFX.md).
+`RenderDevice` posiada pożyczony kontekst urządzenia, bibliotekę programów i jedną pulę VFX. `ParticleWorld` przyjmuje współdzielone urządzenie; stare wywołania create zachowują zgodność. VFX mają własne bufory, kursor zdarzeń, zegar ticków i pole 320 × 192. Nie potwierdzają EventRing ani nie zapisują do świata. `World::sample_fluid` jest lekkim, tylko odczytowym widokiem danych CPU dla prezentacji. GPU wykorzystuje punktowy wariant kernela splatu I08; pierwotny renderer wody zachowuje swój przebieg. Rozmiar WorldEvent i kontrakt nagrań pozostają bez zmian. [Kontrakt i odbiór I09](reports/I09_GPU_VFX.md).
 
 ## I10: autorytatywna termika i gazy
 

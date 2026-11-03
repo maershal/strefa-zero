@@ -91,7 +91,7 @@ bool gpu_menu_button(const char* label, float height, bool available, bool prima
     ImGui::EndDisabled();
     if (!available && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         ImGui::SetTooltip("Wymaga OpenGL 4.3 (compute shadery). Ten kontekst ma niższą wersję;\n"
-                          "Poligon CPU, Laboratorium CPU i ustawienia działają normalnie.");
+                          "Laboratorium CPU i ustawienia działają normalnie.");
     return pressed;
 }
 
@@ -133,12 +133,11 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     // Mode names match README.md, docs/QUICKSTART.md and docs/LINUX_WSL.md.
     if (gpu_menu_button("01    Misja GPU", button_height, frame.gpu_available, true)) action = Action::open_mission;
     if (gpu_menu_button("02    Laboratorium GPU", button_height, frame.gpu_available)) action = Action::open_gpu;
-    if (menu_button("03    Poligon CPU", button_height)) action = Action::open_arena;
-    if (menu_button("04    Laboratorium CPU", button_height)) action = Action::open_laboratory;
-    if (menu_button("05    Podgląd areny", button_height)) action = Action::open_preview;
-    if (menu_button("06    Ustawienia", button_height)) action = Action::open_settings;
-    if (menu_button("07    O projekcie", button_height)) action = Action::open_about;
-    if (menu_button("08    Zakończ", button_height)) action = Action::quit;
+    if (menu_button("03    Laboratorium CPU", button_height)) action = Action::open_laboratory;
+    if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
+    if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
+    if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
+    if (menu_button("07    Zakończ", button_height)) action = Action::quit;
     ImGui::Dummy({0.0F, 14.0F * s});
     notice(frame.message);
     ImGui::TextDisabled("v%s  /  F1 — diagnostyka", build::version.data());
@@ -267,16 +266,15 @@ Action about(const FrameInfo& frame, const Fonts& fonts) {
     ImGui::Spacing();
     ImGui::PushTextWrapPos(0.0F);
     ImGui::TextUnformatted("Prototyp silnika 2D z symulacją materiałów: ciecze i ziarna liczone na GPU oraz "
-                           "referencyjny model cieplno-chemiczny na CPU. Misja i poligon pokazują silnik w ruchu.");
+                           "referencyjny model cieplno-chemiczny na CPU. Misja pokazuje silnik w ruchu.");
     ImGui::Spacing();
     ImGui::TextColored(muted, "Tryby");
     ImGui::BulletText("Misja GPU: tarcze, wyjście, niszczone przegrody, woda i piasek");
     ImGui::BulletText("Laboratorium GPU: ciecze PBF, ziarna PBD, nagrania, termika eksperymentalna");
-    ImGui::BulletText("Poligon CPU: ruch, plecak odrzutowy, karabin i granaty na fizyce CPU");
     ImGui::BulletText("Laboratorium CPU: 19 materiałów, temperatura, ciśnienie i reakcje");
     ImGui::Spacing();
     ImGui::TextColored(muted, "Ograniczenia");
-    ImGui::BulletText("Tryby GPU wymagają OpenGL 4.3; na 3.3 działają tryby CPU");
+    ImGui::BulletText("Tryby GPU wymagają OpenGL 4.3; na 3.3 działa Laboratorium CPU");
     ImGui::BulletText("Oświetlenie i termika są eksperymentalne (poza budżetem wydajności)");
     ImGui::Spacing();
     ImGui::TextDisabled("C++23  /  SDL3  /  Dear ImGui  /  OpenGL");
@@ -363,7 +361,6 @@ Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>
         if (laboratory) result = draw_laboratory(*laboratory, frame, fonts);
         break;
     case Screen::gpu_mission:
-    case Screen::arena:
         if (arena) result = draw_arena(*arena, frame, fonts);
         break;
     case Screen::gpu_laboratory:

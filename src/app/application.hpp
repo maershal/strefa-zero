@@ -16,7 +16,7 @@
 namespace strefa::app {
 
 // The parser allows at most one start mode and at most one test, so each maps to a single value.
-enum class StartMode { menu, cpu_laboratory, cpu_arena, gpu_laboratory, mission };
+enum class StartMode { menu, cpu_laboratory, gpu_laboratory, mission };
 enum class SmokeScenario {
     none,
     menu,
@@ -35,7 +35,6 @@ struct LaunchOptions {
     bool smoke_test{false};
     bool laboratory_smoke_test{false};
     bool start_in_laboratory{false};
-    bool start_in_arena{false};
     bool start_in_gpu{}, gpu_test{}, gpu_liquid_test{}, gpu_flow_test{}, gpu_smoke_test{};
     bool start_in_mission{}, mission_test{}, mission_smoke{}, gameplay_test{};
     bool legacy_graphics{}, shader_cache{}, session_smoke{}, cache_check{};

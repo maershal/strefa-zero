@@ -25,7 +25,6 @@ constexpr std::array player_options{
         PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
         PlayerOption{"--scene", "<gpu|lab>:<id>",
                      "start w scenie laboratorium GPU lub CPU (zły identyfikator wypisuje listę)"},
-        PlayerOption{"--arena", "", "start na poligonie CPU"},
         PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
         PlayerOption{"--gl-debug", "", "zapis komunikatów sterownika OpenGL do gl-debug.txt w katalogu profilu"},
         PlayerOption{"--smoke-test", "", "test dymny menu (wymaga --profile)"},
@@ -58,7 +57,6 @@ int LaunchOptions::test_count() const {
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
-    if (start_in_arena) return StartMode::cpu_arena;
     if (start_in_gpu) return StartMode::gpu_laboratory;
     if (start_in_mission) return StartMode::mission;
     return StartMode::menu;
@@ -268,8 +266,6 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.laboratory_smoke_test = true;
         else if (argument == "--laboratory")
             result.start_in_laboratory = true;
-        else if (argument == "--arena")
-            result.start_in_arena = true;
         else if (argument == "--gpu-laboratory")
             result.start_in_gpu = true;
         else if (argument == "--mission")
@@ -510,9 +506,7 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
     if (!result.gpu_execution.fluid.valid()) return std::unexpected{"Konfiguracja cieczy poza zakresem."};
     if (result.is_test() && result.profile.empty())
         return std::unexpected{"Test wymaga osobnego katalogu: --smoke-test --profile <katalog>."};
-    if (static_cast<int>(result.start_in_arena) + result.start_in_laboratory + result.start_in_gpu
-                + result.start_in_mission
-        > 1)
+    if (static_cast<int>(result.start_in_laboratory) + result.start_in_gpu + result.start_in_mission > 1)
         return std::unexpected{"Wybierz jeden tryb startowy."};
     const bool window_measurement = result.mission_smoke || result.gpu_smoke_test;
     if ((result.test_seconds || result.test_unpaced) && !window_measurement)

@@ -1,11 +1,11 @@
 # Strefa Zero 0.7.0
 
 Offline'owy prototyp gry 2D w C++23 z symulacją materiałów: ciecze PBF i ziarna PBD na GPU
-(OpenGL 4.3 compute), referencyjny model termochemiczny na CPU, misja, poligon i laboratoria.
+(OpenGL 4.3 compute), referencyjny model termochemiczny na CPU, misja i laboratoria.
 SDL 3.4.18, Dear ImGui 1.93.0. Bez CUDA i Vulkana.
 
 Aplikacja tworzy kontekst OpenGL 4.3 i wraca do 3.3, gdy sterownik go nie udostępnia
-(tryby GPU są wtedy niedostępne; laboratorium CPU i poligon działają).
+(tryby GPU są wtedy niedostępne; laboratorium CPU działa).
 
 ## Szybki start
 
@@ -33,9 +33,8 @@ Wyniki kompilacji trafiają do `build/` (ignorowane przez Git).
 | Misja GPU | `--mission` | Zniszcz trzy tarcze i dotrzyj do wyjścia; zapora i silos uwalniają wodę i piasek. [Opis](docs/reports/GPU_MISSION_070.md) |
 | Laboratorium GPU | `--gpu-laboratory` | Woda i olej (PBF), piasek, popiół i drobiny metalu (PBD), limit 32 768 cząstek. |
 | Laboratorium CPU | `--laboratory` | 19 materiałów, 14 scen regresyjnych, temperatura, ciśnienie, tlen, reakcje. |
-| Poligon CPU | `--arena` | Trening na fizyce CPU; trzy tarcze, gracz niewrażliwy na obrażenia. |
 
-**Sterowanie (Misja GPU, Poligon CPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
+**Sterowanie (Misja GPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
 LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 **Laboratoria:** LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja — pauza, F — jeden krok.
 
@@ -45,7 +44,7 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 
 | Opcja | Znaczenie |
 | --- | --- |
-| `--mission`, `--gpu-laboratory`, `--laboratory`, `--arena` | Start bezpośrednio w trybie (zob. tabela wyżej). |
+| `--mission`, `--gpu-laboratory`, `--laboratory` | Start bezpośrednio w trybie (zob. tabela wyżej). |
 | `--scene gpu:<id>`, `--scene lab:<id>` | Start w scenie Laboratorium GPU (`avalanche`, `rain`, `mixed`, `empty`, `water-tank`, `dam-break`, `connected-vessels`, `oil-water`, `sand-water`, `hourglass`, `inverted-oil`, `oil-drop`) albo Laboratorium CPU (`demo`, `falling-water`, `dam-break`, `connected-vessels`, `oil-water`, `sand-pile`, `sand-water`, `smoke-ceiling`, `smoke-vent`, `wood-fire`, `extinguish`, `melting-metal`, `quench-metal`, `ice-fire`, `shielded-explosion`). Te same identyfikatory przyjmuje `StrefaQA --scene-benchmark`. |
 | `--profile <katalog>` | Katalog ustawień, nagrań i raportów (domyślnie profil użytkownika). |
 | `--opengl33` | Wymusza kontekst 3.3 (kontrola zgodności; tryby GPU niedostępne). |
@@ -53,8 +52,8 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 | `--smoke-test`, `--mission-smoke-test` | Test dymny menu / misji GPU tego pliku wykonywalnego (wymaga `--profile`). |
 | `--help` | Lista opcji. |
 
-Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Poligon CPU, 04 Laboratorium CPU, 05 Podgląd areny, 06 Ustawienia,
-07 O projekcie, 08 Zakończ. Na OpenGL 3.3 pozycje 01–02 są wyszarzone.
+Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Laboratorium CPU, 04 Podgląd areny, 05 Ustawienia, 06 O projekcie,
+07 Zakończ. Na OpenGL 3.3 pozycje 01–02 są wyszarzone.
 
 Obraz wody ([I08](docs/reports/I08_SCENE_RENDERER.md)), efekty ([I09](docs/reports/I09_GPU_VFX.md)) i oświetlenie
 ([I11](docs/reports/I11_LIGHTING.md)) wybiera się w ustawieniach albo w Laboratorium GPU i są zapisywane w
@@ -132,7 +131,7 @@ Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście
 
 ```bash
 ./build/linux-release/StrefaPhysics --scene all --ticks 180 --output recordings --record
-./build/linux-release/StrefaPhysics --scene arena --ticks 600 --output benchmark
+./build/linux-release/StrefaPhysics --scene chain --ticks 600 --output benchmark
 ```
 
 ## Struktura
@@ -140,10 +139,10 @@ Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście
 ```
 src/core      ustawienia i schemat metadanych
 src/sim       model CPU: świat, termika, ciecze MAC/PCG, powietrze, reakcje, sceny
-src/game      sesja gry, protokół świata, animacja i IK
+src/game      reguły misji, protokół świata, bufor wejścia, animacja i IK
 src/gpu       świat GPU: PBF/PBD, renderer, VFX, termika, oświetlenie; walidacje (gpu/validation.hpp)
 src/platform  okno SDL, kontekst GL, tekstury, zapis ustawień
-src/ui        menu, laboratoria, poligon (ImGui)
+src/ui        menu, laboratoria, HUD misji (ImGui)
 src/app       aplikacja, opcje uruchomienia, scenariusze diagnostyczne (te ostatnie tylko w StrefaQA)
 src/tools     StrefaPhysics (sceny CPU bez okna) i StrefaQA (walidacje, benchmarki, profile)
 assets/       shadery GLSL, sprite'y, tła, czcionki

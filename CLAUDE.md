@@ -1,7 +1,7 @@
 # Strefa Zero
 
 C++23 2D game prototype with material simulation: GPU liquids (PBF) and grains (PBD) on
-OpenGL 4.3 compute, a CPU reference thermochemical model, a mission, a training arena and
+OpenGL 4.3 compute, a CPU reference thermochemical model, a mission and
 two laboratories. SDL 3.4.18 + Dear ImGui 1.93.0 (fetched by CMake with pinned SHA-256).
 Targets Windows (MSVC) and Linux/WSL2 (GCC >= 13). User-facing docs are in **Polish**;
 keep new docs, UI strings and error messages in Polish; code identifiers, comments, commit messages and PR titles and
@@ -45,10 +45,10 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 | --- | --- |
 | `src/core` | settings schema (`meta::Field`), validation |
 | `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp` |
-| `src/game` | `strefa_game` (CPU arena session), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
+| `src/game` | `strefa_game` (input buffer, actor state for the HUD), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
 | `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`, incl. the `*_validation.inl` member checks), renderer, VFX, thermal, lighting, readback/upload rings. The free `*_validation.cpp`/`*_profile.cpp`/`profiling.cpp` check modes (declared in `gpu/validation.hpp`) build into `strefa_diagnostics` |
 | `src/platform` | SDL window, GL context, textures, settings storage |
-| `src/ui` | ImGui menu, laboratories, arena |
+| `src/ui` | ImGui menu, laboratories, mission HUD (`arena.cpp`) |
 | `src/app` | `strefa_app`: `Application`, `run_main`, launch options (`launch_options.cpp` = all CLI flags; `player_options` = the StrefaZero subset). `diagnostic_scenarios.cpp` and `*_validation.cpp` belong to `strefa_diagnostics` |
 | `src/tools` | `qa_main.cpp` = `StrefaQA` (game + every QA/tuning flag, links `strefa_diagnostics`); `physics_runner.cpp` = `StrefaPhysics`. `src/main.cpp` = `StrefaZero` (player flags only) |
 | `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |

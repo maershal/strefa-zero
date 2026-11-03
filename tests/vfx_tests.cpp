@@ -1,7 +1,8 @@
 #include "app/application.hpp"
-#include "game/session.hpp"
 #include "gpu/vfx.hpp"
+#include "sim/world.hpp"
 
+#include <array>
 #include <iostream>
 #include <stdexcept>
 int main() {
@@ -28,34 +29,21 @@ int main() {
                       && options->gpu_execution.fluid == gpu::FluidOptions{},
               "VFX independent of physical/render configuration");
         sim::PhysicsConfig config;
-        config.thermal = config.fluids = config.air = config.reactions = config.motion = false;
-        game::GameSession game{{}, {}, config};
-        game::TickInput input;
-        input.fire = true;
-        input.aim = {200, 170};
-        game.tick(input);
-        check(!game.visual_events().empty(), "CPU accepted shot publishes presentation event");
-        const auto event = game.visual_events().front();
-        check(event.kind == game::EffectKind::muzzle && event.id != 0, "CPU VFX identity and kind");
-        const auto checksum = game.checksum();
-        for (const auto& e : game.visual_events())
-            check(e.position.x >= 0 && e.position.y >= 0, "CPU VFX position in world units");
-        check(game.checksum() == checksum, "Presentation inspection is read only");
-        game.tick({});
-        check(game.visual_events().empty(), "CPU presentation packet is per tick");
+        config.thermal = config.air = config.reactions = config.motion = false;
+        sim::World world{0x57EF'A023U, config};
+        world.load_scene(sim::Scene::dam_break);
+        for (int i = 0; i < 10; ++i) world.step();
         for (const sim::Point p : std::array{sim::Point{0, 0}, sim::Point{100, 150}, sim::Point{100, 130},
                                              sim::Point{319, 191}, sim::Point{-1, 0}}) {
-            const auto full = game.world().sample(p);
-            const auto light = game.world().sample_fluid(p);
+            const auto full = world.sample(p);
+            const auto light = world.sample_fluid(p);
             check(full.material == light.material && full.liquid_velocity.x == light.velocity.x
                           && full.liquid_velocity.y == light.velocity.y
                           && static_cast<float>(full.liquid_fractions[0]) == light.water
                           && static_cast<float>(full.liquid_fractions[1]) == light.oil,
                   "Light fluid sample matches authoritative full sample");
         }
-        game.reset();
-        check(game.visual_events().empty(), "CPU reset discards old presentation");
-        std::cout << "PASS: VFX CLI, configuration isolation, CPU presentation identity/lifecycle\n";
+        std::cout << "PASS: VFX CLI, configuration isolation, light fluid sample\n";
         return 0;
     } catch (const std::exception& e) {
         std::cerr << e.what() << '\n';

@@ -136,13 +136,12 @@ public:
     template<class App> std::expected<void, std::string> finish(App& app) {
         if (session_smoke) {
             const auto cache = app.simulation_->shader_cache_stats();
-            session_ok = session_ok && app.simulation_.creations() == 1 && !app.game_ && !app.lab_worker_
+            session_ok = session_ok && app.simulation_.creations() == 1 && !app.lab_worker_
                       && cache.programs == session_programs;
             std::ofstream report{app.store_.path().parent_path() / "session-smoke.txt"};
             report << "frames=" << frames << "\nchecks=" << session_checks << "\npassed=" << session_ok
                    << "\nworld_creations=" << app.simulation_.creations() << "\nprograms=" << cache.programs
-                   << "\ncpu_game_created=" << bool(app.game_) << "\ncpu_laboratory_created=" << bool(app.lab_worker_)
-                   << '\n';
+                   << "\ncpu_laboratory_created=" << bool(app.lab_worker_) << '\n';
             const auto folder = app.store_.path().parent_path() / "recording-check";
             if (auto saved = app.simulation_.save_recording(folder); !saved) return saved;
             const auto tick = app.simulation_->metrics().steps;
@@ -266,11 +265,11 @@ public:
                 return std::unexpected{"Krótki test ekranu misji nie przeszedł. Sprawdź mission-ui-quick.txt."};
         }
         if (fault_smoke) {
-            const unsigned expected = app.gpu_available_ ? 4 : 2;
+            const unsigned expected = app.gpu_available_ ? 3 : 1;
             unsigned logged = 0;
             std::ifstream log{app.store_.path().parent_path() / "errors.log"};
             for (std::string line; std::getline(log, line);) logged += line.find("Wstrzyknięty") != std::string::npos;
-            const bool passed = fault_ok && !app.fault_screen_ && fault_checks == (app.gpu_available_ ? 9u : 5u)
+            const bool passed = fault_ok && !app.fault_screen_ && fault_checks == (app.gpu_available_ ? 7u : 3u)
                              && app.mode_failures_ == expected && logged == expected;
             std::ofstream report{app.store_.path().parent_path() / "mode-faults.txt"};
             report << "frames=" << frames << "\nchecks=" << fault_checks << "\npassed=" << passed
@@ -298,16 +297,12 @@ public:
                    << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_
                    << "\ncompiler=" << build::compiler << "\ncpp=" << __cplusplus
                    << "\nsimulation_uploads=" << app.uploads_ << "\nsimulation_pause_step=" << app.smoke_lab_ok_
-                   << "\nactor_atlas=" << (app.soldier_.handle != 0) << "\ngame_uploads=" << app.game_uploads_
-                   << "\ngame_ticks=" << app.game_->ticks() << "\nshots_fired=" << app.game_->shots_fired()
-                   << "\ngrenade_explosions=" << app.game_->explosions() << '\n';
+                   << "\nactor_atlas=" << (app.soldier_.handle != 0) << '\n';
             report << "layered_parts=" << (app.parts_.handle != 0) << "\nweapon_atlas=" << (app.weapons_.handle != 0)
-                   << "\nphysics_finite=" << app.world_->statistics().finite
-                   << "\ngame_physics_finite=" << app.game_->world().statistics().finite << '\n';
+                   << "\nphysics_finite=" << app.world_->statistics().finite << '\n';
             if (!all_screens || (app.gpu_available_ && !experimental_ok) || !all_themes || !all_images || !smoke_ok
                 || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.soldier_.handle || !app.parts_.handle
-                || !app.weapons_.handle || !app.world_->statistics().finite || !app.game_->world().statistics().finite
-                || app.game_uploads_ == 0 || app.game_->shots_fired() == 0 || app.game_->explosions() != 1)
+                || !app.weapons_.handle || !app.world_->statistics().finite)
                 return std::unexpected{"Niepełny wynik testu aplikacji. Sprawdź smoke-report.txt."};
         }
         return {};
@@ -342,8 +337,6 @@ public:
             break;
         case 62: app.lab_controls_.paused = false; break;
         case 78: return app.perform(ui::Action::back);
-        case 80: return app.perform(ui::Action::open_arena);
-        case 230: return app.perform(ui::Action::back);
         case 236: return open_gpu_screen(app, ui::Action::open_gpu);
         case 240:
             // Out-of-range slider values take the UI path (make_thermal_brush) into the world.
@@ -519,9 +512,6 @@ public:
         case 10: app.perform(ui::Action::open_laboratory); break;
         case 20: app.fault_screen_ = ui::Screen::laboratory; break;
         case 24: check(menu && !app.lab_worker_ && !app.world_); break;
-        case 30: app.perform(ui::Action::open_arena); break;
-        case 40: app.fault_screen_ = ui::Screen::arena; break;
-        case 44: check(menu && !app.game_); break;
         case 50:
             if (app.gpu_available_) app.perform(ui::Action::open_gpu);
             break;
@@ -548,7 +538,6 @@ public:
             break;
         case 110: check(app.perform(ui::Action::open_laboratory)); break;
         case 120: check(app.perform(ui::Action::back)); break;
-        case 130: check(app.perform(ui::Action::open_arena)); break;
         default: break;
         }
     }
@@ -577,7 +566,7 @@ public:
         case 0:
             app.simulation_.begin_recording();
             session_programs = app.simulation_->shader_cache_stats().programs;
-            check(session_programs > 0 && !app.game_ && !app.lab_worker_);
+            check(session_programs > 0 && !app.lab_worker_);
             break;
         case 30:
             app.gpu_controls_.paused = true;

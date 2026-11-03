@@ -4,7 +4,7 @@
 
 - [ARCHITECTURE.md](ARCHITECTURE.md) — własność świata, backend GPU, model CPU, kolejność kroku, testy.
 - [PARTICLES.md](PARTICLES.md) — model fizyczny CPU (materiały, energia, ciecze, gazy).
-- [GAMEPLAY.md](GAMEPLAY.md) — poligon, animacja i IK.
+- [GAMEPLAY.md](GAMEPLAY.md) — animacja i IK postaci.
 - [RESEARCH.md](RESEARCH.md) — źródła metod i granice inspiracji.
 - [LINUX_WSL.md](LINUX_WSL.md) — budowanie i uruchamianie na Linuksie i WSL2 (instalowane jako README paczki Linux).
 - [QUICKSTART.md](QUICKSTART.md) — instrukcja dołączana do paczki Windows.
