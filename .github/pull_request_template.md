@@ -4,7 +4,7 @@
 
 ## Changes
 
-<!-- What exactly changes. Name every change of behaviour, default value or setting semantics explicitly. -->
+<!-- What exactly changes. Name every change of behaviour, default value or setting semantics explicitly. A PR that changes src/ also adds an entry to docs/CHANGELOG.md (pr-hygiene checks it). -->
 
 ## Tests
 
@@ -16,11 +16,11 @@
 
 ## Out of scope
 
-<!-- What is deliberately left for later. -->
+<!-- What is deliberately left for later. One list item per topic, each with its tracking issue (#NNN); pr-hygiene fails on an item without one. Skipped review findings (minor and up) become `review-followup` issues too. -->
 
 ## Contracts touched?
 
-<!-- Check every contract touched (CLAUDE.md › Contracts) and give a link to or quote of the owner's approval. If none, check the last item. -->
+<!-- Check every contract touched (CLAUDE.md › Contracts) and put the URL of the owner's approval comment on the same line (https://github.com/<owner>/<repo>/pull/N#issuecomment-…); pr-hygiene fails without it. If none, check the last item. -->
 
 - [ ] SSBO 0-7 (bindings)
 - [ ] 64-byte particle ABI
@@ -41,7 +41,7 @@
 <!-- Check right before merging. The `pr-hygiene` workflow warns about unchecked items. -->
 
 - [ ] CI finished and green (Linux, Windows, pr-hygiene)
-- [ ] `/review-pr <number>` run, blockers and "major" findings resolved or explained
+- [ ] `/review-pr <number>` run after the last push and after CI finished; blockers and "major" findings resolved, skipped findings filed as `review-followup` issues
 - [ ] Description matches the diff, one topic
 - [ ] `./scripts/build.sh --test-suite cpu` and `./scripts/format.sh --check` green
 - [ ] Raw measurements in strefa-zero-measurements, not in this repository
