@@ -55,10 +55,29 @@ jobs:
         run: |
           ./scripts/test-ci-changes.sh
           ./scripts/test-pr-hygiene.sh
+          ./scripts/test-check-architecture.sh
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format-18
       - name: Check C++ formatting
         run: CLANG_FORMAT=clang-format-18 ./scripts/format.sh --check
+
+  # Layer rules and size budgets (scripts/check_architecture.py): source text only, no build, runs on every change.
+  # Pull requests also compare the allowlist and budgets with the base branch, so neither can be raised in the PR,
+  # unless the owner has set the `architecture-debt-approved` label (then rerun the job).
+  architecture:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - name: Check layers and budgets
+        env:
+          BASE: >-
+            ${{ github.event_name == 'pull_request'
+            && !contains(github.event.pull_request.labels.*.name, 'architecture-debt-approved')
+            && format('origin/{0}', github.base_ref) || '' }}
+        run: python3 scripts/check_architecture.py ${BASE:+--base "$BASE"}
 
   build-and-test:
     needs: changes
@@ -98,6 +117,12 @@ jobs:
           ./scripts/build.sh --test-suite cpu --jobs "$(nproc)" --junit-dir build/junit \
             --dependency-cache ~/.cache/strefa-deps
           ccache --show-stats
+      # The Release build links with LTO, which inlines and drops symbols; count them in a build without IPO.
+      - name: Count QA symbols in StrefaZero (no IPO)
+        run: |
+          cmake -S . -B build/noipo -G Ninja -DCMAKE_BUILD_TYPE=Release -DSTREFA_WARNINGS_AS_ERRORS=ON             -DSTREFA_IPO=OFF -DSTREFA_DOWNLOAD_CACHE="$HOME/.cache/strefa-deps"
+          cmake --build build/noipo --target strefa_zero --parallel "$(nproc)"
+          python3 scripts/check_architecture.py --symbols build/noipo/StrefaZero
       - name: Save compiler cache
         if: github.ref == 'refs/heads/main'
         uses: actions/cache/save@v6
@@ -267,7 +292,7 @@ jobs:
   # The single check to require in the ruleset: green when every job passed or was skipped as docs-only.
   linux-status:
     if: always()
-    needs: [changes, format, build-and-test, core-only, core-variants]
+    needs: [changes, format, architecture, build-and-test, core-only, core-variants]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
