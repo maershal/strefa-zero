@@ -1,13 +1,9 @@
 # Review v2 — status, rozstrzygnięcia i zasady dla agentów
 
 Baza review: `e12c39a` (2026-11-03). Status sprawdzony na `9339c1a` (2026-11-04).
-Źródła (migawki, numery linii z `e12c39a`): `reviews/review_strefa_zero_v2.md` (dalej
-**R**), `reviews/architecture_v2.md` (dalej **A**) i `reviews/lab_features.md`
+Źródła (migawki, numery linii z `e12c39a`): [review_strefa_zero_v2.md](reviews/review_strefa_zero_v2.md) (dalej
+**R**), [architecture_v2.md](reviews/architecture_v2.md) (dalej **A**) i [lab_features.md](reviews/lab_features.md)
 (dalej **L**, raport cząstkowy o laboratorium).
-
-Źródła leżą w `docs/plans/reviews/`, ale są w `.gitignore`: istnieją tylko w lokalnej kopii właściciela. Gdy ich nie
-ma (inny klon, sesja w chmurze), ten plik jest jedynym źródłem; odwołania „R §…”, „A §…” i „L §…” wskazują sekcje
-oryginałów.
 
 Ten plik jest ładowany do kontekstu agentów przez `CLAUDE.md`. Trzymaj go krótkim (≤ 150 linii): szczegóły są
 w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
