@@ -39,6 +39,11 @@ readonly sections=(
     "Pre-merge checks|Kontrole przed scaleniem"
 )
 readonly required_content=("Goal" "Changes" "Tests")
+# A comment (or review) on GitHub in which the owner approves a contract change.
+readonly approval_url='https://github\.com/[^/[:space:]]+/[^/[:space:]]+/(pull|issues)/[0-9]+#(issuecomment-|discussion_r|pullrequestreview-)[0-9]+'
+# An issue reference: #123, owner/repo#123 or an issue URL.
+readonly issue_ref='#[0-9]+|/issues/[0-9]+'
+readonly changelog="docs/CHANGELOG.md"
 
 failures=0
 # Workflow commands treat %, CR and LF specially; escape them so file names cannot break annotations.
@@ -112,6 +117,22 @@ else
             [[ -n "${text//[[:space:]]/}" ]] || fail "Sekcja „## $section” w opisie PR jest pusta."
         fi
     done
+    # A checked contract (any item except "None") needs the URL of the owner's approval on the same line.
+    if contracts=$(find_section "Contracts touched?|Kontrakty dotknięte?"); then
+        while IFS= read -r line; do
+            item=$(sed -E 's/^[[:space:]]*[-*][[:space:]]+\[[xX]\][[:space:]]*//' <<<"$line")
+            case "$item" in None* | Brak* | Żad*) continue ;; esac
+            grep -qE "$approval_url" <<<"$line" ||
+                fail "Zaznaczony kontrakt „${item}” w „$contracts” wymaga URL komentarza ze zgodą właściciela (…/pull/N#issuecomment-…) w tej samej linii."
+        done < <(section_text "$contracts" | grep -E '^[[:space:]]*[-*][[:space:]]+\[[xX]\]' || true)
+    fi
+    # Every top-level item of "Out of scope" points to the issue that tracks it; indented sub-items belong to it.
+    if has_section "Out of scope"; then
+        while IFS= read -r line; do
+            grep -qE "$issue_ref" <<<"$line" ||
+                fail "Pozycja „Out of scope” bez issue (#NNN): ${line#"${line%%[![:space:]]*}"}"
+        done < <(section_text "Out of scope" | grep -E '^ ?([-*+]|[0-9]+[.)])[[:space:]]+' || true)
+    fi
     if checks=$(find_section "Pre-merge checks|Kontrole przed scaleniem"); then
         unchecked=$(section_text "$checks" | grep -cE '^[[:space:]]*[-*][[:space:]]+\[ \]' || true)
         if [[ "$unchecked" -gt 0 ]]; then
@@ -135,7 +156,13 @@ while IFS= read -r -d '' path; do
     esac
 done < <(git diff -z --name-only --diff-filter=AC "$merge_base" "$head")
 
-# --- 4. Size of the code change (without docs, Markdown, binaries and linguist-generated files).
+# --- 4. A change in src/ needs an entry in docs/CHANGELOG.md. --no-renames: moving a file out of src/ counts too.
+changed_paths=$(git diff --no-renames --name-only "$merge_base" "$head")
+if grep -q '^src/' <<<"$changed_paths" && ! grep -qxF "$changelog" <<<"$changed_paths"; then
+    fail "PR zmienia src/, ale nie dodaje wpisu w $changelog."
+fi
+
+# --- 5. Size of the code change (without docs, Markdown, binaries and linguist-generated files).
 is_generated() {
     local value
     value=$(git check-attr --source="$head" linguist-generated -- "$1" | sed 's/.*: //')

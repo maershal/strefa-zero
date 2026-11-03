@@ -18,5 +18,6 @@ while IFS= read -r task_path; do
         docs/*|*.md) ;;
         *) task_code=true ;;
     esac
-done < <(git diff --name-only "$task_base" "$task_head")
+# --no-renames lists both sides of a move, so src/x.cpp -> docs/x.cpp still counts as a code change.
+done < <(git diff --no-renames --name-only "$task_base" "$task_head")
 echo "code=$task_code"

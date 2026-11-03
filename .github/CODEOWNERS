@@ -1,9 +1,16 @@
-# Ścieżki wymagające recenzji właściciela (kontrakty GPU, shadery, build, CI, instrukcje agentów).
+# Ścieżki wymagające recenzji właściciela (kontrakty GPU, symulacja, testy, shadery, build, CI, instrukcje agentów).
 /src/gpu/        @maershal
+/src/sim/        @maershal
 /assets/shaders/ @maershal
+/tests/          @maershal
 /CMakeLists.txt  @maershal
 /cmake/          @maershal
 /.github/        @maershal
 /CLAUDE.md       @maershal
 /.claude/        @maershal
-/scripts/pr-hygiene.sh @maershal
+/scripts/build.*             @maershal
+/scripts/ci-changes.sh       @maershal
+/scripts/junit-summary.py    @maershal
+/scripts/pr-hygiene.sh       @maershal
+/scripts/test-ci-changes.sh  @maershal
+/scripts/test-pr-hygiene.sh  @maershal
