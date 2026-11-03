@@ -121,7 +121,7 @@ jobs:
           cd /tmp/strefa-bundle/StrefaZero-Linux-x86_64
           sha256sum -c SHA256SUMS.txt
           env -u LD_LIBRARY_PATH xvfb-run -a ./StrefaZero --smoke-test --profile /tmp/strefa-installed-profile
-          ./StrefaPhysics --scene arena --ticks 5 --output /tmp/strefa-installed-physics
+          ./StrefaPhysics --scene chain --ticks 5 --output /tmp/strefa-installed-physics
       - uses: actions/upload-artifact@v7
         with:
           name: StrefaZero-Linux-x86_64
@@ -188,8 +188,8 @@ jobs:
             configuration: RelWithDebInfo
             cmake: -DSTREFA_SANITIZE=thread
             tests: -R '^sim\.(numerics_parallel|laboratory_worker|golden_master)$'
-          # Debug keeps NDEBUG undefined; -O2 instead of -O0 keeps golden_master and game.training within
-          # their time limits (at -O0 they need 85% of them on an 8-core desktop).
+          # Debug keeps NDEBUG undefined; -O2 instead of -O0 keeps golden_master within
+          # its time limit (at -O0 it needs 85% of it on an 8-core desktop).
           # libc++ 18 ships std::jthread/std::stop_token only with -fexperimental-library.
           - job: clang
             configuration: Debug

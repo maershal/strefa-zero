@@ -1,12 +1,12 @@
 #include "app/application.hpp"
 
 #include "app/clock_stats.hpp"
-#include "app/cpu_vfx.hpp"
 #include "app/frame_profile.hpp"
 #include "app/scenario_runner.hpp"
 #include "app/scene_benchmark.hpp"
 #include "app/simulation_world.hpp"
 #include "build_info.hpp"
+#include "gpu/render_device.hpp"
 #include "platform/gl_debug.hpp"
 #include "platform/settings_store.hpp"
 #include "platform/texture.hpp"
@@ -49,7 +49,6 @@ std::string gl_string(GLenum name) {
 const char* mode_name(ui::Screen screen) {
     switch (screen) {
     case ui::Screen::laboratory: return "Laboratorium CPU";
-    case ui::Screen::arena: return "Poligon CPU";
     case ui::Screen::gpu_laboratory: return "Laboratorium GPU";
     case ui::Screen::gpu_mission: return "Misja GPU";
     default: return "Menu";
@@ -58,7 +57,6 @@ const char* mode_name(ui::Screen screen) {
 ui::Screen target_screen(ui::Action action, ui::Screen current) {
     switch (action) {
     case ui::Action::open_laboratory: return ui::Screen::laboratory;
-    case ui::Action::open_arena: return ui::Screen::arena;
     case ui::Action::open_gpu: return ui::Screen::gpu_laboratory;
     case ui::Action::open_mission: return ui::Screen::gpu_mission;
     default: return current;
@@ -68,7 +66,7 @@ ui::Screen target_screen(ui::Action action, ui::Screen current) {
 struct ApplicationAssets {
     std::array<ui::Image, 3> backgrounds;
     platform::Texture& canvas;
-    ui::Image soldier, parts, weapons;
+    ui::Image parts, weapons;
 };
 
 // One --scene-benchmark scene: settings in, collected frames and GPU samples out.
@@ -110,7 +108,6 @@ public:
           store_{store},
           images_{assets.backgrounds},
           canvas_{assets.canvas},
-          soldier_{assets.soldier},
           parts_{assets.parts},
           weapons_{assets.weapons},
           state_{ui::Screen::main_menu, settings, settings, settings.show_diagnostics, settings},
@@ -153,7 +150,6 @@ public:
         const bool window_test = smoke_ != SmokeScenario::none;
         const bool bench = smoke_ == SmokeScenario::scene_benchmark;
         const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
-        const bool start_in_arena = start_ == StartMode::cpu_arena;
         const bool start_gpu = start_ == StartMode::gpu_laboratory;
         const bool start_mission = start_ == StartMode::mission;
         if (smoke_test) {
@@ -163,7 +159,6 @@ public:
         }
         if (lab_smoke) lab_controls_.scene = sim::Scene::dam_break;
         if (start_in_laboratory && !smoke_test) perform(ui::Action::open_laboratory);
-        if (start_in_arena && !smoke_test) perform(ui::Action::open_arena);
         if (lab_smoke) {
             lab_controls_.scene = sim::Scene::dam_break;
             perform(ui::Action::open_laboratory);
@@ -202,7 +197,7 @@ public:
         const auto window_started = previous;
         refresh_hz_ = window_.refresh_hz();
         while (running_) {
-            // A failing mode (GPU world, CPU laboratory, arena) is closed and the menu
+            // A failing mode (GPU world, CPU laboratory) is closed and the menu
             // shows the reason; window tests still fail on the first error.
             try {
                 const auto frame_start = SDL_GetTicksNS();
@@ -255,9 +250,7 @@ public:
                 if (window_.minimized()) {
                     if (lab_worker_) lab_worker_->set_active(false);
                     clock_.reset();
-                    game_clock_.reset();
                     simulation_.suspend();
-                    game_input_.clear();
                     if (profile_frames) {
                         frame_profile.mission_tick = simulation_ ? simulation_->metrics().steps : 0;
                         frame_profile.mission_pending_seconds = simulation_.clock().pending_seconds();
@@ -288,20 +281,6 @@ public:
                 mark(frame_profile.ui_prepare_ms);
                 // Render one coherent snapshot of actors and terrain. Input collected by
                 // the UI advances the next snapshot; no GPU view can mutate the world.
-                if (state_.screen == ui::Screen::arena) {
-                    const auto uploaded = upload_world(game_->world(), true);
-                    if (!uploaded) throw std::runtime_error{uploaded.error()};
-                    ++game_uploads_;
-                    if (cpu_vfx_enabled_) {
-                        auto& vfx = render_device_->vfx;
-                        vfx.set_options(vfx_options_);
-                        vfx.poll();
-                        vfx.cpu_canvas(canvas_.id(),
-                                       static_cast<unsigned>(
-                                               images_[static_cast<std::size_t>(state_.applied.map_theme)].handle),
-                                       static_cast<float>(game_clock_.fraction()));
-                    }
-                }
                 if (state_.screen == ui::Screen::laboratory) {
                     if (lab_worker_) lab_snapshot_ = lab_worker_->snapshot();
                     if (!lab_snapshot_->error.empty()) throw std::runtime_error{lab_snapshot_->error};
@@ -326,33 +305,17 @@ public:
                 ui::ArenaInput arena_input;
                 const bool focused = (SDL_GetWindowFlags(window_.native()) & SDL_WINDOW_INPUT_FOCUS) != 0;
                 std::optional<ui::ArenaFrame> arena;
-                if (state_.screen == ui::Screen::arena || state_.screen == ui::Screen::gpu_mission) {
+                if (state_.screen == ui::Screen::gpu_mission) {
                     arena.emplace(ui::ArenaFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
-                                                 soldier_,
-                                                 images_[static_cast<std::size_t>(state_.applied.map_theme)],
-                                                 parts_,
-                                                 weapons_,
-                                                 state_.screen == ui::Screen::arena
-                                                         ? ui::ArenaView{*game_}
-                                                         : ui::ArenaView{simulation_->mission()},
+                                                 ui::ArenaView{simulation_->mission()},
                                                  arena_input,
                                                  focused});
-                    arena->scene_mission = state_.screen == ui::Screen::arena || simulation_.scene().mission;
+                    arena->scene_mission = simulation_.scene().mission;
                     arena->paused = gpu_controls_.paused;
-                    if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_) {
-                        arena->shared_vfx = true;
-                    }
-                    if (state_.screen == ui::Screen::arena && cpu_vfx_enabled_ && render_device_->vfx.enabled()) {
-                        arena->world = {render_device_->vfx.cpu_back(), 960, 576};
-                        arena->vfx_front = {render_device_->vfx.cpu_front(), 960, 576};
-                    }
-                    if (state_.screen == ui::Screen::gpu_mission) {
-                        arena->lighting_quality = &lighting_quality_;
-                        arena->camera = simulation_->camera_offset();
-                    }
-                    if (state_.screen == ui::Screen::gpu_mission) arena->clock = &clock_stats_;
+                    arena->lighting_quality = &lighting_quality_;
+                    arena->camera = simulation_->camera_offset();
+                    arena->clock = &clock_stats_;
                     arena->vfx_quality = &gpu_controls_.vfx_quality;
-                    arena->effects_enabled = gpu_controls_.vfx_quality != 0;
                 }
                 double ui_poll_ms = 0;
                 gpu::PollTimings ui_poll;
@@ -471,12 +434,6 @@ public:
                     }
                 } else if (state_.screen != ui::Screen::gpu_laboratory)
                     simulation_.suspend();
-                if (state_.screen == ui::Screen::arena && action != ui::Action::back)
-                    update_game(arena_input, sim_seconds, focused, smoke_test);
-                else {
-                    game_clock_.reset();
-                    game_input_.clear();
-                }
                 if ((state_.screen == ui::Screen::gpu_mission || state_.screen == ui::Screen::gpu_laboratory)
                     && simulation_)
                     update_clock_stats(sim_seconds, static_cast<double>(frame_start) / 1e9);
@@ -613,8 +570,8 @@ public:
         {
             std::ofstream vfx{store_.path().parent_path() / "vfx-state.txt"};
             vfx << "quality=" << gpu::vfx_quality_name(vfx_options_.quality)
-                << "\nrender_device_created=" << bool(render_device_) << "\ncpu_adapter=" << cpu_vfx_enabled_
-                << "\nworld_creations=" << simulation_.creations() << '\n';
+                << "\nrender_device_created=" << bool(render_device_) << "\nworld_creations=" << simulation_.creations()
+                << '\n';
             if (render_device_) {
                 render_device_->vfx.poll();
                 const auto& c = render_device_->vfx.stats();
@@ -732,7 +689,7 @@ private:
                 << "\ncompile_ms=" << cache.compile_ms << "\ncache_load_ms=" << cache.load_ms
                 << "\nfirst_world_ms=" << first_world_ms_ << "\nview_switches=" << view_switches_
                 << "\nview_switch_total_ms=" << view_switch_ms_ << "\nview_switch_max_ms=" << view_switch_max_ms_
-                << "\ncpu_game_created=" << bool(game_) << "\ncpu_laboratory_created=" << bool(lab_worker_) << '\n';
+                << "\ncpu_laboratory_created=" << bool(lab_worker_) << '\n';
     }
     // HUD pacing for the GPU views; restarts with every scene.
     void update_clock_stats(double sim_seconds, double wall) {
@@ -806,43 +763,11 @@ private:
         gpu_ticks_this_frame_ = result.ticks;
         if (gpu_profiling_.collect) world_render_submit_ms_ += result.render_ms;
     }
-    std::expected<void, std::string> upload_world(const sim::World& world, bool transparent = false) {
+    std::expected<void, std::string> upload_world(const sim::World& world) {
         last_lab_pixels_.reset();
-        world.render(std::span<sim::Color, sim::World::cell_count>{pixels_.data(), pixels_.size()}, transparent,
-                     transparent ? sim::RenderMode::materials : lab_controls_.view);
+        world.render(std::span<sim::Color, sim::World::cell_count>{pixels_.data(), pixels_.size()}, false,
+                     lab_controls_.view);
         return canvas_.update_rgba(std::as_bytes(std::span{pixels_}));
-    }
-    void update_game(ui::ArenaInput input, double elapsed, bool focused, bool smoke) {
-        if (input.reset) {
-            game_->reset();
-            if (cpu_vfx_enabled_) cpu_vfx_.reset(*render_device_);
-            game_clock_.reset();
-            game_input_.clear();
-            elapsed = 0;
-        }
-        if (!focused && !smoke) {
-            game_clock_.reset();
-            game_input_.clear();
-            return;
-        }
-        if (smoke) {
-            input.controls = {};
-            input.controls.aim = {184, 140};
-            input.controls.move = smoke_game_frame_ < 40 ? 1.F : 0.F;
-            input.controls.jump = smoke_game_frame_ == 3;
-            input.controls.jet = smoke_game_frame_ > 10 && smoke_game_frame_ < 90;
-            input.controls.fire = true;
-            input.controls.grenade = smoke_game_frame_ == 2;
-            input.controls.reload = smoke_game_frame_ == 120;
-            ++smoke_game_frame_;
-            elapsed = sim::FixedClock::tick_seconds;
-        }
-        game_input_.submit(input.controls);
-        const int steps = game_clock_.advance(elapsed, false, 1);
-        for (int i = 0; i < steps; ++i) {
-            game_->tick(game_input_.consume());
-            if (cpu_vfx_enabled_) cpu_vfx_.tick(*render_device_, *game_);
-        }
     }
     std::expected<void, std::string> update_lab(const ui::LaboratoryInput& input, double elapsed) {
         if (lab_worker_) {
@@ -956,12 +881,6 @@ private:
                 lab_controls_.previous.reset();
                 clock_.reset();
                 break;
-            case ui::Screen::arena:
-                game_.reset();
-                cpu_vfx_enabled_ = false;
-                game_clock_.reset();
-                game_input_.clear();
-                break;
             case ui::Screen::gpu_laboratory:
             case ui::Screen::gpu_mission:
                 simulation_.close();
@@ -996,8 +915,8 @@ private:
         case ui::Action::open_gpu: {
             const bool mission = action == ui::Action::open_mission;
             if (!gpu_available_) {
-                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Poligon CPU, Laboratorium "
-                                       "CPU i ustawienia działają normalnie.",
+                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Laboratorium CPU i "
+                                       "ustawienia działają normalnie.",
                                        mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory),
                                        gl_version_);
                 return false;
@@ -1041,17 +960,6 @@ private:
             message_.clear();
             break;
         }
-        case ui::Action::open_arena:
-            if (!game_)
-                game_ = std::make_unique<game::GameSession>(game::PlayerTuning{}, game::WeaponConfig{}, physics_);
-            ensure_render_device();
-            cpu_vfx_enabled_ = bool(render_device_);
-            if (cpu_vfx_enabled_) cpu_vfx_.reset(*render_device_);
-            state_.screen = ui::Screen::arena;
-            game_clock_.reset();
-            game_input_.clear();
-            message_.clear();
-            break;
         case ui::Action::open_laboratory:
             if (!world_ && !lab_worker_) {
                 lab_worker_ = std::make_unique<sim::LaboratoryRunner>(store_.path().parent_path() / "recordings",
@@ -1134,7 +1042,6 @@ private:
     const platform::SettingsStore& store_;
     std::array<ui::Image, 3> images_;
     platform::Texture& canvas_;
-    ui::Image soldier_;
     ui::Image parts_, weapons_;
     ui::ViewState state_;
     bool running_{true}, unpaced_{};
@@ -1158,13 +1065,7 @@ private:
     bool smoke_single_step_{}, smoke_lab_ok_{true};
     std::uint64_t smoke_paused_tick_{};
     sim::PhysicsConfig physics_;
-    std::unique_ptr<game::GameSession> game_;
-    game::InputBuffer game_input_;
-    sim::FixedClock game_clock_{sim::interactive_clock};
-    unsigned game_uploads_{}, smoke_game_frame_{};
     std::shared_ptr<gpu::RenderDevice> render_device_;
-    CpuVfxAdapter cpu_vfx_;
-    bool cpu_vfx_enabled_{};
     gpu::VfxOptions vfx_options_;
     SimulationWorld simulation_{sim::interactive_clock};
     sim::VsyncSnap vsync_snap_;
@@ -1417,10 +1318,6 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     auto canvas =
             platform::Texture::create_rgba(sim::World::width, sim::World::height, std::as_bytes(std::span{blank}));
     if (!canvas) return std::unexpected{canvas.error()};
-    auto soldier = platform::Texture::load_bmp(assets / "actors" / "soldier_pl.bmp");
-    if (!soldier) return std::unexpected{soldier.error()};
-    if (soldier->width() != 128 || soldier->height() != 192)
-        return std::unexpected{"Atlas żołnierza wymaga rozmiaru 128 × 192."};
     auto parts = platform::Texture::load_bmp(assets / "actors" / "parts.bmp");
     auto weapons = platform::Texture::load_bmp(assets / "weapons" / "weapons.bmp");
     if (!parts || !weapons) return std::unexpected{"Brak atlasu części postaci lub broni."};
@@ -1429,7 +1326,6 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
     physics.worker_threads = options.physics_threads;
     const ApplicationAssets application_assets{images,
                                                *canvas,
-                                               {soldier->id(), soldier->width(), soldier->height()},
                                                {parts->id(), parts->width(), parts->height()},
                                                {weapons->id(), weapons->width(), weapons->height()}};
     const LaunchConfig config{.physics = physics,

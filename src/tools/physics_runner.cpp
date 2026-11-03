@@ -1,4 +1,3 @@
-#include "game/session.hpp"
 #include "sim/recording.hpp"
 
 #include <algorithm>
@@ -56,7 +55,7 @@ int main(int argc, char** argv) {
                 config.modified_cholesky = false;
             } else
                 throw std::runtime_error{
-                        "Usage: StrefaPhysics --scene all|arena|chain|<scene-id> --ticks N --output DIR [--record] [--reference] [--threads 1..4] [--ic0] [--mic-only] [--pressure-reference]"};
+                        "Usage: StrefaPhysics --scene all|chain|<scene-id> --ticks N --output DIR [--record] [--reference] [--threads 1..4] [--ic0] [--mic-only] [--pressure-reference]"};
         }
         if (ticks < 3 || ticks > 36000) throw std::runtime_error{"Ticks must be 3..36000"};
         if (record && output.empty()) throw std::runtime_error{"Recording requires --output DIR"};
@@ -69,17 +68,16 @@ int main(int argc, char** argv) {
             html << "<!doctype html><meta charset=\"utf-8\"><title>Strefa Zero 0.4 — sceny</title><style>body{font:16px system-ui;background:#111c22;color:#e0e9d4;margin:4vw}a{color:#c2df8b}td{padding:10px;border-bottom:1px solid #425242}</style><h1>Strefa Zero 0.4 — sceny regresyjne</h1><p>Krok fizyki 60 Hz; obrazy co 3 kroki (20 FPS). Pomiar nie obejmuje renderowania ani zapisu. Jedna jednostka siatki = jeden piksel świata.</p><table><tr><th>Scena</th><th>Mediana / p95 / p99 / max [ms]</th><th>Bilans masy / energii</th><th>PCG: brak zbieżności</th></tr>";
         }
         bool valid = true, selected = false;
-        for (unsigned index = 0; index <= sim::scene_ids.size() + 1; ++index) {
-            const bool chain = index == sim::scene_ids.size(), arena = index == sim::scene_ids.size() + 1;
-            const std::string_view id = arena ? "arena" : chain ? "chain" : sim::scene_ids[index];
+        for (unsigned index = 0; index <= sim::scene_ids.size(); ++index) {
+            const bool chain = index == sim::scene_ids.size();
+            const std::string_view id = chain ? "chain" : sim::scene_ids[index];
             if (scene != "all" && scene != id) continue;
             if (scene == "all" && index == 0) continue;
             selected = true;
             sim::World world{0x57EF'A023U, config};
-            game::GameSession game{{}, {}, config};
             if (chain)
                 load_powder_chain(world);
-            else if (!arena)
+            else
                 world.load_scene(static_cast<sim::Scene>(index));
             const int scene_ticks = chain && !ticks_given ? 240 : ticks;
             std::optional<sim::Recording> recorder;
@@ -95,21 +93,11 @@ int main(int argc, char** argv) {
             bool scene_finite = true;
             for (int n = 0; n < scene_ticks; ++n) {
                 const auto start = std::chrono::steady_clock::now();
-                if (arena) {
-                    game::TickInput input;
-                    input.aim = {184, 140};
-                    input.move = n < 40 ? 1.F : 0.F;
-                    input.jump = n == 3;
-                    input.fire = n > 30 && n < 150;
-                    input.grenade = n == 45;
-                    game.tick(input);
-                } else
-                    world.step(reference ? sim::ScanMode::full_grid : sim::ScanMode::active_chunks);
+                world.step(reference ? sim::ScanMode::full_grid : sim::ScanMode::active_chunks);
                 const double ms =
                         std::chrono::duration<double, std::milli>(std::chrono::steady_clock::now() - start).count();
                 times.push_back(ms);
-                const auto& current = arena ? game.world() : world;
-                const auto& s = current.statistics();
+                const auto& s = world.statistics();
                 mass_error = std::max(mass_error, std::abs(s.mass_error));
                 energy_error = std::max(energy_error, std::abs(s.energy_error));
                 residual = std::max(residual, s.pressure_residual);
@@ -125,7 +113,7 @@ int main(int argc, char** argv) {
                             << s.air_substeps << ',' << s.mass_error << ',' << s.energy_error << ','
                             << s.pressure_residual << ',' << s.pressure_converged << ',' << s.max_overfill << ','
                             << s.air_wave_ms << ',' << s.air_transport_ms << ',' << s.thermal_refresh_ms << '\n';
-                if (recorder) recorder->capture(current, ms);
+                if (recorder) recorder->capture(world, ms);
             }
             if (recorder) recorder->finish();
             std::ranges::sort(times);
@@ -135,12 +123,11 @@ int main(int argc, char** argv) {
             std::cout << id << ": median=" << percentile(.5) << " p95=" << percentile(.95) << " p99=" << percentile(.99)
                       << " max=" << times.back() << " ms; dm=" << mass_error << " dH=" << energy_error
                       << " residual=" << residual << " failed=" << failed << " overfill=" << overfill << std::endl;
-            const auto& last = (arena ? game.world() : world).statistics();
+            const auto& last = world.statistics();
             std::cout << "  last tick: heat=" << last.heat_ms << " air=" << last.air_ms << " liquid=" << last.liquid_ms
                       << " chemistry=" << last.reaction_ms << " other=" << last.bookkeeping_ms
                       << " PCG=" << last.pressure_iterations << " pressure=" << last.pressure_ms
-                      << " transport=" << last.transport_ms << " checksum=" << (arena ? game.world() : world).checksum()
-                      << std::endl;
+                      << " transport=" << last.transport_ms << " checksum=" << world.checksum() << std::endl;
             if (summary)
                 summary << id << ',' << scene_ticks << ',' << percentile(.5) << ',' << percentile(.95) << ','
                         << percentile(.99) << ',' << times.back() << ',' << mass_error << ',' << energy_error << ','

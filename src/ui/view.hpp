@@ -9,14 +9,13 @@ struct ImFont;
 
 namespace strefa::ui {
 
-enum class Screen { main_menu, settings, preview, about, laboratory, arena, gpu_laboratory, gpu_mission };
+enum class Screen { main_menu, settings, preview, about, laboratory, gpu_laboratory, gpu_mission };
 enum class Action {
     none,
     open_preview,
     open_settings,
     open_about,
     open_laboratory,
-    open_arena,
     open_gpu,
     open_mission,
     back,

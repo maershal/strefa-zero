@@ -50,14 +50,14 @@ Nie uruchamiaj gry przez `sudo`. Przy problemach z Waylandem można wybrać X11:
 SDL_VIDEO_DRIVER=x11 ./StrefaZero --mission
 ```
 
-Poligon CPU i Laboratorium CPU wymagają OpenGL 3.3. Misja GPU, Laboratorium GPU
+Laboratorium CPU wymaga OpenGL 3.3. Misja GPU, Laboratorium GPU
 i efekty compute wymagają OpenGL 4.3 (na 3.3 te pozycje menu są wyszarzone). Dostępna wersja zależy od sterownika
 udostępnianego w WSLg, a nie od samej karty w Windows. Sprawdź ją poleceniem
 `glxinfo -B` (pakiet `mesa-utils`). Jeśli sterownik nie udostępnia 4.3, można
-uruchomić Poligon CPU albo diagnostycznie użyć programowego Mesa llvmpipe:
+uruchomić Laboratorium CPU albo diagnostycznie użyć programowego Mesa llvmpipe:
 
 ```bash
-./StrefaZero --arena --opengl33
+./StrefaZero --laboratory --opengl33
 LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe ./StrefaZero --mission
 ```
 
@@ -103,7 +103,7 @@ Dodatkowe opcje CMake można przekazać po `--`. Dla pracy bez pulpitu i OpenGL:
 
 ```bash
 ./scripts/build.sh --core-only
-./build/linux-release-core/StrefaPhysics --scene arena --ticks 60 --output /tmp/strefa-physics
+./build/linux-release-core/StrefaPhysics --scene chain --ticks 60 --output /tmp/strefa-physics
 ```
 
 Dostępne są też presety `linux-release`, `linux-debug` i `linux-core-only`:
@@ -117,7 +117,7 @@ ctest --preset linux-release -LE graphics
 ## Testy i paczka
 
 `build.sh` domyślnie uruchamia testy CPU oraz zestaw z etykietą `ci-smoke`, ten sam co w CI:
-okno OpenGL 4.3 i 3.3 (8/8 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
+okno OpenGL 4.3 i 3.3 (7/7 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
 compute, protokół misji (`gpu.gameplay`), ekran misji (`gpu.mission_ui_quick`), cache shaderów, oświetlenie
 pod obciążeniem, pierścień odczytów, instrumentację, renderer i reaktywność laboratorium CPU (1 i 4 wątki).
 Pełny zestaw `graphics` uruchamia co noc workflow `nightly-gpu.yml` (także ręcznie). `--test-suite cpu`

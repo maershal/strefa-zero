@@ -1,6 +1,5 @@
 #include "app/diagnostic_scenarios.hpp"
 
-#include "app/cpu_vfx.hpp"
 #include "gpu/validation.hpp"
 #include "platform/texture.hpp"
 namespace strefa::app {
@@ -36,10 +35,6 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
                                   ? (*world)->validate_vfx(profile, options.vfx_benchmark)
                                   : (*world)->validate_renderer(profile, options.render_benchmark);
         if (!result) return std::unexpected{result.error()};
-        if (options.vfx_check) {
-            const auto cpu = validate_cpu_vfx(*(*world)->render_device(), profile);
-            if (!cpu) return std::unexpected{cpu.error()};
-        }
         return 0;
     }
     if (options.fluid_check || options.fluid_benchmark) {

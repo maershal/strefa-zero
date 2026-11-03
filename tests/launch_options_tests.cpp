@@ -92,7 +92,6 @@ int main() {
             check(options->start_mode() == StartMode::menu, flag + " start mode");
         }
         const std::pair<const char*, StartMode> starts[]{{"--laboratory", StartMode::cpu_laboratory},
-                                                         {"--arena", StartMode::cpu_arena},
                                                          {"--gpu-laboratory", StartMode::gpu_laboratory},
                                                          {"--mission", StartMode::mission}};
         for (const auto& [flag, start] : starts) {
@@ -161,17 +160,17 @@ int main() {
                 {"--scene-benchmark", "all", "--gpu-smoke-test", "--profile", "fixture"}};
         for (const auto& bad : bad_benchmarks)
             check(!parse(bad), std::string{"Invalid benchmark options accepted: "} + bad.front());
-        const auto combined = parse({"--arena", "--smoke-test", "--profile", "fixture"});
-        check(combined && combined->start_mode() == StartMode::cpu_arena
+        const auto combined = parse({"--laboratory", "--smoke-test", "--profile", "fixture"});
+        check(combined && combined->start_mode() == StartMode::cpu_laboratory
                       && combined->smoke_scenario() == SmokeScenario::menu,
               "Start mode and smoke test are independent");
-        check(!parse({"--arena", "--mission"}), "Two start modes accepted");
+        check(!parse({"--laboratory", "--mission"}), "Two start modes accepted");
+        check(!parse({"--arena"}), "The removed CPU training arena must not be a start mode");
         check(!parse({"--smoke-test", "--mission-smoke-test", "--profile", "fixture"}), "Two tests accepted");
         // StrefaZero: only player options, each still parsed exactly as in StrefaQA.
         using strefa::app::OptionScope;
         const auto player = OptionScope::player;
-        for (const auto* flag :
-             {"--mission", "--gpu-laboratory", "--laboratory", "--arena", "--opengl33", "--gl-debug"})
+        for (const auto* flag : {"--mission", "--gpu-laboratory", "--laboratory", "--opengl33", "--gl-debug"})
             check(bool(parse({flag}, player)), std::string{flag} + " must stay a player option");
         check(bool(parse({"--scene", "gpu:oil-water"}, player)) && bool(parse({"--scene", "lab:wood-fire"}, player)),
               "--scene is a player option");
