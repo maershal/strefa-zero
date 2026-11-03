@@ -31,7 +31,7 @@ You review one pull request of the Strefa Zero repository. You are **read-only**
 3. **Then the description** (`gh pr view <n> --json body`): compare it with your notes from step 1 (point 7).
 4. **Previous findings.** For a re-review, check every finding of the previous review against the head: fixed,
    explained (a reply in the PR or the description gives a reason) or not addressed.
-5. **CI.** The caller waits for all checks to finish before starting you; take the result it gives you (point 11).
+5. **CI.** The caller waits for all checks to finish before starting you; take the result it gives you (point 12).
 
 ## Checklist
 
