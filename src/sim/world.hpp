@@ -35,6 +35,12 @@ inline constexpr std::array scene_ids{"demo",         "falling-water", "dam-brea
                                       "oil-water",    "sand-pile",     "sand-water",        "smoke-ceiling",
                                       "smoke-vent",   "wood-fire",     "extinguish",        "melting-metal",
                                       "quench-metal", "ice-fire",      "shielded-explosion"};
+// Field groups of World::digests(). Together they cover every field checksum() hashes, so a golden mismatch
+// names what changed instead of one opaque hash.
+enum class DigestField { material, mass, enthalpy, gases, velocity, other, count };
+inline constexpr std::array digest_field_names{"material", "mass", "enthalpy", "gases", "velocity", "other"};
+static_assert(digest_field_names.size() == static_cast<std::size_t>(DigestField::count));
+using StateDigests = std::array<std::uint64_t, static_cast<std::size_t>(DigestField::count)>;
 class World {
 public:
     static constexpr int width = grid_width, height = grid_height, chunk_size = 16;
@@ -63,6 +69,7 @@ public:
     [[nodiscard]] std::size_t count(Material material) const noexcept;
     [[nodiscard]] double mass_of(Material material) const noexcept;
     [[nodiscard]] std::uint64_t checksum() const noexcept;
+    [[nodiscard]] StateDigests digests() const noexcept;
     [[nodiscard]] bool chunk_awake(int index) const noexcept;
     void render(std::span<Color, cell_count> pixels, bool transparent_empty = false,
                 RenderMode mode = RenderMode::materials) const;
