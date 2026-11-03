@@ -66,15 +66,15 @@ def main():
         return 1 if changed else 0
 
     if not args.build_dir:
-        parser.error("--build-dir or --compare is required")
+        parser.error("wymagane --build-dir albo --compare")
     candidates = [args.build_dir / BINARY, args.build_dir / f"{BINARY}.exe"]
     binary = next((c for c in candidates if c.is_file()), None)
     if binary is None:
-        sys.exit(f"{BINARY} not found in {args.build_dir}; build the tests first")
+        sys.exit(f"Brak {BINARY} w {args.build_dir}; najpierw zbuduj testy")
     dump = subprocess.run([str(binary), "--print"], check=True, capture_output=True, text=True).stdout
     toolchain, new = parse(dump)
     if not toolchain:
-        sys.exit("The test binary did not print a toolchain header")
+        sys.exit("Binarka testu nie wypisała nagłówka z nazwą toolchainu")
     reference = args.golden_dir / f"{toolchain}.txt"
     old = parse(reference.read_text(encoding="utf-8"))[1] if reference.is_file() else {}
     text, changed = report(old, new, f"Golden master ({toolchain})")

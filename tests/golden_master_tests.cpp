@@ -27,7 +27,10 @@
 namespace {
 using namespace strefa;
 
-#if defined(_MSC_VER) && !defined(__clang__)
+// clang-cl links the UCRT libm, so it gets its own key; it has no reference yet and fails with "Brak pliku wzorca".
+#if defined(_MSC_VER) && defined(__clang__)
+constexpr std::string_view toolchain = "clang-cl";
+#elif defined(_MSC_VER)
 constexpr std::string_view toolchain = "msvc";
 #elif defined(__clang__)
 constexpr std::string_view toolchain = "clang";
@@ -71,15 +74,23 @@ std::vector<Case> make_cases() {
                          if (blasts >= 2) ++*batched;
                      },
                      [batched] { check(*batched >= 30, "chain: za mało ticków z kilkoma wybuchami"); }});
-    // projectile_hit "chip" branch: the hit must give the slab velocity that an unhit slab does not have.
+    // projectile_hit "chip" branch: compared with an unhit slab, the hit must loosen cells (material digest holds the
+    // loose flags) and give them velocity, but neither delete mass nor add heat as the ignition branch would.
     cases.push_back({"chip",
                      [](sim::World& w) {
                          sim::World slab{0x57EF'A023U, w.config()};
                          sim::load_wood_slab(slab);
                          sim::load_wood_chip(w);
-                         constexpr auto velocity = static_cast<std::size_t>(sim::DigestField::velocity);
-                         check(w.digests()[velocity] != slab.digests()[velocity],
-                               "chip: trafienie nie nadało drewnu prędkości");
+                         const auto hit = w.digests(), unhit = slab.digests();
+                         auto field = [](const sim::StateDigests& d, sim::DigestField f) {
+                             return d[static_cast<std::size_t>(f)];
+                         };
+                         using enum sim::DigestField;
+                         check(field(hit, material) != field(unhit, material)
+                                       && field(hit, velocity) != field(unhit, velocity),
+                               "chip: trafienie nie poluzowało drewna ani nie nadało mu prędkości");
+                         check(field(hit, mass) == field(unhit, mass) && field(hit, enthalpy) == field(unhit, enthalpy),
+                               "chip: trafienie zmieniło masę lub entalpię, więc nie poszło gałęzią odprysku");
                      },
                      {},
                      {}});
@@ -105,8 +116,9 @@ Values run_cases() {
             c.load(world);
             for (int i = 0; i < world_steps; ++i) {
                 world.step();
-                // Release-build check of the detonate_pending entry condition (physics.hpp): every tick must leave
-                // the capacity cache fresh, so the next tick's batch starts from it.
+                // Tick-boundary proxy for the detonate_pending entry condition (physics.hpp), in every build type: each
+                // tick must leave the capacity cache fresh. Inside the step, react_materials runs between this state
+                // and the batch and ends with refresh_thermal; only the Debug assert in apply_blast sees that point.
                 check(world.detonation_ready(), c.name + ": nieświeża pojemność cieplna po ticku " + std::to_string(i));
                 if (c.after_step) c.after_step(world, i);
             }

@@ -3,3 +3,6 @@
 
 # Original supplied review documents.
 docs/plans/reviews/** -text
+
+# References written by scripts/golden.py; excluded from the pr-hygiene size count.
+tests/golden/*.txt linguist-generated=true
