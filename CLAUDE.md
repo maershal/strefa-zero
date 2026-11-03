@@ -24,13 +24,15 @@ ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   #
 - CPU tests run under `ctest -j`; every `graphics` test has `RESOURCE_LOCK gpu`, so GL tests stay serial. Configure
   fails if a test lacks `LABELS` or `TIMEOUT`: CPU tests use `strefa_add_cpu_test` (`unit`/`physics`/`determinism`/
   `golden`, `slow` = 300 s instead of 120 s, `PROCESSORS` = worker threads). CI window tests carry the `ci-smoke` label
-  (`ci-gl33` = rerun under a GL 3.3 override); add the label instead of editing a regex.
+  (`ci-gl33` = rerun under a GL 3.3 override); add the label instead of editing a regex. Tests whose verdict includes
+  a wall-clock threshold carry `perf-wallclock`; `junit-summary.py` lists their failures apart from functional ones.
 - GPU tests exit **77** (skipped) without an OpenGL 4.3 context; with `STREFA_REQUIRE_GL43=1` (set in CI) they exit 1
   instead (`platform::missing_gl43_exit_code()`; use it in new GPU test binaries). CI also fails on any skipped window
   test (`junit-summary.py --fail-on-skipped`). Software Mesa:
   `./scripts/run.sh --software` or `LIBGL_ALWAYS_SOFTWARE=1 GALLIUM_DRIVER=llvmpipe`.
 - Window tests rewrite `<profile>/progress.txt` (frames, ticks, stage) once per second, so a TIMEOUT kill leaves the
-  last state. `-DSTREFA_GPU_TIMEOUT_SCALE=N` multiplies the TIMEOUT of `graphics` tests (nightly llvmpipe run only).
+  last state. `-DSTREFA_GPU_TIMEOUT_SCALE=N` multiplies the TIMEOUT of `graphics` tests (nightly llvmpipe run only)
+  and, through the environment variable of the same name that CTest sets, in-app deadlines (`gpu.mission_ui`).
 - Most GPU/app tests are `StrefaQA --<mode>-check --profile <dir>` invocations registered in
   `CMakeLists.txt`; they write reports into `<dir>` and exit. Only `app.opengl_smoke`,
   `app.opengl33_smoke` and `gpu.mission_ui` run the shipped `StrefaZero` (`--smoke-test`, `--mission-smoke-test`).

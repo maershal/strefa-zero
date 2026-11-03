@@ -2,6 +2,15 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Pędzel GPU niezależny od historii świata, podzielony nocny przebieg GPU
+
+Pędzel GPU tworzył zależnie od historii świata i kolejności wątków mniej cząstek niż komórek w obrysie (na llvmpipe 111 lub 103 zamiast 112). Przyczyna: tworzenie w wolnym slocie podnosiło granicę ponownego użycia indeksu sąsiadów o odległość od kotwicy poprzedniego właściciela slotu. Okno zapytań innych kandydatów tego samego przebiegu sięgało wtedy ostatniego wiersza siatki. Tam koniec zakresu brał bieżący `aliveCount`, który rośnie podczas tworzenia, więc kandydaci porównywali się z nieaktualnymi wpisami `order[]`. Teraz:
+- nowa cząstka dostaje własną kotwicę i nie zmienia granicy;
+- koniec indeksu to liczba cząstek z jego budowy;
+- `load()` (więc i `reset()`) zeruje listy slotów i indeks sąsiadów.
+
+Nowe testy `gpu.brush_history` i `gpu.brush_history_sorted_aos` (`StrefaQA --gpu-brush-check`) porównują pędzel po historii fikstur z liczbą komórek. `STREFA_GPU_TIMEOUT_SCALE` wydłuża też wewnętrzny limit `gpu.mission_ui`. `nightly-gpu.yml` dzieli testy `graphics` na 4 części według czasów poprzedniego przebiegu i przy porażce otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Testy z progiem czasu ściennego mają etykietę `perf-wallclock` i podsumowanie wymienia je osobno. Progi testów bez zmian.
+
 ## Usunięcie Poligonu CPU
 
 Poligon CPU (`--arena`, pozycja menu 03) był drugą, równoległą grą na modelu CPU: gracz, pociski, granaty i tarcze w `game::GameSession`, z osobnym adapterem efektów GPU. Jego rolę przejęła Misja GPU, więc usunięto ekran, opcję `--arena`, `game::GameSession`, adapter `CpuVfxAdapter` i jego kontrolę w `--gpu-vfx-check` (`cpu-vfx-tests.txt`, `cpu-vfx-samples.csv`) oraz scenę `arena` w `StrefaPhysics` (pakiet CI sprawdza teraz `--scene chain`). Menu ma pozycje 01–07; StrefaZero ma 10 opcji gracza. Model CPU, Laboratorium CPU, `--scene lab:<id>` i GPU bez zmian. `sim.golden_master` traci przypadek `arena_session`; sześć hashy scen pozostaje bez zmian. `game.training` zastąpił krótszy `game.input_pose` (bufor wejścia, IK), `game.vfx_contract` porównuje lekkie i pełne próbki cieczy na scenie laboratorium zamiast świata poligonu. Smoke test menu odwiedza 7/7 ekranów, `app.mode_faults` sprawdza 3 tryby (bez GPU: 1). Kolumna `screen` w `frame-profile.csv` i pole `screen=` w `progress.txt` testów okna numerują ekrany GPU o jeden niżej (Laboratorium GPU 5, Misja GPU 6). Na OpenGL 3.3 działa już tylko Laboratorium CPU. Atlas `soldier_pl.bmp` nie jest już wczytywany (rysował go tylko poligon); raport smoke testu nie ma pola `actor_atlas`, a brak pliku nie blokuje startu. Ścieżka zdarzeń CPU w `VfxPool` (`cpu_canvas`, `cpuSource` w `vfx_events.comp`) pozostaje do osobnego usunięcia.

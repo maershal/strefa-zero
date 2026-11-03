@@ -1,11 +1,18 @@
 name: Nightly GPU
 
-# Every `graphics` test on Mesa llvmpipe, one at a time; pull requests run only the `ci-smoke` subset in linux.yml.
-# Not a required check: a red run is a report to read, not a merge gate.
+# Every `graphics` test on Mesa llvmpipe, split over parallel shards (each serial, one GL context at a time);
+# pull requests run only the `ci-smoke` subset in linux.yml.
+# Not a required check: a red run is a report to read, not a merge gate. A failed scheduled run opens or updates
+# the issue labelled `nightly`; a manual run does so only with report_issue.
 on:
   schedule:
     - cron: '0 3 * * *'
   workflow_dispatch:
+    inputs:
+      report_issue:
+        description: 'Open or update the `nightly` issue when a test fails'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,26 +22,23 @@ env:
   CMAKE_CXX_COMPILER_LAUNCHER: ccache
   CCACHE_DIR: ${{ github.workspace }}/.ccache
   CCACHE_MAXSIZE: 500M
+  # Keep in step with the matrix of the `graphics` job.
+  SHARDS: 4
 
 jobs:
-  graphics-full:
+  build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 240
-    env:
-      LIBGL_ALWAYS_SOFTWARE: "1"
-      GALLIUM_DRIVER: llvmpipe
-      SDL_VIDEO_DRIVER: x11
-      STREFA_REQUIRE_GL43: "1"
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v7
-      - name: Install build and graphics dependencies
+      - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y build-essential cmake ninja-build pkg-config ccache \
             libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
             libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
             libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
-            libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev xvfb xauth
+            libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev
       - name: Restore pinned dependency archives
         uses: actions/cache@v6
         with:
@@ -48,34 +52,146 @@ jobs:
           restore-keys: |
             ccache-nightly-gpu-
             ccache-build-and-test-main-
-      # llvmpipe is several times slower than a GPU: only the time limits grow (x3), every check stays the same.
+      # llvmpipe is several times slower than a GPU: only the time limits grow (x3, CTest TIMEOUT and the in-app
+      # deadline of gpu.mission_ui), every check stays the same.
       - name: Build
         run: |
           ccache --zero-stats
           ./scripts/build.sh --skip-tests --jobs "$(nproc)" --dependency-cache ~/.cache/strefa-deps \
             -- -DSTREFA_GPU_TIMEOUT_SCALE=3
           ccache --show-stats
-      - name: Run every graphics test with Mesa
+      # JUnit reports of an earlier run weight the shards; without them each test weighs its TIMEOUT.
+      - name: Restore test durations of an earlier run
+        uses: actions/cache/restore@v6
+        with:
+          path: build/durations
+          key: nightly-gpu-durations-${{ github.run_id }}-${{ github.run_attempt }}
+          restore-keys: nightly-gpu-durations-
+      - name: List graphics tests
+        run: ctest --test-dir build/linux-release --show-only=json-v1 -L graphics > build/graphics-tests.json
+      # A tarball keeps executable bits; object files are not needed to run the tests.
+      - name: Pack build tree
+        run: |
+          mkdir -p build/durations
+          tar --exclude='*.o' -czf build-tree.tar.gz build/linux-release build/graphics-tests.json build/durations
+      - uses: actions/upload-artifact@v7
+        with:
+          name: nightly-gpu-build
+          retention-days: 1
+          path: build-tree.tar.gz
+
+  graphics:
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      LIBGL_ALWAYS_SOFTWARE: "1"
+      GALLIUM_DRIVER: llvmpipe
+      SDL_VIDEO_DRIVER: x11
+      STREFA_REQUIRE_GL43: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install graphics runtime
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev libwayland-dev libdecor-0-dev \
+            libasound2-dev libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev xvfb xauth
+      - uses: actions/download-artifact@v8
+        with:
+          name: nightly-gpu-build
+      - name: Unpack build tree
+        run: tar -xzf build-tree.tar.gz
+      - name: Run graphics shard ${{ matrix.shard }}/${{ env.SHARDS }} with Mesa
         run: |
           mkdir -p build/junit
+          python3 scripts/ctest-shard.py build/graphics-tests.json "$SHARDS" ${{ matrix.shard }} build/durations/*.xml --list
+          regex=$(python3 scripts/ctest-shard.py build/graphics-tests.json "$SHARDS" ${{ matrix.shard }} build/durations/*.xml)
           xvfb-run -a -s '-screen 0 1280x720x24' \
-            ctest --test-dir build/linux-release --output-on-failure --parallel 1 -L graphics \
-            --output-junit "$PWD/build/junit/graphics.xml"
-      - name: Test summary
+            ctest --test-dir build/linux-release --output-on-failure --parallel 1 -L graphics -R "$regex" \
+            --output-junit "$PWD/build/junit/graphics-${{ matrix.shard }}.xml"
+      - uses: actions/upload-artifact@v7
         if: always()
-        run: python3 scripts/junit-summary.py 'Linux (Mesa, wszystkie testy graphics)' build/junit/graphics.xml >> "$GITHUB_STEP_SUMMARY"
-      # Like linux.yml: a skip that does not depend on the GL version (e.g. gpu.shader_cache) must not leave the run green.
-      - name: Require no skipped graphics tests
-        if: always()
-        run: python3 scripts/junit-summary.py --fail-on-skipped 'Mesa' build/junit/graphics.xml
+        with:
+          name: nightly-gpu-junit-${{ matrix.shard }}
+          retention-days: 14
+          path: build/junit/
       # Reports, CSV and progress.txt of every profile; BMP captures stay out to keep the artifact small.
       - uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: Linux-nightly-gpu-profiles
+          name: Linux-nightly-gpu-profiles-${{ matrix.shard }}
           retention-days: 14
           path: |
-            build/junit/
             build/linux-release/Testing/Temporary/
             build/linux-release/*profile/**
             !build/linux-release/*profile/**/*.bmp
+
+  report:
+    needs: graphics
+    if: always()
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
+        with:
+          pattern: nightly-gpu-junit-*
+          merge-multiple: true
+          path: build/junit
+      # Lists wall-clock threshold failures (CTest label perf-wallclock) apart from functional ones.
+      - name: Test summary
+        run: |
+          python3 scripts/junit-summary.py 'Linux (Mesa, wszystkie testy graphics)' \
+            $(seq -f 'build/junit/graphics-%g.xml' 1 "$SHARDS") | tee build/summary.md >> "$GITHUB_STEP_SUMMARY"
+      # Like linux.yml: a skip that does not depend on the GL version (e.g. gpu.shader_cache) must not leave the
+      # run green, nor may a shard that never wrote its report.
+      - name: Require no skipped graphics tests
+        id: skipped
+        run: python3 scripts/junit-summary.py --fail-on-skipped 'Mesa' $(seq -f 'build/junit/graphics-%g.xml' 1 "$SHARDS")
+      - name: Keep test durations for the next split
+        if: always()
+        run: |
+          mkdir -p build/durations
+          cp build/junit/graphics-*.xml build/durations/ 2>/dev/null || true
+      - uses: actions/cache/save@v6
+        if: always() && hashFiles('build/durations/*.xml') != ''
+        with:
+          path: build/durations
+          key: nightly-gpu-durations-${{ github.run_id }}-${{ github.run_attempt }}
+      - name: Open or update the nightly issue
+        if: >-
+          always()
+          && (needs.graphics.result != 'success' || steps.skipped.outcome == 'failure')
+          && (github.event_name == 'schedule' || inputs.report_issue)
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          {
+            echo "Nocny przebieg GPU [#$GITHUB_RUN_NUMBER]($run_url) na \`$GITHUB_REF_NAME\` ($GITHUB_SHA) nie przeszedł."
+            echo
+            cat build/summary.md
+            echo
+            echo "**Artefakty** (raporty JUnit, profile, progress.txt):"
+            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
+              --jq ".artifacts[] | select(.name != \"nightly-gpu-build\") | \"- [\(.name)]($run_url/artifacts/\(.id))\""
+          } > build/issue.md
+          gh label create nightly --color B60205 --description 'Porażki nocnego przebiegu nightly-gpu' --force
+          number=$(gh issue list --label nightly --state open --limit 1 --json number --jq '.[0].number // empty')
+          if [ -n "$number" ]; then
+            gh issue edit "$number" --body-file build/issue.md
+            gh issue comment "$number" --body "Kolejny nieudany przebieg: $run_url"
+          else
+            gh issue create --title 'Nocny przebieg GPU: niezaliczone testy graphics' --label nightly \
+              --body-file build/issue.md
+          fi

@@ -423,6 +423,10 @@ if(BUILD_TESTING)
             set_property(TEST ${smoke_test} APPEND PROPERTY LABELS ci-smoke)
         endforeach()
         set_property(TEST app.opengl33_smoke app.mode_faults APPEND PROPERTY LABELS ci-gl33)
+        # Verdict includes a wall-clock threshold (UI frame p95 <= 100 ms, mission deadline): junit-summary.py lists
+        # these failures apart from functional ones, since a software renderer misses them by design.
+        set_property(TEST app.laboratory_responsiveness app.laboratory_four_threads gpu.laboratory_ui gpu.thermal_ui
+            gpu.mission_ui APPEND PROPERTY LABELS perf-wallclock)
     endif()
 
     # One GL context at a time: graphics tests stay serial under `ctest -j`. Every test must declare
