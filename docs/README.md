@@ -39,7 +39,8 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
   kontekstu agentów przez `CLAUDE.md`.
 - [reviews/](plans/reviews/) — dokumenty review: v0.7.0-i04 (bez zmian), v2
   ([review](plans/reviews/review_strefa_zero_v2.md), [architektura](plans/reviews/architecture_v2.md),
-  [laboratorium](plans/reviews/lab_features.md); tylko formatowanie i poprawki literówek).
+  [laboratorium](plans/reviews/lab_features.md); formatowanie, wyrównane tabele (oznaczone), banery migawki
+  i poprawki literówek; treść bez zmian).
 
 ## Surowe pomiary — [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements)
 
