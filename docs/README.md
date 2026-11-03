@@ -37,9 +37,8 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 - [REVIEW_I04_ROZSTRZYGNIECIA.md](plans/REVIEW_I04_ROZSTRZYGNIECIA.md) — rozstrzygnięcia review v0.7.0-i04.
 - [REVIEW_V2_STATUS.md](plans/REVIEW_V2_STATUS.md) — status i rozstrzygnięcia review v2 (`e12c39a`); ładowany do
   kontekstu agentów przez `CLAUDE.md`.
-- [reviews/](plans/reviews/) — dokumenty review: v0.7.0-i04 (bez zmian), v2
-  ([review](plans/reviews/review_strefa_zero_v2.md), [architektura](plans/reviews/architecture_v2.md),
-  [laboratorium](plans/reviews/lab_features.md); tylko formatowanie i poprawki literówek).
+- [reviews/](plans/reviews/) — oryginalne dokumenty review (bez zmian). Pełne dokumenty review v2 są tylko lokalne
+  (`.gitignore`); w repozytorium jest ich status.
 
 ## Surowe pomiary — [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements)
 

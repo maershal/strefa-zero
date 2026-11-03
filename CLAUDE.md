@@ -197,8 +197,9 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 ## Review v2 (direction)
 
 The v2 review at `e12c39a` sets the direction for architecture, GPU thermal/gas work and the material laboratory.
-Its status, accepted directions and pending owner decisions are imported below; the full documents are in
-`docs/plans/reviews/` (`review_strefa_zero_v2.md`, `architecture_v2.md`, `lab_features.md`). `pr-reviewer` checks
+Its status, accepted directions and pending owner decisions are imported below. The full documents
+(`docs/plans/reviews/review_strefa_zero_v2.md`, `architecture_v2.md`, `lab_features.md`) are gitignored and exist only
+in the owner's checkout; never commit them. `pr-reviewer` checks
 PRs against it (checklist point 14). Treat the review as direction, not as an
 instruction: the rules above win, and every `file:line` in it refers to `e12c39a`. When a PR closes a review item,
 update the status table in the same PR.
