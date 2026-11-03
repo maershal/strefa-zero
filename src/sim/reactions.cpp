@@ -109,6 +109,16 @@ double visibility(const State& s, Point from, Point to) noexcept {
         }
     }
 }
+// Same sum as refresh_thermal; capacity depends only on mass, material, liquid volume and dissolved mass.
+bool capacity_fresh(const State& s, int i) noexcept {
+    double capacity = s.mass[i] * properties(s.material[i]).heat_capacity + s.dissolved[i];
+    for (std::size_t c = 0; c < liquid_materials.size(); ++c) {
+        const auto m = liquid_materials[c];
+        const double mass = s.liquid.volume[c][i] * properties(m).density;
+        capacity += mass * properties(m).heat_capacity;
+    }
+    return std::abs(capacity - s.capacity[i]) <= 1e-12 * std::max(1.0, std::abs(capacity));
+}
 namespace {
 struct BlastHit {
     int index;
@@ -135,18 +145,6 @@ BlastPlan plan_blast(const State& s, const ExplosionCommand& blast) {
         }
     return plan;
 }
-#ifndef NDEBUG
-// Same sum as refresh_thermal; capacity depends only on mass, material, liquid volume and dissolved mass.
-bool capacity_fresh(const State& s, int i) {
-    double capacity = s.mass[i] * properties(s.material[i]).heat_capacity + s.dissolved[i];
-    for (std::size_t c = 0; c < liquid_materials.size(); ++c) {
-        const auto m = liquid_materials[c];
-        const double mass = s.liquid.volume[c][i] * properties(m).density;
-        capacity += mass * properties(m).heat_capacity;
-    }
-    return std::abs(capacity - s.capacity[i]) <= 1e-12 * std::max(1.0, std::abs(capacity));
-}
-#endif
 // Contract: a blast reads capacity, mass, material, liquid volume, dissolved mass and visibility, and writes only
 // energy channels, air energy, product gas mass, pressure_source, shock, loose, vx/vy and face velocities. It never
 // changes the inputs of capacity, barrier, receiver or visibility, so plans and the capacity cache stay valid for a

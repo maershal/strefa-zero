@@ -105,6 +105,9 @@ Values run_cases() {
             c.load(world);
             for (int i = 0; i < world_steps; ++i) {
                 world.step();
+                // Release-build check of the detonate_pending entry condition (physics.hpp): every tick must leave
+                // the capacity cache fresh, so the next tick's batch starts from it.
+                check(world.detonation_ready(), c.name + ": nieświeża pojemność cieplna po ticku " + std::to_string(i));
                 if (c.after_step) c.after_step(world, i);
             }
             if (c.finish) c.finish();

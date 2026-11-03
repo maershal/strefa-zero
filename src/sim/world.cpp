@@ -451,6 +451,12 @@ std::uint64_t World::checksum() const noexcept {
         h.values(*a);
     return h.hash;
 }
+bool World::detonation_ready() const noexcept {
+    if (state_.thermal_dirty) return false;
+    for (int i = 0; i < grid_cells; ++i)
+        if (!capacity_fresh(state_, i)) return false;
+    return true;
+}
 StateDigests World::digests() const noexcept {
     const auto& s = state_;
     StateDigests out{};

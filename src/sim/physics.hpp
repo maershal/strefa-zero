@@ -219,7 +219,16 @@ void solve_air(State& s, double dt);
 void react_materials(State& s, double dt);
 void move_powders(State& s, double dt, bool full_scan);
 // Applies up to limit queued explosions in order (one refresh_thermal per batch).
+// Entry condition: the capacity cache is fresh, i.e. capacity_fresh(s, i) holds for every cell (no write to mass,
+// material, liquid volume or dissolved mass since the last refresh_thermal, and thermal_dirty is false). Blasts read
+// s.capacity to split heat between matter and air, and the batch refreshes only once, right before its last effective
+// blast, so a stale cache would misroute the heat of every earlier blast. World::step guarantees the condition: it
+// refreshes at the start of a tick when thermal_dirty is set, and react_materials (which converts cells and queues
+// explosions) ends with refresh_thermal. Debug builds assert it in apply_blast; World::detonation_ready lets tests
+// check it in every build type without adding work to the step.
 void detonate_pending(State& s, int limit);
+// True when s.capacity[i] equals the sum refresh_thermal would store for cell i.
+bool capacity_fresh(const State& s, int i) noexcept;
 void update_report(State& s);
 double visibility(const State& s, Point from, Point to) noexcept;
 void convert_solid(State& s, int i, Material material);

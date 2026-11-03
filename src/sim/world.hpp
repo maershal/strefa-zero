@@ -70,6 +70,8 @@ public:
     [[nodiscard]] double mass_of(Material material) const noexcept;
     [[nodiscard]] std::uint64_t checksum() const noexcept;
     [[nodiscard]] StateDigests digests() const noexcept;
+    // Entry condition of detail::detonate_pending (see physics.hpp); one full-grid pass, for tests only.
+    [[nodiscard]] bool detonation_ready() const noexcept;
     [[nodiscard]] bool chunk_awake(int index) const noexcept;
     void render(std::span<Color, cell_count> pixels, bool transparent_empty = false,
                 RenderMode mode = RenderMode::materials) const;
