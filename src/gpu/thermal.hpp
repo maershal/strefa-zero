@@ -109,7 +109,8 @@ struct ThermalTiming {
     std::uint64_t tick{};
     double heat_ms{}, gas_ms{}, reaction_ms{}, render_ms{}, cpu_ms{};
     // Profile mode, in the CPU row of the tick (cpu_ms). Counted from the end of the previous thermal tick: events,
-    // solver kernels, condensation of the previous step, erase and the totals capture (not presentation or drawing).
+    // solver kernels, condensation of the previous step, erase and the totals capture. Not counted: presentation,
+    // drawing, the inspector, a reset and the forced capture of a diagnostic read (read_thermal).
     unsigned dispatches{}, barriers{};
     // Profile mode, in the GPU row of the tick (heat_ms...): every solver kernel of ThermalSystem::tick, in order.
     std::vector<ThermalOperationTiming> operations;

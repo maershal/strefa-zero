@@ -199,6 +199,7 @@ void ThermalSystem::reset(const std::array<GLuint, 8>& buffers, unsigned current
     brush({});
     run(0, cell_count);
     synchronize(buffers, current);
+    dispatches_ = barriers_ = 0; // a reset is not the work of the next tick
     state.invalidate();
 }
 void ThermalSystem::synchronize(const std::array<GLuint, 8>& buffers, unsigned current) {
@@ -463,6 +464,7 @@ ThermalSnapshot ThermalSystem::snapshot() {
     s.totals = read_totals(reduction);
     s.totals.tick = tick_;
     s.totals.generation = generation;
+    dispatches_ = barriers_ = 0; // the forced capture of a diagnostic read is not the work of the next tick
     state.invalidate();
     return s;
 }

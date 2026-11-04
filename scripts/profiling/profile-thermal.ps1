@@ -1,7 +1,8 @@
 # -Telemetry (benchmark): nvidia-smi log of SM/memory clocks, temperature, power and throttle reasons every 100 ms
 # (GpuTelemetry.psm1) into telemetry.csv; analyze-thermal.py then disqualifies trials with hw_*/sw_thermal_slowdown.
+# -TimeoutMinutes (default 90): the benchmark takes ~10 min, several times that in the laptop's slow regime.
 # -Seed repeats the scene order of an earlier run (STREFA_BENCHMARK_SEED); without it every run draws a new order.
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality',[switch]$Telemetry,[Nullable[uint64]]$Seed)
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality',[switch]$Telemetry,[Nullable[uint64]]$Seed,[ValidateRange(1,600)][int]$TimeoutMinutes=90)
 $ErrorActionPreference='Stop'
 $Executable=(Resolve-Path -LiteralPath $Executable).Path
 $Output=[IO.Path]::GetFullPath($Output)
@@ -22,7 +23,7 @@ if($null -ne $Seed){$env:STREFA_BENCHMARK_SEED="$Seed"}
 try{
  $p=Start-Process -FilePath $Executable -ArgumentList (@($flags)+@('--profile',('"'+$Output+'"'))) -PassThru
  $null=$p.Handle
- $done=$p.WaitForExit(1800000)
+ $done=$p.WaitForExit($TimeoutMinutes*60000)
  if(-not $done){$p.Kill();$p.WaitForExit()}
 }finally{
  if($null -ne $Seed){Remove-Item Env:STREFA_BENCHMARK_SEED -ErrorAction SilentlyContinue}

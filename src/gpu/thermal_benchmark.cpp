@@ -70,6 +70,7 @@ std::array<unsigned, 4> thermal_benchmark_order(std::uint64_t& state) {
 
 std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const std::filesystem::path& output) {
     try {
+        std::filesystem::create_directories(output);
         const TimerQueries gl;
         const auto seed = benchmark_seed();
         auto state = seed;
