@@ -121,6 +121,9 @@ if(STREFA_BUILD_APP)
 
     add_library(strefa_platform STATIC src/platform/window.cpp src/platform/texture.cpp src/platform/gl_debug.cpp)
     target_link_libraries(strefa_platform PUBLIC strefa_core SDL3::SDL3 PRIVATE OpenGL::GL)
+    if(WIN32)
+        target_link_libraries(strefa_platform PRIVATE dwmapi) # Window::shell_state (DWMWA_CLOAKED)
+    endif()
     add_library(strefa_gpu STATIC src/gpu/lighting_system.cpp src/gpu/thermal_system.cpp src/gpu/vfx_pool.cpp src/gpu/fluid_quality.cpp src/gpu/event_ring.cpp src/gpu/shader_library.cpp src/gpu/scene_renderer.cpp src/gpu/world.cpp src/gpu/mission_route.cpp src/gpu/profile_samples.cpp src/gpu/upload_ring.cpp src/gpu/readback_ring.cpp)
     target_link_libraries(strefa_gpu PUBLIC strefa_core strefa_gameplay PRIVATE SDL3::SDL3 OpenGL::GL)
     foreach(shader presentation_prepare_birth.comp lighting_materials.comp lighting_probe.comp lighting_apply.frag lighting_bloom.frag lighting_common.glsl lighting_events.comp lighting_field.comp lighting_jfa.comp lighting_post.frag lighting_shadow.comp lighting_thermal.comp lighting_visibility.glsl presentation_birth.glsl presentation_field.vert presentation_field.frag presentation_moisture.comp thermal_events.comp thermal.comp thermal_common.glsl thermal_reduce.comp thermal_condense.comp thermal_draw.frag vfx_field_command.comp vfx_field.vert vfx_common.glsl vfx_init.comp vfx_prepare.comp vfx_update.comp vfx_events.comp vfx_water.comp vfx_finish.comp vfx_draw.vert vfx_draw.frag vfx_canvas.frag liquid_sampling.glsl render_probe.comp scene_common.glsl render_terrain.glsl scene_background.frag scene_terrain.frag liquid_filter.frag liquid_thickness.comp reference_liquid_splat.vert reference_liquid_splat.frag reference_liquid_surface.frag world_protocol.glsl soldier_pose.glsl mission.comp mission_state.glsl mission.vert mission.frag coupling.comp body_terrain.glsl neighbors.comp particle_storage.glsl granular.comp granular.vert granular.frag particle_common.glsl liquids.comp liquid_splat.vert liquid_splat.frag liquid_surface.vert liquid_surface.frag)
@@ -132,7 +135,8 @@ if(STREFA_BUILD_APP)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_game PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-    add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp)
+    add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp
+        src/app/scene_benchmark_run.cpp)
     target_link_libraries(strefa_app PUBLIC
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
@@ -399,7 +403,7 @@ if(BUILD_TESTING)
         add_test(NAME gpu.scene_benchmark_content COMMAND ${CMAKE_COMMAND}
             -DPROFILE=${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/scene_benchmark_check.cmake)
         set_tests_properties(gpu.scene_benchmark_content PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
-            FIXTURES_REQUIRED scene_benchmark_output)
+            FIXTURES_REQUIRED scene_benchmark_output SKIP_REGULAR_EXPRESSION "STREFA_SKIPPED")
         add_test(NAME gpu.mission_ui_quick COMMAND strefa_qa --mission-ui-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile)
         set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME app.mode_faults COMMAND strefa_qa --mode-fault-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mode-faults-profile)

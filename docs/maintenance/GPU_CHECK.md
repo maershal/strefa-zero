@@ -16,9 +16,19 @@ Zasady pomiaru: sekcja „Protokół pomiaru” w `CLAUDE.md`.
    ```
 
 4. Zostaw laptop bezczynny przez 5 minut, żeby GPU ostygło.
-5. Benchmark otwiera widoczne okno. Nie minimalizuj go, nie zasłaniaj innym oknem i nie używaj komputera do końca
-   pomiaru. Scena, w której okno choć przez jedną klatkę było ukryte, zminimalizowane albo zasłonięte, dostaje
-   status `invalid`.
+5. Benchmark otwiera widoczne okno. Nie minimalizuj go, nie zasłaniaj innym oknem, nie przełączaj pulpitu
+   wirtualnego i nie używaj komputera do końca pomiaru. Scena, w której okno choć przez jedną klatkę było ukryte,
+   zminimalizowane, zasłonięte albo ukryte przez DWM, dostaje status `invalid`. Klatki z zminimalizowanym oknem
+   (symulacja wtedy stoi) liczą się do okna pomiaru sceny, więc minimalizacja nie skraca ani nie omija pomiaru.
+   Rozgrzewka nie ma wierszy klatek, ale okno poza ekranem w jej trakcie liczy kolumna `warmup_away_frames`
+   i ono też unieważnia scenę.
+   Na Windows SDL 3.4 nie zgłasza zasłonięcia (`SDL_EVENT_WINDOW_OCCLUDED`), więc benchmark sprawdza tam co klatkę
+   także `IsIconic` (liczone jako `minimized`) i `DwmGetWindowAttribute(DWMWA_CLOAKED)` (kolumna `cloaked`). Okna
+   zasłoniętego innym oknem na Windows nie da się w ten sposób wykryć: licznik `unfocused_frames` (wypisywany też
+   w wierszu podsumowania jako „bez fokusu”) pokazuje, że ktoś używał komputera, ale nie unieważnia pomiaru.
+6. Zamknięcie okna (albo Ctrl+C w konsoli, czyli `SDL_EVENT_QUIT`) przerywa cały benchmark, a nie tylko bieżącą
+   scenę: przerwana scena dostaje status `failed` z powodem „przerwany zamknięciem okna (QUIT)”, kolejne sceny nie
+   startują, a kod wyjścia to 1.
 
 ## 2. Benchmark wszystkich scen (z VSync i bez)
 
@@ -42,14 +52,21 @@ foreach ($vsync in 'on', 'off') {
 - Kod wyjścia 0: wszystkie sceny mają status `ok`.
 - Kod 1: co najmniej jedna scena ma status `invalid` (okno niewidoczne) albo `failed` (błąd trybu). Pozostałe sceny są
   zmierzone, a powód jest w kolumnie `status_reason`.
-- Kod 77: brak OpenGL 4.3.
+- Kod 77: brak OpenGL 4.3 (w profilu jest wtedy `gpu-skipped.txt`, a CTest `gpu.scene_benchmark_content` też
+  jest pomijany).
+
+`scene-benchmark-info.txt` jest zapisywany na dysk przed pierwszą sceną, więc zostaje także po awarii albo zabiciu
+procesu. Na końcu dochodzą do niego `result=completed|quit` i `scenes_measured=<liczba>`, a przy kodzie wyjścia sceny innym
+niż 0 (np. 77) `result=exit_code_<kod>`; brak `result=` oznacza przerwany proces. Plik ma `schema=3` (nowe pola
+okna i `result=`). Pola `window_iconic` i `window_cloaked` opisują stan okna na starcie.
 
 `--vsync on` pokazuje, jak gra działa u gracza; `--vsync off` (bez ogranicznika klatek) mierzy koszt. Rozmiar okna
 można ustalić opcją `--test-window-size 1600 900`; `scene-benchmark-info.txt` zapisuje faktyczny rozmiar, skalę DPI
 i jakości z ustawień domyślnych.
 
-Misja odtwarza zapisaną trasę (1340 ticków ≈ 11 s). W dłuższym oknie trasa zaczyna się od nowa. Klatka restartu ma
-`route_reset=1` i nie wchodzi do statystyk czasu klatki; ich liczba jest w kolumnie `route_resets`.
+Misja odtwarza zapisaną trasę (1340 ticków ≈ 11 s). W dłuższym oknie trasa zaczyna się od nowa. `route_reset=1`
+ma klatka po tej, która zażądała restartu (jej `frame_ms` zawiera przeładowanie świata), i nie wchodzi do statystyk
+czasu klatki; liczba restartów jest w kolumnie `route_resets`.
 
 ## 3. Soak 15 minut
 
@@ -117,9 +134,11 @@ ticku.
 
 `scene-benchmark.csv` ma jeden wiersz na scenę i przebieg (`pass`):
 
-- `status`: `ok`, `invalid` (okno ukryte, zminimalizowane albo zasłonięte w części klatek) lub `failed` (błąd sceny),
-  z powodem w `status_reason`; liczniki `hidden_frames`, `minimized_frames`, `occluded_frames`, `unfocused_frames`
-  (brak fokusu nie unieważnia pomiaru);
+- `status`: `ok`, `invalid` (okno ukryte, zminimalizowane, zasłonięte albo ukryte przez DWM w części klatek) lub
+  `failed` (błąd sceny albo przerwanie przez QUIT), z powodem w `status_reason`; liczniki `hidden_frames`,
+  `minimized_frames` (SDL albo `IsIconic`), `occluded_frames`, `unfocused_frames` (brak fokusu nie unieważnia
+  pomiaru), `cloaked_frames` (`DWMWA_CLOAKED`, tylko Windows) i `warmup_away_frames` (klatki rozgrzewki i klatka
+  otwierająca okno pomiaru z oknem poza ekranem; dwie ostatnie kolumny pliku);
 - `window_seconds`: faktyczny czas okna pomiaru;
 - czas klatki: mediana, p95, p99 i max;
 - rozkłady GPU ze wszystkich zapytań zakończonych w oknie pomiaru (zbierane co klatkę, bez limitu):
@@ -137,7 +156,7 @@ ticku.
 - `start_utc_unix_ns` i `end_utc_unix_ns`: granice okna pomiaru.
 
 `scene-benchmark-frames.csv` ma wiersz na klatkę: liczbę i sumę próbek GPU zakończonych w tej klatce, flagi okna SDL
-(`visible`, `focused`, `minimized`, `occluded`) i `route_reset`.
+(`visible`, `focused`, `minimized`, `occluded`), `route_reset` i `cloaked` (ostatnia kolumna).
 
 `telemetry.csv` ma te same znaczniki `utc_unix_ns` (UTC, ns od 1970), więc okno sceny łączy się z próbkami
 telemetrii przez zakres (`Get-GpuTelemetryWindow`). Powody ograniczenia zegara są w kolumnach `reason_*` (1 = aktywny).

@@ -2,6 +2,17 @@
 
 #include <SDL3/SDL_opengl.h>
 
+#ifdef _WIN32
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <dwmapi.h>
+#include <windows.h>
+#endif
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -88,6 +99,18 @@ float Window::display_scale() const noexcept {
 }
 bool Window::minimized() const noexcept {
     return (SDL_GetWindowFlags(window_.get()) & SDL_WINDOW_MINIMIZED) != 0;
+}
+Window::ShellState Window::shell_state() const noexcept {
+    ShellState result;
+#ifdef _WIN32
+    auto* hwnd = static_cast<HWND>(SDL_GetPointerProperty(SDL_GetWindowProperties(window_.get()),
+                                                          SDL_PROP_WINDOW_WIN32_HWND_POINTER, nullptr));
+    if (!hwnd) return result;
+    result.iconic = IsIconic(hwnd) != 0;
+    DWORD cloaked = 0;
+    result.cloaked = SUCCEEDED(DwmGetWindowAttribute(hwnd, DWMWA_CLOAKED, &cloaked, sizeof(cloaked))) && cloaked != 0;
+#endif
+    return result;
 }
 float Window::refresh_hz() const noexcept {
     const auto display = SDL_GetDisplayForWindow(window_.get());
