@@ -83,7 +83,7 @@ lekkie sceny, w których sterownik sam obniża P-stan. Wyniki: `soak-report.md`,
 Macierz ABBA etapów termiki (`off`, `heat`, `heat_gas`, `full`) w 4 scenach (`cold`, `fire`, `oil`, `quench`), 3 bloki.
 Bloki są pętlą zewnętrzną, a każdy blok losuje własną kolejność scen (Fisher–Yates na SplitMix64, ta sama kolejność
 na każdym kompilatorze). Wcześniej kolejność była stała (`cold → fire → oil → quench`), więc ostatnia scena mierzyła
-nagrzany laptop: etap gazu, który nie zależy od sceny, trwał w „gaszeniu” 2,36× dłużej. Pomiar trwa ok. 30 min:
+nagrzany laptop: etap gazu, który nie zależy od sceny, trwał w „gaszeniu” 2,36× dłużej. Pomiar trwa ok. 10 min na szybkim GPU, w wolnym reżimie dłużej:
 
 ```powershell
 pwsh ./scripts/profiling/profile-thermal.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/thermal `
@@ -91,9 +91,10 @@ pwsh ./scripts/profiling/profile-thermal.ps1 -Executable build/release/StrefaQA.
 python scripts/profiling/analyze-thermal.py gpu-check/thermal --controls
 ```
 
-- `-Telemetry` zapisuje obok wyników `telemetry.csv` z `GpuTelemetry.psm1` co 100 ms (zegary SM i pamięci,
-  temperatura, moc, powody ograniczenia, czyli to samo co
-  `nvidia-smi --query-gpu=clocks.sm,clocks.mem,temperature.gpu,power.draw,clocks_throttle_reasons.active`).
+- `-Telemetry` zapisuje obok wyników `telemetry.csv` z `GpuTelemetry.psm1` co 100 ms: P-stan, zegar grafiki
+  (`clocks.current.graphics`, kolumna `graphics_mhz`) i pamięci (`clocks.current.memory`), moc i jej limit,
+  temperaturę oraz aktywne powody ograniczenia (`clocks_event_reasons.*` albo `clocks_throttle_reasons.*`, zależnie
+  od sterownika). `-TimeoutMinutes` (domyślnie 90) przerywa zawieszony pomiar.
 - `-Seed N` (albo zmienna `STREFA_BENCHMARK_SEED`) powtarza kolejność scen wcześniejszego pomiaru; bez niej każdy
   pomiar losuje nowe ziarno. Ziarno i kolejność są w `thermal-benchmark-info.txt` (`seed=`, `block_<n>_scenes=`).
 
@@ -104,7 +105,8 @@ Pliki wyników (wszystkie mają kolumny `seed` i `sequence`, czyli numer odcinka
   z `telemetry.csv`);
 - `thermal-pass-samples.csv`: odcinek profilu po każdej scenie bloku (120 ticków, `ThermalOptions::profile`), kolumna
   `block` oraz `dispatches` i `barriers` (liczone od końca poprzedniego ticku termiki: zdarzenia, kernele solvera,
-  kondensacja poprzedniego kroku, gumka i odczyt sum; bez prezentacji, rysowania i inspektora). Każdy tick ma dwa
+  kondensacja poprzedniego kroku, gumka i odczyt sum; bez prezentacji, rysowania, inspektora, resetu sceny
+  i wymuszonego odczytu sum przez `read_thermal`). Każdy tick ma dwa
   wiersze: wiersz CPU (`cpu_ms`, liczniki) i wiersz GPU (`heat_ms`, `gas_ms`, `reaction_ms`);
 - `thermal-op-samples.csv`: znacznik czasu po każdym kernelu ticku w trybie profilu: `index` (kolejność w ticku),
   `op` (numer programu termiki) i `gpu_ms` (różnica z poprzednim znacznikiem);
@@ -117,7 +119,7 @@ tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę albo odcine
 grafiki jest poniżej 90% maksimum sesji (`--clock-fraction`). Ten drugi warunek łapie wolny reżim GTX 1650 w laptopie:
 po dojściu do 85 °C karta schodzi do 1395 MHz i połowy limitu mocy (ok. 23 W z 50 W) przy P0 i bez żadnego powodu
 ograniczenia w `nvidia-smi`, i zostaje tam także po ostygnięciu do 64 °C; etap gazu trwa wtedy 2,35× dłużej (3,12 zamiast
-1,34 ms). Z telemetrią medianą odniesienia etapu gazu są tylko odcinki, które przeszły warunki telemetrii, więc pomiar
+1,34 ms; jeden przebieg informacyjny bez stygnięcia przed startem, surowe dane: [thermal-benchmark-2026-11-04](https://github.com/maershal/strefa-zero-measurements/tree/0cc0d361c32f7f437327c32127598fdd0d4a55e0/thermal-benchmark-2026-11-04)). Z telemetrią medianą odniesienia etapu gazu są tylko odcinki, które przeszły warunki telemetrii, więc pomiar
 spędzony głównie w wolnym reżimie nie robi z niego odniesienia (`gas_reference` w `thermal-summary.json`). `thermal-summary.json` podaje
 `disqualified_segments`, `qualified_full_gates` i decyzję `performance_accepted` tylko z prób zakwalifikowanych,
 a także `kernel_profiles` (rozkład czasu każdego kernela na scenę) i liczniki dispatchy i barier w `stage_profiles`.
