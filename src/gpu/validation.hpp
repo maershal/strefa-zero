@@ -14,6 +14,9 @@ std::expected<void, std::string> validate_liquids(ParticleWorld&, const std::fil
 std::expected<void, std::string> validate_flow(ParticleWorld&, const std::filesystem::path& output);
 // The brush must spawn the same count after fixtures and scene resets as in a fresh world.
 std::expected<void, std::string> validate_brush_history(ParticleWorld&, const std::filesystem::path& output);
+// Part of the brush check: mission debris after the same kind of history must match the destroyed cells one to one.
+// Throws on failure; writes per-round counts and digests of the explosion tick (passes, mission state, debris).
+void validate_debris_history(ParticleWorld&, std::ostream& report);
 std::expected<void, std::string> profile_gpu(ParticleWorld&, const std::filesystem::path& output,
                                              bool check_only = false);
 std::expected<void, std::string> profile_stabilization(ParticleWorld&, const std::filesystem::path& output,

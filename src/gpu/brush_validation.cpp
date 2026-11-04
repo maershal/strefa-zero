@@ -92,6 +92,7 @@ std::expected<void, std::string> validate_brush_history(ParticleWorld& world, co
         for (int i = 0; i < 120; ++i) world.step();
         world.reset(Scene::empty);
         for (int i = 4; i <= 6; ++i) round("round" + std::to_string(i));
+        validate_debris_history(world, report);
         glFinish();
         world.poll();
         report << "brush_history=passed\n";
