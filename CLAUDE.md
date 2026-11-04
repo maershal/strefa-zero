@@ -103,7 +103,10 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   lines with the 2.65/3.3125 inverse-mass literals, `std::array<GLuint, 8>`, `unsigned& current|bank`, GLSL lines
   > 200 characters. Definitions are in the script; `--report` prints every value and edge.
 - `strefa_zero_qa_symbols`: `nm -C` lines matching `Benchmark|ScenarioRunner|write_profile_samples` in `StrefaZero`
-  built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable). It is measured only on
+  built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable).
+  `strefa_zero_tracy_symbols` (lines matching `tracy`, case-insensitive) comes from the same `nm` run and stays 0:
+  Tracy exists only with `STREFA_TRACY=ON` (presets `dev`/`linux-dev`, ADR 0002); the `tracy` job checks it is found
+  when linked. It is measured only on
   Linux/WSL2 with the GCC of the `ubuntu-24.04` runner (needs `nm` and an ELF binary; MSVC builds have no equivalent).
   On Windows, take the value from the step's log (`strefa_zero_qa_symbols = N`) and edit the JSON by hand. A runner
   image with a new GCC can move the count without a code change; record the new value in its own PR.

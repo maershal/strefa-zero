@@ -1,6 +1,6 @@
 {
-  "world_cpp_lines": 2162,
-  "world_tu_lines": 4096,
+  "world_cpp_lines": 2160,
+  "world_tu_lines": 4094,
   "particle_world_public_decls": 88,
   "particle_world_test_hooks": 30,
   "application_cpp_lines": 1200,
@@ -13,5 +13,6 @@
   "raw_ssbo_arrays": 27,
   "unsigned_ref_banks": 5,
   "glsl_lines_over_200": 59,
-  "strefa_zero_qa_symbols": 35
+  "strefa_zero_qa_symbols": 35,
+  "strefa_zero_tracy_symbols": 0
 }

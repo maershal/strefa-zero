@@ -1,5 +1,7 @@
 #include "platform/window.hpp"
 
+#include "platform/gpu_zone.hpp"
+
 #include <SDL3/SDL_opengl.h>
 
 #ifdef _WIN32
@@ -40,6 +42,7 @@ void WindowDeleter::operator()(SDL_Window* window) const noexcept {
     SDL_DestroyWindow(window);
 }
 void ContextDeleter::operator()(SDL_GLContextState* context) const noexcept {
+    destroy_gpu_zones();
     SDL_GL_DestroyContext(context);
 }
 
@@ -85,6 +88,7 @@ std::expected<Window, std::string> Window::create(const core::Settings& settings
     if (!result.context_) return std::unexpected{sdl_error("OpenGL 3.3 Core")};
     if (!SDL_GL_MakeCurrent(result.window_.get(), result.context_.get()))
         return std::unexpected{sdl_error("Aktywacja OpenGL")};
+    create_gpu_zones();
     result.vsync_ = settings.vsync && SDL_GL_SetSwapInterval(1);
     if (!result.vsync_) {
         SDL_GL_SetSwapInterval(0);
@@ -166,6 +170,8 @@ void Window::clear() const {
 }
 void Window::present() const {
     SDL_GL_SwapWindow(window_.get());
+    collect_gpu_zones();
+    STREFA_FRAME_MARK();
 }
 
 bool context_has_gl43() noexcept {

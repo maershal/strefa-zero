@@ -9,6 +9,7 @@
 #include "gpu/shader_library.hpp"
 #include "gpu/thermal_system.hpp"
 #include "gpu/upload_ring.hpp"
+#include "platform/gpu_zone.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -357,20 +358,6 @@ struct ParticleWorld::Impl {
         timer.pending = true;
         timer.generation = epoch;
     }
-    // Closes a GL_TIME_ELAPSED query left open when step() or render() exits early (exception or
-    // failed submission), so the next begin_timer does not nest queries. The interval is discarded:
-    // its timer slot never becomes pending.
-    struct ElapsedQueryGuard {
-        Impl& impl;
-        explicit ElapsedQueryGuard(Impl& owner) : impl{owner} {}
-        ElapsedQueryGuard(const ElapsedQueryGuard&) = delete;
-        ElapsedQueryGuard& operator=(const ElapsedQueryGuard&) = delete;
-        ~ElapsedQueryGuard() {
-            if (!impl.elapsed_active) return;
-            impl.gl.EndQuery(GL_TIME_ELAPSED);
-            impl.elapsed_active = false;
-        }
-    };
     ~Impl() {
         gl.observe(nullptr);
         for (const auto* queue : {&timers, &render_timers})
@@ -385,6 +372,7 @@ struct ParticleWorld::Impl {
     }
     void dispatch(int op, unsigned count, bool swap = false, bool in_place = false, bool conditional = false) {
         if (count == 0) return;
+        STREFA_GPU_ZONE(detail::pass_zone_name(PassFamily::granular, static_cast<unsigned>(op)));
         if (op == 8) {
             renderer.lighting.prepare_birth(buffers, current);
             invalidate_bindings();
@@ -424,6 +412,7 @@ struct ParticleWorld::Impl {
                   buffers[3]);
     }
     void neighbor_dispatch(unsigned op, unsigned groups) {
+        STREFA_GPU_ZONE(detail::pass_zone_name(PassFamily::neighbors, op));
         auto& k = neighbors[op];
         if (!execution.cached_bindings || bound_program != k.id) {
             gl.UseProgram(k.id);
@@ -460,6 +449,7 @@ struct ParticleWorld::Impl {
         bins_valid = true;
     }
     void liquid_dispatch(int op, bool swap = false) {
+        STREFA_GPU_ZONE(detail::pass_zone_name(PassFamily::liquids, static_cast<unsigned>(op)));
         prepare(liquids, op);
         const auto token = trace.begin(PassFamily::liquids, static_cast<unsigned>(op), epoch,
                                        metrics.steps + (trace_step ? 1 : 0));
@@ -488,6 +478,7 @@ struct ParticleWorld::Impl {
     }
     void mission_dispatch(int op, unsigned count = 1, bool swap = false, bool active = false, bool in_place = false) {
         if (!profile_options.body_coupling && (op == 3 || op == 8)) return;
+        STREFA_GPU_ZONE(detail::pass_zone_name(PassFamily::mission, static_cast<unsigned>(op)));
         if (profile_options.collect && op == 3) ++calls.body_reductions;
         if (op == 3 && execution.coupling != CouplingMode::reference) {
             prepare(coupling_kernels, 0, false, true);
@@ -894,11 +885,13 @@ bool ParticleWorld::step(const MissionInput& input) {
     return step();
 }
 bool ParticleWorld::step() {
+    STREFA_ZONE("ParticleWorld::step");
     const auto started = SDL_GetTicksNS();
     auto& s = *impl_;
     const auto initial_calls = s.calls;
     const auto logic_before = s.event_ring.stats().logic_ms;
     if (!ready_for_step()) return false;
+    STREFA_GPU_ZONE("physics tick");
     s.metrics.gameplay_ms = 0;
     s.invalidate_bindings();
     s.trace_step = true;
@@ -929,11 +922,12 @@ bool ParticleWorld::step() {
         else
             ++s.calls.timer_skips;
     }
-    const Impl::ElapsedQueryGuard elapsed_guard{s};
+    const detail::ElapsedQueryGuard elapsed_guard{s.gl, s.elapsed_active};
     if (measure) s.begin_timer(timer);
     double upload_ms = 0;
     const auto prepare_start = stamp();
     if (s.mission_enabled) {
+        STREFA_ZONE("prepare mission");
         const auto logic_started = SDL_GetTicksNS();
         const auto commands =
                 s.gameplay.prepare({s.controls.move, s.controls.aim_x, s.controls.aim_y, s.controls.buttons});
@@ -963,6 +957,7 @@ bool ParticleWorld::step() {
     // At |v|<=80 each half-tick travels <=1/3 cell. Two approaching,
     // nonoverlapping radius-.46 grains cannot exchange centers undetected.
     for (int half = 0; half < static_cast<int>(s.execution.fluid.substeps); ++half) {
+        STREFA_ZONE("solver substep");
         s.trace.context(half + 1, -1);
         s.bins_valid = false;
         s.half_step = half;
@@ -1153,6 +1148,8 @@ void ParticleWorld::poll(bool collect_hud) {
                 s.metrics.physics_ms = ms;
                 s.metrics.presentation_ms = presentation_ms;
                 s.metrics.gpu_ms = ms + presentation_ms;
+                STREFA_PLOT("physics_ms", ms);
+                STREFA_PLOT("gpu_ms", s.metrics.gpu_ms);
                 ++s.metrics.timing_samples;
                 if (s.timings.size() < 10000)
                     s.timings.push_back(ms);
@@ -1220,7 +1217,8 @@ void ParticleWorld::render(float alpha) {
                 s.hit_started[i] ? std::max(0.F, 1.F - static_cast<float>(now - s.hit_started[i]) / 150000000.F) : 0.F;
     }
 
-    const Impl::ElapsedQueryGuard elapsed_guard{s};
+    STREFA_GPU_ZONE("render");
+    const detail::ElapsedQueryGuard elapsed_guard{s.gl, s.elapsed_active};
     if (measure) s.begin_timer(timer);
     s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
     s.renderer.lighting.impulse = s.mission_enabled ? std::clamp(s.snapshot.flash[3] / .3F, 0.F, 1.F) : 0.F;

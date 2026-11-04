@@ -1,5 +1,7 @@
 #include "gpu/vfx_pool.hpp"
 
+#include "platform/gpu_zone.hpp"
+
 #include <algorithm>
 #include <bit>
 #include <cstring>
@@ -165,6 +167,7 @@ void VfxPool::close_probe(Probe* p) {
 }
 void VfxPool::begin_tick(GLuint terrain_id, unsigned gen, unsigned source_tick, float seconds) {
     if (!enabled()) return;
+    STREFA_GPU_ZONE("vfx begin");
     sand_field = 0;
     if (gen != generation) reset(gen);
     generation = gen;
@@ -196,6 +199,7 @@ void VfxPool::upload_field(std::span<const float> values, std::span<const std::u
 }
 void VfxPool::end_tick(GLuint mission, std::span<const VfxEvent> events, bool water) {
     if (!enabled()) return;
+    STREFA_GPU_ZONE("vfx update");
     const auto refused =
             events.size() > vfx_event_capacity ? static_cast<unsigned>(events.size() - vfx_event_capacity) : 0u;
     events = events.first(std::min<std::size_t>(events.size(), vfx_event_capacity));

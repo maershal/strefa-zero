@@ -3,11 +3,26 @@
 #include "gpu/gl_api.hpp"
 
 #include <algorithm>
+#include <array>
 #include <bit>
+#include <format>
 #include <limits>
 #include <stdexcept>
+#include <string>
 
 namespace strefa::gpu::detail {
+// Label of a pass for its Tracy GPU zone (STREFA_GPU_ZONE in the ParticleWorld dispatch helpers), e.g. "liquids 4".
+inline const char* pass_zone_name(PassFamily family, unsigned op) {
+    static const auto names = [] {
+        std::array<std::array<std::string, 32>, pass_family_names.size()> result;
+        for (std::size_t f = 0; f < result.size(); ++f)
+            for (std::size_t i = 0; i < result[f].size(); ++i)
+                result[f][i] = std::format("{} {}", pass_family_names[f], i);
+        return result;
+    }();
+    const auto& row = names[static_cast<std::size_t>(family)];
+    return row[std::min<std::size_t>(op, row.size() - 1)].c_str();
+}
 // Explicit diagnostic capture. No resources or GL calls while disabled.
 // read() is called only after the CLI's explicit out-of-band GPU drain.
 class DiagnosticTrace {

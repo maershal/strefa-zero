@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-"""Architecture ratchet: layer rules for #include and target_link_libraries, size budgets, QA symbols in StrefaZero.
+"""Architecture ratchet: layer rules for #include and target_link_libraries, size budgets, QA and Tracy symbols in
+StrefaZero.
 
     python3 scripts/check_architecture.py                        # layer rules + budgets (CI job `architecture`)
     python3 scripts/check_architecture.py --base origin/main     # also: allowlist and budgets never grow vs. the base
-    python3 scripts/check_architecture.py --symbols build/noipo/StrefaZero   # QA symbols in the player binary (nm -C)
+    python3 scripts/check_architecture.py --symbols build/noipo/StrefaZero   # QA/Tracy symbols in the player (nm -C)
     python3 scripts/check_architecture.py --update               # lower the allowlist and budgets to today's values
     python3 scripts/check_architecture.py --report               # print the graph edges and every metric
 
@@ -25,6 +26,9 @@ BUDGET = "tools/architecture_budget.json"
 SYMBOL_KEY = "strefa_zero_qa_symbols"
 # QA code that must not reach the player binary: the scene benchmark, the scenario runner and GPU profile dumps.
 QA_SYMBOL = re.compile(r"Benchmark|ScenarioRunner|write_profile_samples")
+TRACY_KEY = "strefa_zero_tracy_symbols"
+# The Tracy client and its zones exist only with STREFA_TRACY=ON (developer builds); the budget is 0.
+TRACY_SYMBOL = re.compile(r"tracy", re.I)
 
 # Module of every CMake target built from src/. Test executables (strefa_*_tests) are not part of the graph.
 TARGET_MODULE = {
@@ -308,12 +312,13 @@ def metrics():
     }
 
 
-def qa_symbols(binary):
+def binary_symbols(binary):
     nm = shutil.which("nm")
     if not nm:
         sys.exit("Brak programu nm (binutils).")
-    output = subprocess.run([nm, "-C", binary], check=True, capture_output=True, text=True).stdout
-    return sum(1 for line in output.splitlines() if QA_SYMBOL.search(line))
+    lines = subprocess.run([nm, "-C", binary], check=True, capture_output=True, text=True).stdout.splitlines()
+    return {key: sum(1 for line in lines if pattern.search(line))
+            for key, pattern in ((SYMBOL_KEY, QA_SYMBOL), (TRACY_KEY, TRACY_SYMBOL))}
 
 
 # --- Ratchet -------------------------------------------------------------------------------------------------------
@@ -348,7 +353,7 @@ def check_base(ref, allowed, budget, errors):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--base", help="git ref whose allowlist and budgets this tree may not exceed")
-    parser.add_argument("--symbols", metavar="BINARY", help="count QA symbols in StrefaZero built without IPO")
+    parser.add_argument("--symbols", metavar="BINARY", help="count QA and Tracy symbols in StrefaZero without IPO")
     parser.add_argument("--update", action="store_true", help="lower the allowlist and budgets to today's values")
     parser.add_argument("--report", action="store_true", help="print every violating edge and metric")
     parser.add_argument("--root", type=pathlib.Path, help="repository to check (default: this one)")
@@ -360,7 +365,7 @@ def main():
     found = violations()
     allowed = parse_allowlist(read(ALLOWLIST))
     budget = json.loads(read(BUDGET))
-    values = {SYMBOL_KEY: qa_symbols(args.symbols)} if args.symbols is not None else metrics()
+    values = binary_symbols(args.symbols) if args.symbols is not None else metrics()
 
     errors, lowered = [], []
     if args.symbols is None:
@@ -410,7 +415,8 @@ def main():
             print(f"  - {error}", file=sys.stderr)
         print("Opis reguł: CLAUDE.md, sekcja Architecture ratchet.", file=sys.stderr)
         return 1
-    print("Strażnik architektury: OK" + (f" ({SYMBOL_KEY} = {values[SYMBOL_KEY]})" if args.symbols else ""))
+    symbols = ", ".join(f"{key} = {value}" for key, value in values.items())
+    print("Strażnik architektury: OK" + (f" ({symbols})" if args.symbols else ""))
     return 0
 
 

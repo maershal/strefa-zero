@@ -1,5 +1,7 @@
 #include "sim/world.hpp"
 
+#include "core/profiling.hpp"
+
 #include <algorithm>
 #include <bit>
 #include <chrono>
@@ -311,6 +313,7 @@ std::uint64_t World::queue_explosion(ExplosionCommand command) {
     return command.id;
 }
 void World::step(ScanMode mode) {
+    STREFA_ZONE("sim::World::step");
     auto& s = state_;
     auto start = std::chrono::steady_clock::now();
     auto elapsed = [&] {

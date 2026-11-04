@@ -6,17 +6,21 @@
     {"name": "debug", "inherits": "base", "cacheVariables": {"CMAKE_BUILD_TYPE": "Debug"}},
     {"name": "release", "inherits": "base", "cacheVariables": {"CMAKE_BUILD_TYPE": "Release"}},
     {"name": "core-only", "inherits": "debug", "cacheVariables": {"STREFA_BUILD_APP": false}},
+    {"name": "dev", "inherits": "release", "cacheVariables": {"CMAKE_BUILD_TYPE": "RelWithDebInfo", "STREFA_TRACY": true}},
     {"name": "linux-debug", "inherits": "debug", "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"}, "cacheVariables": {"STREFA_WARNINGS_AS_ERRORS": true}},
     {"name": "linux-release", "inherits": "release", "condition": {"type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux"}, "cacheVariables": {"STREFA_WARNINGS_AS_ERRORS": true}},
-    {"name": "linux-core-only", "inherits": "linux-release", "cacheVariables": {"STREFA_BUILD_APP": false}}
+    {"name": "linux-core-only", "inherits": "linux-release", "cacheVariables": {"STREFA_BUILD_APP": false}},
+    {"name": "linux-dev", "inherits": "linux-release", "cacheVariables": {"CMAKE_BUILD_TYPE": "RelWithDebInfo", "STREFA_TRACY": true}}
   ],
   "buildPresets": [
     {"name": "debug", "configurePreset": "debug"},
     {"name": "release", "configurePreset": "release"},
     {"name": "core-only", "configurePreset": "core-only"},
+    {"name": "dev", "configurePreset": "dev", "targets": ["strefa_qa"]},
     {"name": "linux-debug", "configurePreset": "linux-debug"},
     {"name": "linux-release", "configurePreset": "linux-release"},
-    {"name": "linux-core-only", "configurePreset": "linux-core-only"}
+    {"name": "linux-core-only", "configurePreset": "linux-core-only"},
+    {"name": "linux-dev", "configurePreset": "linux-dev", "targets": ["strefa_qa"]}
   ],
   "testPresets": [
     {"name": "debug", "configurePreset": "debug", "output": {"outputOnFailure": true}, "execution": {"jobs": 4}},

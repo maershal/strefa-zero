@@ -25,6 +25,8 @@ option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
 # OFF only for the QA symbol count of scripts/check_architecture.py: LTO inlines and drops symbols unpredictably.
 option(STREFA_IPO "Link Release targets with interprocedural optimization when supported" ON)
+# Tracy zones (CPU and GPU): developer builds only (presets `dev`, `linux-dev`); OFF leaves no Tracy symbol in any binary.
+option(STREFA_TRACY "Build the Tracy profiler client and its zones (developer builds only)" OFF)
 set(STREFA_DOWNLOAD_CACHE "" CACHE PATH "Optional directory with pinned dependency archives")
 set(STREFA_SANITIZE "" CACHE STRING "GCC/Clang sanitizers, comma-separated: address, undefined, thread")
 # Only stretches the TIMEOUT of `graphics` tests (nightly Mesa run) and, through the environment variable of the
@@ -57,6 +59,7 @@ if(STREFA_SANITIZE)
     endif()
 endif()
 
+include(cmake/Dependencies.cmake)
 add_library(strefa_options INTERFACE)
 target_compile_features(strefa_options INTERFACE cxx_std_23)
 # Explicit floating-point model: GCC contracts a*b+c into FMA by default in C++ and would change
@@ -68,6 +71,13 @@ if(STREFA_WARNINGS_AS_ERRORS)
     target_compile_options(strefa_options INTERFACE
         $<$<CXX_COMPILER_ID:MSVC>:/WX>
         $<$<NOT:$<CXX_COMPILER_ID:MSVC>>:-Werror>)
+endif()
+
+if(STREFA_TRACY)
+    target_compile_definitions(strefa_options INTERFACE STREFA_TRACY=1)
+    target_link_libraries(strefa_options INTERFACE Tracy::TracyClient)
+    # A package must never ship the profiler client, which listens on a TCP port.
+    install(CODE "message(FATAL_ERROR \"Pakiet nie może powstać z STREFA_TRACY=ON (kompilacja deweloperska).\")")
 endif()
 
 add_library(strefa_core STATIC src/core/settings.cpp)
@@ -110,7 +120,6 @@ if(STREFA_EXPERIMENTAL_REFLECTION)
 endif()
 
 if(STREFA_BUILD_APP)
-    include(cmake/Dependencies.cmake)
     find_package(OpenGL REQUIRED)
 
     add_library(strefa_imgui STATIC
@@ -158,8 +167,9 @@ if(STREFA_BUILD_APP)
         COMMAND ${CMAKE_COMMAND} -E copy_directory
             ${CMAKE_CURRENT_SOURCE_DIR}/assets $<TARGET_FILE_DIR:strefa_zero>/assets)
     add_dependencies(strefa_zero strefa_runtime_assets)
-    add_executable(strefa_qa src/tools/qa_main.cpp)
-    target_link_libraries(strefa_qa PRIVATE strefa_diagnostics)
+    add_executable(strefa_qa src/tools/qa_main.cpp src/tools/renderdoc_capture.cpp)
+    target_include_directories(strefa_qa SYSTEM PRIVATE ${STREFA_RENDERDOC_INCLUDE_DIR})
+    target_link_libraries(strefa_qa PRIVATE strefa_diagnostics SDL3::SDL3 ${CMAKE_DL_LIBS})
     set_target_properties(strefa_qa PROPERTIES OUTPUT_NAME StrefaQA)
     # StrefaQA runs next to StrefaZero and reuses its assets and SDL runtime.
     add_dependencies(strefa_qa strefa_zero)
