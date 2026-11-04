@@ -84,7 +84,7 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
         hud.input.reset = hud.input.reset || ImGui::IsKeyPressed(ImGuiKey_F5, false);
         input.grenade = ImGui::IsKeyPressed(ImGuiKey_G, false);
         const auto mouse = ImGui::GetIO().MousePos;
-        // Retain the direction outside the hud; clamp the target to world bounds.
+        // Retain the direction outside the canvas; clamp the target to world bounds.
         // Active/hovered controls in this window continue to own mouse input.
         const bool pointer_controls =
                 hover || canvas_active || (!ImGui::IsAnyItemHovered() && !ImGui::IsAnyItemActive());

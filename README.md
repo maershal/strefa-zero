@@ -5,7 +5,7 @@ Offline'owy prototyp gry 2D w C++23 z symulacją materiałów: ciecze PBF i ziar
 SDL 3.4.18, Dear ImGui 1.93.0. Bez CUDA i Vulkana.
 
 Aplikacja tworzy kontekst OpenGL 4.3 i wraca do 3.3, gdy sterownik go nie udostępnia
-(tryby GPU są wtedy niedostępne; laboratorium CPU działa).
+(tryby GPU są wtedy niedostępne; model referencyjny CPU działa).
 
 ## Szybki start
 

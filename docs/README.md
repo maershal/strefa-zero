@@ -13,7 +13,7 @@
 
 ## Decyzje architektoniczne — [adr/](adr/)
 
-- [0001 — rola modelu CPU](adr/0001-rola-modelu-cpu.md): wyrocznia testów, zamrożone laboratorium CPU, zamrożony GL 3.3.
+- [0001 — rola modelu CPU](adr/0001-rola-modelu-cpu.md): wyrocznia testów, zamrożony model referencyjny (laboratorium CPU), zamrożony GL 3.3.
 
 ## Raporty — [reports/](reports/)
 

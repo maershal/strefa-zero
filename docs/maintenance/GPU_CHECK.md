@@ -195,7 +195,7 @@ ticku.
   - `*_samples`: liczba próbek; `*_truncated=1`: próbki utracone przez pełną kolejkę;
   - `*_mean_ms`, `*_median_ms`, `*_p95_ms`, `*_p99_ms`;
 - metryki kosztu z sekcji wyżej;
-- `cpu_step_*`: krok wątku Laboratorium CPU (sceny `lab:`, które nie mają czasu GPU);
+- `cpu_step_*`: krok wątku modelu referencyjnego CPU (sceny `lab:`, które nie mają czasu GPU);
 - `ticks_per_frame_*`, `ticks_per_second`, `frames_per_second`;
 - `dropped_seconds`: czas pominięty przez zegar; w scenach `lab:` jest to spóźnienie wątku;
 - `backlog_*`: zaległość zegara;
