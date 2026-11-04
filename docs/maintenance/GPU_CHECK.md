@@ -112,8 +112,13 @@ Pliki wyników (wszystkie mają kolumny `seed` i `sequence`, czyli numer odcinka
 
 `analyze-thermal.py` (schemat 2) traktuje etap gazu jako sondę zegara: odcinek profilu, którego mediana `gas_ms`
 odbiega od mediany wszystkich odcinków o więcej niż 10% (`--gas-tolerance`), jest dyskwalifikowany razem z próbami
-tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę, w której był aktywny `hw_slowdown`,
-`hw_thermal_slowdown`, `hw_power_brake_slowdown` albo `sw_thermal_slowdown`. `thermal-summary.json` podaje
+tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę albo odcinek profilu, w którym był aktywny
+`hw_slowdown`, `hw_thermal_slowdown`, `hw_power_brake_slowdown` albo `sw_thermal_slowdown`, albo którego mediana zegara
+grafiki jest poniżej 90% maksimum sesji (`--clock-fraction`). Ten drugi warunek łapie wolny reżim GTX 1650 w laptopie:
+po dojściu do 85 °C karta schodzi do 1395 MHz i połowy limitu mocy (ok. 23 W z 50 W) przy P0 i bez żadnego powodu
+ograniczenia w `nvidia-smi`, i zostaje tam także po ostygnięciu do 64 °C; etap gazu trwa wtedy 2,35× dłużej (3,12 zamiast
+1,34 ms). Z telemetrią medianą odniesienia etapu gazu są tylko odcinki, które przeszły warunki telemetrii, więc pomiar
+spędzony głównie w wolnym reżimie nie robi z niego odniesienia (`gas_reference` w `thermal-summary.json`). `thermal-summary.json` podaje
 `disqualified_segments`, `qualified_full_gates` i decyzję `performance_accepted` tylko z prób zakwalifikowanych,
 a także `kernel_profiles` (rozkład czasu każdego kernela na scenę) i liczniki dispatchy i barier w `stage_profiles`.
 

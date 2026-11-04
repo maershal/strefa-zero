@@ -4,8 +4,12 @@ Schema 2: blocks are the outer loop and each block draws its own scene order (se
 of a block a profile segment records per-stage and per-kernel GPU time, dispatches and barriers. The gas stage does
 not depend on the scene, so it serves as a clock probe: a profile segment whose gas median deviates from the median
 of all segments by more than --gas-tolerance (10%) is disqualified together with the trials of that scene and block.
-With telemetry.csv (GpuTelemetry.psm1, scripts/profiling/profile-thermal.ps1 -Telemetry) a trial is also
-disqualified when a hw_* or sw_thermal_slowdown reason was active during it.
+With telemetry.csv (GpuTelemetry.psm1, scripts/profiling/profile-thermal.ps1 -Telemetry) a trial or profile segment
+is also disqualified when a hw_* or sw_thermal_slowdown reason was active, or when its median graphics clock is below
+90% of the session maximum (--clock-fraction). The GTX 1650 laptop drops to 1395 MHz and half its power limit after
+reaching 85 C with no throttle reason and stays there after cooling; the clock criterion catches that regime. With
+telemetry the gas reference is the median of the segments that pass the telemetry criteria, so a run spent mostly in
+the slow regime does not make the slow regime the reference.
 """
 import argparse,csv,json,math,statistics
 from collections import defaultdict
@@ -78,30 +82,30 @@ def merge_profiles(rows):
     for key,ticks in segments.items():
         if len(ticks)!=120 or any(not set(STAGE_FIELDS)<=set(v)or v.get('dispatches',0)<=0 for v in ticks):raise ValueError(f'Incomplete stage profile {key}')
     return segments
-def qualify_segments(segments,tolerance):
-    """Gas-stage clock probe: median gas_ms per segment against the median of all segment medians."""
+def qualify_segments(segments,tolerance,reference_keys=None):
+    """Gas-stage clock probe: median gas_ms per segment against the median of the segment medians in reference_keys
+    (default: all segments)."""
     medians={key:statistics.median(v['gas_ms']for v in ticks)for key,ticks in segments.items()}
-    reference=statistics.median(medians.values())
+    reference=statistics.median(m for key,m in medians.items()if reference_keys is None or key in reference_keys)
     if reference<=0:raise ValueError('Gas stage was not measured')
     return reference,{key:dict(gas_median_ms=m,deviation=m/reference-1,disqualified=abs(m/reference-1)>tolerance)for key,m in medians.items()}
-def telemetry_windows(folder,pools):
-    """Per trial (sequence): median graphics clock, maximum temperature and the active disqualifying reasons."""
+def load_telemetry(folder):
     path=folder/'telemetry.csv'
     if not path.exists():return None
-    samples=[r for r in csv.DictReader(path.open(encoding='utf-8-sig'))if r.get('utc_unix_ns')]
-    result={}
-    for pool in pools:
-        start,end=int(pool['start_utc_unix_ns']),int(pool['end_utc_unix_ns'])
-        inside=[r for r in samples if start<=int(r['utc_unix_ns'])<=end]
-        reasons=sorted({name for r in inside for name in DISQUALIFYING_REASONS if r.get('reason_'+name)=='1'})
-        clocks=[float(r['graphics_mhz'])for r in inside if r.get('graphics_mhz')not in(None,'')]
-        temperatures=[float(r['temperature_c'])for r in inside if r.get('temperature_c')not in(None,'')]
-        result[int(pool['sequence'])]=dict(samples=len(inside),graphics_mhz_median=statistics.median(clocks)if clocks else None,
-                                           temperature_c_max=max(temperatures,default=None),reasons=reasons)
-    return result
+    return [r for r in csv.DictReader(path.open(encoding='utf-8-sig'))if r.get('utc_unix_ns')]
+def telemetry_window(samples,start,end,session_max_mhz,clock_fraction):
+    """Median graphics clock, maximum temperature and the disqualifying reasons of [start, end] (UTC ns)."""
+    inside=[r for r in samples if start<=int(r['utc_unix_ns'])<=end]
+    reasons={name for r in inside for name in DISQUALIFYING_REASONS if r.get('reason_'+name)=='1'}
+    clocks=[float(r['graphics_mhz'])for r in inside if r.get('graphics_mhz')not in(None,'')]
+    temperatures=[float(r['temperature_c'])for r in inside if r.get('temperature_c')not in(None,'')]
+    median=statistics.median(clocks)if clocks else None
+    if median is not None and median<clock_fraction*session_max_mhz:reasons.add('graphics_clock_below_session_max')
+    return dict(samples=len(inside),graphics_mhz_median=median,temperature_c_max=max(temperatures,default=None),reasons=sorted(reasons))
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('folder',type=Path);parser.add_argument('--controls',action='store_true')
     parser.add_argument('--gas-tolerance',type=float,default=.10,help='allowed relative deviation of the gas stage median (default 0.10)')
+    parser.add_argument('--clock-fraction',type=float,default=.90,help='telemetry: minimum median graphics clock as a fraction of the session maximum (default 0.90)')
     args=parser.parse_args()
     rows=list(csv.DictReader((args.folder/'thermal-samples.csv').open(encoding='utf-8-sig')))
     pools=list(csv.DictReader((args.folder/'thermal-pool-segments.csv').open(encoding='utf-8-sig')))
@@ -110,17 +114,23 @@ def main():
     seed=single_seed(rows,'thermal-samples.csv')
     if single_seed(pools,'thermal-pool-segments.csv')!=seed or single_seed(profile_rows,'thermal-pass-samples.csv')!=seed:raise ValueError('Seeds differ between files')
     segments=merge_profiles(profile_rows)
-    reference,qualification=qualify_segments(segments,args.gas_tolerance)
-    disqualified={key for key,q in qualification.items()if q['disqualified']}
-    telemetry=telemetry_windows(args.folder,pools)
-    if telemetry:
-        for pool in pools:
-            if telemetry[int(pool['sequence'])]['reasons']:disqualified.add((pool['scene'],int(pool['block'])))
+    samples=load_telemetry(args.folder);telemetry=None;telemetry_bad=set();reference_keys=None
+    if samples:
+        session_max=max(float(r['graphics_mhz'])for r in samples if r.get('graphics_mhz')not in(None,''))
+        window=lambda row:telemetry_window(samples,int(row['start_utc_unix_ns']),int(row['end_utc_unix_ns']),session_max,args.clock_fraction)
+        telemetry=dict(session_max_graphics_mhz=session_max,trials={int(p['sequence']):window(p)for p in pools},
+                       profile_segments={f"{r['scene']}:{r['block']}":window(r)for r in csv.DictReader((args.folder/'thermal-profile-segments.csv').open(encoding='utf-8-sig'))})
+        telemetry_bad={(p['scene'],int(p['block']))for p in pools if telemetry['trials'][int(p['sequence'])]['reasons']}
+        telemetry_bad|={(k.split(':')[0],int(k.split(':')[1]))for k,v in telemetry['profile_segments'].items()if v['reasons']}
+        reference_keys=set(segments)-telemetry_bad or None
+    reference,qualification=qualify_segments(segments,args.gas_tolerance,reference_keys)
+    disqualified={key for key,q in qualification.items()if q['disqualified']}|telemetry_bad
     result=summarize(rows,frozenset(disqualified))
     result['seed']=seed;result['gas_reference_median_ms']=reference;result['gas_tolerance']=args.gas_tolerance
     result['profile_segments']=[dict(scene=s,block=b,**q)for (s,b),q in sorted(qualification.items())]
     result['disqualified_segments']=sorted([list(k)for k in disqualified])
-    if telemetry is not None:result['telemetry']={str(k):v for k,v in sorted(telemetry.items())}
+    result['gas_reference']='telemetry_qualified_segments'if reference_keys else'all_segments'
+    if telemetry is not None:result['telemetry']=dict(telemetry,trials={str(k):v for k,v in sorted(telemetry['trials'].items())})
     result['stage_profiles']={}
     for scene in SCENES:
         ticks=[v for b in(1,2,3)if(scene,b)not in disqualified for v in segments[scene,b]]
@@ -145,6 +155,10 @@ def main():
         slowed={key:[dict(v,gas_ms=v['gas_ms']*(1+3*args.gas_tolerance))for v in ticks]if key==target else ticks for key,ticks in segments.items()}
         if not qualify_segments(slowed,args.gas_tolerance)[1][target]['disqualified']:raise ValueError('Control accepted gas_outlier')
         checks['gas_outlier']='PASS'
+        # 1395 MHz against a 1890 MHz session maximum, no throttle reason: the slow regime must be caught by the clock.
+        slow=[dict(utc_unix_ns=str(n),graphics_mhz='1395',temperature_c='64')for n in(1,2)]
+        if 'graphics_clock_below_session_max'not in telemetry_window(slow,0,3,1890,args.clock_fraction)['reasons']:raise ValueError('Control accepted slow_clock')
+        checks['slow_clock']='PASS'
         try:single_seed([dict(rows[0],seed=rows[0]['seed']+'1')]+rows[1:],'control')
         except ValueError:checks['mixed_seed']='PASS'
         else:raise ValueError('Control accepted mixed_seed')
