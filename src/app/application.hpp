@@ -6,11 +6,13 @@
 #include "gpu/thermal.hpp"
 #include "gpu/vfx.hpp"
 
+#include <array>
 #include <expected>
 #include <filesystem>
 #include <functional>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace strefa::app {
@@ -30,6 +32,8 @@ enum class SmokeScenario {
 };
 // StrefaZero accepts only the player options; StrefaQA and the contract tests accept every option.
 enum class OptionScope { player, all };
+// Names accepted by --gpu-check: one StrefaQA check per name instead of one boolean flag per check.
+inline constexpr std::array<std::string_view, 1> gpu_checks{"lab-blast"};
 
 struct LaunchOptions {
     bool smoke_test{false};
@@ -59,6 +63,7 @@ struct LaunchOptions {
     bool benchmark_vsync{true}, benchmark_tuned{};
     bool thermal_check{}, thermal_benchmark{};
     std::filesystem::path thermal_conformance; // --gpu-thermal-conformance <thresholds file>
+    std::string gpu_check;                     // --gpu-check <name>: named GPU check, one of gpu_checks
     gpu::VfxOptions gpu_vfx;
     bool vfx_check{}, vfx_benchmark{};
     gpu::RenderOptions gpu_render;
