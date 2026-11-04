@@ -191,6 +191,9 @@ klatkę), a RenderDoc i Nsight przechwytują wywołania OpenGL. Decyzja i zakres
    W wolnym reżimie porównaj długość `physics tick` na GPU z odstępem między jego wysłaniem a wykonaniem: rosnący
    odstęp przy tej samej długości stref oznacza kolejkę albo zegar, dłuższe strefy oznaczają wolniejszą pracę GPU.
    Zestaw to z telemetrią z tego samego okna czasu (`GpuTelemetry.psm1`).
+   Uwaga: z podłączonym profilerem strefa `tracy::GpuCtx::Collect` (odczyt kwerend po `present`) zajmuje na
+   GTX 1650 średnio ok. 10 ms na klatkę. Długości stref GPU są wiarygodne, ale odstępy na osi CPU i FPS są wtedy
+   zawyżone.
 5. Zrzut ekranu osi czasu z GTX 1650 dołącz do opisu PR. Plik `.tracy` jest surowymi danymi i trafia do
    strefa-zero-measurements, nie do tego repozytorium.
 

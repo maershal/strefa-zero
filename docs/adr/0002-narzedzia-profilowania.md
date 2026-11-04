@@ -49,6 +49,9 @@ w StrefaQA.
   z `STREFA_TRACY=ON` kończy się błędem i pakiet zawsze powstaje z OFF.
 - Liczby z Tracy nie zastępują protokołu pomiaru (`CLAUDE.md`, „Protokół pomiaru”) ani pul kwerend: decyzje nadal
   wymagają ABBA i telemetrii. Oś czasu służy do znalezienia przyczyny, a liczba do raportu pochodzi z benchmarku.
-- Kwerendy znaczników czasu Tracy (2 na przebieg, ok. 400 na klatkę) mogą same zmienić czas ticku. Pomiar
-  z podłączonym profilerem nie jest pomiarem bazowym.
+- Kwerendy znaczników czasu Tracy (2 na strefę GPU, ok. 470 na klatkę misji) zmieniają czas klatki. Pierwszy zapis
+  na GTX 1650 (mission UI smoke test, 421 ticków) pokazał, że `tracy::GpuCtx::Collect` po `present` zajmuje średnio
+  9,6 ms CPU na klatkę (maksimum 35 ms), bo odczytuje każdą kwerendę osobno. Długości stref GPU są wtedy wiarygodne,
+  ale oś czasu CPU i tempo klatek już nie. Pomiar z podłączonym profilerem nie jest pomiarem bazowym. Bez
+  połączenia (`TRACY_ON_DEMAND`) `Collect` kończy się od razu.
 - Nowe miejsca pomiaru dostają strefę z tego ADR zamiast nowej puli kwerend, chyba że liczba ma trafić do CSV testu.
