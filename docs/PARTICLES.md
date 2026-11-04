@@ -52,8 +52,8 @@ Proszki i oderwane piksele integrują grawitację, opór gazu i przesunięcia po
 
 ## Referencja i pomiary
 
-Jedna deterministyczna implementacja jednowątkowa, dwa tryby skanowania ruchu: aktywne chunki i cała siatka. Usypianie ruchu nie wyłącza przewodzenia ani reakcji. Spokojne powietrze i termika mogą pomijać pracę niezależnie od ruchu. Bufory pól i PCG są trwałe. Progi numeryczne usypiania wynoszą 1e-4 K od temperatury otoczenia i 1e-9 dla śladowych gatunków gazu; przemiany par o masie poniżej 1e-8 są odroczone. Masa i entalpia tych śladów pozostają w tablicach oraz bilansie. Release używa LTO tam, gdzie wspiera je kompilator.
+Jedna deterministyczna implementacja (ten sam wynik przy 1, 2 i 4 wątkach, `sim.numerics_parallel`), dwa tryby skanowania ruchu: aktywne chunki i cała siatka. Usypianie ruchu nie wyłącza przewodzenia ani reakcji. Spokojne powietrze i termika mogą pomijać pracę niezależnie od ruchu. Bufory pól i PCG są trwałe. Progi numeryczne usypiania wynoszą 1e-4 K od temperatury otoczenia i 1e-9 dla śladowych gatunków gazu; przemiany par o masie poniżej 1e-8 są odroczone. Masa i entalpia tych śladów pozostają w tablicach oraz bilansie. Release używa LTO tam, gdzie wspiera je kompilator.
 
-`StrefaPhysics` generuje sceny, CSV i BMP co trzy kroki. Czasy są mierzone wyłącznie wokół kroku świata/logiki gry. Eksport i rendering są poza pomiarem. Raporty podają percentyle i maksimum; deklarację 60 FPS należy oceniać na bieżącym sprzęcie, szczególnie podczas rozległych reakcji i po włączeniu eksportu.
+`StrefaPhysics` generuje sceny, CSV i BMP co trzy kroki. Czasy są mierzone wyłącznie wokół kroku świata. Eksport i rendering są poza pomiarem. Raporty podają percentyle i maksimum; deklarację 60 FPS należy oceniać na bieżącym sprzęcie, szczególnie podczas rozległych reakcji i po włączeniu eksportu.
 
 

@@ -16,11 +16,17 @@ inline void reset_cell_colours() noexcept {
     cell_colour = 0;
 }
 template<class T> struct CellAllocator {
+    // The colour offset is a multiple of cell_line, so a stricter alignment would be broken.
+    static_assert(alignof(T) <= cell_line, "CellAllocator aligns arrays only to 64 bytes");
     using value_type = T;
     CellAllocator() noexcept = default;
     template<class U> CellAllocator(const CellAllocator<U>&) noexcept {}
-    T* allocate(std::size_t count) {
-        if (count > (static_cast<std::size_t>(-1) - cell_page) / sizeof(T)) throw std::bad_array_new_length{};
+    // One block holds the array plus a page of slack for the colour offset.
+    [[nodiscard]] static constexpr std::size_t max_size() noexcept {
+        return (static_cast<std::size_t>(-1) - cell_page) / sizeof(T);
+    }
+    [[nodiscard]] T* allocate(std::size_t count) {
+        if (count > max_size()) throw std::bad_array_new_length{};
         auto* base =
                 static_cast<std::byte*>(::operator new(count * sizeof(T) + cell_page, std::align_val_t{cell_page}));
         const std::size_t colour = cell_colour++ % cell_colours;

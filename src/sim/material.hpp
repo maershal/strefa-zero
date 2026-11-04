@@ -131,12 +131,5 @@ inline constexpr std::array<PhysicalProperties, materials.size()> physical{
 [[nodiscard]] constexpr double specific_enthalpy(Material m, double kelvin) noexcept {
     return properties(m).heat_capacity * kelvin + enthalpy_offset(m);
 }
-[[nodiscard]] constexpr bool blocks_actor(Material value) noexcept {
-    const auto phase = definition(value).phase;
-    return phase == Phase::solid || phase == Phase::powder;
-}
-[[nodiscard]] constexpr bool blocks_projectile(Material value) noexcept {
-    return blocks_actor(value) || value == Material::nitroglycerin;
-}
 
 } // namespace strefa::sim

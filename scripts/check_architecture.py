@@ -33,7 +33,7 @@ TARGET_MODULE = {
     "strefa_platform": "platform",
     "strefa_sim": "sim",
     "strefa_gameplay": "game",
-    "strefa_game": "game",
+    "strefa_input": "game",
     "strefa_launch": "launch",
     "strefa_gpu": "gpu",
     "strefa_ui": "ui",

@@ -50,11 +50,11 @@ Nie uruchamiaj gry przez `sudo`. Przy problemach z Waylandem można wybrać X11:
 SDL_VIDEO_DRIVER=x11 ./StrefaZero --mission
 ```
 
-Laboratorium CPU wymaga OpenGL 3.3. Misja GPU, Laboratorium GPU
+Model referencyjny (CPU) wymaga OpenGL 3.3. Misja GPU, Laboratorium GPU
 i efekty compute wymagają OpenGL 4.3 (na 3.3 te pozycje menu są wyszarzone). Dostępna wersja zależy od sterownika
 udostępnianego w WSLg, a nie od samej karty w Windows. Sprawdź ją poleceniem
 `glxinfo -B` (pakiet `mesa-utils`). Jeśli sterownik nie udostępnia 4.3, można
-uruchomić Laboratorium CPU albo diagnostycznie użyć programowego Mesa llvmpipe:
+uruchomić model referencyjny (CPU) albo diagnostycznie użyć programowego Mesa llvmpipe:
 
 ```bash
 ./StrefaZero --laboratory --opengl33
@@ -117,9 +117,9 @@ ctest --preset linux-release -LE graphics
 ## Testy i paczka
 
 `build.sh` domyślnie uruchamia testy CPU oraz zestaw z etykietą `ci-smoke`, ten sam co w CI:
-okno OpenGL 4.3 i 3.3 (7/7 ekranów), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
+okno OpenGL 4.3 (7/7 ekranów) i 3.3 (5 ekranów CPU, oba ekrany GPU odmawiają otwarcia), powrót do menu po błędzie trybu (`app.mode_faults`), dispatch
 compute, protokół misji (`gpu.gameplay`), ekran misji (`gpu.mission_ui_quick`), cache shaderów, oświetlenie
-pod obciążeniem, pierścień odczytów, instrumentację, renderer, reaktywność laboratorium CPU (1 i 4 wątki)
+pod obciążeniem, pierścień odczytów, instrumentację, renderer, reaktywność modelu referencyjnego CPU (1 i 4 wątki)
 i pędzel GPU po historii fikstur (`gpu.brush_history`).
 Pełny zestaw `graphics` uruchamia co noc workflow `nightly-gpu.yml` (także ręcznie) w czterech równoległych
 częściach. Porażka nocnego przebiegu otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Porażki progów

@@ -1,5 +1,6 @@
 #pragma once
 #include "game/world_protocol.hpp"
+#include "gpu/dimensions.hpp"
 
 #include <array>
 #include <cstddef>

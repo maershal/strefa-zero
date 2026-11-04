@@ -1,7 +1,7 @@
 #include "build_info.hpp"
-#include "ui/arena.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
+#include "ui/mission_hud.hpp"
 #include "ui/view.hpp"
 
 #include <imgui.h>
@@ -91,7 +91,7 @@ bool gpu_menu_button(const char* label, float height, bool available, bool prima
     ImGui::EndDisabled();
     if (!available && ImGui::IsItemHovered(ImGuiHoveredFlags_AllowWhenDisabled))
         ImGui::SetTooltip("Wymaga OpenGL 4.3 (compute shadery). Ten kontekst ma niższą wersję;\n"
-                          "Laboratorium CPU i ustawienia działają normalnie.");
+                          "Model referencyjny (CPU) i ustawienia działają normalnie.");
     return pressed;
 }
 
@@ -133,11 +133,10 @@ Action main_menu(const ViewState& state, const FrameInfo& frame, const Fonts& fo
     // Mode names match README.md, docs/QUICKSTART.md and docs/LINUX_WSL.md.
     if (gpu_menu_button("01    Misja GPU", button_height, frame.gpu_available, true)) action = Action::open_mission;
     if (gpu_menu_button("02    Laboratorium GPU", button_height, frame.gpu_available)) action = Action::open_gpu;
-    if (menu_button("03    Laboratorium CPU", button_height)) action = Action::open_laboratory;
-    if (menu_button("04    Podgląd areny", button_height)) action = Action::open_preview;
-    if (menu_button("05    Ustawienia", button_height)) action = Action::open_settings;
-    if (menu_button("06    O projekcie", button_height)) action = Action::open_about;
-    if (menu_button("07    Zakończ", button_height)) action = Action::quit;
+    if (menu_button("03    Model referencyjny (CPU)", button_height)) action = Action::open_laboratory;
+    if (menu_button("04    Ustawienia", button_height)) action = Action::open_settings;
+    if (menu_button("05    O projekcie", button_height)) action = Action::open_about;
+    if (menu_button("06    Zakończ", button_height)) action = Action::quit;
     ImGui::Dummy({0.0F, 14.0F * s});
     notice(frame.message);
     ImGui::TextDisabled("v%s  /  F1 — diagnostyka", build::version.data());
@@ -254,6 +253,9 @@ Action settings(ViewState& state, const FrameInfo& frame, const Fonts& fonts) {
     ImGui::SameLine();
     if (ImGui::Button("Domyślne", {120.0F * s, 42.0F * s})) action = Action::reset;
     ImGui::SameLine();
+    // Shows the theme picked above (the draft) without applying it; Esc returns here.
+    if (ImGui::Button("Podgląd motywu", {170.0F * s, 42.0F * s})) action = Action::open_preview;
+    ImGui::SameLine();
     if (ImGui::Button("Wróć", {100.0F * s, 42.0F * s})) action = Action::back;
     ImGui::End();
     return action;
@@ -271,10 +273,10 @@ Action about(const FrameInfo& frame, const Fonts& fonts) {
     ImGui::TextColored(muted, "Tryby");
     ImGui::BulletText("Misja GPU: tarcze, wyjście, niszczone przegrody, woda i piasek");
     ImGui::BulletText("Laboratorium GPU: ciecze PBF, ziarna PBD, nagrania, termika eksperymentalna");
-    ImGui::BulletText("Laboratorium CPU: 19 materiałów, temperatura, ciśnienie i reakcje");
+    ImGui::BulletText("Model referencyjny (CPU): 19 materiałów, temperatura, ciśnienie i reakcje");
     ImGui::Spacing();
     ImGui::TextColored(muted, "Ograniczenia");
-    ImGui::BulletText("Tryby GPU wymagają OpenGL 4.3; na 3.3 działa Laboratorium CPU");
+    ImGui::BulletText("Tryby GPU wymagają OpenGL 4.3; na 3.3 działa model referencyjny (CPU)");
     ImGui::BulletText("Oświetlenie i termika są eksperymentalne (poza budżetem wydajności)");
     ImGui::Spacing();
     ImGui::TextDisabled("C++23  /  SDL3  /  Dear ImGui  /  OpenGL");
@@ -292,12 +294,12 @@ Action preview(const ViewState& state, const FrameInfo& frame, const Fonts& font
     ImGui::SetNextWindowPos({viewport->Pos.x + 40.0F * s, viewport->Pos.y + 40.0F * s});
     ImGui::SetNextWindowSize({std::min(420.0F * s, viewport->Size.x - 80.0F * s), 180.0F * s});
     ImGui::Begin("PreviewControls", nullptr, plain_window);
-    ImGui::TextColored(accent, "PODGLĄD OPRAWY");
-    heading(fonts, core::theme_names[static_cast<std::size_t>(state.applied.map_theme)].data(), 28.0F);
-    ImGui::TextColored(muted, "ESC — powrót do menu");
-    const bool back = ImGui::Button("Wróć do menu", {180.0F * s, 40.0F * s});
+    ImGui::TextColored(accent, "PODGLĄD MOTYWU");
+    heading(fonts, core::theme_names[static_cast<std::size_t>(state.draft.map_theme)].data(), 28.0F);
+    ImGui::TextColored(muted, "ESC — powrót do ustawień");
+    const bool back = ImGui::Button("Wróć do ustawień", {200.0F * s, 40.0F * s});
     ImGui::End();
-    return back ? Action::back : Action::none;
+    return back ? Action::open_settings : Action::none;
 }
 
 void diagnostics(ViewState& state, const FrameInfo& frame) {
@@ -348,8 +350,9 @@ void clock_stats(const ClockStats& clock) {
 }
 
 Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds, const Fonts& fonts,
-            LaboratoryFrame* laboratory, ArenaFrame* arena, GpuLaboratoryFrame* gpu) {
-    const auto theme = static_cast<std::size_t>(state.applied.map_theme);
+            LaboratoryFrame* laboratory, MissionHudFrame* hud, GpuLaboratoryFrame* gpu) {
+    const auto theme =
+            static_cast<std::size_t>(state.screen == Screen::preview ? state.draft.map_theme : state.applied.map_theme);
     background(backgrounds[theme], state.screen == Screen::preview, frame.scale);
     Action result = Action::none;
     switch (state.screen) {
@@ -361,14 +364,15 @@ Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>
         if (laboratory) result = draw_laboratory(*laboratory, frame, fonts);
         break;
     case Screen::gpu_mission:
-        if (arena) result = draw_arena(*arena, frame, fonts);
+        if (hud) result = draw_mission_hud(*hud, frame, fonts);
         break;
     case Screen::gpu_laboratory:
         if (gpu) result = draw_gpu_laboratory(*gpu, frame);
         break;
     }
     if (ImGui::IsKeyPressed(ImGuiKey_F1, false)) state.diagnostics = !state.diagnostics;
-    if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && state.screen != Screen::main_menu) result = Action::back;
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && state.screen != Screen::main_menu)
+        result = state.screen == Screen::preview ? Action::open_settings : Action::back; // preview belongs to Settings
     diagnostics(state, frame);
     return result;
 }

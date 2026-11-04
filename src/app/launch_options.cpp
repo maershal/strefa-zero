@@ -22,7 +22,7 @@ constexpr std::array player_options{
         PlayerOption{"--profile", "<katalog>", "katalog ustawień i raportów (domyślnie katalog użytkownika)"},
         PlayerOption{"--mission", "", "start w misji GPU"},
         PlayerOption{"--gpu-laboratory", "", "start w laboratorium GPU"},
-        PlayerOption{"--laboratory", "", "start w laboratorium CPU"},
+        PlayerOption{"--laboratory", "", "start w modelu referencyjnym (CPU)"},
         PlayerOption{"--scene", "<gpu|lab>:<id>",
                      "start w scenie laboratorium GPU lub CPU (zły identyfikator wypisuje listę)"},
         PlayerOption{"--opengl33", "", "tryb zgodności OpenGL 3.3 (bez trybów GPU)"},
@@ -33,9 +33,8 @@ constexpr std::array player_options{
 };
 } // namespace
 std::string help_text(OptionScope scope) {
-    std::string text = scope == OptionScope::player
-                             ? "Strefa Zero — opcje uruchomienia:\n"
-                             : "StrefaQA — opcje gry (pełna lista w docs/maintenance/INVENTORY.md):\n";
+    std::string text = scope == OptionScope::player ? "Strefa Zero — opcje uruchomienia:\n"
+                                                    : "StrefaQA — opcje gry (definicje: src/app/launch_options.cpp):\n";
     for (const auto& option : player_options) {
         std::string usage{option.name};
         if (!option.value.empty()) usage += " " + std::string{option.value};
@@ -122,12 +121,13 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 result.gpu_scene = *scene;
                 result.start_in_gpu = true;
             } else if (group == "lab") {
-                const auto scene = find_scene_id(sim::scene_ids, name, "laboratorium CPU");
+                const auto scene = find_scene_id(sim::scene_ids, name, "modelu referencyjnego (CPU)");
                 if (!scene) return std::unexpected{scene.error()};
                 result.lab_scene = *scene;
                 result.start_in_laboratory = true;
             } else
-                return std::unexpected{"Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (laboratorium CPU)."};
+                return std::unexpected{
+                        "Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (model referencyjny CPU)."};
         } else if (argument == "--scene-benchmark" && i + 1 < argc) {
             auto scenes = parse_benchmark_scenes(argv[++i]);
             if (!scenes) return std::unexpected{scenes.error()};

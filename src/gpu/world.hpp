@@ -1,6 +1,7 @@
 #pragma once
 #include "game/gameplay_session.hpp"
 #include "gpu/diagnostics.hpp"
+#include "gpu/dimensions.hpp"
 #include "gpu/mission.hpp"
 #include "gpu/profiling.hpp"
 #include "gpu/render_options.hpp"
@@ -20,7 +21,7 @@
 
 namespace strefa::gpu {
 class RenderDevice;
-inline constexpr int width = 320, height = 192, capacity = 32768;
+inline constexpr int capacity = 32768;
 inline constexpr double step_seconds = 1.0 / 120.0;
 enum class Scene {
     avalanche,

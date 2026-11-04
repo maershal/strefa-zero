@@ -1,5 +1,8 @@
 # Inwentarz przed podziałem StrefaZero / StrefaQA
 
+> **Dokument historyczny.** To migawka z `e304e2b`, sprzed podziału StrefaZero / StrefaQA, a nie aktualna lista
+> opcji. Bieżące opcje wypisuje `StrefaZero --help` i `StrefaQA --help`; definicje są w `src/app/launch_options.cpp`.
+
 Stan na `origin/main` (e304e2b), przed refaktoryzacją `refactor/qa-split`. Numery linii odnoszą się do tego commitu.
 Ścieżki są względne wobec `src/`. Skróty: `app.cpp` = `app/application.cpp`, `diag` = `app/diagnostic_scenarios.cpp`,
 `world` = `gpu/world.cpp`.

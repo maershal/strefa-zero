@@ -3,7 +3,7 @@ layout(local_size_x=1) in;
 #include "vfx_common.glsl"
 #define MISSION_READ_ONLY 1
 #include "mission_state.glsl"
-uniform int cpuSource;
+uniform int hostSource;
 void sourceEvent(uint kind,vec2 p,vec2 velocity,float strength,uint seed){
     if(kind==2u&&vfxSolid(ivec2(floor(p)))){for(int i=0;i<8;++i){float a=float(i)*.785398;vec2 q=p+vec2(cos(a),sin(a))*.8;if(!vfxSolid(ivec2(floor(q)))){p=q;break;}}}
     if(kind==1u){
@@ -18,11 +18,11 @@ void sourceEvent(uint kind,vec2 p,vec2 velocity,float strength,uint seed){
 }
 void main(){uint gen=uint(sourceGeneration),tick=uint(sourceTick);
     if(clockState.x==gen&&tick<=clockState.y)return;
-    if(cpuSource==2){clockState.xy=uvec2(gen,tick);return;}
-    if(cpuSource!=0){if(cpuHeader.x!=gen||cpuHeader.y!=tick||cpuHeader.z>256u){clockState.w++;return;}rejected[0]+=cpuHeader.w;
-        for(uint priority=0u;priority<2u;++priority)for(uint i=0u;i<cpuHeader.z;++i){VfxEvent e=cpuEvents[i];if((e.identity.w==2u?1u:0u)!=priority)continue;
+    if(hostSource==2){clockState.xy=uvec2(gen,tick);return;}
+    if(hostSource!=0){if(hostHeader.x!=gen||hostHeader.y!=tick||hostHeader.z>256u){clockState.w++;return;}rejected[0]+=hostHeader.w;
+        for(uint priority=0u;priority<2u;++priority)for(uint i=0u;i<hostHeader.z;++i){VfxEvent e=hostEvents[i];if((e.identity.w==2u?1u:0u)!=priority)continue;
             if(e.identity.x!=gen||e.identity.y!=tick||any(isnan(e.source))||any(isinf(e.source))||any(isnan(e.velocity))||any(isinf(e.velocity))){clockState.w++;continue;}
-            bool duplicate=false;for(uint j=0u;j<i;++j)if(cpuEvents[j].identity.z==e.identity.z&&cpuEvents[j].identity.w==e.identity.w)duplicate=true;if(duplicate)continue;
+            bool duplicate=false;for(uint j=0u;j<i;++j)if(hostEvents[j].identity.z==e.identity.z&&hostEvents[j].identity.w==e.identity.w)duplicate=true;if(duplicate)continue;
             sourceEvent(e.identity.w,e.source.xy,e.velocity.xy,e.source.z,hashVfx(e.identity.z^gen^tick));}}
     else if(game.status.x!=0u){if(eventBatch.header.z!=gen||eventBatch.header.y!=tick||eventBatch.header.x>144u||eventBatch.header.w!=0u){clockState.w++;return;}
         for(uint priority=0u;priority<2u;++priority)for(uint i=0u;i<eventBatch.header.x;++i){WorldEvent e=eventBatch.events[i];if(((e.identity.w==3u||e.identity.w==7u)?1u:0u)!=priority)continue;if(e.identity.x!=gen||e.identity.y!=tick||e.identity.z!=i+1u){clockState.w++;continue;}uint kind=e.identity.w,seed=hashVfx(gen^hashVfx(tick)^e.identity.z);

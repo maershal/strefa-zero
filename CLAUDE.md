@@ -52,10 +52,10 @@ python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenera
 | --- | --- |
 | `src/core` | settings schema (`meta::Field`), validation |
 | `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp` |
-| `src/game` | `strefa_game` (input buffer, actor state for the HUD), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
+| `src/game` | `strefa_input` (`input.hpp`: input buffer, actor state for the HUD; no CPU model), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
 | `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`, incl. the `*_validation.inl` member checks), renderer, VFX, thermal, lighting, readback/upload rings. The free `*_validation.cpp`/`*_profile.cpp`/`profiling.cpp` check modes (declared in `gpu/validation.hpp`) build into `strefa_diagnostics` |
 | `src/platform` | SDL window, GL context, textures, settings storage |
-| `src/ui` | ImGui menu, laboratories, mission HUD (`arena.cpp`) |
+| `src/ui` | ImGui menu, laboratories, mission HUD (`mission_hud.cpp`) |
 | `src/app` | `strefa_app`: `Application`, `run_main`, launch options (`launch_options.cpp` = all CLI flags; `player_options` = the StrefaZero subset). `diagnostic_scenarios.cpp` and `*_validation.cpp` belong to `strefa_diagnostics` |
 | `src/tools` | `qa_main.cpp` = `StrefaQA` (game + every QA/tuning flag, links `strefa_diagnostics`); `physics_runner.cpp` = `StrefaPhysics`. `src/main.cpp` = `StrefaZero` (player flags only) |
 | `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |

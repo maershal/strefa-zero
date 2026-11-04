@@ -294,17 +294,17 @@ public:
             report << "frames=" << frames << "\nscreens=" << visited << '/' << visited_screens.size()
                    << "\ngpu_screens=" << (app.gpu_available_ ? "available" : "unavailable_handled")
                    << "\nexperimental_confirmation=" << (!app.gpu_available_ || experimental_ok)
-                   << "\nall_screens=" << all_screens << "\nall_themes=" << all_themes
-                   << "\nall_backgrounds=" << all_images << "\nsettings_applied=" << smoke_ok
-                   << "\nrenderer=" << app.renderer_ << "\nopengl=" << app.gl_version_
-                   << "\ncompiler=" << build::compiler << "\ncpp=" << __cplusplus
+                   << "\npreview_keeps_draft=" << preview_keeps_draft << "\nall_screens=" << all_screens
+                   << "\nall_themes=" << all_themes << "\nall_backgrounds=" << all_images
+                   << "\nsettings_applied=" << smoke_ok << "\nrenderer=" << app.renderer_
+                   << "\nopengl=" << app.gl_version_ << "\ncompiler=" << build::compiler << "\ncpp=" << __cplusplus
                    << "\nsimulation_uploads=" << app.uploads_ << "\nsimulation_pause_step=" << app.smoke_lab_ok_
                    << '\n';
             report << "layered_parts=" << (app.parts_.handle != 0) << "\nweapon_atlas=" << (app.weapons_.handle != 0)
                    << "\nphysics_finite=" << app.world_->statistics().finite << '\n';
-            if (!all_screens || (app.gpu_available_ && !experimental_ok) || !all_themes || !all_images || !smoke_ok
-                || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.parts_.handle || !app.weapons_.handle
-                || !app.world_->statistics().finite)
+            if (!all_screens || (app.gpu_available_ && !experimental_ok) || !preview_keeps_draft || !all_themes
+                || !all_images || !smoke_ok || app.uploads_ == 0 || !app.smoke_lab_ok_ || !app.parts_.handle
+                || !app.weapons_.handle || !app.world_->statistics().finite)
                 return std::unexpected{"Niepełny wynik testu aplikacji. Sprawdź smoke-report.txt."};
         }
         return {};
@@ -319,8 +319,16 @@ public:
             app.state_.draft.vsync = false;
             app.state_.draft.ui_scale = 1.15F;
             return app.perform(ui::Action::apply);
-        case 32: return app.perform(ui::Action::open_preview);
-        case 40: return app.perform(ui::Action::open_settings);
+        case 32:
+            // The theme preview shows the unsaved choice and returns to Settings without losing it.
+            app.state_.draft.map_theme = core::MapTheme::winter;
+            return app.perform(ui::Action::open_preview);
+        case 40: {
+            const bool opened = app.perform(ui::Action::open_settings);
+            preview_keeps_draft = opened && app.state_.draft.map_theme == core::MapTheme::winter
+                               && app.state_.applied.map_theme == core::MapTheme::industrial;
+            return opened;
+        }
         case 41: app.state_.draft.map_theme = core::MapTheme::winter; return app.perform(ui::Action::apply);
         case 48: return app.perform(ui::Action::open_about);
         case 56: return app.perform(ui::Action::open_laboratory);
@@ -640,7 +648,7 @@ public:
     std::vector<std::uint32_t> retained_terrain;
     bool smoke_test{}, lab_smoke{}, gpu_smoke{}, mission_smoke{};
     std::uint64_t mission_deadline_ns{};
-    bool gpu_unavailable_handled{}, experimental_ok{};
+    bool gpu_unavailable_handled{}, experimental_ok{}, preview_keeps_draft{};
     std::optional<gpu::ThermalBrush> injected_brush;
     bool mission_quick{}, quick_ok{true};
     unsigned quick_checks{};

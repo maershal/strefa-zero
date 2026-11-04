@@ -165,7 +165,7 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
     }
     ImGui::Spacing();
     ImGui::TextWrapped("Woda i olej: cząstki cieczy na GPU (PBF). Termika: transport ciepła i gazów z wybranymi "
-                       "reakcjami. Laboratorium CPU jest modelem referencyjnym.");
+                       "reakcjami. Wzorcem jest model referencyjny (CPU).");
     ImGui::EndChild();
     ImGui::SameLine();
     ImGui::BeginChild("GpuCanvas", {0, 0});

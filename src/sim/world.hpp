@@ -57,7 +57,6 @@ public:
     double inject_heat(Point position, double energy);
     void set_temperature(Point position, double kelvin);
     void projectile_hit(Point position);
-    std::uint64_t queue_explosion(Point center, int radius = 9);
     std::uint64_t queue_explosion(ExplosionCommand command);
     [[nodiscard]] Cell at(Point position) const noexcept;
     [[nodiscard]] FluidSample sample_fluid(Point position) const noexcept;

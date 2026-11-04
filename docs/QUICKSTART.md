@@ -4,7 +4,7 @@ Uruchom `StrefaZero.exe`. Zachowaj `SDL3.dll`, `assets/` oraz `licenses/` w tym 
 
 `StrefaZero.exe --help` wypisuje opcje gry. Pokrętła eksperymentów (`--gpu-*`, `--physics-threads`, `--shader-cache`) oraz walidacje przyjmuje `StrefaQA.exe`, budowany ze źródeł obok gry (`./scripts/build.ps1`) i nie dołączany do paczki gracza. Większość tych ustawień jest też dostępna w Laboratorium GPU i ustawieniach gry.
 
-Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Laboratorium CPU, 04 Podgląd areny, 05 Ustawienia, 06 O projekcie, 07 Zakończ.
+Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Model referencyjny (CPU), 04 Ustawienia (z podglądem motywu), 05 O projekcie, 06 Zakończ.
 
 ## Misja GPU
 
@@ -14,7 +14,7 @@ Zniszcz trzy czerwone tarcze i dotrzyj do zielonego wyjścia po prawej. Pomarań
 
 A/D lub strzałki — ruch; Spacja — skok; PPM — plecak; LPM — karabin; R — przeładuj; G — granat; F5 — reset; Esc — menu. Celowanie oraz plecak działają również z kursorem poza planszą w aktywnym oknie; kontrolki interfejsu zachowują przechwycenie wejścia. Utrata fokusu zatrzymuje symulację.
 
-Wymagane OpenGL 4.3; na starszym sterowniku działa tylko Laboratorium CPU. Misja ma 3096 cząstek początkowych, a gruz powstaje z niszczonych przegród. Pełna pula 32768 cząstek jest limitem pojemności, nie gwarancją utrzymania 120 kroków/s na każdym GPU. Pomiary i ograniczenia: `REPORT.md`.
+Wymagane OpenGL 4.3; na starszym sterowniku działa tylko model referencyjny (CPU). Misja ma 3096 cząstek początkowych, a gruz powstaje z niszczonych przegród. Pełna pula 32768 cząstek jest limitem pojemności, nie gwarancją utrzymania 120 kroków/s na każdym GPU. Pomiary i ograniczenia: `REPORT.md`.
 
 ## Laboratorium GPU
 
@@ -22,11 +22,11 @@ W menu wybierz **02 Laboratorium GPU**. Domyślnie uruchamia się klepsydra. Na 
 
 Piasek, popiół i metalowe drobiny poruszają się z ciągłymi pozycjami, zderzają i tworzą usypy. LPM dodaje wybrany materiał, PPM usuwa, kółko zmienia pędzel. Spacja pauzuje, F wykonuje pojedynczy krok. Możesz rysować ściany, wybrać scenę lub zacząć od pustej planszy. Woda i olej korzystają z PBF; wybierz zbiornik, przerwaną zaporę, naczynia połączone lub mieszankę z piaskiem. Limit: 32768 cząstek łącznie. Panel można przewijać.
 
-GPU wykonuje fizykę i rysowanie; krok czasu wynosi 1/120 s z podkrokami kontaktów. Panel pokazuje czas GPU i ewentualny pominięty czas. Wymagane OpenGL 4.3. Przy starszym sterowniku nadal działa Laboratorium CPU na OpenGL 3.3; ten tryb zgodności wymusza parametr `--opengl33`.
+GPU wykonuje fizykę i rysowanie; krok czasu wynosi 1/120 s z podkrokami kontaktów. Panel pokazuje czas GPU i ewentualny pominięty czas. Wymagane OpenGL 4.3. Przy starszym sterowniku nadal działa model referencyjny (CPU) na OpenGL 3.3; ten tryb zgodności wymusza parametr `--opengl33`.
 
-**Woda i olej działają na GPU. Ogień, gazy, temperatura i reakcje mają referencyjną wersję w Laboratorium CPU, a od I10 także opcjonalną, eksperymentalną termikę GPU, domyślnie wyłączoną: włącz ją w Laboratorium GPU albo parametrem `--gpu-thermal on` programu StrefaQA (opis w sekcji o termice poniżej).** Misja GPU używa nowego modelu. Opis i wyniki: REPORT.md w paczce Windows.
+**Woda i olej działają na GPU. Ogień, gazy, temperatura i reakcje mają referencyjną wersję w modelu referencyjnym (CPU), a od I10 także opcjonalną, eksperymentalną termikę GPU, domyślnie wyłączoną: włącz ją w Laboratorium GPU albo parametrem `--gpu-thermal on` programu StrefaQA (opis w sekcji o termice poniżej).** Misja GPU używa nowego modelu. Opis i wyniki: REPORT.md w paczce Windows.
 
-## Laboratorium CPU
+## Model referencyjny (CPU)
 
 Wybór scen i map pól znajduje się po prawej. Najedź kursorem na świat, aby obejrzeć temperaturę, ciśnienia, prędkości, masę, paliwo i tlen. Panel można przewijać. LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja zatrzymuje czas, F wykonuje pojedynczy krok.
 
@@ -47,14 +47,14 @@ Aby porównać cztery wątki, uruchom `StrefaQA.exe --laboratory --physics-threa
 
 Otwórz `recordings/index.html`. `summary.csv` zawiera percentyle czasu fizyki, bilanse i zbieżność solvera. Brak zbieżności PCG jest raportowany również w laboratorium. Laboratorium oblicza fizykę osobno od obsługi okna. Panel pokazuje rzeczywiste kroki/s; ciężkie sceny mogą działać wolniej niż 60 kroków fizyki/s, przy płynnie działających kontrolkach.
 
-Windows x64, OpenGL 3.3. C++23 / SDL 3.4.18 / Dear ImGui 1.93.0. Licencje bibliotek i czcionek: `licenses/`. Kod i dokumentacja modeli są w `StrefaZero-source-I07.zip`. To prototyp fizyki i misji; nie zawiera botów ani multiplayera.
+Windows x64, OpenGL 4.3 (na 3.3 tylko model referencyjny CPU). C++23 / SDL 3.4.18 / Dear ImGui 1.93.0. Licencje bibliotek i czcionek: `licenses/`. Kod i dokumentacja modeli są w repozytorium projektu. To prototyp fizyki i misji; nie zawiera botów ani multiplayera.
 
 
 ## Wspólna scena gry i narzędzi (I05)
 
 „Misja GPU” oraz „Laboratorium GPU” otwierają ten sam świat. Na pierwszym wejściu wybierana jest misja lub klepsydra; późniejszy powrót z menu zachowuje stan. W misji użyj przycisku „Laboratorium GPU”, a w laboratorium „Widok gry (Misja GPU)”. Pauza jest wspólna. Reset, wybór innej sceny i rozpoczęcie nowej misji są jawnymi działaniami.
 
-W Laboratorium GPU można malować również na misji, zatrzymać ją i wykonać jeden krok. Opcjonalna termika i gazy działają w tym samym świecie GPU. Laboratorium CPU jest osobnym narzędziem referencyjnym, tworzonym dopiero po otwarciu.
+W Laboratorium GPU można malować również na misji, zatrzymać ją i wykonać jeden krok. Opcjonalna termika i gazy działają w tym samym świecie GPU. Model referencyjny (CPU) jest osobnym narzędziem, tworzonym dopiero po otwarciu; nie dostaje nowych funkcji ([ADR 0001](adr/0001-rola-modelu-cpu.md)).
 
 „Nowe nagranie (reset sceny)” rozpoczyna zapis poleceń. „Zapisz nagranie + obraz” eksportuje `session.txt`, `metrics.csv` i `preview.bmp` do `recordings/gpu-…/` w profilu. „Odtwórz ostatnie nagranie” wykonuje zapis wsadowo i pozostawia scenę zatrzymaną. Limit to 65536 poleceń.
 

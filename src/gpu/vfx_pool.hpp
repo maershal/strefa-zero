@@ -14,7 +14,8 @@ public:
     VfxOptions options() const { return config; }
     void reset(unsigned generation = 0);
     bool enabled() const { return initialized && config.quality != VfxQuality::off; }
-    // Field generation is owned by the source adapter; these textures never alias physics.
+    // Field generation is owned by the source adapter; these textures never alias physics. `upload_field` and the
+    // `events` of `end_tick` are the host/test path (SSBO 5): validation and benchmarks feed them, the game does not.
     void begin_tick(GLuint terrain, unsigned generation, unsigned tick, float dt);
     void field_target();
     void upload_field(std::span<const float>, std::span<const std::uint16_t>);
@@ -22,9 +23,6 @@ public:
     void end_tick(GLuint mission_buffer = 0, std::span<const VfxEvent> events = {}, bool water = true);
     void draw(GLuint target, int width, int height, int layer, float interpolation, bool linear = false);
     void distort(GLuint source, GLuint target, int width, int height, float interpolation, bool linear = false);
-    void cpu_canvas(GLuint canvas, GLuint background, float interpolation);
-    GLuint cpu_back() const { return cpu_images[0]; }
-    GLuint cpu_front() const { return cpu_images[1]; }
     const VfxCounters& stats() const { return latest; }
     std::vector<VfxSample> take_samples();
     void poll();
@@ -48,25 +46,30 @@ private:
     unsigned bank{}, generation{}, tick{};
     float dt{}, normalization{1};
     GLuint sand_field{};
-    GLuint field{}, terrain{}, cpu_terrain{}, fbo{}, vao{}, scratch{}, scratch_fbo{};
-    std::array<GLuint, 2> cpu_images{}, cpu_fbos{};
+    GLuint field{}, terrain{}, host_terrain{}, fbo{}, vao{}, scratch{}, scratch_fbo{};
     int scratch_width{}, scratch_height{};
     bool scratch_linear{};
-    GLuint init{}, prepare{}, update{}, events_program{}, water_program{}, finish{}, graphics{}, copy{},
-            canvas_program{};
+    GLuint init{}, prepare{}, update{}, events_program{}, water_program{}, finish{}, graphics{}, copy{};
     struct ProgramUniforms {
         GLuint id{};
-        std::array<GLint, 13> locations{};
+        std::array<GLint, 11> locations{};
         float last_dt{-1}, last_normalization{-1};
         int last_quality{-1};
         unsigned last_generation{~0u}, last_tick{~0u};
     };
     std::vector<ProgramUniforms> uniforms;
     GLint location(GLuint, const char*) const;
-    static constexpr std::array<const char*, 13> uniform_names{
-            "stepData",         "quality",      "cpuSource",         "layer",       "alpha",
-            "linearOutput",     "renderExtent", "copyMode",          "sourceImage", "backgroundImage",
-            "sourceGeneration", "sourceTick",   "fieldNormalization"};
+    static constexpr std::array<const char*, 11> uniform_names{"stepData",
+                                                               "quality",
+                                                               "hostSource",
+                                                               "layer",
+                                                               "alpha",
+                                                               "linearOutput",
+                                                               "renderExtent",
+                                                               "sourceImage",
+                                                               "sourceGeneration",
+                                                               "sourceTick",
+                                                               "fieldNormalization"};
     VfxCounters latest{};
     struct Probe {
         GLuint buffer{};

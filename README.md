@@ -5,7 +5,7 @@ Offline'owy prototyp gry 2D w C++23 z symulacją materiałów: ciecze PBF i ziar
 SDL 3.4.18, Dear ImGui 1.93.0. Bez CUDA i Vulkana.
 
 Aplikacja tworzy kontekst OpenGL 4.3 i wraca do 3.3, gdy sterownik go nie udostępnia
-(tryby GPU są wtedy niedostępne; laboratorium CPU działa).
+(tryby GPU są wtedy niedostępne; model referencyjny CPU działa).
 
 ## Szybki start
 
@@ -32,7 +32,7 @@ Wyniki kompilacji trafiają do `build/` (ignorowane przez Git).
 | --- | --- | --- |
 | Misja GPU | `--mission` | Zniszcz trzy tarcze i dotrzyj do wyjścia; zapora i silos uwalniają wodę i piasek. [Opis](docs/reports/GPU_MISSION_070.md) |
 | Laboratorium GPU | `--gpu-laboratory` | Woda i olej (PBF), piasek, popiół i drobiny metalu (PBD), limit 32 768 cząstek. |
-| Laboratorium CPU | `--laboratory` | 19 materiałów, 14 scen regresyjnych, temperatura, ciśnienie, tlen, reakcje. |
+| Model referencyjny (CPU) | `--laboratory` | 19 materiałów, 14 scen regresyjnych, temperatura, ciśnienie, tlen, reakcje. Wyrocznia testów, bez nowych funkcji ([ADR 0001](docs/adr/0001-rola-modelu-cpu.md)). |
 
 **Sterowanie (Misja GPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
 LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
@@ -45,15 +45,15 @@ LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
 | Opcja | Znaczenie |
 | --- | --- |
 | `--mission`, `--gpu-laboratory`, `--laboratory` | Start bezpośrednio w trybie (zob. tabela wyżej). |
-| `--scene gpu:<id>`, `--scene lab:<id>` | Start w scenie Laboratorium GPU (`avalanche`, `rain`, `mixed`, `empty`, `water-tank`, `dam-break`, `connected-vessels`, `oil-water`, `sand-water`, `hourglass`, `inverted-oil`, `oil-drop`) albo Laboratorium CPU (`demo`, `falling-water`, `dam-break`, `connected-vessels`, `oil-water`, `sand-pile`, `sand-water`, `smoke-ceiling`, `smoke-vent`, `wood-fire`, `extinguish`, `melting-metal`, `quench-metal`, `ice-fire`, `shielded-explosion`). Te same identyfikatory przyjmuje `StrefaQA --scene-benchmark`. |
+| `--scene gpu:<id>`, `--scene lab:<id>` | Start w scenie Laboratorium GPU (`avalanche`, `rain`, `mixed`, `empty`, `water-tank`, `dam-break`, `connected-vessels`, `oil-water`, `sand-water`, `hourglass`, `inverted-oil`, `oil-drop`) albo modelu referencyjnego CPU (`demo`, `falling-water`, `dam-break`, `connected-vessels`, `oil-water`, `sand-pile`, `sand-water`, `smoke-ceiling`, `smoke-vent`, `wood-fire`, `extinguish`, `melting-metal`, `quench-metal`, `ice-fire`, `shielded-explosion`). Te same identyfikatory przyjmuje `StrefaQA --scene-benchmark`. |
 | `--profile <katalog>` | Katalog ustawień, nagrań i raportów (domyślnie profil użytkownika). |
 | `--opengl33` | Wymusza kontekst 3.3 (kontrola zgodności; tryby GPU niedostępne). |
 | `--gl-debug` | Zapisuje komunikaty sterownika OpenGL do `gl-debug.txt` w profilu. |
 | `--smoke-test`, `--mission-smoke-test` | Test dymny menu / misji GPU tego pliku wykonywalnego (wymaga `--profile`). |
 | `--help` | Lista opcji. |
 
-Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Laboratorium CPU, 04 Podgląd areny, 05 Ustawienia, 06 O projekcie,
-07 Zakończ. Na OpenGL 3.3 pozycje 01–02 są wyszarzone.
+Menu: 01 Misja GPU, 02 Laboratorium GPU, 03 Model referencyjny (CPU), 04 Ustawienia (z podglądem motywu), 05 O projekcie, 06 Zakończ.
+Na OpenGL 3.3 pozycje 01–02 są wyszarzone.
 
 Obraz wody ([I08](docs/reports/I08_SCENE_RENDERER.md)), efekty ([I09](docs/reports/I09_GPU_VFX.md)) i oświetlenie
 ([I11](docs/reports/I11_LIGHTING.md)) wybiera się w ustawieniach albo w Laboratorium GPU i są zapisywane w
@@ -75,8 +75,8 @@ tylko w bieżącej sesji.
 
 `StrefaQA` powstaje w tym samym katalogu kompilacji (nie trafia do paczki gracza). Przyjmuje opcje gracza
 oraz wszystkie walidacje, benchmarki, profile i pokrętła eksperymentów, z tą samą semantyką co wcześniej
-`StrefaZero`. Pełna lista z wartościami domyślnymi: [docs/maintenance/INVENTORY.md](docs/maintenance/INVENTORY.md)
-i `src/app/launch_options.cpp`. Przykłady pokręteł startowych:
+`StrefaZero`. Aktualną listę wypisuje `StrefaQA --help`; definicje i wartości domyślne są w
+`src/app/launch_options.cpp` ([INVENTORY.md](docs/maintenance/INVENTORY.md) to historyczny stan sprzed podziału). Przykłady pokręteł startowych:
 
 | Opcja | Domyślnie | Znaczenie |
 | --- | --- | --- |

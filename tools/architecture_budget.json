@@ -7,7 +7,7 @@
   "application_run_lines": 445,
   "launch_options_bools": 55,
   "inl_includes": 7,
-  "size_literals_cpp": 105,
+  "size_literals_cpp": 103,
   "size_literals_glsl": 75,
   "inverse_mass_literal_lines": 25,
   "raw_ssbo_arrays": 27,

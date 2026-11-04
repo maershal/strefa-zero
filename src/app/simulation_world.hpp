@@ -1,6 +1,6 @@
 #pragma once
 #include "app/session_recording.hpp"
-#include "game/session.hpp"
+#include "game/input.hpp"
 #include "gpu/world.hpp"
 #include "sim/fixed_clock.hpp"
 
