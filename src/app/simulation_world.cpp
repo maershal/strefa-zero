@@ -33,6 +33,8 @@ void SimulationWorld::reset(SceneConfiguration scene) {
         world_->reset(scene.laboratory);
     scene_ = scene;
     ++scene_epoch_;
+    detonations_.clear();
+    explosion_id_ = 0;
     suspend();
     recording_.append(scene);
 }
@@ -44,6 +46,8 @@ void SimulationWorld::close() {
     pending_single_step_ = false;
     thermal_brush_ = {};
     thermal_pending_ = false;
+    detonations_.clear();
+    explosion_id_ = 0;
 }
 void SimulationWorld::set_thermal_options(gpu::ThermalOptions value) {
     if (value != world_->thermal_options()) {
@@ -64,6 +68,9 @@ void SimulationWorld::suspend() {
             thermal_brush_ = {};
         }
     }
+}
+void SimulationWorld::detonate(const gpu::Explosion& explosion) {
+    if (!recording_.active()) detonations_.push_back(explosion);
 }
 SimulationSubmission SimulationWorld::advance(const SimulationFrame& frame) {
     STREFA_ZONE("SimulationWorld::advance");
@@ -86,6 +93,18 @@ SimulationSubmission SimulationWorld::advance(const SimulationFrame& frame) {
     if (frame.stroke) {
         world_->paint(*frame.stroke);
         recording_.append(*frame.stroke);
+    }
+    // Clicks keep their order; while the world's queue is full (32) the rest wait for a later frame.
+    while (!detonations_.empty()) {
+        auto explosion = detonations_.front();
+        explosion.id = explosion_id_ + 1;
+        try {
+            world_->queue_explosion(explosion);
+        } catch (const std::runtime_error&) {
+            break;
+        }
+        ++explosion_id_;
+        detonations_.pop_front();
     }
     if (frame.paused) {
         input_.clear();

@@ -374,9 +374,7 @@ public:
                     simulation_->set_background_texture(
                             static_cast<unsigned>(images_[static_cast<std::size_t>(state_.applied.map_theme)].handle));
                 }
-                if (gpu_frame) {
-                    update_gpu(gpu_input, sim_seconds, focused || gpu_smoke || session_smoke || bench);
-                }
+                if (gpu_frame) update_gpu(gpu_input, sim_seconds, focused || gpu_smoke || session_smoke || bench);
                 if (state_.screen == ui::Screen::laboratory) {
                     const auto updated = update_lab(input, sim_seconds);
                     if (!updated) throw std::runtime_error{updated.error()};
@@ -732,6 +730,7 @@ private:
             gpu_controls_.previous.reset();
             elapsed = 0;
         }
+        if (input.explosion) simulation_.detonate(*input.explosion);
         const auto result = simulation_.advance(
                 {{}, input.stroke, elapsed, focused, gpu_controls_.paused, input.step, false, input.thermal_brush});
         gpu_controls_.lost_seconds = simulation_.clock().dropped_seconds();

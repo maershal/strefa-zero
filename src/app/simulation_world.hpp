@@ -4,6 +4,9 @@
 #include "gpu/world.hpp"
 #include "sim/fixed_clock.hpp"
 
+#include <cstdint>
+#include <deque>
+
 namespace strefa::app {
 struct SimulationFrame {
     game::TickInput controls;
@@ -39,6 +42,9 @@ public:
     std::expected<void, std::string> save_recording(const std::filesystem::path&) const;
     std::expected<void, std::string> replay_recording(const std::filesystem::path&);
     SimulationSubmission advance(const SimulationFrame&);
+    // Laboratory Detonator: queued in click order and handed to the world by advance(). Ignored while recording,
+    // since recordings v1-v3 have no explosion entry.
+    void detonate(const gpu::Explosion&);
     gpu::ParticleWorld* operator->() const noexcept { return world_.get(); }
     gpu::ParticleWorld& operator*() const noexcept { return *world_; }
     explicit operator bool() const noexcept { return bool(world_); }
@@ -58,5 +64,7 @@ private:
     SessionRecording recording_;
     gpu::ThermalBrush thermal_brush_;
     bool thermal_pending_{};
+    std::deque<gpu::Explosion> detonations_; // waiting for room in the world's explosion queue
+    std::uint32_t explosion_id_{};           // last ID given in this world generation
 };
 } // namespace strefa::app

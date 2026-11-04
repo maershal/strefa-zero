@@ -126,11 +126,29 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
         }
     }
     ImGui::Separator();
-    ImGui::TextUnformatted("MATERIAŁ");
+    ImGui::TextUnformatted("NARZĘDZIE");
+    int tool_index = static_cast<int>(controls.tool);
     ImGui::SetNextItemWidth(-1);
-    ImGui::Combo("##GpuMaterial", &controls.material, "Gumka\0Piasek\0Popiół\0Metalowe drobiny\0Ściana\0Woda\0Olej\0");
-    ImGui::SliderInt("Pędzel", &controls.radius, gpu_brush_min, gpu_brush_max, "%d", ImGuiSliderFlags_AlwaysClamp);
-    ImGui::TextWrapped("LPM: rysuj. PPM: usuń. Kółko: rozmiar pędzla.");
+    if (ImGui::Combo("##GpuTool", &tool_index, "Pędzel materiału\0Detonator\0"))
+        controls.tool = static_cast<GpuTool>(tool_index);
+    const bool detonator = controls.tool == GpuTool::detonator;
+    if (detonator) {
+        ImGui::SliderFloat("Promień", &controls.blast_radius, blast_radius_min, blast_radius_max, "%.0f",
+                           ImGuiSliderFlags_AlwaysClamp);
+        tooltip("Promień wybuchu w komórkach. Kółko myszy zmienia go nad sceną.");
+        ImGui::SliderFloat("Energia", &controls.blast_impulse, blast_impulse_min, blast_impulse_max, "%.0f",
+                           ImGuiSliderFlags_AlwaysClamp);
+        tooltip("Impuls w środku wybuchu, malejący do zera na krawędzi. Lżejsze ziarna lecą dalej: popiół "
+                "najdalej, metal najbliżej. Gruz zniszczonego terenu dostaje prędkość od środka.");
+        ImGui::TextWrapped(lab.recording ? "Detonator nie działa podczas nagrywania: nagranie nie zapisuje wybuchów."
+                                         : "LPM: wybuch pod kursorem. Do 8 wybuchów na krok, kolejne czekają.");
+    } else {
+        ImGui::SetNextItemWidth(-1);
+        ImGui::Combo("##GpuMaterial", &controls.material,
+                     "Gumka\0Piasek\0Popiół\0Metalowe drobiny\0Ściana\0Woda\0Olej\0");
+        ImGui::SliderInt("Pędzel", &controls.radius, gpu_brush_min, gpu_brush_max, "%d", ImGuiSliderFlags_AlwaysClamp);
+        ImGui::TextWrapped("LPM: rysuj. PPM: usuń. Kółko: rozmiar pędzla.");
+    }
     ImGui::Separator();
     ImGui::Text("Cząstki: %u / %d", lab.metrics.grains, gpu::capacity);
     ImGui::Text("Woda: %u / Olej: %u", lab.metrics.water, lab.metrics.oil);
@@ -196,13 +214,20 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
                 ImGui::EndTooltip();
             }
         }
-        if (ImGui::GetIO().MouseWheel != 0)
-            controls.radius = std::clamp(controls.radius + (ImGui::GetIO().MouseWheel > 0 ? 1 : -1), gpu_brush_min,
-                                         gpu_brush_max);
+        const int wheel = ImGui::GetIO().MouseWheel > 0 ? 1 : -1;
+        if (ImGui::GetIO().MouseWheel != 0 && detonator)
+            controls.blast_radius =
+                    std::clamp(controls.blast_radius + static_cast<float>(wheel), blast_radius_min, blast_radius_max);
+        else if (ImGui::GetIO().MouseWheel != 0)
+            controls.radius = std::clamp(controls.radius + wheel, gpu_brush_min, gpu_brush_max);
         ImGui::GetWindowDrawList()->AddCircle(
-                {origin.x + (x - lab.camera[0]) * zoom, origin.y + (y - lab.camera[1]) * zoom}, controls.radius * zoom,
-                IM_COL32(225, 228, 168, 220));
-        if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
+                {origin.x + (x - lab.camera[0]) * zoom, origin.y + (y - lab.camera[1]) * zoom},
+                (detonator ? controls.blast_radius : static_cast<float>(controls.radius)) * zoom,
+                detonator ? IM_COL32(255, 150, 70, 230) : IM_COL32(225, 228, 168, 220));
+        if (detonator) {
+            if (ImGui::IsMouseClicked(ImGuiMouseButton_Left) && !lab.recording)
+                lab.input.explosion = make_explosion(controls, x, y);
+        } else if (ImGui::IsMouseDown(ImGuiMouseButton_Left) || ImGui::IsMouseDown(ImGuiMouseButton_Right)) {
             const auto previous = controls.previous.value_or(std::array{x, y});
             lab.input.stroke = gpu::Stroke{previous[0],
                                            previous[1],
