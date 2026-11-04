@@ -1,4 +1,7 @@
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality')
+# -Telemetry (benchmark): nvidia-smi log of SM/memory clocks, temperature, power and throttle reasons every 100 ms
+# (GpuTelemetry.psm1) into telemetry.csv; analyze-thermal.py then disqualifies trials with hw_*/sw_thermal_slowdown.
+# -Seed repeats the scene order of an earlier run (STREFA_BENCHMARK_SEED); without it every run draws a new order.
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality',[switch]$Telemetry,[Nullable[uint64]]$Seed)
 $ErrorActionPreference='Stop'
 $Executable=(Resolve-Path -LiteralPath $Executable).Path
 $Output=[IO.Path]::GetFullPath($Output)
@@ -9,11 +12,22 @@ $flags=switch($Suite){
  'benchmark' {@('--gpu-thermal-benchmark')}
  'window' {@('--gpu-smoke-test','--gpu-thermal','on','--show-test-window','--gl-debug')}
 }
-[ordered]@{iteration='I10';executable=$Executable;sha256=(Get-FileHash $Executable -Algorithm SHA256).Hash.ToLowerInvariant();flags=$flags;started_utc=[DateTime]::UtcNow.ToString('o');grid=@(320,192);tick_hz=120;render_hz_in_benchmark=60;blocks=3;warmup_ticks=120;samples=240;order=@('off','candidate','candidate','off');hot_budget_ms=.70;cold_budget_ms=.05;default_enabled=$false}|ConvertTo-Json -Depth 4|Set-Content -Encoding UTF8 (Join-Path $Output 'run-spec.json')
-$p=Start-Process -FilePath $Executable -ArgumentList (@($flags)+@('--profile',('"'+$Output+'"'))) -PassThru
-$null=$p.Handle
-$done=$p.WaitForExit(1800000)
-if(-not $done){$p.Kill();$p.WaitForExit()}
+[ordered]@{iteration='I10';executable=$Executable;sha256=(Get-FileHash $Executable -Algorithm SHA256).Hash.ToLowerInvariant();flags=$flags;started_utc=[DateTime]::UtcNow.ToString('o');grid=@(320,192);tick_hz=120;render_hz_in_benchmark=60;blocks=3;warmup_ticks=120;samples=240;order=@('off','candidate','candidate','off');scene_order='random_per_block';seed=$Seed;telemetry=[bool]$Telemetry;hot_budget_ms=.70;cold_budget_ms=.05;default_enabled=$false}|ConvertTo-Json -Depth 4|Set-Content -Encoding UTF8 (Join-Path $Output 'run-spec.json')
+$sampler=$null
+if($Telemetry){
+ Import-Module (Join-Path $PSScriptRoot 'GpuTelemetry.psm1')
+ $sampler=Start-GpuTelemetry -Path (Join-Path $Output 'telemetry.csv') -IntervalMs 100
+}
+if($null -ne $Seed){$env:STREFA_BENCHMARK_SEED="$Seed"}
+try{
+ $p=Start-Process -FilePath $Executable -ArgumentList (@($flags)+@('--profile',('"'+$Output+'"'))) -PassThru
+ $null=$p.Handle
+ $done=$p.WaitForExit(1800000)
+ if(-not $done){$p.Kill();$p.WaitForExit()}
+}finally{
+ if($null -ne $Seed){Remove-Item Env:STREFA_BENCHMARK_SEED -ErrorAction SilentlyContinue}
+ if($sampler){$null=Stop-GpuTelemetry $sampler}
+}
 $p.Refresh();$code=$p.ExitCode
 if($null -eq $code){throw 'Native process exit status unavailable'}
 [ordered]@{exit_code=$code;timed_out=(-not $done);finished_utc=[DateTime]::UtcNow.ToString('o')}|ConvertTo-Json|Set-Content -Encoding UTF8 (Join-Path $Output 'run-result.json')
