@@ -131,10 +131,11 @@ jobs:
             --dependency-cache ~/.cache/strefa-deps
           ccache --show-stats
       # The Release build links with LTO, which inlines and drops symbols; count them in a build without IPO.
-      - name: Count QA symbols in StrefaZero (no IPO)
+      # The same count checks that the default STREFA_TRACY=OFF leaves no Tracy symbol (budget 0).
+      - name: Count QA and Tracy symbols in StrefaZero (no IPO)
         run: |
           cmake -S . -B build/noipo -G Ninja -DCMAKE_BUILD_TYPE=Release -DSTREFA_WARNINGS_AS_ERRORS=ON \
-            -DSTREFA_IPO=OFF -DSTREFA_DOWNLOAD_CACHE="$HOME/.cache/strefa-deps"
+            -DSTREFA_IPO=OFF -DSTREFA_TRACY=OFF -DSTREFA_DOWNLOAD_CACHE="$HOME/.cache/strefa-deps"
           cmake --build build/noipo --target strefa_zero --parallel "$(nproc)"
           python3 scripts/check_architecture.py --symbols build/noipo/StrefaZero
       - name: Save compiler cache
@@ -224,6 +225,54 @@ jobs:
             build/junit/
             build/linux-release-core/Testing/Temporary/
 
+  # Developer build with Tracy (STREFA_TRACY=ON, docs/adr/0002-narzedzia-profilowania.md): the zones must keep
+  # compiling with warnings as errors, and nm must find Tracy when it is linked (otherwise the OFF count above
+  # could pass because the pattern stopped matching). No tests: the simulation code is the same as in the OFF build.
+  tracy:
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install build and graphics dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build pkg-config ccache \
+            libgl-dev libegl-dev libx11-dev libxext-dev libxcursor-dev libxi-dev \
+            libxfixes-dev libxrandr-dev libxss-dev libxtst-dev libxkbcommon-dev \
+            libwayland-dev wayland-protocols libdecor-0-dev libasound2-dev \
+            libpulse-dev libudev-dev libdbus-1-dev libdrm-dev libgbm-dev
+      - name: Restore pinned dependency archives
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/strefa-deps
+          key: strefa-deps-${{ hashFiles('cmake/Dependencies.cmake') }}
+      - name: Restore compiler cache
+        uses: actions/cache/restore@v6
+        with:
+          path: .ccache
+          key: ccache-${{ github.job }}-main-${{ github.sha }}
+          restore-keys: |
+            ccache-${{ github.job }}-main-
+      - name: Build StrefaQA with Tracy (preset linux-dev)
+        run: |
+          ccache --zero-stats
+          cmake --preset linux-dev -DSTREFA_IPO=OFF -DSTREFA_DOWNLOAD_CACHE="$HOME/.cache/strefa-deps"
+          cmake --build --preset linux-dev --parallel "$(nproc)"
+          ccache --show-stats
+      - name: Count Tracy symbols in StrefaQA
+        run: |
+          count=$(nm -C build/linux-dev/StrefaQA | grep -ci tracy || true)
+          echo "Symbole Tracy w StrefaQA (STREFA_TRACY=ON): $count"
+          test "$count" -gt 0
+      - name: Save compiler cache
+        if: github.ref == 'refs/heads/main'
+        uses: actions/cache/save@v6
+        with:
+          path: .ccache
+          key: ccache-${{ github.job }}-main-${{ github.sha }}
+
   # Core-only variants: sanitizers, a TSan subset (full TSan runs nightly), Clang + libc++ and GCC Debug.
   # Debug builds keep assert() and other NDEBUG-dependent paths that the Release jobs never compile.
   core-variants:
@@ -306,7 +355,7 @@ jobs:
   # The single check to require in the ruleset: green when every job passed or was skipped as docs-only.
   linux-status:
     if: always()
-    needs: [changes, format, architecture, build-and-test, core-only, core-variants]
+    needs: [changes, format, architecture, build-and-test, core-only, core-variants, tracy]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
     steps:
