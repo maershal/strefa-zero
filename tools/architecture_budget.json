@@ -3,7 +3,7 @@
   "world_tu_lines": 4223,
   "particle_world_public_decls": 88,
   "particle_world_test_hooks": 31,
-  "application_cpp_lines": 1201,
+  "application_cpp_lines": 1200,
   "application_run_lines": 445,
   "launch_options_bools": 55,
   "inl_includes": 8,

@@ -80,7 +80,8 @@ struct BenchmarkRecord {
     std::vector<double> physics_gpu_ms, presentation_gpu_ms, render_gpu_ms;
     bool physics_truncated{}, presentation_truncated{}, render_truncated{}; // samples lost to a full queue
     unsigned route_resets{};
-    std::string error; // empty unless the scene failed
+    unsigned warmup_away_frames{}; // warm-up frames (and the opening frame) with the window not presented
+    std::string error;             // empty unless the scene failed
 };
 
 enum class BenchmarkStatus { ok, invalid, failed };
@@ -118,7 +119,7 @@ struct BenchmarkSummary {
     double budget_60fps{};
     BenchmarkPhase early, late;
     std::size_t hidden_frames{}, minimized_frames{}, occluded_frames{}, unfocused_frames{}, cloaked_frames{};
-    unsigned route_resets{};
+    unsigned route_resets{}, warmup_away_frames{};
     std::int64_t start_utc_unix_ns{}, end_utc_unix_ns{};
 };
 // tick_rate = simulation ticks per simulated second (GPU world: 120); 0 for scenes without GPU physics.
@@ -140,7 +141,7 @@ inline constexpr std::string_view benchmark_summary_header =
         "backlog_max_seconds,early_frames,early_frame_median_ms,early_ticks_per_second,early_gpu_tick_mean_ms,"
         "late_frames,late_frame_median_ms,late_ticks_per_second,late_gpu_tick_mean_ms,hidden_frames,"
         "minimized_frames,occluded_frames,unfocused_frames,route_resets,start_utc_unix_ns,end_utc_unix_ns,"
-        "cloaked_frames";
+        "cloaked_frames,warmup_away_frames";
 [[nodiscard]] std::string benchmark_frame_row(std::string_view scene, unsigned pass, const BenchmarkFrame&);
 [[nodiscard]] std::string benchmark_summary_row(const BenchmarkSummary&);
 // One human-readable line per scene for stdout and the PR table.

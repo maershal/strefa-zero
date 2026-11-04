@@ -26,7 +26,10 @@ std::string BenchmarkScene::id() const {
     switch (kind) {
     case Kind::gpu: return "gpu:" + id_at(gpu::scene_ids, index);
     case Kind::mission: return "mission";
-    case Kind::thermal: return "thermal:" + (index ? id_at(thermal_scene_ids, index - 1) : std::string{"?0"});
+    case Kind::thermal: // 1-based: index 0 and indices past the list both print the raw index
+        return "thermal:"
+             + (index >= 1 && index <= thermal_scene_ids.size() ? std::string{thermal_scene_ids[index - 1]}
+                                                                : "?" + std::to_string(index));
     case Kind::lab: return "lab:" + id_at(sim::scene_ids, index);
     }
     return {};
@@ -158,6 +161,7 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
     result.presentation_truncated = record.presentation_truncated;
     result.render_truncated = record.render_truncated;
     result.route_resets = record.route_resets;
+    result.warmup_away_frames = record.warmup_away_frames;
     if (!record.error.empty()) {
         result.status = BenchmarkStatus::failed;
         result.status_reason = record.error;
@@ -209,12 +213,14 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
     result.early = phase(frames.first(early_count), std::min(result.window_seconds, early_phase_seconds));
     result.late = phase(frames.subspan(early_count), std::max(0.0, result.window_seconds - early_phase_seconds));
     if (result.status == BenchmarkStatus::ok
-        && (result.hidden_frames || result.minimized_frames || result.occluded_frames || result.cloaked_frames)) {
+        && (result.hidden_frames || result.minimized_frames || result.occluded_frames || result.cloaked_frames
+            || result.warmup_away_frames)) {
         result.status = BenchmarkStatus::invalid;
-        result.status_reason = std::format(
-                "okno niewidoczne w {} klatkach, zminimalizowane w {}, zasłonięte w {}, ukryte przez DWM "
-                "w {}",
-                result.hidden_frames, result.minimized_frames, result.occluded_frames, result.cloaked_frames);
+        result.status_reason =
+                std::format("okno niewidoczne w {} klatkach, zminimalizowane w {}, zasłonięte w {}, ukryte przez DWM "
+                            "w {}, poza ekranem w {} klatkach rozgrzewki",
+                            result.hidden_frames, result.minimized_frames, result.occluded_frames,
+                            result.cloaked_frames, result.warmup_away_frames);
     }
     result.start_utc_unix_ns = frames.front().utc_unix_ns;
     result.end_utc_unix_ns = frames.back().utc_unix_ns;
@@ -242,7 +248,7 @@ std::string benchmark_summary_row(const BenchmarkSummary& s) {
     return std::format(
             "{},{},{},{},{},{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.4f},{},{:.4f},{},{:.4f},{},{},{},{:.3f},"
             "{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.3f},{:.3f},{:.6f},{:.6f},{:.6f},{},{},{},{},{},"
-            "{},{},{},{},{}",
+            "{},{},{},{},{},{}",
             s.scene, s.pass, status_name(s.status), csv_text(s.status_reason), s.frames, s.window_seconds,
             s.frame_ms.median, s.frame_ms.p95, s.frame_ms.p99, s.frame_ms.max, s.by_ticks[0].frames,
             s.by_ticks[0].frame_median_ms, s.by_ticks[1].frames, s.by_ticks[1].frame_median_ms, s.by_ticks[2].frames,
@@ -252,7 +258,7 @@ std::string benchmark_summary_row(const BenchmarkSummary& s) {
             s.ticks_mean, s.ticks_max, s.ticks_per_second, s.frames_per_second, s.dropped_seconds,
             s.pending_seconds.p95, s.pending_seconds.max, phase_cells(s.early), phase_cells(s.late), s.hidden_frames,
             s.minimized_frames, s.occluded_frames, s.unfocused_frames, s.route_resets, s.start_utc_unix_ns,
-            s.end_utc_unix_ns, s.cloaked_frames);
+            s.end_utc_unix_ns, s.cloaked_frames, s.warmup_away_frames);
 }
 
 std::string benchmark_summary_line(const BenchmarkSummary& s) {

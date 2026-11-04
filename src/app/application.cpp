@@ -582,10 +582,9 @@ private:
         }
         if (!benchmark_started_ns_) benchmark_started_ns_ = frame_start;
         const double elapsed = static_cast<double>(frame_start - benchmark_started_ns_) / 1e9;
-        BenchmarkFrame row;
-        row.sdl_ns = frame_start;
-        row.frame_ms = frame_ms;
-        row.window = benchmark_window_state(window_);
+        BenchmarkFrame row{.sdl_ns = frame_start, .frame_ms = frame_ms, .window = benchmark_window_state(window_)};
+        // Warm-up and the frame that opens the window keep no row; a window away from screen still invalidates.
+        if (!run.measuring) run.record.warmup_away_frames += row.window.presented() ? 0 : 1;
         // The scripted mission route ends at scripted_mission_ticks; restart it so a long window
         // keeps measuring the route instead of an idle scene.
         const bool restart = run.scene.kind == BenchmarkScene::Kind::mission && simulation_

@@ -54,7 +54,7 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
 #else
     constexpr bool debug_build = true;
 #endif
-    info << "schema=2\nbuild_version=" << build::version << "\nndebug=" << !debug_build
+    info << "schema=3\nbuild_version=" << build::version << "\nndebug=" << !debug_build
          << "\ngl_vendor=" << gl_string(GL_VENDOR) << "\ngl_renderer=" << gl_string(GL_RENDERER)
          << "\ngl_version=" << gl_string(GL_VERSION) << "\nvsync_requested=" << options.benchmark_vsync
          << "\nvsync_enabled=" << window.vsync_enabled() << "\nswap_interval=" << presentation.swap_interval
@@ -134,7 +134,10 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
             // One failing scene is reported in its row; the remaining scenes are still measured.
             try {
                 const auto result = run_scene(config);
-                if (result && *result != 0) return *result; // e.g. 77: no OpenGL 4.3 for any scene
+                if (result && *result != 0) { // e.g. 77: no OpenGL 4.3 for any scene
+                    info << "result=exit_code_" << *result << '\n';
+                    return *result;
+                }
                 if (!result && run.record.error.empty()) run.record.error = result.error();
             } catch (const std::exception& error) {
                 run.record.error = error.what();

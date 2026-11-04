@@ -20,6 +20,8 @@ Zasady pomiaru: sekcja „Protokół pomiaru” w `CLAUDE.md`.
    wirtualnego i nie używaj komputera do końca pomiaru. Scena, w której okno choć przez jedną klatkę było ukryte,
    zminimalizowane, zasłonięte albo ukryte przez DWM, dostaje status `invalid`. Klatki z zminimalizowanym oknem
    (symulacja wtedy stoi) liczą się do okna pomiaru sceny, więc minimalizacja nie skraca ani nie omija pomiaru.
+   Rozgrzewka nie ma wierszy klatek, ale okno poza ekranem w jej trakcie liczy kolumna `warmup_away_frames`
+   i ono też unieważnia scenę.
    Na Windows SDL 3.4 nie zgłasza zasłonięcia (`SDL_EVENT_WINDOW_OCCLUDED`), więc benchmark sprawdza tam co klatkę
    także `IsIconic` (liczone jako `minimized`) i `DwmGetWindowAttribute(DWMWA_CLOAKED)` (kolumna `cloaked`). Okna
    zasłoniętego innym oknem na Windows nie da się w ten sposób wykryć: licznik `unfocused_frames` (wypisywany też
@@ -54,8 +56,9 @@ foreach ($vsync in 'on', 'off') {
   jest pomijany).
 
 `scene-benchmark-info.txt` jest zapisywany na dysk przed pierwszą sceną, więc zostaje także po awarii albo zabiciu
-procesu. Na końcu dochodzą do niego `result=completed|quit` i `scenes_measured=<liczba>`; brak `result=` oznacza
-przerwany proces. Pola `window_iconic` i `window_cloaked` opisują stan okna na starcie.
+procesu. Na końcu dochodzą do niego `result=completed|quit` i `scenes_measured=<liczba>`, a przy kodzie wyjścia sceny innym
+niż 0 (np. 77) `result=exit_code_<kod>`; brak `result=` oznacza przerwany proces. Plik ma `schema=3` (nowe pola
+okna i `result=`). Pola `window_iconic` i `window_cloaked` opisują stan okna na starcie.
 
 `--vsync on` pokazuje, jak gra działa u gracza; `--vsync off` (bez ogranicznika klatek) mierzy koszt. Rozmiar okna
 można ustalić opcją `--test-window-size 1600 900`; `scene-benchmark-info.txt` zapisuje faktyczny rozmiar, skalę DPI
@@ -134,7 +137,8 @@ ticku.
 - `status`: `ok`, `invalid` (okno ukryte, zminimalizowane, zasłonięte albo ukryte przez DWM w części klatek) lub
   `failed` (błąd sceny albo przerwanie przez QUIT), z powodem w `status_reason`; liczniki `hidden_frames`,
   `minimized_frames` (SDL albo `IsIconic`), `occluded_frames`, `unfocused_frames` (brak fokusu nie unieważnia
-  pomiaru) i `cloaked_frames` (`DWMWA_CLOAKED`, tylko Windows; ostatnia kolumna pliku);
+  pomiaru), `cloaked_frames` (`DWMWA_CLOAKED`, tylko Windows) i `warmup_away_frames` (klatki rozgrzewki i klatka
+  otwierająca okno pomiaru z oknem poza ekranem; dwie ostatnie kolumny pliku);
 - `window_seconds`: faktyczny czas okna pomiaru;
 - czas klatki: mediana, p95, p99 i max;
 - rozkłady GPU ze wszystkich zapytań zakończonych w oknie pomiaru (zbierane co klatkę, bez limitu):

@@ -122,6 +122,13 @@ int main() {
                   cloaked ? "A cloaked window invalidates the scene" : "A minimized frame invalidates the scene");
         }
         check(!strefa::app::WindowState{true, true, false, false, true}.presented(), "Cloaked is not presented");
+        // Minimized during the warm-up: no frame row, but the scene must not end as ok.
+        auto warm = record;
+        warm.warmup_away_frames = 3;
+        const auto warm_summary = strefa::app::summarize("gpu:rain", warm, 120);
+        check(warm_summary.status == BenchmarkStatus::invalid && warm_summary.warmup_away_frames == 3
+                      && warm_summary.minimized_frames == 0,
+              "A window away during the warm-up invalidates the scene");
 
         // A restart requested in frame 2 is flagged in frame 3, whose frame_ms contains the reload.
         strefa::app::RouteResetMarker marker;
@@ -132,7 +139,7 @@ int main() {
 
         // Out-of-range indices name no scene instead of reading past the id arrays.
         check(BenchmarkScene{BenchmarkScene::Kind::thermal, 0}.id() == "thermal:?0", "Thermal scene 0 has no id");
-        check(BenchmarkScene{BenchmarkScene::Kind::thermal, 99}.id() == "thermal:?98", "Thermal scene past the end");
+        check(BenchmarkScene{BenchmarkScene::Kind::thermal, 99}.id() == "thermal:?99", "Thermal scene past the end");
         check(BenchmarkScene{BenchmarkScene::Kind::gpu, 1000}.id() == "gpu:?1000", "GPU scene past the end");
         check(BenchmarkScene{BenchmarkScene::Kind::lab, 1000}.id() == "lab:?1000", "Lab scene past the end");
 
