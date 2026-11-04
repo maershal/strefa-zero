@@ -1,9 +1,9 @@
 #include "tools/renderdoc_capture.hpp"
 
 #include <SDL3/SDL.h>
-#include <renderdoc_app.h>
 
 #include <iostream>
+#include <renderdoc_app.h>
 #include <string>
 #include <string_view>
 
@@ -36,8 +36,7 @@ pRENDERDOC_GetAPI find_get_api() {
                   : nullptr;
 #else
     void* module = dlopen("librenderdoc.so", RTLD_NOW | RTLD_NOLOAD);
-    if (!module && load)
-        module = dlopen(std::string_view{requested} == "1" ? "librenderdoc.so" : requested, RTLD_NOW);
+    if (!module && load) module = dlopen(std::string_view{requested} == "1" ? "librenderdoc.so" : requested, RTLD_NOW);
     return module ? reinterpret_cast<pRENDERDOC_GetAPI>(dlsym(module, "RENDERDOC_GetAPI")) : nullptr;
 #endif
 }
