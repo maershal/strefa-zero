@@ -49,7 +49,7 @@ std::string gl_string(GLenum name) {
 }
 const char* mode_name(ui::Screen screen) {
     switch (screen) {
-    case ui::Screen::laboratory: return "Laboratorium CPU";
+    case ui::Screen::laboratory: return "Model referencyjny (CPU)";
     case ui::Screen::gpu_laboratory: return "Laboratorium GPU";
     case ui::Screen::gpu_mission: return "Misja GPU";
     default: return "Menu";
@@ -889,7 +889,7 @@ private:
         case ui::Action::open_gpu: {
             const bool mission = action == ui::Action::open_mission;
             if (!gpu_available_) {
-                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Laboratorium CPU i "
+                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Model referencyjny (CPU) i "
                                        "ustawienia działają normalnie.",
                                        mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory),
                                        gl_version_);
@@ -958,6 +958,11 @@ private:
             message_.clear();
             break;
         case ui::Action::back:
+            if (state_.screen == ui::Screen::preview) {
+                state_.screen = ui::Screen::settings; // the theme preview belongs to Settings and keeps the draft
+                message_.clear();
+                break;
+            }
             flush_settings();
             simulation_.suspend();
             gpu_controls_.previous.reset();

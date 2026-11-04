@@ -74,7 +74,7 @@ std::expected<std::vector<BenchmarkScene>, std::string> parse_benchmark_scenes(s
             index = find_scene_id(thermal_scene_ids, name, "termiki").transform([](unsigned i) { return i + 1; });
         } else if (group == "lab") {
             scene.kind = BenchmarkScene::Kind::lab;
-            index = find_scene_id(sim::scene_ids, name, "laboratorium CPU");
+            index = find_scene_id(sim::scene_ids, name, "modelu referencyjnego (CPU)");
         } else
             return std::unexpected{std::format(
                     "Nieznana scena benchmarku „{}”. Użyj all albo listy: gpu:<scena>, mission, thermal:<scena>, "

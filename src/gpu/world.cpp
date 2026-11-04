@@ -573,7 +573,7 @@ ParticleWorld::create(const std::filesystem::path& shaders, const ExecutionOptio
     glGetIntegerv(GL_MAJOR_VERSION, &major);
     glGetIntegerv(GL_MINOR_VERSION, &minor);
     if (major < 4 || (major == 4 && minor < 3))
-        return std::unexpected{"Laboratorium GPU wymaga OpenGL 4.3. Laboratorium CPU jest dostępne."};
+        return std::unexpected{"Laboratorium GPU wymaga OpenGL 4.3. Model referencyjny (CPU) jest dostępny."};
     try {
         const bool standalone = !device;
         auto resources = device ? std::move(device) : std::make_shared<RenderDevice>(shaders, shader_cache);
