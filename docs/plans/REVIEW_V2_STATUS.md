@@ -62,7 +62,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
 | Pomiary termiki z losową kolejnością scen, liczniki dispatchy/barier, znaczniki per kernel, telemetria (R §5.3) | zrobione; odniesienie etapu gazu bez telemetrii i przyczyna wolnego reżimu — otwarte | #50, #46, #49 |
 | Szkielet zgodności termiki GPU z CPU: 10 scen, progi w pliku przed zmianami GPU (R §5.3) | zrobione po stronie CPU; strona GPU — otwarte | #48 |
-| Porządki po #22 (płótno CPU w VFX, `ui/mission_hud`, `strefa_input`, martwe API), ADR roli modelu CPU | zrobione | K06, [ADR 0001](../adr/0001-rola-modelu-cpu.md) |
+| Porządki po #22 (płótno CPU w VFX, `ui/mission_hud`, `strefa_input`, martwe API), ADR roli modelu CPU | zrobione | #55, [ADR 0001](../adr/0001-rola-modelu-cpu.md) |
 | Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B–E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
@@ -105,7 +105,7 @@ Z R §12 i A §6:
 4. Model gazu: akustyka jak w CPU zamiast projekcji (po porównaniu obrazów).
 5. Większe, przewijane mapy: teraz czy później (zmienia priorytet `TileGrid` i `WorldDims`).
 6. ~~Laboratorium CPU jako „Model referencyjny (CPU)” i przeniesienie „04 Podgląd areny” do Ustawień.~~
-   Rozstrzygnięte i zrobione w K06 (ADR 0001; podgląd jako „Podgląd motywu” w Ustawieniach).
+   Rozstrzygnięte i zrobione w #55 (ADR 0001; podgląd jako „Podgląd motywu” w Ustawieniach).
 
 ## Następne kroki według review
 
