@@ -14,7 +14,7 @@ public:
     void reset(unsigned generation);
     void bind_birth();
     void prepare_birth(const std::array<GLuint, 8>&, unsigned current, bool conditional = false);
-    void tick(const std::array<GLuint, 8>&, unsigned current, unsigned generation, unsigned tick, bool mission,
+    void tick(const std::array<GLuint, 8>&, unsigned current, unsigned generation, unsigned tick, bool events,
               GLuint terrain, GLuint heat = 0, GLuint thermal_particles = 0);
     void illuminate(GLuint scene, GLuint receiver, GLuint terrain, int width, int height, GLuint fbo,
                     const LightingOptions&);

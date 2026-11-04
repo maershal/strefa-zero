@@ -52,7 +52,8 @@ int LaunchOptions::test_count() const {
          + neighbor_profile + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile
          + cost_check + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check
          + lighting_benchmark + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke
-         + cache_check + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty() + !thermal_conformance.empty();
+         + cache_check + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty() + !thermal_conformance.empty()
+         + !gpu_check.empty();
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -103,7 +104,15 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.thermal_benchmark = true;
         else if (argument == "--gpu-thermal-conformance" && i + 1 < argc)
             result.thermal_conformance = utf8_path(argv[++i]);
-        else if (argument == "--gpu-thermal-scene" && i + 1 < argc) {
+        else if (argument == "--gpu-check" && i + 1 < argc) {
+            result.gpu_check = argv[++i];
+            if (std::ranges::find(gpu_checks, result.gpu_check) == gpu_checks.end())
+                return std::unexpected{"Nieznany test GPU: " + result.gpu_check + " (dostępne: lab-blast)."};
+        } else if (argument == "--gpu-batched-blasts" && i + 1 < argc) {
+            const std::string_view value{argv[++i]};
+            if (value != "on" && value != "off") return std::unexpected{"Wybuchy wsadowe w misji: on lub off."};
+            result.gpu_execution.batched_blasts = value == "on";
+        } else if (argument == "--gpu-thermal-scene" && i + 1 < argc) {
             const auto scene = find_scene_id(thermal_scene_ids, argv[++i], "termiki");
             if (!scene) return std::unexpected{scene.error()};
             result.thermal_scene = *scene + 1;

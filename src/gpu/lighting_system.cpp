@@ -215,7 +215,7 @@ std::vector<LightingSample> LightingSystem::take_samples() {
     return std::exchange(samples, {});
 }
 void LightingSystem::tick(const std::array<GLuint, 8>& buffers, unsigned current, unsigned gen, unsigned tick_id,
-                          bool mission, GLuint terrain, GLuint heat, GLuint thermal_particles) {
+                          bool events, GLuint terrain, GLuint heat, GLuint thermal_particles) {
     if (gen != generation) reset(gen);
     if (tick_known && tick_id <= last_tick) return;
     STREFA_ZONE("LightingSystem::tick");
@@ -267,7 +267,7 @@ void LightingSystem::tick(const std::array<GLuint, 8>& buffers, unsigned current
     state.use(event_program);
     gl.Uniform1i(location(event_program, "sourceGeneration"), std::bit_cast<int>(gen));
     gl.Uniform1i(location(event_program, "sourceTick"), std::bit_cast<int>(tick_id));
-    gl.Uniform1i(location(event_program, "missionEnabled"), mission ? 1 : 0);
+    gl.Uniform1i(location(event_program, "missionEnabled"), events ? 1 : 0);
     gl.Uniform1i(location(event_program, "heatEnabled"), heat ? 1 : 0);
     gl.DispatchCompute(1, 1, 1);
     gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);

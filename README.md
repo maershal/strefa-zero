@@ -36,7 +36,8 @@ Wyniki kompilacji trafiają do `build/` (ignorowane przez Git).
 
 **Sterowanie (Misja GPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
 LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
-**Laboratoria:** LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja — pauza, F — jeden krok.
+**Laboratoria:** LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja — pauza, F — jeden krok. W Laboratorium GPU
+narzędzie „Detonator” wywołuje LPM wybuch o ustawionym promieniu i energii.
 
 ## Opcje uruchomienia
 
@@ -87,6 +88,7 @@ oraz wszystkie walidacje, benchmarki, profile i pokrętła eksperymentów, z tą
 | `--gpu-thermal on`, `--gpu-thermal-scene fire\|oil\|quench\|phases` | wyłączone | Termika, gazy i ogień GPU ([I10](docs/reports/I10_GPU_THERMAL.md)). |
 | `--gpu-lighting-quality off\|low\|high` | z ustawień | Światło 2D, HDR i bloom ([I11](docs/reports/I11_LIGHTING.md)). |
 | `--shader-cache on` | wyłączony | Cache skompilowanych shaderów. |
+| `--gpu-batched-blasts on\|off` | `off` | Misja: do 8 wybuchów na tick, impuls skalowany odwrotną masą, gruz z prędkością (jak Laboratorium GPU). |
 
 ## Budowanie i testy
 
@@ -129,6 +131,8 @@ opis w [GPU_CHECK.md](docs/maintenance/GPU_CHECK.md)).
 Zgodność termiki GPU z wyrocznią CPU:
 `StrefaQA --gpu-thermal-conformance tests/conformance/thermal_thresholds.txt --profile <katalog>` (na razie zapisuje
 tylko obserwable CPU 10 scen; progi są ustalone w pliku przed zmianami GPU).
+Nazwane testy GPU: `StrefaQA --gpu-check <nazwa> --profile <katalog>`; `lab-blast` sprawdza wybuchy laboratorium
+(z `--gpu-batched-blasts on` także misję). Nowe testy dostają nazwę zamiast osobnej flagi.
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
 1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
 `errors.log`).
