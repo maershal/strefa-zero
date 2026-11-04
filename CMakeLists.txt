@@ -134,7 +134,7 @@ if(STREFA_BUILD_APP)
     endforeach()
 
     configure_file(cmake/build_info.hpp.in generated/build_info.hpp @ONLY)
-    add_library(strefa_ui STATIC src/ui/session.cpp src/ui/menu.cpp src/ui/laboratory.cpp src/ui/arena.cpp src/ui/gpu_laboratory.cpp)
+    add_library(strefa_ui STATIC src/ui/session.cpp src/ui/menu.cpp src/ui/laboratory.cpp src/ui/mission_hud.cpp src/ui/gpu_laboratory.cpp)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_game PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 

@@ -26,7 +26,7 @@ enum class Action {
     quit
 };
 struct LaboratoryFrame;
-struct ArenaFrame;
+struct MissionHudFrame;
 struct GpuLaboratoryFrame;
 
 struct Image {
@@ -68,7 +68,7 @@ struct ViewState {
 void clock_stats(const ClockStats& clock);
 
 [[nodiscard]] Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds,
-                          const Fonts& fonts, LaboratoryFrame* laboratory = nullptr, ArenaFrame* arena = nullptr,
+                          const Fonts& fonts, LaboratoryFrame* laboratory = nullptr, MissionHudFrame* hud = nullptr,
                           GpuLaboratoryFrame* gpu = nullptr);
 
 } // namespace strefa::ui

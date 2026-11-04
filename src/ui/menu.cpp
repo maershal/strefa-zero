@@ -1,5 +1,5 @@
 #include "build_info.hpp"
-#include "ui/arena.hpp"
+#include "ui/mission_hud.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
 #include "ui/view.hpp"
@@ -348,7 +348,7 @@ void clock_stats(const ClockStats& clock) {
 }
 
 Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds, const Fonts& fonts,
-            LaboratoryFrame* laboratory, ArenaFrame* arena, GpuLaboratoryFrame* gpu) {
+            LaboratoryFrame* laboratory, MissionHudFrame* hud, GpuLaboratoryFrame* gpu) {
     const auto theme = static_cast<std::size_t>(state.applied.map_theme);
     background(backgrounds[theme], state.screen == Screen::preview, frame.scale);
     Action result = Action::none;
@@ -361,7 +361,7 @@ Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>
         if (laboratory) result = draw_laboratory(*laboratory, frame, fonts);
         break;
     case Screen::gpu_mission:
-        if (arena) result = draw_arena(*arena, frame, fonts);
+        if (hud) result = draw_mission_hud(*hud, frame, fonts);
         break;
     case Screen::gpu_laboratory:
         if (gpu) result = draw_gpu_laboratory(*gpu, frame);

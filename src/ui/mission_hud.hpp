@@ -7,18 +7,18 @@
 
 namespace strefa::ui {
 
-struct ArenaInput {
+struct MissionHudInput {
     game::TickInput controls;
     bool reset{}, toggle_pause{};
 };
 // Read-only presentation DTO of the GPU mission. No UI dependency on the simulation owner.
-struct ArenaView {
+struct MissionHudView {
     game::PlayerState actor;
     int ammo{}, stock{}, destroyed{};
     float reloading{}, fuel_limit{1.5F};
     std::uint64_t tick{};
     bool finished{};
-    ArenaView(const gpu::MissionSnapshot& state)
+    MissionHudView(const gpu::MissionSnapshot& state)
         : ammo(static_cast<int>(state.inventory[0])),
           stock(static_cast<int>(state.inventory[1])),
           destroyed(static_cast<int>(state.inventory[2])),
@@ -37,16 +37,16 @@ struct ArenaView {
     float fuel_capacity() const { return fuel_limit; }
     std::uint64_t ticks() const { return tick; }
 };
-struct ArenaFrame {
+struct MissionHudFrame {
     Image world;
-    ArenaView game;
-    ArenaInput& input;
+    MissionHudView game;
+    MissionHudInput& input;
     bool focused{}, scene_mission{true}, paused{};
     int* vfx_quality{};
     int* lighting_quality{};
     std::array<float, 2> camera{};
     const ClockStats* clock{};
 };
-[[nodiscard]] Action draw_arena(ArenaFrame& arena, const FrameInfo& frame, const Fonts& fonts);
+[[nodiscard]] Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Fonts& fonts);
 
 } // namespace strefa::ui

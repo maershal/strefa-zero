@@ -14,7 +14,7 @@
 #include "platform/window.hpp"
 #include "sim/fixed_clock.hpp"
 #include "sim/recording.hpp"
-#include "ui/arena.hpp"
+#include "ui/mission_hud.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
 #include "ui/session.hpp"
@@ -275,28 +275,28 @@ public:
                                                     input,
                                                     lab_snapshot_->step_ms,
                                                     lab_snapshot_->overload_seconds});
-                ui::ArenaInput arena_input;
+                ui::MissionHudInput hud_input;
                 const bool focused = (SDL_GetWindowFlags(window_.native()) & SDL_WINDOW_INPUT_FOCUS) != 0;
-                std::optional<ui::ArenaFrame> arena;
+                std::optional<ui::MissionHudFrame> hud;
                 if (state_.screen == ui::Screen::gpu_mission) {
-                    arena.emplace(ui::ArenaFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
-                                                 ui::ArenaView{simulation_->mission()},
-                                                 arena_input,
+                    hud.emplace(ui::MissionHudFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
+                                                 ui::MissionHudView{simulation_->mission()},
+                                                 hud_input,
                                                  focused});
-                    arena->scene_mission = simulation_.scene().mission;
-                    arena->paused = gpu_controls_.paused;
-                    arena->lighting_quality = &lighting_quality_;
-                    arena->camera = simulation_->camera_offset();
-                    arena->clock = &clock_stats_;
-                    arena->vfx_quality = &gpu_controls_.vfx_quality;
+                    hud->scene_mission = simulation_.scene().mission;
+                    hud->paused = gpu_controls_.paused;
+                    hud->lighting_quality = &lighting_quality_;
+                    hud->camera = simulation_->camera_offset();
+                    hud->clock = &clock_stats_;
+                    hud->vfx_quality = &gpu_controls_.vfx_quality;
                 }
                 double ui_poll_ms = 0;
                 gpu::PollTimings ui_poll;
                 if (state_.screen == ui::Screen::gpu_mission && simulation_) {
                     const auto poll_started = gpu_profiling_.collect ? SDL_GetTicksNS() : std::uint64_t{0};
                     simulation_->poll();
-                    arena->world = {simulation_->texture(), gpu::width * 3, gpu::height * 3};
-                    arena->game = ui::ArenaView{simulation_->mission()};
+                    hud->world = {simulation_->texture(), gpu::width * 3, gpu::height * 3};
+                    hud->game = ui::MissionHudView{simulation_->mission()};
                     if (gpu_profiling_.collect) {
                         ui_poll_ms = static_cast<double>(SDL_GetTicksNS() - poll_started) / 1e6;
                         ui_poll = simulation_->poll_timings();
@@ -328,7 +328,7 @@ public:
                     gpu_frame->vfx_memory = render_device_->vfx.memory_bytes();
                 }
                 const auto action = ui::draw(state_, info, images_, gui_.fonts(), lab ? &*lab : nullptr,
-                                             arena ? &*arena : nullptr, gpu_frame ? &*gpu_frame : nullptr);
+                                             hud ? &*hud : nullptr, gpu_frame ? &*gpu_frame : nullptr);
                 if (state_.screen == ui::Screen::gpu_mission)
                     gpu_controls_.lighting.quality = static_cast<gpu::LightingQuality>(lighting_quality_);
                 else
@@ -385,7 +385,7 @@ public:
                     lab_controls_.previous.reset();
                 }
                 if (state_.screen == ui::Screen::gpu_mission && action != ui::Action::back) {
-                    update_mission(arena_input, sim_seconds,
+                    update_mission(hud_input, sim_seconds,
                                    focused || mission_smoke || session_smoke || mission_quick || bench,
                                    mission_smoke || session_smoke || mission_quick || bench);
                     if (mission_smoke) {
@@ -695,7 +695,7 @@ private:
                 shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{});
         render_device_->vfx.set_options(vfx_options_);
     }
-    void update_mission(const ui::ArenaInput& input, double elapsed, bool focused, bool scripted) {
+    void update_mission(const ui::MissionHudInput& input, double elapsed, bool focused, bool scripted) {
         if (input.toggle_pause) gpu_controls_.paused = !gpu_controls_.paused;
         if (input.reset) {
             simulation_.reset({true});
