@@ -24,9 +24,9 @@ VfxPool::~VfxPool() {
         if (p.queries[0]) gl.DeleteQueries(4, p.queries.data());
     }
     if (buffers[0]) gl.DeleteBuffers(static_cast<GLsizei>(buffers.size()), buffers.data());
-    for (auto id : {field, cpu_terrain, scratch, cpu_images[0], cpu_images[1]})
+    for (auto id : {field, host_terrain, scratch})
         if (id) glDeleteTextures(1, &id);
-    for (auto id : {fbo, scratch_fbo, cpu_fbos[0], cpu_fbos[1]})
+    for (auto id : {fbo, scratch_fbo})
         if (id) gl.DeleteFramebuffers(1, &id);
     if (vao) gl.DeleteVertexArrays(1, &vao);
 }
@@ -51,7 +51,6 @@ void VfxPool::initialize(ShaderLibrary& library, const std::filesystem::path& fo
             {{GL_VERTEX_SHADER, folder / "vfx_draw.vert"}, {GL_FRAGMENT_SHADER, folder / "vfx_draw.frag"}});
     copy = library.program(
             {{GL_VERTEX_SHADER, folder / "liquid_surface.vert"}, {GL_FRAGMENT_SHADER, folder / "vfx_canvas.frag"}});
-    canvas_program = copy;
     for (GLuint program : {init, prepare, update, events_program, water_program, finish, graphics, copy}) {
         ProgramUniforms u;
         u.id = program;
@@ -72,20 +71,11 @@ void VfxPool::initialize(ShaderLibrary& library, const std::filesystem::path& fo
         gl.BufferData(GL_SHADER_STORAGE_BUFFER, static_cast<GLsizeiptr>(sizes[i]), nullptr, GL_DYNAMIC_COPY);
     }
     texture(field, 320, 192, GL_RGBA16F, GL_RGBA, GL_FLOAT);
-    texture(cpu_terrain, 320, 192, GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT);
+    texture(host_terrain, 320, 192, GL_R16UI, GL_RED_INTEGER, GL_UNSIGNED_SHORT);
     gl.GenFramebuffers(1, &fbo);
     gl.GenVertexArrays(1, &vao);
-    for (unsigned i = 0; i < 2; ++i) {
-        texture(cpu_images[i], 960, 576, GL_RGBA8, GL_RGBA, GL_UNSIGNED_BYTE);
-        gl.GenFramebuffers(1, &cpu_fbos[i]);
-        state.framebuffer(cpu_fbos[i]);
-        gl.FramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, cpu_images[i], 0);
-        if (gl.CheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-            throw std::runtime_error{"Niekompletny bufor ramki efektów CPU."};
-    }
     initialized = true;
     reset();
-    state.framebuffer(0);
 }
 void VfxPool::bind() {
     state.base(0, buffers[0]);
@@ -105,20 +95,20 @@ void VfxPool::run(GLuint program, unsigned groups) {
         gl.Uniform4f(u.locations[0], 0.F, 0.F, dt, 0.F);
         u.last_dt = dt;
     }
-    if (u.locations[12] >= 0 && u.last_normalization != normalization) {
-        gl.Uniform1f(u.locations[12], normalization);
+    if (u.locations[10] >= 0 && u.last_normalization != normalization) {
+        gl.Uniform1f(u.locations[10], normalization);
         u.last_normalization = normalization;
     }
     if (u.locations[1] >= 0 && u.last_quality != static_cast<int>(config.quality)) {
         gl.Uniform1i(u.locations[1], static_cast<int>(config.quality));
         u.last_quality = static_cast<int>(config.quality);
     }
-    if (u.locations[10] >= 0 && u.last_generation != generation) {
-        gl.Uniform1i(u.locations[10], std::bit_cast<int>(generation));
+    if (u.locations[8] >= 0 && u.last_generation != generation) {
+        gl.Uniform1i(u.locations[8], std::bit_cast<int>(generation));
         u.last_generation = generation;
     }
-    if (u.locations[11] >= 0 && u.last_tick != tick) {
-        gl.Uniform1i(u.locations[11], std::bit_cast<int>(tick));
+    if (u.locations[9] >= 0 && u.last_tick != tick) {
+        gl.Uniform1i(u.locations[9], std::bit_cast<int>(tick));
         u.last_tick = tick;
     }
     gl.DispatchCompute(groups, 1, 1);
@@ -200,9 +190,9 @@ void VfxPool::upload_field(std::span<const float> values, std::span<const std::u
     normalization = 1.F;
     state.texture(2, field);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320, 192, GL_RGBA, GL_FLOAT, values.data());
-    state.texture(3, cpu_terrain);
+    state.texture(3, host_terrain);
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320, 192, GL_RED_INTEGER, GL_UNSIGNED_SHORT, walls.data());
-    terrain = cpu_terrain;
+    terrain = host_terrain;
 }
 void VfxPool::end_tick(GLuint mission, std::span<const VfxEvent> events, bool water) {
     if (!enabled()) return;
@@ -225,7 +215,7 @@ void VfxPool::end_tick(GLuint mission, std::span<const VfxEvent> events, bool wa
     }
     state.base(6, mission ? mission : buffers[5]);
     state.use(events_program);
-    gl.Uniform1i(location(events_program, "cpuSource"), mission ? 0 : events.empty() ? 2 : 1);
+    gl.Uniform1i(location(events_program, "hostSource"), mission ? 0 : events.empty() ? 2 : 1);
     run(events_program);
     if (water)
         for (int kind = 5; kind <= 7; ++kind) {
@@ -294,7 +284,6 @@ void VfxPool::distort(GLuint source, GLuint target, int w, int h, float interpol
     state.framebuffer(scratch_fbo);
     state.use(copy);
     state.texture(4, source);
-    gl.Uniform1i(location(copy, "copyMode"), 0);
     gl.Uniform4f(location(copy, "renderExtent"), static_cast<float>(w), static_cast<float>(h), 0.F, 0.F);
     auto* p = begin_probe(true);
     state.draw_indirect(buffers[4]);
@@ -302,27 +291,6 @@ void VfxPool::distort(GLuint source, GLuint target, int w, int h, float interpol
     close_probe(p);
     state.texture(4, scratch);
     draw(target, w, h, 2, interpolation, linear);
-}
-void VfxPool::cpu_canvas(GLuint source, GLuint background, float interpolation) {
-    if (!enabled()) return;
-    state.invalidate();
-    state.raster(960, 576);
-    state.vertex_array(vao);
-    state.framebuffer(cpu_fbos[0]);
-    state.texture(4, source);
-    state.texture(1, background);
-    state.use(canvas_program);
-    gl.Uniform1i(location(copy, "copyMode"), 1);
-    gl.Uniform4f(location(copy, "renderExtent"), 960.F, 576.F, 0.F, 0.F);
-    glDrawArrays(GL_TRIANGLES, 0, 3);
-    draw(cpu_fbos[0], 960, 576, 0, interpolation);
-    distort(cpu_images[0], cpu_fbos[0], 960, 576, interpolation);
-    state.framebuffer(cpu_fbos[1]);
-    glClearColor(0, 0, 0, 0);
-    glClear(GL_COLOR_BUFFER_BIT);
-    draw(cpu_fbos[1], 960, 576, 1, interpolation);
-    state.framebuffer(0);
-    state.invalidate();
 }
 void VfxPool::poll() {
     while (probe_count) {
@@ -367,7 +335,7 @@ std::uint64_t VfxPool::memory_bytes() const {
     for (const auto& p : probes)
         if (p.buffer) staging += sizeof(VfxCounters);
     return staging + vfx_capacity * (sizeof(VfxParticle) + 24) + sizeof(VfxCounters) + 16
-         + vfx_event_capacity * sizeof(VfxEvent) + 320 * 192 * 10 + 960 * 576 * 8
+         + vfx_event_capacity * sizeof(VfxEvent) + 320 * 192 * 10
          + static_cast<std::uint64_t>(scratch_width) * scratch_height * (scratch_linear ? 8 : 4);
 }
 VfxSnapshot VfxPool::snapshot() {
