@@ -86,7 +86,7 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
          << "\nrender_gpu_ms=world_render_pass\ngpu_distributions=all_completed_timer_queries_in_window"
          << "\nlab_scenes=cpu_worker_thread_no_gpu_physics" << "\nmission=scripted_route_restarted_every_"
          << gpu::scripted_mission_ticks << "_ticks"
-         << "\nstatus=ok|invalid(window_hidden_minimized_occluded_or_cloaked)|failed\n";
+         << "\nstatus=ok|invalid(window_hidden_minimized_occluded_cloaked_or_away_in_warmup)|failed\n";
     frames_csv << benchmark_frames_header << '\n';
     summary_csv << benchmark_summary_header << '\n';
     // The environment is on disk before the first scene: a crash or a TIMEOUT kill still leaves it.
