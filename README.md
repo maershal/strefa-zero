@@ -126,6 +126,9 @@ Pomiar scen w oknie: `StrefaQA --scene-benchmark <lista|all> [--seconds 60] [--v
 Benchmark termiki: `StrefaQA --gpu-thermal-benchmark --profile <katalog>` (kolejność scen losowana w każdym bloku,
 ziarno w każdym wierszu CSV, `STREFA_BENCHMARK_SEED` powtarza kolejność; analiza `scripts/profiling/analyze-thermal.py`,
 opis w [GPU_CHECK.md](docs/maintenance/GPU_CHECK.md)).
+Zgodność termiki GPU z wyrocznią CPU:
+`StrefaQA --gpu-thermal-conformance tests/conformance/thermal_thresholds.txt --profile <katalog>` (na razie zapisuje
+tylko obserwable CPU 10 scen; progi są ustalone w pliku przed zmianami GPU).
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
 1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
 `errors.log`).

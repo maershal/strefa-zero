@@ -53,7 +53,7 @@ int LaunchOptions::test_count() const {
          + neighbor_profile + coupling_test + coupling_profile + work_test + transport_test + hot_test + cost_profile
          + cost_check + thermal_check + thermal_benchmark + vfx_check + vfx_benchmark + lighting_check
          + lighting_benchmark + render_check + render_benchmark + fluid_check + fluid_benchmark + session_smoke
-         + cache_check + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty();
+         + cache_check + mission_ui_smoke + fault_smoke + !benchmark_scenes.empty() + !thermal_conformance.empty();
 }
 StartMode LaunchOptions::start_mode() const {
     if (start_in_laboratory) return StartMode::cpu_laboratory;
@@ -102,6 +102,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             result.thermal_check = true;
         else if (argument == "--gpu-thermal-benchmark")
             result.thermal_benchmark = true;
+        else if (argument == "--gpu-thermal-conformance" && i + 1 < argc)
+            result.thermal_conformance = utf8_path(argv[++i]);
         else if (argument == "--gpu-thermal-scene" && i + 1 < argc) {
             const auto scene = find_scene_id(thermal_scene_ids, argv[++i], "termiki");
             if (!scene) return std::unexpected{scene.error()};
