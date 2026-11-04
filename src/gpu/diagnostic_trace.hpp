@@ -169,7 +169,11 @@ public:
         auto& event = events_[token];
         if (event.sampled) gl_.QueryCounter(queries_[2 * query_slots_[token] + 1], GL_TIMESTAMP);
         event.indexed = indexed;
-        if (headers_ && indexed) {
+        // Mission ops 5-6 (terrain damage, debris spawn) are read even when not indexed: the reuse bound after them
+        // shows whether debris spawned into free slots raised it (#23).
+        event.bounded =
+                indexed || (event.family == PassFamily::mission && (event.operation == 5 || event.operation == 6));
+        if (headers_ && event.bounded) {
             gl_.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
             copy(cells, headers_, 0, token * 8, 8);
             ++header_copies_;
@@ -209,7 +213,7 @@ public:
             gl_.BindBuffer(GL_COPY_READ_BUFFER, headers_);
             gl_.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(values.size() * 8), values.data());
             for (std::size_t i = 0; i < events_.size(); ++i)
-                if (events_[i].indexed) {
+                if (events_[i].bounded) {
                     events_[i].displacement = std::bit_cast<float>(values[i][0]);
                     events_[i].builds = values[i][1];
                 }

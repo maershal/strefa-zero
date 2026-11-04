@@ -103,6 +103,23 @@ void validate_debris_history(ParticleWorld& world, std::ostream& report) {
                     std::format("{}: no debris grain at the centre of cell ({}, {})", label, cx - .5F, cy - .5F));
         }
 
+        // #23: debris spawned into a freed slot must not raise the reuse bound by the distance from the anchor of the
+        // slot's former occupant. Mission op 5 (terrain damage) runs right before op 6 and moves no particle.
+        if (bounds) {
+            const auto mission_pass = [&](unsigned op) {
+                const auto it = std::ranges::find_if(trace.dispatches, [&](const DispatchSample& event) {
+                    return event.family == PassFamily::mission && event.operation == op && event.phase == 0;
+                });
+                require(it != trace.dispatches.end() && it->bounded,
+                        std::format("{}: no bound after mission op {}", label, op));
+                return it->displacement;
+            };
+            const auto damage = mission_pass(5), spawn = mission_pass(6);
+            report << label << "_reuse_bound=" << damage << ',' << spawn << '\n';
+            require(spawn == damage,
+                    std::format("{}: debris spawn raised the reuse bound from {} to {} cells", label, damage, spawn));
+        }
+
         // Evidence that moving the explosion path keeps the work identical: the pass sequence of the explosion
         // tick, the mission state bytes and the order-independent debris positions (slot reservation is atomic).
         std::string passes;
