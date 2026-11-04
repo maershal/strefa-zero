@@ -59,9 +59,17 @@ private:
     };
     std::vector<ProgramUniforms> uniforms;
     GLint location(GLuint, const char*) const;
-    static constexpr std::array<const char*, 11> uniform_names{
-            "stepData",     "quality",     "hostSource",       "layer",      "alpha",             "linearOutput",
-            "renderExtent", "sourceImage", "sourceGeneration", "sourceTick", "fieldNormalization"};
+    static constexpr std::array<const char*, 11> uniform_names{"stepData",
+                                                               "quality",
+                                                               "hostSource",
+                                                               "layer",
+                                                               "alpha",
+                                                               "linearOutput",
+                                                               "renderExtent",
+                                                               "sourceImage",
+                                                               "sourceGeneration",
+                                                               "sourceTick",
+                                                               "fieldNormalization"};
     VfxCounters latest{};
     struct Probe {
         GLuint buffer{};

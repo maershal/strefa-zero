@@ -14,9 +14,9 @@
 #include "platform/window.hpp"
 #include "sim/fixed_clock.hpp"
 #include "sim/recording.hpp"
-#include "ui/mission_hud.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
+#include "ui/mission_hud.hpp"
 #include "ui/session.hpp"
 #include "ui/view.hpp"
 
@@ -280,9 +280,9 @@ public:
                 std::optional<ui::MissionHudFrame> hud;
                 if (state_.screen == ui::Screen::gpu_mission) {
                     hud.emplace(ui::MissionHudFrame{{canvas_.id(), canvas_.width(), canvas_.height()},
-                                                 ui::MissionHudView{simulation_->mission()},
-                                                 hud_input,
-                                                 focused});
+                                                    ui::MissionHudView{simulation_->mission()},
+                                                    hud_input,
+                                                    focused});
                     hud->scene_mission = simulation_.scene().mission;
                     hud->paused = gpu_controls_.paused;
                     hud->lighting_quality = &lighting_quality_;
@@ -889,10 +889,10 @@ private:
         case ui::Action::open_gpu: {
             const bool mission = action == ui::Action::open_mission;
             if (!gpu_available_) {
-                message_ = std::format("„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Model referencyjny (CPU) i "
-                                       "ustawienia działają normalnie.",
-                                       mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory),
-                                       gl_version_);
+                message_ = std::format(
+                        "„{}” wymaga OpenGL 4.3, a ten kontekst to OpenGL {}. Model referencyjny (CPU) i "
+                        "ustawienia działają normalnie.",
+                        mode_name(mission ? ui::Screen::gpu_mission : ui::Screen::gpu_laboratory), gl_version_);
                 return false;
             }
             const bool existing = bool(simulation_);
@@ -949,7 +949,7 @@ private:
             message_.clear();
             break;
         case ui::Action::open_settings:
-            state_.draft = state_.applied;
+            if (state_.screen != ui::Screen::preview) state_.draft = state_.applied; // the preview keeps the draft
             state_.screen = ui::Screen::settings;
             message_.clear();
             break;
@@ -958,11 +958,6 @@ private:
             message_.clear();
             break;
         case ui::Action::back:
-            if (state_.screen == ui::Screen::preview) {
-                state_.screen = ui::Screen::settings; // the theme preview belongs to Settings and keeps the draft
-                message_.clear();
-                break;
-            }
             flush_settings();
             simulation_.suspend();
             gpu_controls_.previous.reset();

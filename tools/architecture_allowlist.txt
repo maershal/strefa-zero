@@ -6,7 +6,6 @@ include gpu sim 1
 include launch gpu 3
 include launch sim 2
 include ui gpu 2
-include ui sim 2
-link game sim 1
+include ui sim 1
 link gpu game 1
 link ui sim 1

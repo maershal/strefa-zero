@@ -1,7 +1,7 @@
 #include "build_info.hpp"
-#include "ui/mission_hud.hpp"
 #include "ui/gpu_laboratory.hpp"
 #include "ui/laboratory.hpp"
+#include "ui/mission_hud.hpp"
 #include "ui/view.hpp"
 
 #include <imgui.h>
@@ -299,7 +299,7 @@ Action preview(const ViewState& state, const FrameInfo& frame, const Fonts& font
     ImGui::TextColored(muted, "ESC — powrót do ustawień");
     const bool back = ImGui::Button("Wróć do ustawień", {200.0F * s, 40.0F * s});
     ImGui::End();
-    return back ? Action::back : Action::none;
+    return back ? Action::open_settings : Action::none;
 }
 
 void diagnostics(ViewState& state, const FrameInfo& frame) {
@@ -351,8 +351,8 @@ void clock_stats(const ClockStats& clock) {
 
 Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>& backgrounds, const Fonts& fonts,
             LaboratoryFrame* laboratory, MissionHudFrame* hud, GpuLaboratoryFrame* gpu) {
-    const auto theme = static_cast<std::size_t>(state.screen == Screen::preview ? state.draft.map_theme
-                                                                                : state.applied.map_theme);
+    const auto theme =
+            static_cast<std::size_t>(state.screen == Screen::preview ? state.draft.map_theme : state.applied.map_theme);
     background(backgrounds[theme], state.screen == Screen::preview, frame.scale);
     Action result = Action::none;
     switch (state.screen) {
@@ -371,7 +371,8 @@ Action draw(ViewState& state, const FrameInfo& frame, const std::array<Image, 3>
         break;
     }
     if (ImGui::IsKeyPressed(ImGuiKey_F1, false)) state.diagnostics = !state.diagnostics;
-    if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && state.screen != Screen::main_menu) result = Action::back;
+    if (ImGui::IsKeyPressed(ImGuiKey_Escape, false) && state.screen != Screen::main_menu)
+        result = state.screen == Screen::preview ? Action::open_settings : Action::back; // preview belongs to Settings
     diagnostics(state, frame);
     return result;
 }

@@ -33,9 +33,8 @@ constexpr std::array player_options{
 };
 } // namespace
 std::string help_text(OptionScope scope) {
-    std::string text = scope == OptionScope::player
-                             ? "Strefa Zero — opcje uruchomienia:\n"
-                             : "StrefaQA — opcje gry (definicje: src/app/launch_options.cpp):\n";
+    std::string text = scope == OptionScope::player ? "Strefa Zero — opcje uruchomienia:\n"
+                                                    : "StrefaQA — opcje gry (definicje: src/app/launch_options.cpp):\n";
     for (const auto& option : player_options) {
         std::string usage{option.name};
         if (!option.value.empty()) usage += " " + std::string{option.value};
@@ -127,7 +126,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 result.lab_scene = *scene;
                 result.start_in_laboratory = true;
             } else
-                return std::unexpected{"Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (model referencyjny CPU)."};
+                return std::unexpected{
+                        "Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (model referencyjny CPU)."};
         } else if (argument == "--scene-benchmark" && i + 1 < argc) {
             auto scenes = parse_benchmark_scenes(argv[++i]);
             if (!scenes) return std::unexpected{scenes.error()};
