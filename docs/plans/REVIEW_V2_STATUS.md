@@ -51,7 +51,8 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Nocny GPU: shardy, issue przy porażce, `perf-wallclock` osobno (R §2.3 p. 4, §5.4) | zrobione; liczba shardów w jednym miejscu — otwarte | #24, #25 |
 | UI p95 bez oceny na rendererze programowym (R §6, §12 p. 6) | zrobione | #24 |
 | `gpu.granular_physics`: pędzel zależny od historii (R §6) | naprawione, test `gpu.brush_history` | #24 |
-| Gruz misji ze starymi kotwicami | otwarte | #23 |
+| Gruz misji ze starymi kotwicami | naprawione (`spawnParticle`), test w `gpu.brush_history` | #23, #69 |
+| `ExplosionSystem` poza `world.cpp`, `PassContext` dla nowych systemów (A §3.5) | zrobione; `PassContext` w termice i oświetleniu — otwarte | #69, #66 |
 | Golden master: „chain”, „chip”, MSVC, referencje per toolchain (R §6) | zrobione | #27 |
 | Golden master: pozostałe 9 scen laboratorium CPU; clang z libc++ | otwarte | #28, #30 |
 | Ratchet architektury: reguły warstw, budżety, symbole QA (A faza A1–A2) | zrobione | #42 |

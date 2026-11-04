@@ -3,6 +3,7 @@
 #include "gpu/diagnostic_trace.hpp"
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/event_ring.hpp"
+#include "gpu/explosion_system.hpp"
 #include "gpu/readback_ring.hpp"
 #include "gpu/render_device.hpp"
 #include "gpu/scene_renderer.hpp"
@@ -20,7 +21,6 @@
 #include <cassert>
 #include <cmath>
 #include <cstring>
-#include <deque>
 #include <fstream>
 #include <iomanip>
 #include <iterator>
@@ -58,7 +58,7 @@ std::array<float, 2> seeded_position(int x, int y) {
             y + .5F + (static_cast<float>(hash(2 * id + 1) & 65535U) / 65535.F - .5F) * .12F};
 }
 } // namespace
-struct ParticleWorld::Impl {
+struct ParticleWorld::Impl final : detail::ExplosionPasses {
     std::filesystem::path shader_folder;
     std::shared_ptr<RenderDevice> resources;
     explicit Impl(std::shared_ptr<RenderDevice> value) : resources{std::move(value)} {}
@@ -265,7 +265,7 @@ struct ParticleWorld::Impl {
     bool mission_enabled{};
     unsigned epoch{};
     MissionSnapshot snapshot{};
-    std::deque<Explosion> explosions;
+    detail::ExplosionSystem explosions;
     MissionInput controls{};
     void next_generation() {
         if (epoch == std::numeric_limits<unsigned>::max())
@@ -475,6 +475,20 @@ struct ParticleWorld::Impl {
         dispatch(19, capacity, false, false, conditional);
         if (conditional) dispatch(9, width * height, false, false, true);
         dispatch(20, 1, false, false, conditional);
+    }
+    void mission_pass(detail::PassContext& c, int op, unsigned count, bool swap, bool active, bool in_place) override {
+        current = c.bank;
+        mission_dispatch(op, count, swap, active, in_place);
+        c.bank = current;
+    }
+    void birth_pass(detail::PassContext& context) override {
+        renderer.lighting.prepare_birth(buffers, context.bank, context.conditional);
+        invalidate_bindings();
+    }
+    void rebuild_pass(detail::PassContext& context) override {
+        current = context.bank;
+        rebuild_active(true);
+        context.bank = current;
     }
     void mission_dispatch(int op, unsigned count = 1, bool swap = false, bool active = false, bool in_place = false) {
         if (!profile_options.body_coupling && (op == 3 || op == 8)) return;
@@ -933,24 +947,14 @@ bool ParticleWorld::step() {
                 s.gameplay.prepare({s.controls.move, s.controls.aim_x, s.controls.aim_y, s.controls.buttons});
         s.metrics.gameplay_ms = static_cast<double>(SDL_GetTicksNS() - logic_started) / 1e6;
         s.upload(6, command_offset, sizeof(commands), &commands);
-        if (!s.explosions.empty()) {
+        detail::PassContext context{s.buffers, s.current, s.execution.conditional_work};
+        if (s.explosions.pending()) {
             const auto upload_start = stamp();
-            const auto e = s.explosions.front();
-            s.explosions.pop_front();
-            const std::array<float, 4> payload{e.x, e.y, e.radius, e.impulse};
-            const std::array<std::uint32_t, 4> id{e.id, 0, 0, 0};
-            s.upload(6, explosion_offset, 16, payload.data());
-            s.upload(6, explosion_offset + 16, 16, id.data());
+            s.explosions.upload(context, s.uploads);
             upload_ms = elapsed(upload_start, stamp());
         }
         s.mission_dispatch(0);
-        s.mission_dispatch(7, capacity, true, true);
-        s.mission_dispatch(5, width * height);
-        // Pending cells keep the material until a free slot is available.
-        s.renderer.lighting.prepare_birth(s.buffers, s.current, s.execution.conditional_work);
-        s.invalidate_bindings();
-        s.mission_dispatch(6, width * height, false, false, true);
-        s.rebuild_active(true);
+        s.explosions.apply(context, s);
     }
     const auto prepare_end = stamp();
     if (grouped) s.gl.QueryCounter(group.ids[1], GL_TIMESTAMP);
@@ -1460,12 +1464,7 @@ void ParticleWorld::set_actor_textures(unsigned parts, unsigned weapons, int w, 
     impl_->renderer.weapon_height = h;
 }
 void ParticleWorld::queue_explosion(const Explosion& e) {
-    if (e.id == 0 || !std::isfinite(e.x) || !std::isfinite(e.y) || !std::isfinite(e.radius) || !std::isfinite(e.impulse)
-        || e.x < 0 || e.x >= width || e.y < 0 || e.y >= height || e.radius <= 0 || e.radius > 32 || e.impulse < 0
-        || e.impulse > 80)
-        throw std::invalid_argument{"Nieprawidłowy wybuch GPU."};
-    if (impl_->explosions.size() >= 32) throw std::runtime_error{"Kolejka wybuchów GPU jest pełna."};
-    impl_->explosions.push_back(e);
+    impl_->explosions.queue(e);
 }
 void ParticleWorld::configure_mission(const MissionConfig& config) {
     if (!std::isfinite(config.spawn_x) || !std::isfinite(config.spawn_y) || !std::isfinite(config.relative_density)

@@ -31,6 +31,7 @@ struct DispatchSample {
     PassFamily family{};
     int phase{-1}, iteration{-1}; // external, prepare=0, halves=1/2, diagnostics=3
     bool sampled{}, indexed{};
+    bool bounded{}; // displacement/builds read after the pass: indexed passes, mission ops 5-6 (damage, debris)
     double milliseconds{};
     float displacement{};
     unsigned builds{};

@@ -195,7 +195,7 @@ void main(){
         if(ticket>=freeCount)return;
         uint slot=slots[ticket];vec2 pos=vec2(id%W,id/W)+.5;
         Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,1,4);p.contact=vec4(0,0,pos);p.residual=vec4(0);
-        storeParticle(uint(slot),p);wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
+        spawnParticle(uint(slot),p);wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
     }
     if(id>=aliveCount)return;id=slots[N+id];Grain p=readParticle(uint(id));
     if(operation==8){
