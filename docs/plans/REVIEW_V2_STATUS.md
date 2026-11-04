@@ -65,6 +65,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Szkielet zgodności termiki GPU z CPU: 10 scen, progi w pliku przed zmianami GPU (R §5.3) | zrobione po stronie CPU; strona GPU — otwarte | #48 |
 | Porządki po #22 (płótno CPU w VFX, `ui/mission_hud`, `strefa_input`, martwe API), ADR roli modelu CPU | zrobione | #55, [ADR 0001](../adr/0001-rola-modelu-cpu.md) |
 | Tracy (dev, `STREFA_TRACY=OFF`), strefy CPU/GPU, RenderDoc F11 w StrefaQA, Nsight w `GPU_CHECK.md` (R §10, A §4 D7) | zrobione; strefy w `PassRunner` — po fazie C | K07, [ADR 0002](../adr/0002-narzedzia-profilowania.md) |
+| Detonator w laboratorium GPU, gruz z prędkością, impuls ∝ odwrotnej masy, do 8 wybuchów na tick (R §11, szybkie wygrane) | zrobione; misja za flagą `batched_blasts` (domyślnie wyłączoną) | N06 |
 | Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B–E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
