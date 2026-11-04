@@ -1,5 +1,5 @@
 #pragma once
-#include "game/session.hpp"
+#include "game/input.hpp"
 
 #include <algorithm>
 #include <cmath>

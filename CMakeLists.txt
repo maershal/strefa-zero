@@ -92,8 +92,11 @@ target_link_libraries(strefa_gameplay PUBLIC strefa_options)
 add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/scene_benchmark.cpp src/app/session_recording.cpp)
 target_link_libraries(strefa_launch PUBLIC strefa_core strefa_gameplay)
 
-add_library(strefa_game STATIC src/game/session.cpp)
-target_link_libraries(strefa_game PUBLIC strefa_sim)
+# Input buffer and HUD actor state: no CPU model, only the project options (-ffp-contract=off / /fp:precise and,
+# with STREFA_WARNINGS_AS_ERRORS, -Werror / /WX) that strefa_sim used to bring in transitively.
+add_library(strefa_input STATIC src/game/input.cpp)
+target_include_directories(strefa_input PUBLIC src)
+target_link_libraries(strefa_input PUBLIC strefa_options)
 add_executable(strefa_physics src/tools/physics_runner.cpp)
 target_link_libraries(strefa_physics PRIVATE strefa_sim)
 # CPU side of StrefaQA --gpu-thermal-conformance (QA code on the CPU oracle only, so core-only builds test it too).
@@ -135,7 +138,7 @@ if(STREFA_BUILD_APP)
 
     configure_file(cmake/build_info.hpp.in generated/build_info.hpp @ONLY)
     add_library(strefa_ui STATIC src/ui/session.cpp src/ui/menu.cpp src/ui/laboratory.cpp src/ui/mission_hud.cpp src/ui/gpu_laboratory.cpp)
-    target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_game PRIVATE strefa_imgui strefa_platform)
+    target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_input PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
     add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp
@@ -221,10 +224,10 @@ if(BUILD_TESTING)
     target_link_libraries(strefa_fluid_tests PRIVATE strefa_launch)
     strefa_add_cpu_test(physics.fluid_reference strefa_fluid_tests physics)
     add_executable(strefa_gameplay_tests tests/gameplay_tests.cpp)
-    target_link_libraries(strefa_gameplay_tests PRIVATE strefa_gameplay strefa_game)
+    target_link_libraries(strefa_gameplay_tests PRIVATE strefa_gameplay strefa_input)
     strefa_add_cpu_test(game.protocol strefa_gameplay_tests unit)
     add_executable(strefa_clock_tests tests/clock_tests.cpp)
-    target_link_libraries(strefa_clock_tests PRIVATE strefa_game)
+    target_link_libraries(strefa_clock_tests PRIVATE strefa_input)
     strefa_add_cpu_test(game.clock strefa_clock_tests unit)
     add_executable(strefa_core_tests tests/core_tests.cpp)
     target_link_libraries(strefa_core_tests PRIVATE strefa_core strefa_storage)
@@ -248,7 +251,7 @@ if(BUILD_TESTING)
         ARGS --golden-dir ${CMAKE_SOURCE_DIR}/tests/golden
              --actual ${CMAKE_BINARY_DIR}/Testing/Temporary/golden-actual.txt)
     add_executable(strefa_game_tests tests/game_tests.cpp)
-    target_link_libraries(strefa_game_tests PRIVATE strefa_game)
+    target_link_libraries(strefa_game_tests PRIVATE strefa_input)
     strefa_add_cpu_test(game.input_pose strefa_game_tests unit)
     add_executable(strefa_laboratory_tests tests/laboratory_tests.cpp)
     target_link_libraries(strefa_laboratory_tests PRIVATE strefa_sim)
@@ -472,7 +475,7 @@ endif()
 include(CheckIPOSupported)
 check_ipo_supported(RESULT STREFA_IPO_SUPPORTED OUTPUT STREFA_IPO_MESSAGE)
 if(STREFA_IPO AND STREFA_IPO_SUPPORTED)
-    foreach(own_target strefa_sim strefa_game strefa_launch strefa_physics strefa_core strefa_storage
+    foreach(own_target strefa_sim strefa_input strefa_launch strefa_physics strefa_core strefa_storage
         strefa_platform strefa_gpu strefa_ui strefa_app strefa_diagnostics strefa_zero strefa_qa strefa_core_tests strefa_sim_tests strefa_game_tests strefa_laboratory_tests strefa_numerics_tests strefa_clock_tests)
         if(TARGET ${own_target})
             set_property(TARGET ${own_target} PROPERTY INTERPROCEDURAL_OPTIMIZATION_RELEASE TRUE)
