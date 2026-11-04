@@ -135,7 +135,8 @@ if(STREFA_BUILD_APP)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_game PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-    add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp)
+    add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp
+        src/app/scene_benchmark_run.cpp)
     target_link_libraries(strefa_app PUBLIC
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
