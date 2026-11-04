@@ -1,6 +1,7 @@
 #include "app/scene_benchmark.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <iostream>
 #include <stdexcept>
@@ -111,6 +112,30 @@ int main() {
         check(invalid.status == BenchmarkStatus::invalid && invalid.occluded_frames == 1
                       && strefa::app::benchmark_summary_row(invalid).find(",1,invalid,") != std::string::npos,
               "An occluded window invalidates the scene");
+        // Frames taken while minimized (the minimized branch of the loop) or cloaked by DWM count as well.
+        for (const bool cloaked : {false, true}) {
+            auto away = record;
+            (cloaked ? away.frames[12].window.cloaked : away.frames[12].window.minimized) = true;
+            const auto result = strefa::app::summarize("mission", away, 120);
+            check(result.status == BenchmarkStatus::invalid && result.frames == 20
+                          && (cloaked ? result.cloaked_frames : result.minimized_frames) == 1,
+                  cloaked ? "A cloaked window invalidates the scene" : "A minimized frame invalidates the scene");
+        }
+        check(!strefa::app::WindowState{true, true, false, false, true}.presented(), "Cloaked is not presented");
+
+        // A restart requested in frame 2 is flagged in frame 3, whose frame_ms contains the reload.
+        strefa::app::RouteResetMarker marker;
+        const std::array requested{false, false, true, false, false, true, true, false};
+        const std::array flagged{false, false, false, true, false, false, true, true};
+        for (std::size_t i = 0; i < requested.size(); ++i)
+            check(marker.next_frame(requested[i]) == flagged[i], "Route restart flagged in frame " + std::to_string(i));
+
+        // Out-of-range indices name no scene instead of reading past the id arrays.
+        check(BenchmarkScene{BenchmarkScene::Kind::thermal, 0}.id() == "thermal:?0", "Thermal scene 0 has no id");
+        check(BenchmarkScene{BenchmarkScene::Kind::thermal, 99}.id() == "thermal:?98", "Thermal scene past the end");
+        check(BenchmarkScene{BenchmarkScene::Kind::gpu, 1000}.id() == "gpu:?1000", "GPU scene past the end");
+        check(BenchmarkScene{BenchmarkScene::Kind::lab, 1000}.id() == "lab:?1000", "Lab scene past the end");
+
         BenchmarkRecord failed;
         failed.error = "błąd, z przecinkiem; i średnikiem";
         const auto failure = strefa::app::summarize("lab:demo", failed, 0);

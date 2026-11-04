@@ -16,14 +16,18 @@ std::string joined(std::span<const char* const> ids, std::string_view prefix = {
     }
     return text;
 }
+// An index outside the list (e.g. thermal scene 0) names no scene; never read past the array.
+std::string id_at(std::span<const char* const> ids, std::size_t index) {
+    return index < ids.size() ? std::string{ids[index]} : "?" + std::to_string(index);
+}
 } // namespace
 
 std::string BenchmarkScene::id() const {
     switch (kind) {
-    case Kind::gpu: return std::string{"gpu:"} + gpu::scene_ids[index];
+    case Kind::gpu: return "gpu:" + id_at(gpu::scene_ids, index);
     case Kind::mission: return "mission";
-    case Kind::thermal: return std::string{"thermal:"} + thermal_scene_ids[index - 1];
-    case Kind::lab: return std::string{"lab:"} + sim::scene_ids[index];
+    case Kind::thermal: return "thermal:" + (index ? id_at(thermal_scene_ids, index - 1) : std::string{"?0"});
+    case Kind::lab: return "lab:" + id_at(sim::scene_ids, index);
     }
     return {};
 }
@@ -179,6 +183,7 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
         result.minimized_frames += frame.window.minimized;
         result.occluded_frames += frame.window.occluded;
         result.unfocused_frames += !frame.window.focused;
+        result.cloaked_frames += frame.window.cloaked;
     }
     for (std::size_t i = 0; i < by_ticks.size(); ++i)
         result.by_ticks[i] = {by_ticks[i].size(), median_of(std::move(by_ticks[i]))};
@@ -204,10 +209,12 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
     result.early = phase(frames.first(early_count), std::min(result.window_seconds, early_phase_seconds));
     result.late = phase(frames.subspan(early_count), std::max(0.0, result.window_seconds - early_phase_seconds));
     if (result.status == BenchmarkStatus::ok
-        && (result.hidden_frames || result.minimized_frames || result.occluded_frames)) {
+        && (result.hidden_frames || result.minimized_frames || result.occluded_frames || result.cloaked_frames)) {
         result.status = BenchmarkStatus::invalid;
-        result.status_reason = std::format("okno niewidoczne w {} klatkach, zminimalizowane w {}, zasłonięte w {}",
-                                           result.hidden_frames, result.minimized_frames, result.occluded_frames);
+        result.status_reason = std::format(
+                "okno niewidoczne w {} klatkach, zminimalizowane w {}, zasłonięte w {}, ukryte przez DWM "
+                "w {}",
+                result.hidden_frames, result.minimized_frames, result.occluded_frames, result.cloaked_frames);
     }
     result.start_utc_unix_ns = frames.front().utc_unix_ns;
     result.end_utc_unix_ns = frames.back().utc_unix_ns;
@@ -217,11 +224,11 @@ BenchmarkSummary summarize(std::string scene, BenchmarkRecord record, double tic
 std::string benchmark_frame_row(std::string_view scene, unsigned pass, const BenchmarkFrame& f) {
     return std::format(
             "{},{},{},{},{:.6f},{:.4f},{},{:.6f},{:.6f},{},{:.4f},{},{:.4f},{},{:.4f},{:.4f},{:d},{:d},{:d},{:d},"
-            "{:d}",
+            "{:d},{:d}",
             scene, pass, f.utc_unix_ns, f.sdl_ns, f.elapsed_seconds, f.frame_ms, f.ticks, f.dropped_seconds,
             f.pending_seconds, f.physics_samples, f.physics_gpu_ms, f.presentation_samples, f.presentation_gpu_ms,
             f.render_samples, f.render_gpu_ms, f.cpu_step_ms, f.window.visible, f.window.focused, f.window.minimized,
-            f.window.occluded, f.route_reset);
+            f.window.occluded, f.route_reset, f.window.cloaked);
 }
 
 std::string benchmark_summary_row(const BenchmarkSummary& s) {
@@ -235,7 +242,7 @@ std::string benchmark_summary_row(const BenchmarkSummary& s) {
     return std::format(
             "{},{},{},{},{},{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.4f},{},{:.4f},{},{:.4f},{},{},{},{:.3f},"
             "{:.3f},{:.4f},{:.4f},{:.4f},{:.4f},{},{:.3f},{:.3f},{:.6f},{:.6f},{:.6f},{},{},{},{},{},"
-            "{},{},{},{}",
+            "{},{},{},{},{}",
             s.scene, s.pass, status_name(s.status), csv_text(s.status_reason), s.frames, s.window_seconds,
             s.frame_ms.median, s.frame_ms.p95, s.frame_ms.p99, s.frame_ms.max, s.by_ticks[0].frames,
             s.by_ticks[0].frame_median_ms, s.by_ticks[1].frames, s.by_ticks[1].frame_median_ms, s.by_ticks[2].frames,
@@ -245,7 +252,7 @@ std::string benchmark_summary_row(const BenchmarkSummary& s) {
             s.ticks_mean, s.ticks_max, s.ticks_per_second, s.frames_per_second, s.dropped_seconds,
             s.pending_seconds.p95, s.pending_seconds.max, phase_cells(s.early), phase_cells(s.late), s.hidden_frames,
             s.minimized_frames, s.occluded_frames, s.unfocused_frames, s.route_resets, s.start_utc_unix_ns,
-            s.end_utc_unix_ns);
+            s.end_utc_unix_ns, s.cloaked_frames);
 }
 
 std::string benchmark_summary_line(const BenchmarkSummary& s) {
@@ -260,6 +267,7 @@ std::string benchmark_summary_line(const BenchmarkSummary& s) {
         line += std::format("  krok CPU {:.3f} ms", s.cpu_step_ms.median);
     line += std::format("  ticki/klatkę {:.2f} (max {})  utracone {:.3f} s  zaległość max {:.4f} s", s.ticks_mean,
                         s.ticks_max, s.dropped_seconds, s.pending_seconds.max);
+    if (s.unfocused_frames) line += std::format("  bez fokusu {} klatek", s.unfocused_frames);
     if (s.status != BenchmarkStatus::ok) line += std::format("  [{}: {}]", status_name(s.status), s.status_reason);
     return line;
 }

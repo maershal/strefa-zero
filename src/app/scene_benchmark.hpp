@@ -6,6 +6,7 @@
 #include <span>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace strefa::app {
@@ -37,11 +38,23 @@ struct Distribution {
 };
 [[nodiscard]] Distribution distribution(std::vector<double> values);
 
-// SDL window state sampled once per frame (SDL_GetWindowFlags).
+// Window state sampled once per frame: SDL_GetWindowFlags, on Windows also IsIconic (minimized) and
+// DWMWA_CLOAKED, because SDL 3.4 sends no SDL_EVENT_WINDOW_OCCLUDED there.
 struct WindowState {
-    bool visible{}, focused{}, minimized{}, occluded{};
+    bool visible{}, focused{}, minimized{}, occluded{}, cloaked{};
     // A frame that was not on screen measures a different presentation path.
-    [[nodiscard]] bool presented() const noexcept { return visible && !minimized && !occluded; }
+    [[nodiscard]] bool presented() const noexcept { return visible && !minimized && !occluded && !cloaked; }
+};
+
+// frame_ms is the time since the previous frame started, so the reload of a mission route restart requested
+// in frame N shows up in frame N + 1: that frame is flagged (route_reset), not the one that requested it.
+class RouteResetMarker {
+public:
+    // restart: this frame restarts the route after taking its row. Returns route_reset of this frame.
+    bool next_frame(bool restart) noexcept { return std::exchange(pending_, restart); }
+
+private:
+    bool pending_{};
 };
 
 // One presented frame. GPU samples are the timer queries that completed during this frame
@@ -104,7 +117,7 @@ struct BenchmarkSummary {
     // Share of a 60 FPS real-time budget: ((physics + presentation) x tick rate + render x 60) / 1000 ms.
     double budget_60fps{};
     BenchmarkPhase early, late;
-    std::size_t hidden_frames{}, minimized_frames{}, occluded_frames{}, unfocused_frames{};
+    std::size_t hidden_frames{}, minimized_frames{}, occluded_frames{}, unfocused_frames{}, cloaked_frames{};
     unsigned route_resets{};
     std::int64_t start_utc_unix_ns{}, end_utc_unix_ns{};
 };
@@ -114,7 +127,7 @@ struct BenchmarkSummary {
 inline constexpr std::string_view benchmark_frames_header =
         "scene,pass,utc_unix_ns,sdl_ns,elapsed_seconds,frame_ms,ticks,dropped_seconds,pending_seconds,physics_samples,"
         "physics_gpu_ms_sum,presentation_samples,presentation_gpu_ms_sum,render_samples,render_gpu_ms_sum,"
-        "cpu_step_ms,visible,focused,minimized,occluded,route_reset";
+        "cpu_step_ms,visible,focused,minimized,occluded,route_reset,cloaked";
 inline constexpr std::string_view benchmark_summary_header =
         "scene,pass,status,status_reason,frames,window_seconds,frame_median_ms,frame_p95_ms,frame_p99_ms,frame_max_ms,"
         "frames_0_ticks,frame_median_0_ticks_ms,frames_1_tick,frame_median_1_tick_ms,frames_2plus_ticks,"
@@ -126,7 +139,8 @@ inline constexpr std::string_view benchmark_summary_header =
         "ticks_per_frame_max,ticks_per_second,frames_per_second,dropped_seconds,backlog_p95_seconds,"
         "backlog_max_seconds,early_frames,early_frame_median_ms,early_ticks_per_second,early_gpu_tick_mean_ms,"
         "late_frames,late_frame_median_ms,late_ticks_per_second,late_gpu_tick_mean_ms,hidden_frames,"
-        "minimized_frames,occluded_frames,unfocused_frames,route_resets,start_utc_unix_ns,end_utc_unix_ns";
+        "minimized_frames,occluded_frames,unfocused_frames,route_resets,start_utc_unix_ns,end_utc_unix_ns,"
+        "cloaked_frames";
 [[nodiscard]] std::string benchmark_frame_row(std::string_view scene, unsigned pass, const BenchmarkFrame&);
 [[nodiscard]] std::string benchmark_summary_row(const BenchmarkSummary&);
 // One human-readable line per scene for stdout and the PR table.

@@ -402,7 +402,7 @@ if(BUILD_TESTING)
         add_test(NAME gpu.scene_benchmark_content COMMAND ${CMAKE_COMMAND}
             -DPROFILE=${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/scene_benchmark_check.cmake)
         set_tests_properties(gpu.scene_benchmark_content PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
-            FIXTURES_REQUIRED scene_benchmark_output)
+            FIXTURES_REQUIRED scene_benchmark_output SKIP_REGULAR_EXPRESSION "STREFA_SKIPPED")
         add_test(NAME gpu.mission_ui_quick COMMAND strefa_qa --mission-ui-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile)
         set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77)
         add_test(NAME app.mode_faults COMMAND strefa_qa --mode-fault-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mode-faults-profile)
