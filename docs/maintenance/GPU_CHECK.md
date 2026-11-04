@@ -157,6 +157,66 @@ Surowe pliki (`scene-benchmark*.csv`, `telemetry.csv`, `run/`, `pass-*/`) trafia
 [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements) w nowym katalogu z własnym
 `SHA256SUMS.txt`, a nie do tego repozytorium.
 
+## 6. Tracy, RenderDoc, Nsight na GTX 1650
+
+Narzędzia do szukania przyczyny, np. wolnego reżimu: pokazują oś czasu albo pojedynczą klatkę, ale nie zastępują
+benchmarku z sekcji 2–4. Liczby do raportu nadal pochodzą z benchmarku, zgodnie z protokołem pomiaru. Nie uruchamiaj
+benchmarku ani soak z podłączonym profilerem: Tracy dokłada 2 kwerendy znacznika czasu na każdy przebieg (ok. 400 na
+klatkę), a RenderDoc i Nsight przechwytują wywołania OpenGL. Decyzja i zakres: [ADR 0002](../adr/0002-narzedzia-profilowania.md).
+
+### Tracy (oś czasu CPU i GPU)
+
+1. Pobierz profiler Tracy **v0.14.1** (`Tracy-0.14.1.7z` z wydań `wolfpld/tracy` na GitHubie); klient i serwer
+   muszą mieć tę samą wersję protokołu.
+2. Zbuduj StrefaQA z Tracy (preset `dev`: RelWithDebInfo, `STREFA_TRACY=ON`, tylko cel `strefa_qa` i jego
+   zależności) w terminalu deweloperskim Visual Studio (`Developer PowerShell for VS`):
+
+   ```powershell
+   cmake --preset dev
+   cmake --build --preset dev
+   ```
+
+   Linux/WSL2: `cmake --preset linux-dev && cmake --build --preset linux-dev`. Paczka z tym buildem się nie zbuduje
+   (`cmake --install` kończy się błędem), bo klient Tracy otwiera port TCP.
+3. Uruchom scenę interaktywnie, np. `build\dev\StrefaQA.exe --gpu-laboratory --scene gpu:<id>
+   --gpu-thermal on`, albo misję (`--mission`). Uruchom `tracy-profiler.exe` i połącz się z `localhost` (klient
+   nasłuchuje tylko lokalnie; tryb na żądanie, więc dane płyną dopiero po połączeniu).
+4. Co oglądać:
+   - wiersz `OpenGL`: strefa `physics tick` z przebiegami `granular <op>` (PBD), `liquids <op>` (PBF),
+     `neighbors <op>`, `mission <op>`, `thermal tick` z kernelami `thermal <op>`, `lighting tick`, `vfx update`,
+     `render`;
+   - wątek główny: `Application frame` → `SimulationWorld::advance` → `ParticleWorld::step` (`prepare mission`,
+     `solver substep`) i `ThermalSystem::tick`; ramki z `FrameMark` po każdym `present`;
+   - wykresy `physics_ms` i `gpu_ms`: te same wartości co HUD (pula kwerend `ParticleWorld`).
+   W wolnym reżimie porównaj długość `physics tick` na GPU z odstępem między jego wysłaniem a wykonaniem: rosnący
+   odstęp przy tej samej długości stref oznacza kolejkę albo zegar, dłuższe strefy oznaczają wolniejszą pracę GPU.
+   Zestaw to z telemetrią z tego samego okna czasu (`GpuTelemetry.psm1`).
+5. Zrzut ekranu osi czasu z GTX 1650 dołącz do opisu PR. Plik `.tracy` jest surowymi danymi i trafia do
+   strefa-zero-measurements, nie do tego repozytorium.
+
+### RenderDoc (jedna klatka, compute i rysowanie)
+
+1. Zainstaluj RenderDoc (testowane API in-app z v1.47; działa każda wersja z API 1.1.2 lub nowszym).
+2. Uruchom StrefaQA na jeden z dwóch sposobów:
+   - z RenderDoc: *Launch Application*, plik `StrefaQA.exe`, argumenty jak wyżej, katalog roboczy = katalog buildu;
+   - bez interfejsu RenderDoc: ustaw `STREFA_RENDERDOC=1` (biblioteka `renderdoc.dll` ze ścieżki albo
+     `C:\Program Files\RenderDoc\renderdoc.dll`) albo pełną ścieżkę do biblioteki. Na Linuksie analogicznie
+     `librenderdoc.so`.
+3. **F11** przechwytuje następną klatkę. Pliki `strefa_*.rdc` trafiają do `<profil>/renderdoc/`, a konsola wypisuje
+   ich ścieżkę. Klawisze F12/PrtScn RenderDoc są wyłączone. Bez RenderDoc F11 nic nie robi. Działa tylko w StrefaQA,
+   nie w StrefaZero.
+4. Programy i bufory mają etykiety obiektów, więc w *Event Browser* widać, który dispatch to który kernel. Grupy
+   debugowania (`Physics tick`) pojawiają się tylko w kontekście debug (build Debug albo `--gl-debug`).
+
+### Nsight Graphics (profil sprzętowy na GTX 1650)
+
+1. Nsight Graphics (NVIDIA, darmowy) obsługuje Turing, czyli GTX 1650. Użyj *GPU Trace* do obciążenia jednostek
+   i przepustowości pamięci w kernelach compute, a *Frame Debugger* do pojedynczej klatki.
+2. Uruchom zwykły build Release (bez Tracy, bez RenderDoc), bo kilka narzędzi przechwytujących OpenGL naraz się
+   wyklucza. Ustaw *Activity* = OpenGL i podaj te same argumenty co wyżej.
+3. Liczby z GPU Trace opisują jedną klatkę na kontrolowanym zegarze. Nie porównuj ich z benchmarkiem; używaj ich do
+   wskazania kernela, który ogranicza czas ticku.
+
 ## Jak czytać wyniki
 
 Symulacja ma 120 ticków na sekundę niezależnie od FPS. Przy `--vsync on` (60 Hz) każda klatka wykonuje 2 ticki.

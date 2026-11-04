@@ -14,6 +14,7 @@
 ## Decyzje architektoniczne — [adr/](adr/)
 
 - [0001 — rola modelu CPU](adr/0001-rola-modelu-cpu.md): wyrocznia testów, zamrożony model referencyjny (laboratorium CPU), zamrożony GL 3.3.
+- [0002 — narzędzia profilowania](adr/0002-narzedzia-profilowania.md): Tracy tylko w buildach deweloperskich (`STREFA_TRACY`), RenderDoc pod F11 w StrefaQA, Nsight na GTX 1650.
 
 ## Raporty — [reports/](reports/)
 
