@@ -298,12 +298,6 @@ void World::projectile_hit(Point p) {
             }
         }
 }
-std::uint64_t World::queue_explosion(Point p, int radius) {
-    ExplosionCommand command;
-    command.center = p;
-    command.radius = radius;
-    return queue_explosion(command);
-}
 std::uint64_t World::queue_explosion(ExplosionCommand command) {
     auto& s = state_;
     if (!contains(command.center) || !std::isfinite(command.energy) || !std::isfinite(command.pressure)
