@@ -1,5 +1,6 @@
 #include "app/thermal_conformance.hpp"
 
+#include "core/charconv.hpp"
 #include "sim/world.hpp"
 
 #include <array>
@@ -207,7 +208,7 @@ std::vector<Scene> scenes() {
 
 double parse_number(std::string_view text, bool& ok) {
     double value{};
-    const auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
+    const auto [end, error] = core::from_chars(text.data(), text.data() + text.size(), value); // libc++ < 20
     ok = ok && error == std::errc{} && end == text.data() + text.size() && std::isfinite(value) && value >= 0;
     return value;
 }
