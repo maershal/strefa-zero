@@ -40,12 +40,16 @@ std::expected<Session, std::string> Session::create(const platform::Window& wind
     if (!result.platform_ready_) return std::unexpected{"Nie można uruchomić backendu SDL3 ImGui."};
     result.renderer_ready_ = ImGui_ImplOpenGL3_Init("#version 330 core");
     if (!result.renderer_ready_) return std::unexpected{"Nie można uruchomić backendu OpenGL ImGui."};
-    const auto regular = (assets / "fonts" / "Barlow-Regular.ttf").string();
-    const auto bold = (assets / "fonts" / "Barlow-Bold.ttf").string();
+    const auto regular = assets / "fonts" / "Barlow-Regular.ttf";
+    const auto bold = assets / "fonts" / "Barlow-Bold.ttf";
     if (!std::filesystem::exists(regular) || !std::filesystem::exists(bold))
         return std::unexpected{"Brak czcionek w assets/fonts. Rozpakuj pełną paczkę aplikacji."};
-    result.fonts_.body = io.Fonts->AddFontFromFileTTF(regular.c_str(), 18.0F);
-    result.fonts_.heading = io.Fonts->AddFontFromFileTTF(bold.c_str(), 18.0F);
+    // ImGui opens font files by UTF-8 name (converted to UTF-16 on Windows); path::string() is the ANSI code page
+    // there and breaks start-up in a folder such as "Michał" in the user profile.
+    const auto regular_utf8 = regular.u8string();
+    const auto bold_utf8 = bold.u8string();
+    result.fonts_.body = io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(regular_utf8.c_str()), 18.0F);
+    result.fonts_.heading = io.Fonts->AddFontFromFileTTF(reinterpret_cast<const char*>(bold_utf8.c_str()), 18.0F);
     if (!result.fonts_.body || !result.fonts_.heading) return std::unexpected{"Nie można wczytać czcionek interfejsu."};
     io.FontDefault = result.fonts_.body;
     result.set_scale(window.display_scale(), 1.0F);
