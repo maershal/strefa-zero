@@ -35,7 +35,7 @@ constexpr std::array player_options{
 std::string help_text(OptionScope scope) {
     std::string text = scope == OptionScope::player
                              ? "Strefa Zero — opcje uruchomienia:\n"
-                             : "StrefaQA — opcje gry (pełna lista w docs/maintenance/INVENTORY.md):\n";
+                             : "StrefaQA — opcje gry (definicje: src/app/launch_options.cpp):\n";
     for (const auto& option : player_options) {
         std::string usage{option.name};
         if (!option.value.empty()) usage += " " + std::string{option.value};

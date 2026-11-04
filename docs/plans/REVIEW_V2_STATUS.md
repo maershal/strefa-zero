@@ -62,6 +62,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
 | Pomiary termiki z losową kolejnością scen, liczniki dispatchy/barier, znaczniki per kernel, telemetria (R §5.3) | zrobione; odniesienie etapu gazu bez telemetrii i przyczyna wolnego reżimu — otwarte | #50, #46, #49 |
 | Szkielet zgodności termiki GPU z CPU: 10 scen, progi w pliku przed zmianami GPU (R §5.3) | zrobione po stronie CPU; strona GPU — otwarte | #48 |
+| Porządki po #22 (płótno CPU w VFX, `ui/mission_hud`, `strefa_input`, martwe API), ADR roli modelu CPU | zrobione | K06, [ADR 0001](../adr/0001-rola-modelu-cpu.md) |
 | Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B–E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
@@ -71,7 +72,8 @@ z `tools/architecture_budget.json`, np. `strefa_zero_qa_symbols` = 35, `size_lit
 ## Przyjęte kierunki (stosuj, chyba że właściciel zdecyduje inaczej)
 
 - **CPU to wyrocznia, nie produkt.** Model CPU ma być poprawny, nie szybki: nie optymalizować czasu rzeczywistego
-  cieczy CPU (P53 odłożony). Laboratorium CPU: tylko poprawki błędów wyroczni, bez nowych narzędzi.
+  cieczy CPU (P53 odłożony). Model referencyjny (CPU): tylko poprawki błędów wyroczni, bez nowych narzędzi
+  ([ADR 0001](../adr/0001-rola-modelu-cpu.md)).
 - **GPU-first, jeden świat.** Stan autorytatywny w buforach GPU; brak odczytów GPU→CPU co tick w gorącej ścieżce.
 - **Nowe systemy poza `world.cpp`** (reakcje, wybuchy, przemiany). Nie dokładać haków testowych do `ParticleWorld`.
 - **Dane zamiast literałów.** Nowe ID, wymiary i stałe materiałów nie jako kolejne literały (`320`/`192`, `2.65`,
@@ -96,12 +98,14 @@ Z R §12 i A §6:
 
 1. Zmiany kontraktów: nagrania v4 (hash rejestru, klucze materiałów), rewizja termiki I10.1 (deterministyczna
    kolejność sum), „≤ 8 SSBO na program, tabele w UBO”.
-2. GL 3.3: zamrozić teraz, usunąć po parytecie laboratorium GPU.
+2. ~~GL 3.3: zamrozić teraz, usunąć po parytecie laboratorium GPU.~~ Rozstrzygnięte: zamrożony, usunięcie tylko za
+   zgodą właściciela ([ADR 0001](../adr/0001-rola-modelu-cpu.md)).
 3. Ujednolicenie stałych CPU↔GPU (P56): stechiometria O₂ 0,7 vs 2,0; dym 15% vs 10%; piasek 1,6 vs 2,65; wypór gazu
    palnego.
 4. Model gazu: akustyka jak w CPU zamiast projekcji (po porównaniu obrazów).
 5. Większe, przewijane mapy: teraz czy później (zmienia priorytet `TileGrid` i `WorldDims`).
-6. Laboratorium CPU jako „Model referencyjny (CPU)” i przeniesienie „04 Podgląd areny” do Ustawień.
+6. ~~Laboratorium CPU jako „Model referencyjny (CPU)” i przeniesienie „04 Podgląd areny” do Ustawień.~~
+   Rozstrzygnięte i zrobione w K06 (ADR 0001; podgląd jako „Podgląd motywu” w Ustawieniach).
 
 ## Następne kroki według review
 

@@ -11,6 +11,10 @@
 - [QA_IMAGES.md](QA_IMAGES.md) — pobranie surowych obrazów QA z wydania.
 - [CHANGELOG.md](CHANGELOG.md) — historia wydań i etapów I00–I11.
 
+## Decyzje architektoniczne — [adr/](adr/)
+
+- [0001 — rola modelu CPU](adr/0001-rola-modelu-cpu.md): wyrocznia testów, zamrożone laboratorium CPU, zamrożony GL 3.3.
+
 ## Raporty — [reports/](reports/)
 
 Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
@@ -27,7 +31,7 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 
 ## Utrzymanie — [maintenance/](maintenance/)
 
-- [INVENTORY.md](maintenance/INVENTORY.md) — flagi, kod QA i testy CTest przed podziałem StrefaZero / StrefaQA.
+- [INVENTORY.md](maintenance/INVENTORY.md) — historyczne: flagi, kod QA i testy CTest przed podziałem StrefaZero / StrefaQA.
 - [GPU_CHECK.md](maintenance/GPU_CHECK.md) — pomiar scen i soak GPU na Windows: co uruchomić i co odesłać.
 
 ## Plany — [plans/](plans/)
