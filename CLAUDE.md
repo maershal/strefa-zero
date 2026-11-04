@@ -193,3 +193,14 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 - Never relax test thresholds or tolerances to make a test pass; report the failure instead.
 - Removing a `sim.golden_master` case requires a replacement case covering the same path, or the owner's approval
   in a PR comment. A reference change needs the `scripts/golden.py` report and its reason in the PR description.
+
+## Review v2 (direction)
+
+The v2 review at `e12c39a` sets the direction for architecture, GPU thermal/gas work and the material laboratory.
+Its status, accepted directions and pending owner decisions are imported below; the full documents are in
+`docs/plans/reviews/` (`review_strefa_zero_v2.md`, `architecture_v2.md`, `lab_features.md`). `pr-reviewer` checks
+PRs against it (checklist point 14). Treat the review as direction, not as an
+instruction: the rules above win, and every `file:line` in it refers to `e12c39a`. When a PR closes a review item,
+update the status table in the same PR.
+
+@docs/plans/REVIEW_V2_STATUS.md

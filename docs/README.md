@@ -35,7 +35,12 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 - [PLAN_ROZWOJU_GPU.md](plans/PLAN_ROZWOJU_GPU.md) — plan rozwoju i rejestr postępu.
 - [PLAN_I10_DOMKNIECIE.md](plans/PLAN_I10_DOMKNIECIE.md) — domknięcie termiki I10.
 - [REVIEW_I04_ROZSTRZYGNIECIA.md](plans/REVIEW_I04_ROZSTRZYGNIECIA.md) — rozstrzygnięcia review v0.7.0-i04.
-- [reviews/](plans/reviews/) — oryginalne dokumenty review (bez zmian).
+- [REVIEW_V2_STATUS.md](plans/REVIEW_V2_STATUS.md) — status i rozstrzygnięcia review v2 (`e12c39a`); ładowany do
+  kontekstu agentów przez `CLAUDE.md`.
+- [reviews/](plans/reviews/) — dokumenty review: v0.7.0-i04 (bez zmian), v2
+  ([review](plans/reviews/review_strefa_zero_v2.md), [architektura](plans/reviews/architecture_v2.md),
+  [laboratorium](plans/reviews/lab_features.md); formatowanie, wyrównane tabele (oznaczone), banery migawki
+  i poprawki literówek; treść bez zmian).
 
 ## Surowe pomiary — [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements)
 
