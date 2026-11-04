@@ -96,6 +96,9 @@ add_library(strefa_game STATIC src/game/session.cpp)
 target_link_libraries(strefa_game PUBLIC strefa_sim)
 add_executable(strefa_physics src/tools/physics_runner.cpp)
 target_link_libraries(strefa_physics PRIVATE strefa_sim)
+# CPU side of StrefaQA --gpu-thermal-conformance (QA code on the CPU oracle only, so core-only builds test it too).
+add_library(strefa_conformance STATIC src/app/thermal_conformance.cpp)
+target_link_libraries(strefa_conformance PUBLIC strefa_sim)
 set_target_properties(strefa_physics PROPERTIES OUTPUT_NAME StrefaPhysics)
 install(TARGETS strefa_physics RUNTIME DESTINATION . COMPONENT StrefaRuntime)
 
@@ -137,8 +140,8 @@ if(STREFA_BUILD_APP)
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_conformance.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
-    target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu PRIVATE SDL3::SDL3 OpenGL::GL)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
+    target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu strefa_conformance PRIVATE SDL3::SDL3 OpenGL::GL)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
     target_link_libraries(strefa_zero PRIVATE strefa_app)
@@ -226,6 +229,11 @@ if(BUILD_TESTING)
     add_executable(strefa_sim_tests tests/sim_tests.cpp)
     target_link_libraries(strefa_sim_tests PRIVATE strefa_sim)
     strefa_add_cpu_test(sim.materials strefa_sim_tests "physics;slow" PROCESSORS 2)
+    add_executable(strefa_thermal_conformance_tests tests/thermal_conformance_tests.cpp)
+    target_link_libraries(strefa_thermal_conformance_tests PRIVATE strefa_conformance)
+    strefa_add_cpu_test(physics.thermal_conformance_cpu strefa_thermal_conformance_tests "physics;slow"
+        ARGS ${CMAKE_CURRENT_SOURCE_DIR}/tests/conformance/thermal_thresholds.txt
+             ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-cpu)
     add_executable(strefa_numerics_tests tests/numerics_tests.cpp)
     target_link_libraries(strefa_numerics_tests PRIVATE strefa_sim)
     strefa_add_cpu_test(sim.numerics_parallel strefa_numerics_tests determinism PROCESSORS 4)
@@ -283,17 +291,9 @@ if(BUILD_TESTING)
         set_tests_properties(gpu.thermal_ui PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 180 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.thermal COMMAND strefa_qa --gpu-thermal-check --gl-debug --profile ${CMAKE_CURRENT_BINARY_DIR}/thermal-profile)
         set_tests_properties(gpu.thermal PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 900 SKIP_RETURN_CODE 77)
-        # Skeleton: today only the CPU side records observables; thresholds are fixed in tests/conformance.
-        add_test(NAME gpu.thermal_conformance COMMAND strefa_qa
-            --gpu-thermal-conformance ${CMAKE_CURRENT_SOURCE_DIR}/tests/conformance/thermal_thresholds.txt
-            --profile ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-profile)
-        set_tests_properties(gpu.thermal_conformance PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 300
-            SKIP_RETURN_CODE 77)
-        add_executable(strefa_thermal_conformance_tests tests/thermal_conformance_tests.cpp)
-        target_link_libraries(strefa_thermal_conformance_tests PRIVATE strefa_diagnostics)
-        strefa_add_cpu_test(physics.thermal_conformance_cpu strefa_thermal_conformance_tests "physics;slow"
-            ARGS ${CMAKE_CURRENT_SOURCE_DIR}/tests/conformance/thermal_thresholds.txt
-                 ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-cpu)
+        # --gpu-thermal-conformance has no gpu.* test yet: today it compares nothing, and a green GPU test would
+        # pretend conformance (a skip would fail the nightly --fail-on-skipped). It comes with the GPU side (#48);
+        # the CPU side is physics.thermal_conformance_cpu.
         add_test(NAME gpu.vfx COMMAND strefa_qa --gpu-vfx-check --gl-debug --profile ${CMAKE_CURRENT_BINARY_DIR}/vfx-profile)
         set_tests_properties(gpu.vfx PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 600 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.lighting COMMAND strefa_qa --gpu-lighting-check --gl-debug --profile ${CMAKE_CURRENT_BINARY_DIR}/lighting-profile)

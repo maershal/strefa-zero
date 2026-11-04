@@ -9,7 +9,8 @@
 
 namespace strefa::app {
 
-// One line of the thresholds file: a GPU value v passes when |v - cpu| <= max(absolute, relative * |cpu|).
+// One line of the thresholds file: a GPU value v passes when |v - cpu| <= max(absolute, relative * |base|), where
+// base is cpu, or cpu - ambient for temperatures (column relative_of of the CSV).
 struct ConformanceThreshold {
     std::string scene, observable;
     double absolute{}, relative{};
@@ -24,6 +25,8 @@ struct ConformanceObservable {
     std::string_view scene, observable, unit;
 };
 [[nodiscard]] std::vector<ConformanceObservable> thermal_conformance_observables();
+// Rows of thermal-conformance-cpu.csv: every observable at every sampled tick of its scene.
+[[nodiscard]] std::size_t thermal_conformance_sample_count();
 
 // Writes thermal-conformance-cpu.csv and thermal-conformance.txt into output. Fails when the thresholds do not cover
 // exactly the recorded observables or a CPU value is not finite.

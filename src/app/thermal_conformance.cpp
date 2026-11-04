@@ -11,6 +11,7 @@
 #include <iomanip>
 #include <iterator>
 #include <map>
+#include <optional>
 #include <set>
 #include <sstream>
 #include <utility>
@@ -23,6 +24,7 @@ using sim::Point;
 struct Probe {
     std::string_view name, unit;
     std::function<double(const sim::World&)> read;
+    std::optional<Point> where{}; // sampled cell; checked to lie inside the grid
 };
 struct Scene {
     std::string_view id, description;
@@ -33,14 +35,20 @@ struct Scene {
 
 const std::vector<unsigned> default_ticks{0, 30, 120, 300};
 
+// Scene coordinates are relative to the grid instead of 320x192 literals: x from the middle column, y from the top
+// of the floor (8 rows above the bottom; negative is up).
+Point at(int dx, int dy) {
+    return {sim::grid_width / 2 + dx, sim::grid_height - 8 + dy};
+}
+
 Probe temperature(std::string_view name, Point p) {
-    return {name, "K", [p](const sim::World& w) { return w.sample(p).temperature; }};
+    return {name, "K", [p](const sim::World& w) { return w.sample(p).temperature; }, p};
 }
 Probe air_temperature(std::string_view name, Point p) {
-    return {name, "K", [p](const sim::World& w) { return w.sample(p).air_temperature; }};
+    return {name, "K", [p](const sim::World& w) { return w.sample(p).air_temperature; }, p};
 }
 Probe pressure(std::string_view name, Point p) {
-    return {name, "sim_pressure", [p](const sim::World& w) { return w.sample(p).pressure; }};
+    return {name, "sim_pressure", [p](const sim::World& w) { return w.sample(p).pressure; }, p};
 }
 Probe cells(std::string_view name, Material m) {
     return {name, "cells", [m](const sim::World& w) { return static_cast<double>(w.count(m)); }};
@@ -58,8 +66,9 @@ void hot(sim::World& world, Point a, Point b, Material material, double kelvin) 
     for (int y = a.y; y <= b.y; ++y)
         for (int x = a.x; x <= b.x; ++x) world.set({x, y}, material, kelvin);
 }
-// Hot gas: set_temperature of empty cells; keep the regions small (see hot()).
-void heat_air(sim::World& world, Point a, Point b, double kelvin) {
+// Heats existing cells in place with set_temperature: hot gas in empty cells, or the ignition spot of a powder.
+// Keep the regions small (see hot()).
+void heat_cells(sim::World& world, Point a, Point b, double kelvin) {
     for (int y = a.y; y <= b.y; ++y)
         for (int x = a.x; x <= b.x; ++x) world.set_temperature({x, y}, kelvin);
 }
@@ -71,7 +80,16 @@ void box(sim::World& world, Point a, Point b, int wall, Material material = Mate
     fill(world, {b.x + 1, a.y}, {b.x + wall, b.y}, material);
 }
 void floor(sim::World& world) {
-    fill(world, {0, sim::grid_height - 8}, {sim::grid_width - 1, sim::grid_height - 1}, Material::stone);
+    fill(world, {0, at(0, 0).y}, {sim::grid_width - 1, sim::grid_height - 1}, Material::stone);
+}
+// Temperatures compare the rise above ambient: a relative tolerance of an absolute temperature in kelvin would
+// dwarf the absolute one (5% of 293 K is already 14.7 K).
+bool relative_to_rise(const Probe& probe) {
+    return probe.unit == "K";
+}
+std::string utf8(const std::filesystem::path& path) {
+    const auto text = path.u8string();
+    return {text.begin(), text.end()};
 }
 
 std::vector<Scene> scenes() {
@@ -79,107 +97,107 @@ std::vector<Scene> scenes() {
     result.push_back({"rod",
                       "Pręt z gorącym końcem",
                       [](sim::World& w) {
-                          fill(w, {100, 95}, {219, 97}, Material::metal);
-                          hot(w, {94, 94}, {99, 98}, Material::metal, 1500);
+                          fill(w, at(-60, -89), at(59, -87), Material::metal);
+                          hot(w, at(-66, -90), at(-61, -86), Material::metal, 1500);
                       },
-                      {temperature("t_at_2", {102, 96}), temperature("t_at_5", {105, 96}),
-                       temperature("t_at_10", {110, 96}), air_temperature("air_above_hot_end", {104, 90})},
+                      {temperature("t_at_2", at(-58, -88)), temperature("t_at_5", at(-55, -88)),
+                       temperature("t_at_10", at(-50, -88)), air_temperature("air_above_hot_end", at(-56, -94))},
                       default_ticks});
     result.push_back({"chamber",
                       "Komora z gorącym gazem",
                       [](sim::World& w) {
-                          box(w, {120, 60}, {200, 140}, 2);
-                          heat_air(w, {155, 95}, {164, 104}, 900);
+                          box(w, at(-40, -124), at(40, -44), 2);
+                          heat_cells(w, at(-5, -89), at(4, -80), 900);
                       },
-                      {air_temperature("air_center", {160, 100}), air_temperature("air_corner", {124, 136}),
-                       pressure("pressure_center", {160, 100}), temperature("wall_inner", {119, 100}),
-                       air_temperature("air_outside", {110, 100})},
+                      {air_temperature("air_center", at(0, -84)), air_temperature("air_corner", at(-36, -48)),
+                       pressure("pressure_center", at(0, -84)), temperature("wall_inner", at(-41, -84)),
+                       air_temperature("air_outside", at(-50, -84))},
                       default_ticks});
-    result.push_back(
-            {"pulse",
-             "Impuls ciśnienia",
-             [](sim::World& w) {
-                 floor(w);
-                 heat_air(w, {158, 94}, {162, 98}, 2000);
-             },
-             {pressure("pressure_0", {160, 96}), pressure("pressure_10", {170, 96}), pressure("pressure_20", {180, 96}),
-              pressure("pressure_40", {200, 96}), air_temperature("air_center", {160, 96})},
-             {0, 2, 5, 10, 30, 120}});
+    result.push_back({"pulse",
+                      "Impuls ciśnienia",
+                      [](sim::World& w) {
+                          floor(w);
+                          heat_cells(w, at(-2, -90), at(2, -86), 2000);
+                      },
+                      {pressure("pressure_0", at(0, -88)), pressure("pressure_10", at(10, -88)),
+                       pressure("pressure_20", at(20, -88)), pressure("pressure_40", at(40, -88)),
+                       air_temperature("air_center", at(0, -88))},
+                      {0, 2, 5, 10, 30, 120}});
     result.push_back({"open_beam",
                       "Belka przy otwartej górze",
                       [](sim::World& w) {
                           w.set_open_top(true);
                           floor(w);
-                          hot(w, {130, 150}, {190, 153}, Material::metal, 900);
+                          hot(w, at(-30, -34), at(30, -31), Material::metal, 900);
                       },
-                      {air_temperature("air_10_above", {160, 140}),
-                       air_temperature("air_40_above", {160, 110}),
-                       air_temperature("air_beside", {120, 151}),
+                      {air_temperature("air_10_above", at(0, -44)),
+                       air_temperature("air_40_above", at(0, -74)),
+                       air_temperature("air_beside", at(-40, -33)),
                        {"escaped_energy", "J", [](const sim::World& w) { return w.statistics().escaped_energy; }}},
                       default_ticks});
     result.push_back({"door",
                       "Ściana i drzwi 1 px",
                       [](sim::World& w) {
-                          box(w, {100, 40}, {220, 150}, 2);
-                          fill(w, {160, 40}, {160, 99}, Material::stone);
-                          fill(w, {160, 101}, {160, 150}, Material::stone);
-                          heat_air(w, {135, 95}, {144, 104}, 800);
+                          box(w, at(-60, -144), at(60, -34), 2);
+                          fill(w, at(0, -144), at(0, -85), Material::stone);
+                          fill(w, at(0, -83), at(0, -34), Material::stone);
+                          heat_cells(w, at(-25, -89), at(-16, -80), 800);
                       },
-                      {air_temperature("air_left", {140, 100}), air_temperature("air_door", {162, 100}),
-                       air_temperature("air_right", {190, 100}), pressure("pressure_left", {140, 100}),
-                       pressure("pressure_right", {190, 100})},
+                      {air_temperature("air_left", at(-20, -84)), air_temperature("air_door", at(2, -84)),
+                       air_temperature("air_right", at(30, -84)), pressure("pressure_left", at(-20, -84)),
+                       pressure("pressure_right", at(30, -84))},
                       default_ticks});
     result.push_back({"water_heater",
                       "Woda z grzałką",
                       [](sim::World& w) {
                           floor(w);
-                          box(w, {120, 100}, {200, 150}, 2);
-                          fill(w, {120, 110}, {200, 150}, Material::water);
-                          hot(w, {150, 145}, {170, 148}, Material::metal, 1500);
+                          box(w, at(-40, -84), at(40, -34), 2);
+                          fill(w, at(-40, -74), at(40, -34), Material::water);
+                          hot(w, at(-10, -39), at(10, -36), Material::metal, 1500);
                       },
-                      {temperature("water_low", {160, 143}), temperature("water_high", {160, 115}),
+                      {temperature("water_low", at(0, -41)), temperature("water_high", at(0, -69)),
                        cells("steam_cells", Material::steam), mass("water_mass", Material::water)},
                       default_ticks});
     result.push_back({"lava_water",
                       "Lawa na wodzie",
                       [](sim::World& w) {
                           floor(w);
-                          box(w, {120, 100}, {200, 150}, 2);
-                          fill(w, {120, 125}, {200, 150}, Material::water);
-                          fill(w, {150, 105}, {170, 112}, Material::lava);
+                          box(w, at(-40, -84), at(40, -34), 2);
+                          fill(w, at(-40, -59), at(40, -34), Material::water);
+                          fill(w, at(-10, -79), at(10, -72), Material::lava);
                       },
                       {cells("water_cells", Material::water), cells("steam_cells", Material::steam),
                        cells("stone_cells", Material::stone), cells("lava_cells", Material::lava),
-                       temperature("water_far", {130, 145})},
+                       temperature("water_far", at(-30, -39))},
                       default_ticks});
     result.push_back({"ice_heater",
                       "Lód przy grzałce",
                       [](sim::World& w) {
                           floor(w);
-                          fill(w, {140, 160}, {180, 183}, Material::ice);
-                          hot(w, {136, 160}, {139, 183}, Material::metal, 1200);
+                          fill(w, at(-20, -24), at(20, -1), Material::ice);
+                          hot(w, at(-24, -24), at(-21, -1), Material::metal, 1200);
                       },
                       {cells("ice_cells", Material::ice), cells("water_cells", Material::water),
-                       temperature("ice_near", {142, 170}), temperature("ice_far", {175, 170})},
+                       temperature("ice_near", at(-18, -14)), temperature("ice_far", at(15, -14))},
                       default_ticks});
     result.push_back({"gunpowder_line",
                       "Linia prochu",
                       [](sim::World& w) {
                           floor(w);
-                          fill(w, {60, 181}, {260, 183}, Material::gunpowder);
-                          heat_air(w, {60, 181}, {61, 183}, 1000);
+                          fill(w, at(-100, -3), at(100, -1), Material::gunpowder);
+                          heat_cells(w, at(-100, -3), at(-99, -1), 1000);
                       },
                       {cells("gunpowder_cells", Material::gunpowder), cells("fire_cells", Material::fire),
-                       cells("smoke_cells", Material::smoke), temperature("line_middle", {160, 182})},
+                       cells("smoke_cells", Material::smoke), temperature("line_middle", at(0, -2))},
                       default_ticks});
     result.push_back({"acid_stone",
                       "Kwas na kamieniu",
                       [](sim::World& w) {
                           floor(w);
-                          fill(w, {130, 160}, {190, 183}, Material::stone);
-                          fill(w, {129, 140}, {129, 159}, Material::metal);
-                          fill(w, {191, 140}, {191, 159}, Material::metal);
-                          fill(w, {130, 150}, {190, 159}, Material::acid);
+                          fill(w, at(-30, -24), at(30, -1), Material::stone);
+                          fill(w, at(-31, -44), at(-31, -25), Material::metal);
+                          fill(w, at(31, -44), at(31, -25), Material::metal);
+                          fill(w, at(-30, -34), at(30, -25), Material::acid);
                       },
                       {cells("stone_cells", Material::stone), cells("acid_cells", Material::acid),
                        mass("acid_mass", Material::acid), mass("stone_mass", Material::stone)},
@@ -220,6 +238,12 @@ std::expected<std::vector<ConformanceThreshold>, std::string> parse_conformance_
     return result;
 }
 
+std::size_t thermal_conformance_sample_count() {
+    std::size_t count = 0;
+    for (const auto& scene : scenes()) count += scene.probes.size() * scene.ticks.size();
+    return count;
+}
+
 std::vector<ConformanceObservable> thermal_conformance_observables() {
     std::vector<ConformanceObservable> result;
     // Scene ids and probe names are string literals, so the views outlive the scene table.
@@ -231,31 +255,39 @@ std::vector<ConformanceObservable> thermal_conformance_observables() {
 std::expected<void, std::string> run_thermal_conformance(const std::filesystem::path& thresholds_path,
                                                          const std::filesystem::path& output) {
     std::ifstream file{thresholds_path};
-    if (!file) return std::unexpected{"Nie można odczytać pliku progów " + thresholds_path.string() + "."};
+    if (!file) return std::unexpected{"Nie można odczytać pliku progów " + utf8(thresholds_path) + "."};
     const std::string text{std::istreambuf_iterator<char>{file}, {}};
     const auto thresholds = parse_conformance_thresholds(text);
-    if (!thresholds) return std::unexpected{thresholds_path.filename().string() + ": " + thresholds.error()};
+    if (!thresholds) return std::unexpected{utf8(thresholds_path.filename()) + ": " + thresholds.error()};
     // Thresholds and recorded observables must match one to one: a new probe needs its threshold first.
     std::map<std::pair<std::string, std::string>, const ConformanceThreshold*> by_key;
     for (const auto& row : *thresholds) by_key[{row.scene, row.observable}] = &row;
+    std::set<std::pair<std::string, std::string>> recorded;
     std::string mismatch;
-    std::size_t matched = 0;
     for (const auto& o : thermal_conformance_observables()) {
-        if (by_key.contains({std::string{o.scene}, std::string{o.observable}}))
-            ++matched;
-        else
+        recorded.emplace(o.scene, o.observable);
+        if (!by_key.contains({std::string{o.scene}, std::string{o.observable}}))
             mismatch += std::format(" brak progu {} {};", o.scene, o.observable);
     }
-    if (matched != thresholds->size()) mismatch += " progi bez obserwabli w kodzie;";
+    for (const auto& [key, row] : by_key)
+        if (!recorded.contains(key)) mismatch += std::format(" próg bez obserwabli {} {};", key.first, key.second);
     if (!mismatch.empty()) return std::unexpected{"Progi zgodności termiki nie pasują do obserwabli:" + mismatch};
 
-    std::filesystem::create_directories(output);
+    for (const auto& scene : scenes())
+        for (const auto& probe : scene.probes)
+            if (probe.where && !sim::contains(*probe.where))
+                return std::unexpected{std::format("{} {}: sonda poza siatką.", scene.id, probe.name)};
+
+    std::error_code created;
+    std::filesystem::create_directories(output, created);
+    if (created) return std::unexpected{"Nie można utworzyć katalogu wyników zgodności termiki."};
     std::ofstream csv{output / "thermal-conformance-cpu.csv"}, report{output / "thermal-conformance.txt"};
     if (!csv || !report) return std::unexpected{"Nie można zapisać wyników zgodności termiki."};
-    csv << std::setprecision(17) << "scene,observable,unit,seconds,cpu_tick,cpu_value,absolute,relative\n";
-    report << "schema=1\nthresholds=" << thresholds_path.filename().string()
-           << "\nthreshold_rows=" << thresholds->size() << "\ncpu_tick_seconds=" << sim::tick_duration
-           << "\npass_rule=abs(gpu-cpu)<=max(absolute,relative*abs(cpu))\ngpu=not_implemented\n";
+    csv << std::setprecision(17) << "scene,observable,unit,seconds,cpu_tick,cpu_value,absolute,relative,relative_of\n";
+    report << "schema=1\nthresholds=" << utf8(thresholds_path.filename()) << "\nthreshold_rows=" << thresholds->size()
+           << "\ncpu_tick_seconds=" << sim::tick_duration << "\nambient_k=" << sim::ambient_temperature
+           << "\npass_rule=abs(gpu-cpu)<=max(absolute,relative*abs(base)),base=cpu|cpu-ambient_k(relative_of)"
+              "\nthresholds_status=provisional_until_gpu_side\ngpu=not_implemented\n";
     report.flush();
     for (const auto& scene : scenes()) {
         sim::World world;
@@ -271,7 +303,8 @@ std::expected<void, std::string> run_thermal_conformance(const std::filesystem::
                             std::format("{} {}: wartość CPU nieskończona w ticku {}.", scene.id, probe.name, sample)};
                 const auto& limit = *by_key.at({std::string{scene.id}, std::string{probe.name}});
                 csv << scene.id << ',' << probe.name << ',' << probe.unit << ',' << sample * sim::tick_duration << ','
-                    << sample << ',' << value << ',' << limit.absolute << ',' << limit.relative << '\n';
+                    << sample << ',' << value << ',' << limit.absolute << ',' << limit.relative << ','
+                    << (relative_to_rise(probe) ? "rise_above_ambient" : "value") << '\n';
             }
         }
         report << "scene_" << scene.id << "=cpu_recorded ticks=" << tick << " observables=" << scene.probes.size()

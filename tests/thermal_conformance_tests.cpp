@@ -40,7 +40,8 @@ int main(int argc, char** argv) {
         std::ifstream csv{output / "thermal-conformance-cpu.csv"};
         std::size_t rows = 0;
         for (std::string line; std::getline(csv, line);) rows += !line.empty();
-        check(rows > observables.size(), "Every observable sampled");
+        check(rows == strefa::app::thermal_conformance_sample_count() + 1,
+              "Every observable sampled at every tick of its scene (plus the header)");
         std::ifstream report{output / "thermal-conformance.txt"};
         const std::string text{std::istreambuf_iterator<char>{report}, {}};
         check(text.find("status=cpu_only") != std::string::npos
@@ -56,6 +57,12 @@ int main(int argc, char** argv) {
         const auto partial = output / "partial-thresholds.txt";
         std::ofstream{partial} << all;
         check(!strefa::app::run_thermal_conformance(partial, output / "partial"), "Missing threshold accepted");
+        const auto extra = output / "extra-thresholds.txt";
+        std::ifstream complete{argv[1]};
+        std::ofstream{extra} << std::string{std::istreambuf_iterator<char>{complete}, {}} << "rod not_recorded 1 0\n";
+        const auto rejected = strefa::app::run_thermal_conformance(extra, output / "extra");
+        check(!rejected && rejected.error().find("rod not_recorded") != std::string::npos,
+              "A threshold without an observable must be rejected by name");
         std::cout << "Thermal conformance skeleton PASS (" << rows - 1 << " CPU samples)\n";
         return 0;
     } catch (const std::exception& error) {

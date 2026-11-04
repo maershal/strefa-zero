@@ -41,6 +41,7 @@ TARGET_MODULE = {
     "strefa_zero": "app",
     "strefa_physics": "tools",
     "strefa_diagnostics": "qa",
+    "strefa_conformance": "qa",
     "strefa_qa": "qa",
 }
 EXTERNAL_TARGETS = {"strefa_options", "strefa_imgui"}
