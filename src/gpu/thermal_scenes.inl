@@ -57,4 +57,7 @@ void ParticleWorld::reset_thermal_scene(unsigned scene) {
     s.thermal_brush = {};
     render(1);
 }
+std::vector<ThermalTiming> ParticleWorld::take_thermal_timings() {
+    return impl_->thermal ? impl_->thermal->take_timings() : std::vector<ThermalTiming>{};
+}
 } // namespace strefa::gpu

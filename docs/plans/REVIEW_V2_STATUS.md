@@ -60,6 +60,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Ruleset `main` (R §12 p. 1, R1) | utworzony, `enforcement: disabled` | #31 |
 | Recenzja pod tożsamością bota; `large-pr-approved` nie od autora | otwarte | #32, #33 |
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
+| Pomiary termiki z losową kolejnością scen, liczniki dispatchy/barier, znaczniki per kernel, telemetria (R §5.3) | zrobione; odniesienie etapu gazu bez telemetrii i przyczyna wolnego reżimu — otwarte | #50, #46, #49 |
 | Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B–E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości

@@ -9,7 +9,8 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
     if (options.thermal_check || options.thermal_benchmark) {
         auto world = gpu::ParticleWorld::create(assets / "shaders", options.gpu_execution, options.gpu_profiling);
         if (!world) return std::unexpected{world.error()};
-        const auto result = (*world)->validate_thermal(profile, options.thermal_benchmark);
+        const auto result = options.thermal_benchmark ? gpu::benchmark_thermal(**world, profile)
+                                                      : (*world)->validate_thermal(profile);
         if (!result) return std::unexpected{result.error()};
         if (options.thermal_check) {
             const auto session = validate_thermal_session(assets / "shaders", profile, (*world)->render_device());

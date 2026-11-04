@@ -141,7 +141,7 @@ if(STREFA_BUILD_APP)
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/pbf_access_validation.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
     target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu PRIVATE SDL3::SDL3 OpenGL::GL)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
