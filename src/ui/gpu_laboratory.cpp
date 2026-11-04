@@ -186,9 +186,13 @@ Action draw_gpu_laboratory(GpuLaboratoryFrame& lab, const FrameInfo& info) {
                        "reakcjami. Wzorcem jest model referencyjny (CPU).");
     ImGui::EndChild();
     ImGui::SameLine();
-    ImGui::BeginChild("GpuCanvas", {0, 0});
+    // No scrollbar: when the caption overflowed, the scrollbar narrowed the room, the zoom shrank, the scrollbar
+    // vanished again and the canvas jumped between two sizes every frame. The wheel resizes the brush, not scrolls.
+    ImGui::BeginChild("GpuCanvas", {0, 0}, ImGuiChildFlags_None,
+                      ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
     const auto room = ImGui::GetContentRegionAvail();
-    const float zoom = std::max(.1F, std::min(room.x / gpu::width, (room.y - 28 * s) / gpu::height));
+    const float caption = ImGui::GetStyle().ItemSpacing.y + ImGui::GetTextLineHeightWithSpacing();
+    const float zoom = std::max(.1F, std::min(room.x / gpu::width, (room.y - caption) / gpu::height));
     const ImVec2 size{gpu::width * zoom, gpu::height * zoom};
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.F, (room.x - size.x) * .5F));
     const auto origin = ImGui::GetCursorScreenPos();
