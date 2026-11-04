@@ -2,6 +2,15 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Większy obraz misji, stabilny podgląd Laboratorium GPU
+
+Obraz misji wypełnia dostępne miejsce w oknie (powiększenie ułamkowe zamiast tylko całkowitych krotności; na oknie
+1920×1080 wcześniej zostawało ×1, czyli 640 px szerokości). Przy szerokim oknie listy „Światło” i „Efekty” oraz linia
+tempa stoją w jednym wierszu. Podgląd Laboratorium GPU na pełnym ekranie nie drga: obszar płótna nie ma paska
+przewijania (pasek pojawiał się, gdy podpis pod obrazem nie mieścił się w zarezerwowanych 28 px, zwężał obszar
+i zmniejszał obraz, po czym znikał — co klatkę), a miejsce na podpis liczy się z wysokości wiersza. Kółko myszy nad
+płótnem tylko zmienia rozmiar pędzla. Symulacja bez zmian.
+
 ## Detonator w Laboratorium GPU, wybuchy wsadowe
 
 Laboratorium GPU ma narzędzie „Detonator” (lista „NARZĘDZIE”): LPM wywołuje wybuch pod kursorem, suwaki ustawiają promień (2–32 komórki) i energię (impuls 1–80), kółko zmienia promień. Wcześniej wybuchy działały tylko przy aktywnej misji. Bez misji `ExplosionSystem` wgrywa do 8 wybuchów na tick (nowa lista za `EventBatch` w buforze misji, wiązanie 6); nadmiar zostaje w kolejce na kolejny tick, a jeden przebieg po cząstkach (operacja 7), jeden po komórkach (operacja 5) i jeden przebieg gruzu (operacja 6) obsługują wszystkie wybuchy ticku w ustalonej kolejności. Impuls jest mnożony przez odwrotną masę cząstki (`motion.z`: popiół 4, piasek 1, metal 0,35, ciecze jak w PBF), a gruz startuje z prędkością od środka wybuchu z udziałem w górę jak w modelu CPU (`sim/reactions.cpp`: −0,35 siły). Host zapisuje dla każdego wybuchu `WorldEvent` rodzaju 4 (ten sam układ co w misji); zdarzenia czytają VFX, światło (błysk) i termika, a błysk i wstrząs kamery wygasają przez 0,3 s jak `MissionSnapshot::flash`. Kliknięcia trafiają do kolejki w kolejności; gdy kolejka świata (32) jest pełna, czekają na kolejną klatkę. Podczas nagrywania Detonator jest wyłączony, bo nagrania v1–v3 nie mają wpisu wybuchu.

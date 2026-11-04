@@ -47,24 +47,28 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
         ImGui::TextWrapped("MISJA UKOŃCZONA  /  F5 — kolejna próba");
         ImGui::PopFont();
     }
+    // Quality combos and clock share one row so the canvas keeps the vertical space.
+    const bool wide = viewport->WorkSize.x / frame.scale >= 900;
     if (hud.lighting_quality) {
         ImGui::SetNextItemWidth(120 * frame.scale);
         ImGui::Combo("Światło (eksp.)", hud.lighting_quality, "Wyłączone\0Niskie\0Wysokie\0");
         if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", core::lighting_cost.data());
     }
-    bool confirm = false;
-    if (hud.lighting_quality) confirm = experimental_notice(frame);
     if (hud.vfx_quality) {
-        ImGui::SetNextItemWidth(140 * frame.scale);
+        if (hud.lighting_quality && wide) ImGui::SameLine();
+        ImGui::SetNextItemWidth(120 * frame.scale);
         ImGui::Combo("Efekty", hud.vfx_quality, "Wyłączone\0Niskie\0Wysokie\0");
     }
     if (hud.clock) {
-        if (hud.vfx_quality) ImGui::SameLine();
+        if ((hud.lighting_quality || hud.vfx_quality) && wide) ImGui::SameLine();
         clock_stats(*hud.clock);
     }
+    bool confirm = false;
+    if (hud.lighting_quality) confirm = experimental_notice(frame);
     const auto room = ImGui::GetContentRegionAvail();
+    // Fill the room (fractional zoom): integer-only zoom left a 1x canvas on a 1080p window.
     const float fit = std::min(room.x / gpu::width, (room.y - 2 * ImGui::GetTextLineHeightWithSpacing()) / gpu::height);
-    const float zoom = fit >= 1 ? std::floor(fit) : std::max(.1F, fit);
+    const float zoom = std::max(.1F, fit);
     const ImVec2 size{gpu::width * zoom, gpu::height * zoom};
     ImGui::SetCursorPosX(ImGui::GetCursorPosX() + std::max(0.F, (room.x - size.x) * .5F));
     const auto start = ImGui::GetCursorScreenPos();
