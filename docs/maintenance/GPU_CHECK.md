@@ -78,7 +78,46 @@ Samo kryterium względne nie wykryje reżimu, który trwa od pierwszego przebieg
 lekkie sceny, w których sterownik sam obniża P-stan. Wyniki: `soak-report.md`, `soak-summary.csv`, `telemetry.csv`,
 `environment.json` i katalog `run/` (albo `pass-NN/` bez `-SingleProcess`).
 
-## 4. Co odesłać
+## 4. Benchmark termiki (opcjonalnie)
+
+Macierz ABBA etapów termiki (`off`, `heat`, `heat_gas`, `full`) w 4 scenach (`cold`, `fire`, `oil`, `quench`), 3 bloki.
+Bloki są pętlą zewnętrzną, a każdy blok losuje własną kolejność scen (Fisher–Yates na SplitMix64, ta sama kolejność
+na każdym kompilatorze). Wcześniej kolejność była stała (`cold → fire → oil → quench`), więc ostatnia scena mierzyła
+nagrzany laptop: etap gazu, który nie zależy od sceny, trwał w „gaszeniu” 2,36× dłużej. Pomiar trwa ok. 30 min:
+
+```powershell
+pwsh ./scripts/profiling/profile-thermal.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/thermal `
+    -Suite benchmark -Telemetry
+python scripts/profiling/analyze-thermal.py gpu-check/thermal --controls
+```
+
+- `-Telemetry` zapisuje obok wyników `telemetry.csv` z `GpuTelemetry.psm1` co 100 ms (zegary SM i pamięci,
+  temperatura, moc, powody ograniczenia, czyli to samo co
+  `nvidia-smi --query-gpu=clocks.sm,clocks.mem,temperature.gpu,power.draw,clocks_throttle_reasons.active`).
+- `-Seed N` (albo zmienna `STREFA_BENCHMARK_SEED`) powtarza kolejność scen wcześniejszego pomiaru; bez niej każdy
+  pomiar losuje nowe ziarno. Ziarno i kolejność są w `thermal-benchmark-info.txt` (`seed=`, `block_<n>_scenes=`).
+
+Pliki wyników (wszystkie mają kolumny `seed` i `sequence`, czyli numer odcinka w kolejności wykonania):
+
+- `thermal-samples.csv`: wiersz na tick odcinka ABBA (bez zmian poza `seed`, `sequence`);
+- `thermal-pool-segments.csv`: stan sum termiki po odcinku oraz `start_utc_unix_ns`, `end_utc_unix_ns` (łączenie
+  z `telemetry.csv`);
+- `thermal-pass-samples.csv`: odcinek profilu po każdej scenie bloku (120 ticków, `ThermalOptions::profile`), kolumna
+  `block` oraz `dispatches` i `barriers` (liczone od końca poprzedniego ticku termiki: zdarzenia, kernele solvera,
+  kondensacja poprzedniego kroku, gumka i odczyt sum; bez prezentacji, rysowania i inspektora). Każdy tick ma dwa
+  wiersze: wiersz CPU (`cpu_ms`, liczniki) i wiersz GPU (`heat_ms`, `gas_ms`, `reaction_ms`);
+- `thermal-op-samples.csv`: znacznik czasu po każdym kernelu ticku w trybie profilu: `index` (kolejność w ticku),
+  `op` (numer programu termiki) i `gpu_ms` (różnica z poprzednim znacznikiem);
+- `thermal-profile-segments.csv`: granice UTC odcinków profilu.
+
+`analyze-thermal.py` (schemat 2) traktuje etap gazu jako sondę zegara: odcinek profilu, którego mediana `gas_ms`
+odbiega od mediany wszystkich odcinków o więcej niż 10% (`--gas-tolerance`), jest dyskwalifikowany razem z próbami
+tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę, w której był aktywny `hw_slowdown`,
+`hw_thermal_slowdown`, `hw_power_brake_slowdown` albo `sw_thermal_slowdown`. `thermal-summary.json` podaje
+`disqualified_segments`, `qualified_full_gates` i decyzję `performance_accepted` tylko z prób zakwalifikowanych,
+a także `kernel_profiles` (rozkład czasu każdego kernela na scenę) i liczniki dispatchy i barier w `stage_profiles`.
+
+## 5. Co odesłać
 
 Wklej do rozmowy albo do opisu PR:
 
@@ -87,7 +126,8 @@ Wklej do rozmowy albo do opisu PR:
 2. Cały `gpu-check/soak/soak-report.md`: wynik trzech kryteriów, tabelę powodów ograniczenia i tabelę przebiegów
    (≤ 10 wierszy).
 3. Z `gpu-check/soak/environment.json`: pola `gpu`, `power_source`, `power_scheme` i `telemetry_reasons_source`.
-4. Czy w trakcie coś się działo (aktualizacja Windows, uśpienie ekranu, odłączony zasilacz, inne okno na wierzchu).
+4. Jeśli był benchmark termiki: wynik `analyze-thermal.py` (ziarno, `performance_accepted`, odcinki zdyskwalifikowane).
+5. Czy w trakcie coś się działo (aktualizacja Windows, uśpienie ekranu, odłączony zasilacz, inne okno na wierzchu).
 
 Surowe pliki (`scene-benchmark*.csv`, `telemetry.csv`, `run/`, `pass-*/`) trafiają do repozytorium
 [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements) w nowym katalogu z własnym
