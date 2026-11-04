@@ -1,11 +1,17 @@
 #include "app/diagnostic_scenarios.hpp"
 
+#include "app/thermal_conformance.hpp"
 #include "gpu/validation.hpp"
 #include "platform/texture.hpp"
 namespace strefa::app {
 std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const LaunchOptions& options,
                                                                        const std::filesystem::path& assets,
                                                                        const std::filesystem::path& profile) {
+    if (!options.thermal_conformance.empty()) {
+        const auto result = run_thermal_conformance(options.thermal_conformance, profile);
+        if (!result) return std::unexpected{result.error()};
+        return 0;
+    }
     if (options.thermal_check || options.thermal_benchmark) {
         auto world = gpu::ParticleWorld::create(assets / "shaders", options.gpu_execution, options.gpu_profiling);
         if (!world) return std::unexpected{world.error()};

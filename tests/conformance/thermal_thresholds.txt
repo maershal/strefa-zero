@@ -1,0 +1,62 @@
+# Progi zgodności termiki GPU z wyrocznią CPU: StrefaQA --gpu-thermal-conformance <ten plik>.
+# Ustalone przed jakąkolwiek zmianą termiki GPU (review v2, R §5.3). Zmiana progu wymaga zgody właściciela w PR
+# (CLAUDE.md, „Never relax test thresholds”).
+#
+# Format: scena obserwabla tolerancja_bezwzględna tolerancja_względna
+# Wartość GPU v przechodzi, gdy |v - cpu| <= max(bezwzględna, względna * |cpu|), w każdej chwili próbkowania
+# (kolumna seconds w thermal-conformance-cpu.csv). Plik musi pokrywać dokładnie obserwable zapisywane przez kod.
+# Jednostki: K (temperatury), ciśnienie w jednostkach modelu, komórki (liczba komórek materiału), kg, J.
+
+rod t_at_2 10 0.05
+rod t_at_5 10 0.05
+rod t_at_10 10 0.05
+rod air_above_hot_end 10 0.05
+
+chamber air_center 10 0.05
+chamber air_corner 10 0.05
+chamber pressure_center 0.5 0.2
+chamber wall_inner 10 0.05
+chamber air_outside 10 0.05
+
+pulse pressure_0 0.5 0.2
+pulse pressure_10 0.5 0.2
+pulse pressure_20 0.5 0.2
+pulse pressure_40 0.5 0.2
+pulse air_center 10 0.05
+
+open_beam air_10_above 10 0.05
+open_beam air_40_above 10 0.05
+open_beam air_beside 10 0.05
+open_beam escaped_energy 1 0.2
+
+door air_left 10 0.05
+door air_door 10 0.05
+door air_right 10 0.05
+door pressure_left 0.5 0.2
+door pressure_right 0.5 0.2
+
+water_heater water_low 10 0.05
+water_heater water_high 10 0.05
+water_heater steam_cells 20 0.1
+water_heater water_mass 1 0.05
+
+lava_water water_cells 20 0.1
+lava_water steam_cells 20 0.1
+lava_water stone_cells 20 0.1
+lava_water lava_cells 20 0.1
+lava_water water_far 10 0.05
+
+ice_heater ice_cells 20 0.1
+ice_heater water_cells 20 0.1
+ice_heater ice_near 10 0.05
+ice_heater ice_far 10 0.05
+
+gunpowder_line gunpowder_cells 20 0.1
+gunpowder_line fire_cells 20 0.1
+gunpowder_line smoke_cells 20 0.1
+gunpowder_line line_middle 10 0.05
+
+acid_stone stone_cells 20 0.1
+acid_stone acid_cells 20 0.1
+acid_stone acid_mass 1 0.05
+acid_stone stone_mass 1 0.05

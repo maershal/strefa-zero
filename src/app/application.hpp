@@ -58,6 +58,7 @@ struct LaunchOptions {
     unsigned benchmark_loop_minutes{}; // --loop-minutes: start passes until this much time has passed
     bool benchmark_vsync{true}, benchmark_tuned{};
     bool thermal_check{}, thermal_benchmark{};
+    std::filesystem::path thermal_conformance; // --gpu-thermal-conformance <thresholds file>
     gpu::VfxOptions gpu_vfx;
     bool vfx_check{}, vfx_benchmark{};
     gpu::RenderOptions gpu_render;

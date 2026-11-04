@@ -126,6 +126,13 @@ int main() {
         check(!parse({"--scene", "gpu:rain", "--gpu-thermal-scene", "fire"}), "GPU and thermal start scenes accepted");
         check(!parse({"--scene", "gpu:rain", "--scene-benchmark", "all", "--profile", "fixture"}),
               "--scene with --scene-benchmark accepted");
+        // StrefaQA thermal conformance: the value is the thresholds file; a GPU check (skipped without GL 4.3).
+        const auto conformance = parse({"--gpu-thermal-conformance", "progi.txt", "--profile", "fixture"});
+        check(conformance && conformance->test_count() == 1 && conformance->requires_gl43()
+                      && conformance->thermal_conformance == "progi.txt",
+              "--gpu-thermal-conformance");
+        check(!parse({"--gpu-thermal-conformance"}), "--gpu-thermal-conformance must require a thresholds file");
+        check(!parse({"--gpu-thermal-conformance", "progi.txt"}), "--gpu-thermal-conformance must require --profile");
         // StrefaQA scene benchmark: one test with its own window pacing.
         check(!parse({"--scene-benchmark", "all"}), "--scene-benchmark must require --profile");
         const auto bench = parse({"--scene-benchmark", "all", "--profile", "fixture"});
