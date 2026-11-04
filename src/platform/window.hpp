@@ -53,6 +53,12 @@ public:
     [[nodiscard]] float display_scale() const noexcept;
     [[nodiscard]] bool vsync_enabled() const noexcept { return vsync_; }
     [[nodiscard]] bool minimized() const noexcept;
+    // Windows: IsIconic and DWMWA_CLOAKED (another virtual desktop, a cloaked shell window). SDL 3.4 reports
+    // neither as SDL_WINDOW_OCCLUDED there. Both false on other platforms.
+    struct ShellState {
+        bool iconic{}, cloaked{};
+    };
+    [[nodiscard]] ShellState shell_state() const noexcept;
     // Current display mode refresh rate, 0 when unknown.
     [[nodiscard]] float refresh_hz() const noexcept;
     // Diagnostic queries only; callers account for their CPU cost separately.
