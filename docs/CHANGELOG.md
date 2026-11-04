@@ -2,6 +2,10 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Szkielet zgodności termiki GPU z wyrocznią CPU
+
+Nowy tryb `StrefaQA --gpu-thermal-conformance <plik progów>` zapisuje 44 obserwable 10 scen modelu CPU w ustalonych chwilach (`thermal-conformance-cpu.csv`): pręt z gorącym końcem, komora z gorącym gazem, impuls ciśnienia, belka przy otwartej górze, ściana z drzwiami 1 px, woda z grzałką, lawa na wodzie, lód przy grzałce, linia prochu i kwas na kamieniu. Grzałki to bloki metalu ustawione gorące na starcie. Progi (tolerancja bezwzględna i względna dla każdej obserwabli) są w `tests/conformance/thermal_thresholds.txt` już teraz, przed jakąkolwiek zmianą termiki GPU; tryb kończy się błędem, gdy plik nie pokrywa dokładnie obserwabli zapisywanych przez kod. Strony GPU jeszcze nie ma (`gpu=not_implemented` w raporcie). Testy: `physics.thermal_conformance_cpu` (CPU) i `gpu.thermal_conformance` (StrefaQA). Gra i symulacja bez zmian.
+
 ## Strażnicy architektury w CI
 
 Nowy job `architecture` (`scripts/check_architecture.py`, sam Python, bez buildu) pilnuje, żeby dług architektury nie rósł. Sprawdza graf `#include` i `target_link_libraries` z regułami warstw: GPU nie zależy od rozgrywki, UI, aplikacji ani modelu CPU; model CPU nie zależy od GPU, UI ani aplikacji; GPU i model CPU składają tylko StrefaZero/StrefaQA (oraz `StrefaPhysics` dla modelu CPU); kod QA nie trafia do gry. Dzisiejsze naruszenia (9 par, policzone krawędziami) są w `tools/architecture_allowlist.txt`. `tools/architecture_budget.json` zapisuje 14 miar (m.in. `world.cpp` 2163 linii, jednostka kompilacji z `.inl` 4223, 88 publicznych deklaracji `ParticleWorld`, w tym 31 haków testowych). Job `build-and-test` buduje dodatkowo `StrefaZero` bez IPO (nowa opcja CMake `STREFA_IPO`, domyślnie ON) i liczy symbole QA przez `nm -C`. Każda wartość może tylko maleć: wzrost albo nowa krawędź wywala CI, a spadek trzeba zapisać (`--update`) w tym samym PR. Na PR budżety i lista są porównywane z gałęzią bazową. Gra i symulacja bez zmian.
