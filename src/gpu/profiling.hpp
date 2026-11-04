@@ -56,6 +56,9 @@ struct ExecutionOptions {
     bool pbf_restrict{};
     bool effective_pbf_restrict() const noexcept { return pbf_restrict && specialized; }
     FluidOptions fluid{};
+    // N06: the mission applies up to 8 queued explosions per tick, impulses scaled by inverse mass and debris that
+    // leaves with velocity, as the GPU laboratory always does. Off: the mission keeps one explosion per tick.
+    bool batched_blasts{};
     static ExecutionOptions reference() {
         return {false, false, false, false, 256, 256, NeighborMode::linked, false, CouplingMode::reference};
     }

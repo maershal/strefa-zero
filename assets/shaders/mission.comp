@@ -30,6 +30,32 @@ void damageCell(int id,uint damage){
     wall[3*W*H+id]=hp>damage?hp-damage:0u;
     if(hp<=damage){atomicAdd(game.counts.y,1u);atomicAdd(game.counts.z,1u);}
 }
+#ifndef BATCHED_BLASTS
+#define BATCHED_BLASTS 0
+#endif
+// The laboratory (no mission) always batches; the mission only with BATCHED_BLASTS. The host writes up to 8
+// explosions for one tick; a batched mission adds its own grenade blast as source 0.
+bool batched(){return BATCHED_BLASTS!=0||game.status.x==0u;}
+uint blastCount(){
+    bool fresh=blastHeader.z!=0u&&(game.status.x==0u||blastHeader.y==game.status.z);
+    return batched()&&fresh?min(blastHeader.x,8u):0u;
+}
+uint blastSources(){return blastCount()+(game.blast.z>0?1u:0u);}
+vec4 blastSource(uint k){if(game.blast.z>0){if(k==0u)return game.blast;--k;}return blastShapes[k];}
+bool blasting(){return blastSources()>0u;}
+// Velocity change per unit inverse mass; the caller scales it by the class (ash > sand > metal).
+vec2 blastImpulse(vec2 p){vec2 dv=vec2(0);
+    for(uint k=0u;k<blastSources();++k){vec4 b=blastSource(k);vec2 d=p-b.xy;float r=length(d);
+        if(r<b.z&&blastVisible(b.xy,p))dv+=normalize(d+vec2(0,-.001))*b.w*(1-r/b.z);}
+    return dv;
+}
+// Debris leaves away from every source that reaches it, with the upward share of the CPU model
+// (sim/reactions.cpp: vy - .35 force). Debris has the inverse mass of its class.
+vec2 debrisVelocity(vec2 p){vec2 v=vec2(0);
+    for(uint k=0u;k<blastSources();++k){vec4 b=blastSource(k);vec2 d=p-b.xy;float r=length(d);
+        if(r<b.z){float force=b.w*(1-r/b.z);v+=normalize(d+vec2(0,-.001))*force+vec2(0,-.35*force);}}
+    return v*inverseMass(4);
+}
 uint rifleImpact(int id){
     if(id<0||wall[id]<2u)return 0u;uint before=game.counts.y;
     ivec2 center=ivec2(id%W,id/W);
@@ -77,6 +103,10 @@ void beginTick(){
         game.events.z=requestedBlastId.x;transportState.z=requestedBlastId.x;game.blast=requestedBlast;game.flash=vec4(game.blast.xyz,.3);
         game.events.x++;game.events.y=game.events.x;game.counts.x++;
         emitEvent(4u,0u,requestedBlastId.x,1u,game.blast);
+    }
+    for(uint k=0u;k<blastCount();++k){ // batched host explosions, in queue order
+        uint id=blastIds[k].x;transportState.z=id;game.flash=vec4(blastShapes[k].xyz,.3);
+        game.events.x++;game.events.y=game.events.x;game.counts.x++;emitEvent(4u,0u,id,1u,blastShapes[k]);
     }
     game.flash.w=max(0,game.flash.w-tickDt);game.aim.w=max(0,game.aim.w-8*tickDt);
     game.locomotion.y=max(0,game.locomotion.y-5*tickDt);
@@ -140,9 +170,9 @@ void main(){
     uint id=gl_GlobalInvocationID.x;
     if(operation==0){if(id==0u){beginTick();
 #if GPU_CONDITIONAL_WORK
-        dispatchCommand(BLAST_COMMAND,game.blast.z>0?(aliveCount+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
-        dispatchCommand(BLAST_TERRAIN_COMMAND,game.blast.z>0?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
-        dispatchCommand(DEBRIS_COMMAND,(game.counts.z>0u||game.blast.z>0)&&freeCount>0u?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+        dispatchCommand(BLAST_COMMAND,blasting()?(aliveCount+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+        dispatchCommand(BLAST_TERRAIN_COMMAND,blasting()?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
+        dispatchCommand(DEBRIS_COMMAND,(game.counts.z>0u||blasting())&&freeCount>0u?(uint(W*H)+PARTICLE_LOCAL_SIZE-1u)/PARTICLE_LOCAL_SIZE:0u);
 #endif
     }return;}
     if(operation==1){if(id!=0u)return;
@@ -183,6 +213,13 @@ void main(){
         return;
     }
     if(operation==5){ // Occlusion is evaluated against pre-destruction terrain.
+        if(batched()){ // one writer per cell; sources in fixed order
+            if(id>=uint(W*H)||wall[id]<2u||wall[3*W*H+id]==0u)return;
+            vec2 p=vec2(id%W,id/W)+.5,hit;
+            for(uint k=0u;k<blastSources();++k){vec4 b=blastSource(k);float r=length(p-b.xy);
+                if(r<b.z&&trace(b.xy,p,hit)==int(id))damageCell(int(id),uint(max(1,8*(1-r/b.z))));}
+            return;
+        }
         if(id>=uint(W*H)||game.blast.z<=0||wall[id]<2u||wall[3*W*H+id]==0u)return;
         vec2 p=vec2(id%W,id/W)+.5,d=p-game.blast.xy;float r=length(d);if(r>=game.blast.z)return;
         vec2 hit;int first=trace(game.blast.xy,p,hit);
@@ -194,7 +231,7 @@ void main(){
         while(ticket<freeCount){uint prior=atomicCompSwap(requested,ticket,ticket+1u);if(prior==ticket)break;ticket=prior;}
         if(ticket>=freeCount)return;
         uint slot=slots[ticket];vec2 pos=vec2(id%W,id/W)+.5;
-        Grain p;p.position=vec4(pos,pos);p.motion=vec4(0,0,1,4);p.contact=vec4(0,0,pos);p.residual=vec4(0);
+        Grain p;p.position=vec4(pos,pos);p.motion=vec4(batched()?debrisVelocity(pos):vec2(0),1,4);p.contact=vec4(0,0,pos);p.residual=vec4(0);
         spawnParticle(uint(slot),p);wall[id]=0u;atomicAdd(game.counts.z,0xffffffffu);atomicAdd(game.counts.w,1u);atomicOr(reserved0,1u);return;
     }
     if(id>=aliveCount)return;id=slots[N+id];Grain p=readParticle(uint(id));
@@ -210,7 +247,8 @@ void main(){
         writeBodyReaction(id,reaction,false);storeParticle(uint(id),p);return;
     }
     if(operation==7){
-        if(game.blast.z>0){vec2 d=p.position.xy-game.blast.xy;float r=length(d);
+        if(batched())p.motion.xy+=blastImpulse(p.position.xy)*p.motion.z;
+        else if(game.blast.z>0){vec2 d=p.position.xy-game.blast.xy;float r=length(d);
             if(r<game.blast.z&&blastVisible(game.blast.xy,p.position.xy))p.motion.xy+=normalize(d+vec2(0,-.001))*game.blast.w*(1-r/game.blast.z);}
         storeParticle(uint(id),p);return;
     }

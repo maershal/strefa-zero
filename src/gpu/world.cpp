@@ -134,7 +134,8 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
              + "\n#define REDUCTION_LOCAL_SIZE " + std::to_string(execution.reduction_size) + "u\n#define PHASE_GATING "
              + (execution.phase_gating ? "1\n" : "0\n") + "#define SKIP_ZERO_PROJECTION "
              + (execution.skip_zero_projection ? "1\n" : "0\n") + "#define HOT_READS "
-             + std::to_string(static_cast<int>(read_mode())) + "\n";
+             + std::to_string(static_cast<int>(read_mode())) + "\n#define BATCHED_BLASTS "
+             + (execution.batched_blasts ? "1\n" : "0\n");
     }
     std::array<Kernel, 9> mission_kernels;
     std::array<Kernel, 3> coupling_kernels;
@@ -534,7 +535,6 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
                              || (op == 8 && execution.coupling != CouplingMode::reference))
                                     ? GL_COMMAND_BARRIER_BIT
                                     : 0));
-        if (op == 9) renderer.end_terrain_update();
         if (swap) current = 1 - current;
         trace.end(token, bins_valid && op != 6, execution.soa, buffers[current], buffers[2], buffers[3]);
     }
@@ -947,15 +947,17 @@ bool ParticleWorld::step() {
                 s.gameplay.prepare({s.controls.move, s.controls.aim_x, s.controls.aim_y, s.controls.buttons});
         s.metrics.gameplay_ms = static_cast<double>(SDL_GetTicksNS() - logic_started) / 1e6;
         s.upload(6, command_offset, sizeof(commands), &commands);
-        detail::PassContext context{s.buffers, s.current, s.execution.conditional_work};
-        if (s.explosions.pending()) {
-            const auto upload_start = stamp();
-            s.explosions.upload(context, s.uploads);
-            upload_ms = elapsed(upload_start, stamp());
-        }
-        s.mission_dispatch(0);
-        s.explosions.apply(context, s);
     }
+    const auto tick = s.mission_enabled ? s.gameplay.tick() : static_cast<unsigned>(s.metrics.steps + 1);
+    const detail::BlastTick blast{s.mission_enabled, s.execution.batched_blasts, s.epoch, tick, s.execution.local_size};
+    detail::PassContext context{s.buffers, s.current, s.execution.conditional_work};
+    if (s.explosions.pending()) {
+        const auto upload_start = stamp();
+        s.explosions.upload(context, s.uploads, blast);
+        upload_ms = elapsed(upload_start, stamp());
+    }
+    if (s.mission_enabled) s.mission_dispatch(0);
+    const bool events = s.explosions.apply(context, s, blast);
     const auto prepare_end = stamp();
     if (grouped) s.gl.QueryCounter(group.ids[1], GL_TIMESTAMP);
     // At |v|<=80 each half-tick travels <=1/3 cell. Two approaching,
@@ -1016,7 +1018,7 @@ bool ParticleWorld::step() {
         s.liquid_dispatch(2);
     }
     if (s.thermal && s.thermal_config.enabled) {
-        if (s.mission_enabled) s.thermal->consume_events(s.buffers, s.epoch, s.gameplay.tick());
+        if (events) s.thermal->consume_events(s.buffers, s.epoch, tick);
         s.thermal->tick(s.buffers, s.current, static_cast<unsigned>(s.metrics.steps + 1), s.thermal_brush);
         s.invalidate_bindings();
         s.rebuild_active();
@@ -1035,20 +1037,17 @@ bool ParticleWorld::step() {
     const auto timer_closed = stamp();
     if (s.thermal && s.thermal_config.enabled) s.thermal->presentation(s.renderer.lighting.thermal_image);
     s.gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
-    s.renderer.lighting.tick(s.buffers, s.current, s.epoch,
-                             s.mission_enabled ? s.gameplay.tick() : static_cast<unsigned>(s.metrics.steps + 1),
-                             s.mission_enabled, s.renderer.terrain_image,
+    s.renderer.lighting.tick(s.buffers, s.current, s.epoch, tick, events, s.renderer.terrain_image,
                              s.thermal && s.thermal_config.enabled ? s.renderer.lighting.thermal_image : 0,
                              s.thermal && s.thermal_config.enabled ? s.thermal->presentation_particles() : 0);
     s.invalidate_bindings();
     if (s.resources->vfx.enabled()) {
         auto& vfx = s.resources->vfx;
-        vfx.begin_tick(s.renderer.terrain_image, s.epoch,
-                       s.mission_enabled ? s.gameplay.tick() : static_cast<unsigned>(s.metrics.steps + 1), 1.F / 120.F);
+        vfx.begin_tick(s.renderer.terrain_image, s.epoch, tick, 1.F / 120.F);
         s.renderer.build_vfx_field({s.buffers, s.current, s.fluids_enabled, s.mission_enabled});
         vfx.sand_sources(s.renderer.get_options().lighting.quality != LightingQuality::off ? s.renderer.lighting.field
                                                                                            : 0);
-        vfx.end_tick(s.mission_enabled ? s.buffers[6] : 0, {}, s.fluids_enabled);
+        vfx.end_tick(events ? s.buffers[6] : 0, {}, s.fluids_enabled);
         s.invalidate_bindings();
     }
     if (s.mission_enabled) s.event_ring.submit(s.buffers[6], event_offset, s.epoch, s.gameplay.tick());
@@ -1225,7 +1224,8 @@ void ParticleWorld::render(float alpha) {
     const detail::ElapsedQueryGuard elapsed_guard{s.gl, s.elapsed_active};
     if (measure) s.begin_timer(timer);
     s.gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-    s.renderer.lighting.impulse = s.mission_enabled ? std::clamp(s.snapshot.flash[3] / .3F, 0.F, 1.F) : 0.F;
+    s.renderer.lighting.impulse =
+            s.mission_enabled ? std::clamp(s.snapshot.flash[3] / .3F, 0.F, 1.F) : s.explosions.flash(s.metrics.steps);
     s.renderer.render({s.buffers, s.current, s.fluids_enabled, s.mission_enabled}, alpha);
     s.invalidate_bindings();
     if (measure) {

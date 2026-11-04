@@ -38,5 +38,9 @@ inline constexpr std::size_t explosion_offset =
 inline constexpr std::size_t transport_offset = explosion_offset + 32;
 inline constexpr std::size_t command_offset = transport_offset + 16;
 inline constexpr std::size_t event_offset = command_offset + sizeof(game::CommandBatch);
-inline constexpr std::size_t mission_buffer_size = event_offset + sizeof(game::EventBatch);
+// Batched explosions (mission_state.glsl): shapes, IDs, then the header {count, tick, written, 0}.
+inline constexpr unsigned blasts_per_tick = 8;
+inline constexpr std::size_t blast_offset = event_offset + sizeof(game::EventBatch);
+inline constexpr std::size_t blast_header_offset = blast_offset + blasts_per_tick * 32;
+inline constexpr std::size_t mission_buffer_size = blast_header_offset + 16;
 } // namespace strefa::gpu

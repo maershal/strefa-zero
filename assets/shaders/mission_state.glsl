@@ -19,6 +19,9 @@ layout(std430,binding=6) buffer Counters {
     vec4 requestedBlast;uvec4 requestedBlastId;
     uvec4 transportState; // last command ID, unused, unused, terrain baseline
     CommandBatch commandBatch;EventBatch eventBatch;
+    // Batched explosions (laboratory; mission with BATCHED_BLASTS): xy, radius, impulse; ID.
+    vec4 blastShapes[8];uvec4 blastIds[8];
+    uvec4 blastHeader; // count, tick, written (1), unused
 };
 bool bodyCouplingEnabled(){return game.status.x!=0u&&disableBodyCoupling==0;}
 float capsuleDistance(vec2 p,vec2 feet){
