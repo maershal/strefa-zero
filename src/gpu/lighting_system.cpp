@@ -1,5 +1,7 @@
 #include "gpu/lighting_system.hpp"
 
+#include "platform/gpu_zone.hpp"
+
 #include <algorithm>
 #include <bit>
 #include <utility>
@@ -216,6 +218,8 @@ void LightingSystem::tick(const std::array<GLuint, 8>& buffers, unsigned current
                           bool mission, GLuint terrain, GLuint heat, GLuint thermal_particles) {
     if (gen != generation) reset(gen);
     if (tick_known && tick_id <= last_tick) return;
+    STREFA_ZONE("LightingSystem::tick");
+    STREFA_GPU_ZONE("lighting tick");
     last_tick = tick_id;
     tick_known = true;
     PresentationCounterScope observation{gl};

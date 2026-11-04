@@ -1,5 +1,7 @@
 #include "app/simulation_world.hpp"
 
+#include "core/profiling.hpp"
+
 #include <algorithm>
 #include <chrono>
 #include <fstream>
@@ -64,6 +66,7 @@ void SimulationWorld::suspend() {
     }
 }
 SimulationSubmission SimulationWorld::advance(const SimulationFrame& frame) {
+    STREFA_ZONE("SimulationWorld::advance");
     SimulationSubmission result;
     if (!frame.focused) {
         suspend();

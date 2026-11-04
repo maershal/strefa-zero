@@ -1,13 +1,19 @@
 #include "gpu/thermal_system.hpp"
 
+#include "platform/gpu_zone.hpp"
+
 #include <SDL3/SDL.h>
 
+#include <algorithm>
+#include <array>
 #include <bit>
 #include <cmath>
+#include <format>
 #include <iomanip>
 #include <limits>
 #include <locale>
 #include <sstream>
+#include <string>
 #include <utility>
 namespace strefa::gpu::detail {
 namespace {
@@ -42,6 +48,15 @@ std::string material_defines() {
     return out.str();
 }
 } // namespace
+// Label of one thermal kernel for its Tracy GPU zone, e.g. "thermal 10".
+inline const char* thermal_zone_name(int op) {
+    static const auto names = [] {
+        std::array<std::string, 32> result;
+        for (std::size_t i = 0; i < result.size(); ++i) result[i] = std::format("thermal {}", i);
+        return result;
+    }();
+    return names[std::min(static_cast<std::size_t>(op), names.size() - 1)].c_str();
+}
 ThermalSystem::~ThermalSystem() {
     for (auto& p : probes) {
         if (p.fence) gl.DeleteSync(p.fence);
@@ -129,6 +144,7 @@ void ThermalSystem::bind() {
     state.base(7, auxiliary);
 }
 void ThermalSystem::run(int op, unsigned n) {
+    STREFA_GPU_ZONE(thermal_zone_name(op));
     bind();
     auto& k = kernels[static_cast<unsigned>(op)];
     state.use(k.program);
@@ -213,7 +229,9 @@ void ThermalSystem::synchronize(const std::array<GLuint, 8>& buffers, unsigned c
 }
 void ThermalSystem::tick(const std::array<GLuint, 8>& buffers, unsigned& current, unsigned tick,
                          const ThermalBrush& b) {
+    STREFA_ZONE("ThermalSystem::tick");
     if (tick <= tick_) return; // One completed solver tick advances this state once.
+    STREFA_GPU_ZONE("thermal tick");
     const auto began = SDL_GetTicksNS();
     physics = buffers;
     physical_bank = current;
@@ -303,6 +321,7 @@ void ThermalSystem::consume_events(const std::array<GLuint, 8>& buffers, unsigne
 }
 void ThermalSystem::condense(const std::array<GLuint, 8>& buffers, unsigned& current) {
     if (!options.reactions) return;
+    STREFA_GPU_ZONE("thermal condense");
     physics = buffers;
     physical_bank = current;
     run(21, particle_count);
@@ -483,6 +502,7 @@ void ThermalSystem::seed(std::span<const ThermalCell> c, std::span<const Thermal
     state.invalidate();
 }
 void ThermalSystem::presentation(GLuint target) {
+    STREFA_GPU_ZONE("thermal presentation");
     PresentationCounterScope observation{gl};
     state.invalidate();
     state.base(5, cells[cell_bank]);

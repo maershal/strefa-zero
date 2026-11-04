@@ -186,5 +186,22 @@ private:
     CallCounters* counters{};
     std::uint64_t before{};
 };
+// Closes a GL_TIME_ELAPSED query left open when a tick or a render exits early (exception or failed submission), so
+// the next query does not nest. The interval is discarded: its timer slot never becomes pending.
+class ElapsedQueryGuard {
+public:
+    ElapsedQueryGuard(Api& api, bool& active) : gl_{api}, active_{active} {}
+    ElapsedQueryGuard(const ElapsedQueryGuard&) = delete;
+    ElapsedQueryGuard& operator=(const ElapsedQueryGuard&) = delete;
+    ~ElapsedQueryGuard() {
+        if (!active_) return;
+        gl_.EndQuery(GL_TIME_ELAPSED);
+        active_ = false;
+    }
+
+private:
+    Api& gl_;
+    bool& active_;
+};
 
 } // namespace strefa::gpu::detail

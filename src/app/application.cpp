@@ -7,6 +7,7 @@
 #include "app/scene_benchmark.hpp"
 #include "app/simulation_world.hpp"
 #include "build_info.hpp"
+#include "core/profiling.hpp"
 #include "gpu/render_device.hpp"
 #include "platform/gl_debug.hpp"
 #include "platform/settings_store.hpp"
@@ -174,6 +175,7 @@ public:
             // A failing mode (GPU world, CPU laboratory) is closed and the menu
             // shows the reason; window tests still fail on the first error.
             try {
+                STREFA_ZONE("Application frame");
                 const auto frame_start = SDL_GetTicksNS();
                 const float frame_ms = static_cast<float>(frame_start - previous) / 1'000'000.0F;
                 const double frame_seconds = static_cast<double>(frame_start - previous) / 1e9;
@@ -196,8 +198,7 @@ public:
                     frame_profile.previous_interval_ms = frame_ms;
                     frame_profile.frame_limit = unpaced_ ? 0U : static_cast<unsigned>(state_.applied.frame_limit);
                 }
-                mission_ticks_this_frame_ = 0;
-                gpu_ticks_this_frame_ = 0;
+                mission_ticks_this_frame_ = gpu_ticks_this_frame_ = 0;
                 world_render_submit_ms_ = 0;
                 SDL_Event event;
                 while (SDL_PollEvent(&event)) {
@@ -1139,8 +1140,7 @@ std::expected<int, std::string> run(const LaunchOptions& options, const Diagnost
         return code;
     }
     if (testing && !options.is_window_smoke() && gl_debug) gl_debug->set_phase(platform::DebugPhase::validation);
-    if (diagnostics)
-        if (auto diagnostic = diagnostics(options, assets, profile)) return *diagnostic;
+    if (auto diagnostic = diagnostics ? diagnostics(options, assets, profile) : std::nullopt) return *diagnostic;
     auto gui = ui::Session::create(*window, assets);
     if (!gui) return std::unexpected{gui.error()};
     std::array<std::optional<platform::Texture>, 3> textures;
