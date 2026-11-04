@@ -59,6 +59,9 @@ private:
         GLsync fence{};
         unsigned serial{}, generation{}, tick{};
         std::array<GLuint, 5> queries{};
+        std::vector<GLuint> operation_queries; // profile mode: one timestamp after each kernel, reused
+        std::vector<unsigned> operation_kernels;
+        unsigned operations{};
         bool measured{};
     };
     std::array<Probe, 8> probes{};
@@ -75,6 +78,8 @@ private:
     ThermalInspection inspected;
     ThermalTotals latest;
     std::vector<ThermalTiming> timings;
+    unsigned dispatches_{}, barriers_{}; // since the end of the previous tick
+    void dispatch(GLuint groups, GLbitfield barrier);
     void bind();
     void run(int, unsigned);
     void swap_cells() { cell_bank ^= 1; }

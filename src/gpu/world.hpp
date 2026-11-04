@@ -113,7 +113,6 @@ public:
     void render(float alpha);
     std::expected<void, std::string> run_vfx_benchmark(const std::filesystem::path&);
     std::shared_ptr<RenderDevice> render_device() const;
-    std::expected<void, std::string> run_thermal_benchmark(const std::filesystem::path&);
     void reset_thermal_scene(unsigned scene);
     void set_thermal_options(ThermalOptions);
     ThermalOptions thermal_options() const;
@@ -124,7 +123,9 @@ public:
     void request_thermal_inspection(int x, int y);
     const ThermalInspection& thermal_inspection() const;
     std::uint64_t thermal_memory() const;
-    std::expected<void, std::string> validate_thermal(const std::filesystem::path&, bool benchmark = false);
+    // ThermalOptions::profile: per-tick stage and kernel timings collected so far (polls completed queries first).
+    std::vector<ThermalTiming> take_thermal_timings();
+    std::expected<void, std::string> validate_thermal(const std::filesystem::path&);
     void set_vfx_options(VfxOptions);
     VfxOptions vfx_options() const noexcept;
     const VfxCounters& vfx_stats() const;

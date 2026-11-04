@@ -16,9 +16,19 @@ Zasady pomiaru: sekcja „Protokół pomiaru” w `CLAUDE.md`.
    ```
 
 4. Zostaw laptop bezczynny przez 5 minut, żeby GPU ostygło.
-5. Benchmark otwiera widoczne okno. Nie minimalizuj go, nie zasłaniaj innym oknem i nie używaj komputera do końca
-   pomiaru. Scena, w której okno choć przez jedną klatkę było ukryte, zminimalizowane albo zasłonięte, dostaje
-   status `invalid`.
+5. Benchmark otwiera widoczne okno. Nie minimalizuj go, nie zasłaniaj innym oknem, nie przełączaj pulpitu
+   wirtualnego i nie używaj komputera do końca pomiaru. Scena, w której okno choć przez jedną klatkę było ukryte,
+   zminimalizowane, zasłonięte albo ukryte przez DWM, dostaje status `invalid`. Klatki z zminimalizowanym oknem
+   (symulacja wtedy stoi) liczą się do okna pomiaru sceny, więc minimalizacja nie skraca ani nie omija pomiaru.
+   Rozgrzewka nie ma wierszy klatek, ale okno poza ekranem w jej trakcie liczy kolumna `warmup_away_frames`
+   i ono też unieważnia scenę.
+   Na Windows SDL 3.4 nie zgłasza zasłonięcia (`SDL_EVENT_WINDOW_OCCLUDED`), więc benchmark sprawdza tam co klatkę
+   także `IsIconic` (liczone jako `minimized`) i `DwmGetWindowAttribute(DWMWA_CLOAKED)` (kolumna `cloaked`). Okna
+   zasłoniętego innym oknem na Windows nie da się w ten sposób wykryć: licznik `unfocused_frames` (wypisywany też
+   w wierszu podsumowania jako „bez fokusu”) pokazuje, że ktoś używał komputera, ale nie unieważnia pomiaru.
+6. Zamknięcie okna (albo Ctrl+C w konsoli, czyli `SDL_EVENT_QUIT`) przerywa cały benchmark, a nie tylko bieżącą
+   scenę: przerwana scena dostaje status `failed` z powodem „przerwany zamknięciem okna (QUIT)”, kolejne sceny nie
+   startują, a kod wyjścia to 1.
 
 ## 2. Benchmark wszystkich scen (z VSync i bez)
 
@@ -42,14 +52,21 @@ foreach ($vsync in 'on', 'off') {
 - Kod wyjścia 0: wszystkie sceny mają status `ok`.
 - Kod 1: co najmniej jedna scena ma status `invalid` (okno niewidoczne) albo `failed` (błąd trybu). Pozostałe sceny są
   zmierzone, a powód jest w kolumnie `status_reason`.
-- Kod 77: brak OpenGL 4.3.
+- Kod 77: brak OpenGL 4.3 (w profilu jest wtedy `gpu-skipped.txt`, a CTest `gpu.scene_benchmark_content` też
+  jest pomijany).
+
+`scene-benchmark-info.txt` jest zapisywany na dysk przed pierwszą sceną, więc zostaje także po awarii albo zabiciu
+procesu. Na końcu dochodzą do niego `result=completed|quit` i `scenes_measured=<liczba>`, a przy kodzie wyjścia sceny innym
+niż 0 (np. 77) `result=exit_code_<kod>`; brak `result=` oznacza przerwany proces. Plik ma `schema=3` (nowe pola
+okna i `result=`). Pola `window_iconic` i `window_cloaked` opisują stan okna na starcie.
 
 `--vsync on` pokazuje, jak gra działa u gracza; `--vsync off` (bez ogranicznika klatek) mierzy koszt. Rozmiar okna
 można ustalić opcją `--test-window-size 1600 900`; `scene-benchmark-info.txt` zapisuje faktyczny rozmiar, skalę DPI
 i jakości z ustawień domyślnych.
 
-Misja odtwarza zapisaną trasę (1340 ticków ≈ 11 s). W dłuższym oknie trasa zaczyna się od nowa. Klatka restartu ma
-`route_reset=1` i nie wchodzi do statystyk czasu klatki; ich liczba jest w kolumnie `route_resets`.
+Misja odtwarza zapisaną trasę (1340 ticków ≈ 11 s). W dłuższym oknie trasa zaczyna się od nowa. `route_reset=1`
+ma klatka po tej, która zażądała restartu (jej `frame_ms` zawiera przeładowanie świata), i nie wchodzi do statystyk
+czasu klatki; liczba restartów jest w kolumnie `route_resets`.
 
 ## 3. Soak 15 minut
 
@@ -78,7 +95,53 @@ Samo kryterium względne nie wykryje reżimu, który trwa od pierwszego przebieg
 lekkie sceny, w których sterownik sam obniża P-stan. Wyniki: `soak-report.md`, `soak-summary.csv`, `telemetry.csv`,
 `environment.json` i katalog `run/` (albo `pass-NN/` bez `-SingleProcess`).
 
-## 4. Co odesłać
+## 4. Benchmark termiki (opcjonalnie)
+
+Macierz ABBA etapów termiki (`off`, `heat`, `heat_gas`, `full`) w 4 scenach (`cold`, `fire`, `oil`, `quench`), 3 bloki.
+Bloki są pętlą zewnętrzną, a każdy blok losuje własną kolejność scen (Fisher–Yates na SplitMix64, ta sama kolejność
+na każdym kompilatorze). Wcześniej kolejność była stała (`cold → fire → oil → quench`), więc ostatnia scena mierzyła
+nagrzany laptop: etap gazu, który nie zależy od sceny, trwał w „gaszeniu” 2,36× dłużej. Pomiar trwa ok. 10 min na szybkim GPU, w wolnym reżimie dłużej:
+
+```powershell
+pwsh ./scripts/profiling/profile-thermal.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/thermal `
+    -Suite benchmark -Telemetry
+python scripts/profiling/analyze-thermal.py gpu-check/thermal --controls
+```
+
+- `-Telemetry` zapisuje obok wyników `telemetry.csv` z `GpuTelemetry.psm1` co 100 ms: P-stan, zegar grafiki
+  (`clocks.current.graphics`, kolumna `graphics_mhz`) i pamięci (`clocks.current.memory`), moc i jej limit,
+  temperaturę oraz aktywne powody ograniczenia (`clocks_event_reasons.*` albo `clocks_throttle_reasons.*`, zależnie
+  od sterownika). `-TimeoutMinutes` (domyślnie 90) przerywa zawieszony pomiar.
+- `-Seed N` (albo zmienna `STREFA_BENCHMARK_SEED`) powtarza kolejność scen wcześniejszego pomiaru; bez niej każdy
+  pomiar losuje nowe ziarno. Ziarno i kolejność są w `thermal-benchmark-info.txt` (`seed=`, `block_<n>_scenes=`).
+
+Pliki wyników (wszystkie mają kolumny `seed` i `sequence`, czyli numer odcinka w kolejności wykonania):
+
+- `thermal-samples.csv`: wiersz na tick odcinka ABBA (bez zmian poza `seed`, `sequence`);
+- `thermal-pool-segments.csv`: stan sum termiki po odcinku oraz `start_utc_unix_ns`, `end_utc_unix_ns` (łączenie
+  z `telemetry.csv`);
+- `thermal-pass-samples.csv`: odcinek profilu po każdej scenie bloku (120 ticków, `ThermalOptions::profile`), kolumna
+  `block` oraz `dispatches` i `barriers` (liczone od końca poprzedniego ticku termiki: zdarzenia, kernele solvera,
+  kondensacja poprzedniego kroku, gumka i odczyt sum; bez prezentacji, rysowania, inspektora, resetu sceny
+  i wymuszonego odczytu sum przez `read_thermal`). Każdy tick ma dwa
+  wiersze: wiersz CPU (`cpu_ms`, liczniki) i wiersz GPU (`heat_ms`, `gas_ms`, `reaction_ms`);
+- `thermal-op-samples.csv`: znacznik czasu po każdym kernelu ticku w trybie profilu: `index` (kolejność w ticku),
+  `op` (numer programu termiki) i `gpu_ms` (różnica z poprzednim znacznikiem);
+- `thermal-profile-segments.csv`: granice UTC odcinków profilu.
+
+`analyze-thermal.py` (schemat 2) traktuje etap gazu jako sondę zegara: odcinek profilu, którego mediana `gas_ms`
+odbiega od mediany wszystkich odcinków o więcej niż 10% (`--gas-tolerance`), jest dyskwalifikowany razem z próbami
+tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę albo odcinek profilu, w którym był aktywny
+`hw_slowdown`, `hw_thermal_slowdown`, `hw_power_brake_slowdown` albo `sw_thermal_slowdown`, albo którego mediana zegara
+grafiki jest poniżej 90% maksimum sesji (`--clock-fraction`). Ten drugi warunek łapie wolny reżim GTX 1650 w laptopie:
+po dojściu do 85 °C karta schodzi do 1395 MHz i połowy limitu mocy (ok. 23 W z 50 W) przy P0 i bez żadnego powodu
+ograniczenia w `nvidia-smi`, i zostaje tam także po ostygnięciu do 64 °C; etap gazu trwa wtedy 2,35× dłużej (3,12 zamiast
+1,34 ms; jeden przebieg informacyjny bez stygnięcia przed startem, surowe dane: [thermal-benchmark-2026-11-04](https://github.com/maershal/strefa-zero-measurements/tree/0cc0d361c32f7f437327c32127598fdd0d4a55e0/thermal-benchmark-2026-11-04)). Z telemetrią medianą odniesienia etapu gazu są tylko odcinki, które przeszły warunki telemetrii, więc pomiar
+spędzony głównie w wolnym reżimie nie robi z niego odniesienia (`gas_reference` w `thermal-summary.json`). `thermal-summary.json` podaje
+`disqualified_segments`, `qualified_full_gates` i decyzję `performance_accepted` tylko z prób zakwalifikowanych,
+a także `kernel_profiles` (rozkład czasu każdego kernela na scenę) i liczniki dispatchy i barier w `stage_profiles`.
+
+## 5. Co odesłać
 
 Wklej do rozmowy albo do opisu PR:
 
@@ -87,7 +150,8 @@ Wklej do rozmowy albo do opisu PR:
 2. Cały `gpu-check/soak/soak-report.md`: wynik trzech kryteriów, tabelę powodów ograniczenia i tabelę przebiegów
    (≤ 10 wierszy).
 3. Z `gpu-check/soak/environment.json`: pola `gpu`, `power_source`, `power_scheme` i `telemetry_reasons_source`.
-4. Czy w trakcie coś się działo (aktualizacja Windows, uśpienie ekranu, odłączony zasilacz, inne okno na wierzchu).
+4. Jeśli był benchmark termiki: wynik `analyze-thermal.py` (ziarno, `performance_accepted`, odcinki zdyskwalifikowane).
+5. Czy w trakcie coś się działo (aktualizacja Windows, uśpienie ekranu, odłączony zasilacz, inne okno na wierzchu).
 
 Surowe pliki (`scene-benchmark*.csv`, `telemetry.csv`, `run/`, `pass-*/`) trafiają do repozytorium
 [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements) w nowym katalogu z własnym
@@ -117,9 +181,11 @@ ticku.
 
 `scene-benchmark.csv` ma jeden wiersz na scenę i przebieg (`pass`):
 
-- `status`: `ok`, `invalid` (okno ukryte, zminimalizowane albo zasłonięte w części klatek) lub `failed` (błąd sceny),
-  z powodem w `status_reason`; liczniki `hidden_frames`, `minimized_frames`, `occluded_frames`, `unfocused_frames`
-  (brak fokusu nie unieważnia pomiaru);
+- `status`: `ok`, `invalid` (okno ukryte, zminimalizowane, zasłonięte albo ukryte przez DWM w części klatek) lub
+  `failed` (błąd sceny albo przerwanie przez QUIT), z powodem w `status_reason`; liczniki `hidden_frames`,
+  `minimized_frames` (SDL albo `IsIconic`), `occluded_frames`, `unfocused_frames` (brak fokusu nie unieważnia
+  pomiaru), `cloaked_frames` (`DWMWA_CLOAKED`, tylko Windows) i `warmup_away_frames` (klatki rozgrzewki i klatka
+  otwierająca okno pomiaru z oknem poza ekranem; dwie ostatnie kolumny pliku);
 - `window_seconds`: faktyczny czas okna pomiaru;
 - czas klatki: mediana, p95, p99 i max;
 - rozkłady GPU ze wszystkich zapytań zakończonych w oknie pomiaru (zbierane co klatkę, bez limitu):
@@ -137,7 +203,7 @@ ticku.
 - `start_utc_unix_ns` i `end_utc_unix_ns`: granice okna pomiaru.
 
 `scene-benchmark-frames.csv` ma wiersz na klatkę: liczbę i sumę próbek GPU zakończonych w tej klatce, flagi okna SDL
-(`visible`, `focused`, `minimized`, `occluded`) i `route_reset`.
+(`visible`, `focused`, `minimized`, `occluded`), `route_reset` i `cloaked` (ostatnia kolumna).
 
 `telemetry.csv` ma te same znaczniki `utc_unix_ns` (UTC, ns od 1970), więc okno sceny łączy się z próbkami
 telemetrii przez zakres (`Get-GpuTelemetryWindow`). Powody ograniczenia zegara są w kolumnach `reason_*` (1 = aktywny).

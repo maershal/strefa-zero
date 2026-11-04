@@ -1,8 +1,7 @@
 namespace strefa::gpu {
-std::expected<void, std::string> ParticleWorld::validate_thermal(const std::filesystem::path& output, bool benchmark) {
+std::expected<void, std::string> ParticleWorld::validate_thermal(const std::filesystem::path& output) {
     try {
         std::filesystem::create_directories(output);
-        if (benchmark) return run_thermal_benchmark(output);
         std::ofstream report{output / "thermal-tests.txt"}, csv{output / "thermal-balances.csv"};
         csv << std::setprecision(12)
             << "scene,tick,mass,enthalpy,chemical,external_mass,external_H,external_chemical,mass_error,H_error,relative_mass_error,relative_H_error,oxygen,fuel,steam,smoke,divergence_l2,divergence_max,finite\n";
@@ -92,7 +91,7 @@ std::expected<void, std::string> ParticleWorld::validate_thermal(const std::file
         cycle(40);
         balance("shared_cell_heat_budget", b, system.snapshot().totals, 40);
         require(system.snapshot().totals.finite, "many_particles_cannot_overdraw_cell");
-        if (!benchmark) {
+        {
             std::fill(walls.begin(), walls.end(), 0u);
             for (int y = 0; y < height; ++y) walls[y * width + 160] = 1;
             auto gas = fixture({}, walls);

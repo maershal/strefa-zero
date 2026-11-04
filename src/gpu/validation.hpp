@@ -32,6 +32,11 @@ void validate_coupling_replay(const std::filesystem::path& output, std::ostream&
                               const ExecutionOptions& layout);
 std::expected<void, std::string> validate_neighbors(const std::filesystem::path& output, bool benchmark = false);
 std::expected<void, std::string> validate_execution(const std::filesystem::path& output, bool benchmark = false);
+// --gpu-thermal-benchmark: ABBA matrix of thermal stages per scene, scene order drawn per block (seed in every CSV
+// row, STREFA_BENCHMARK_SEED repeats it), stage/kernel timestamps, dispatch and barrier counts.
+std::expected<void, std::string> benchmark_thermal(ParticleWorld&, const std::filesystem::path& output);
+// Scene order of one benchmark block: Fisher-Yates over SplitMix64, identical on every toolchain.
+std::array<unsigned, 4> thermal_benchmark_order(std::uint64_t& state);
 std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::path& output);
 std::expected<void, std::string> validate_readback(const std::filesystem::path& output);
 std::expected<void, std::string> profile_readback(const std::filesystem::path& output);

@@ -47,6 +47,8 @@ ThermalSystem::~ThermalSystem() {
         if (p.fence) gl.DeleteSync(p.fence);
         if (p.buffer) gl.DeleteBuffers(1, &p.buffer);
         if (p.queries[0]) gl.DeleteQueries(5, p.queries.data());
+        if (!p.operation_queries.empty())
+            gl.DeleteQueries(static_cast<GLsizei>(p.operation_queries.size()), p.operation_queries.data());
     }
     for (auto& p : inspections) {
         if (p.fence) gl.DeleteSync(p.fence);
@@ -109,6 +111,13 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     allocate(reduction, totals_bytes);
     state.invalidate();
 }
+// Every thermal dispatch goes through here so profile mode can count dispatches and barriers.
+void ThermalSystem::dispatch(GLuint groups, GLbitfield barrier) {
+    gl.DispatchCompute(groups, 1, 1);
+    gl.MemoryBarrier(barrier);
+    ++dispatches_;
+    ++barriers_;
+}
 void ThermalSystem::bind() {
     state.base(0, physics[physical_bank]);
     state.base(1, physics[physical_bank ^ 1]);
@@ -153,8 +162,19 @@ void ThermalSystem::run(int op, unsigned n) {
         gl.Uniform1i(k.command, std::bit_cast<int>(command_id));
         k.previous_command = command_id;
     }
-    gl.DispatchCompute((n + 127) / 128, 1, 1);
-    gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
+    // Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
+    // capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
+    if (active && active->measured) {
+        auto& p = *active;
+        if (p.operations == p.operation_queries.size()) {
+            p.operation_queries.push_back(0);
+            gl.GenQueries(1, &p.operation_queries.back());
+            p.operation_kernels.push_back(0);
+        }
+        p.operation_kernels[p.operations] = static_cast<unsigned>(op);
+        gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
+    }
 }
 void ThermalSystem::brush(const ThermalBrush& b) {
     pending_brush = b;
@@ -179,6 +199,7 @@ void ThermalSystem::reset(const std::array<GLuint, 8>& buffers, unsigned current
     brush({});
     run(0, cell_count);
     synchronize(buffers, current);
+    dispatches_ = barriers_ = 0; // a reset is not the work of the next tick
     state.invalidate();
 }
 void ThermalSystem::synchronize(const std::array<GLuint, 8>& buffers, unsigned current) {
@@ -207,6 +228,7 @@ void ThermalSystem::tick(const std::array<GLuint, 8>& buffers, unsigned& current
             gl.BufferData(GL_COPY_WRITE_BUFFER, totals_bytes, nullptr, GL_STREAM_READ);
         }
         p.measured = options.profile;
+        p.operations = 0;
         p.serial = serial;
         p.generation = generation;
         p.tick = tick;
@@ -260,8 +282,9 @@ void ThermalSystem::tick(const std::array<GLuint, 8>& buffers, unsigned& current
     }
     if (active && active->measured) gl.QueryCounter(active->queries[3], GL_TIMESTAMP);
     const double cpu = static_cast<double>(SDL_GetTicksNS() - began) / 1e6;
-    if (options.profile) timings.push_back({tick, 0, 0, 0, 0, cpu});
     capture();
+    if (options.profile) timings.push_back({tick, 0, 0, 0, 0, cpu, dispatches_, barriers_, {}});
+    dispatches_ = barriers_ = 0;
     state.invalidate();
 }
 void ThermalSystem::consume_events(const std::array<GLuint, 8>& buffers, unsigned gen, unsigned tick) {
@@ -273,11 +296,9 @@ void ThermalSystem::consume_events(const std::array<GLuint, 8>& buffers, unsigne
     gl.Uniform1i(event_generation, std::bit_cast<int>(gen));
     gl.Uniform1i(event_tick, std::bit_cast<int>(tick));
     gl.Uniform1i(event_mode, 0);
-    gl.DispatchCompute(1, 1, 1);
-    gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    dispatch(1, GL_SHADER_STORAGE_BARRIER_BIT);
     gl.Uniform1i(event_mode, 1);
-    gl.DispatchCompute((cell_count + 127) / 128, 1, 1);
-    gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    dispatch((cell_count + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
     state.invalidate();
 }
 void ThermalSystem::condense(const std::array<GLuint, 8>& buffers, unsigned& current) {
@@ -293,8 +314,7 @@ void ThermalSystem::condense(const std::array<GLuint, 8>& buffers, unsigned& cur
     state.base(5, physics[5]);
     state.base(6, physics[6]);
     state.use(condensation);
-    gl.DispatchCompute((cell_count + 127) / 128, 1, 1);
-    gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+    dispatch((cell_count + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
     current ^= 1;
     physical_bank = current;
     state.invalidate();
@@ -312,8 +332,7 @@ void ThermalSystem::capture(bool force) {
     state.base(1, cells[cell_bank]);
     state.base(2, reduction);
     state.use(reduce_program);
-    gl.DispatchCompute(2, 1, 1);
-    gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
+    dispatch(2, GL_BUFFER_UPDATE_BARRIER_BIT | GL_SHADER_STORAGE_BARRIER_BIT);
     if (active) {
         gl.BindBuffer(GL_COPY_READ_BUFFER, reduction);
         gl.BindBuffer(GL_COPY_WRITE_BUFFER, active->buffer);
@@ -414,7 +433,14 @@ void ThermalSystem::poll() {
                 t.heat_ms = static_cast<double>(stamp[1] - stamp[0]) / 1e6;
                 t.gas_ms = static_cast<double>(stamp[2] - stamp[1]) / 1e6;
                 t.reaction_ms = static_cast<double>(stamp[3] - stamp[2]) / 1e6;
-                timings.push_back(t);
+                GLuint64 previous = stamp[0];
+                for (unsigned i = 0; i < p.operations; ++i) {
+                    GLuint64 now = 0;
+                    gl.GetQueryObjectui64v(p.operation_queries[i], GL_QUERY_RESULT, &now);
+                    t.operations.push_back({p.operation_kernels[i], static_cast<double>(now - previous) / 1e6});
+                    previous = now;
+                }
+                timings.push_back(std::move(t));
             }
         }
         head = (head + 1) % static_cast<unsigned>(probes.size());
@@ -438,6 +464,7 @@ ThermalSnapshot ThermalSystem::snapshot() {
     s.totals = read_totals(reduction);
     s.totals.tick = tick_;
     s.totals.generation = generation;
+    dispatches_ = barriers_ = 0; // the forced capture of a diagnostic read is not the work of the next tick
     state.invalidate();
     return s;
 }

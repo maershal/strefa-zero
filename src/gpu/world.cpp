@@ -2158,6 +2158,5 @@ void ParticleWorld::project_liquids_for_test(unsigned iterations) {
 } // namespace strefa::gpu
 
 #include "gpu/lighting_validation.inl"
-#include "gpu/thermal_benchmark.inl"
 #include "gpu/thermal_scenes.inl"
 #include "gpu/thermal_validation.inl"
