@@ -62,7 +62,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Recenzja pod tożsamością bota; `large-pr-approved` nie od autora | otwarte | #32, #33 |
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
 | Pomiary termiki z losową kolejnością scen, liczniki dispatchy/barier, znaczniki per kernel, telemetria (R §5.3) | zrobione; odniesienie etapu gazu bez telemetrii i przyczyna wolnego reżimu — otwarte | #50, #46, #49 |
-| Szkielet zgodności termiki GPU z CPU: 10 scen, progi w pliku przed zmianami GPU (R §5.3) | zrobione po stronie CPU; strona GPU — otwarte | #48 |
+| Szkielet zgodności termiki GPU z CPU: 10 scen, progi w pliku przed zmianami GPU (R §5.3) | szkic: strona CPU zapisuje wartości, progi niczego nie sprawdzają; strona GPU odłożona do K35/K36; test CPU rozbity na sceny | #48, #77 |
 | Porządki po #22 (płótno CPU w VFX, `ui/mission_hud`, `strefa_input`, martwe API), ADR roli modelu CPU | zrobione | #55, [ADR 0001](../adr/0001-rola-modelu-cpu.md) |
 | Tracy (dev, `STREFA_TRACY=OFF`), strefy CPU/GPU, RenderDoc F11 w StrefaQA, Nsight w `GPU_CHECK.md` (R §10, A §4 D7) | zrobione; strefy w `PassRunner` — po fazie C | K07, [ADR 0002](../adr/0002-narzedzia-profilowania.md) |
 | Detonator w laboratorium GPU, gruz z prędkością, impuls ∝ odwrotnej masy, do 8 wybuchów na tick (R §11, szybkie wygrane) | zrobione; misja za flagą `batched_blasts` (domyślnie wyłączoną) | N06 |
