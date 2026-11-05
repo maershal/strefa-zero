@@ -3,6 +3,7 @@
 #include "core/charconv.hpp"
 #include "sim/world.hpp"
 
+#include <algorithm>
 #include <array>
 #include <charconv>
 #include <cmath>
@@ -239,10 +240,17 @@ std::expected<std::vector<ConformanceThreshold>, std::string> parse_conformance_
     return result;
 }
 
-std::size_t thermal_conformance_sample_count() {
+std::size_t thermal_conformance_sample_count(std::optional<std::string_view> only) {
     std::size_t count = 0;
-    for (const auto& scene : scenes()) count += scene.probes.size() * scene.ticks.size();
+    for (const auto& scene : scenes())
+        if (!only || scene.id == *only) count += scene.probes.size() * scene.ticks.size();
     return count;
+}
+
+std::vector<std::string_view> thermal_conformance_scenes() {
+    std::vector<std::string_view> result;
+    for (const auto& scene : scenes()) result.push_back(scene.id);
+    return result;
 }
 
 std::vector<ConformanceObservable> thermal_conformance_observables() {
@@ -254,7 +262,8 @@ std::vector<ConformanceObservable> thermal_conformance_observables() {
 }
 
 std::expected<void, std::string> run_thermal_conformance(const std::filesystem::path& thresholds_path,
-                                                         const std::filesystem::path& output) {
+                                                         const std::filesystem::path& output,
+                                                         std::optional<std::string_view> only) {
     std::ifstream file{thresholds_path};
     if (!file) return std::unexpected{"Nie można odczytać pliku progów " + utf8(thresholds_path) + "."};
     const std::string text{std::istreambuf_iterator<char>{file}, {}};
@@ -273,6 +282,8 @@ std::expected<void, std::string> run_thermal_conformance(const std::filesystem::
     for (const auto& [key, row] : by_key)
         if (!recorded.contains(key)) mismatch += std::format(" próg bez obserwabli {} {};", key.first, key.second);
     if (!mismatch.empty()) return std::unexpected{"Progi zgodności termiki nie pasują do obserwabli:" + mismatch};
+    if (const auto ids = thermal_conformance_scenes(); only && std::ranges::find(ids, *only) == ids.end())
+        return std::unexpected{std::format("Nieznana scena zgodności termiki „{}”.", *only)};
 
     for (const auto& scene : scenes())
         for (const auto& probe : scene.probes)
@@ -288,9 +299,11 @@ std::expected<void, std::string> run_thermal_conformance(const std::filesystem::
     report << "schema=1\nthresholds=" << utf8(thresholds_path.filename()) << "\nthreshold_rows=" << thresholds->size()
            << "\ncpu_tick_seconds=" << sim::tick_duration << "\nambient_k=" << sim::ambient_temperature
            << "\npass_rule=abs(gpu-cpu)<=max(absolute,relative*abs(base)),base=cpu|cpu-ambient_k(relative_of)"
-              "\nthresholds_status=provisional_until_gpu_side\ngpu=not_implemented\n";
+              "\nthresholds_status=provisional_until_gpu_side\ngpu=not_implemented\nscenes="
+           << only.value_or("all") << '\n';
     report.flush();
     for (const auto& scene : scenes()) {
+        if (only && scene.id != *only) continue;
         sim::World world;
         world.clear();
         scene.setup(world);

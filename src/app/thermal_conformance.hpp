@@ -3,6 +3,7 @@
 // compared with thresholds fixed in a file before any GPU thermal change. The GPU side is not implemented yet.
 #include <expected>
 #include <filesystem>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -25,12 +26,16 @@ struct ConformanceObservable {
     std::string_view scene, observable, unit;
 };
 [[nodiscard]] std::vector<ConformanceObservable> thermal_conformance_observables();
-// Rows of thermal-conformance-cpu.csv: every observable at every sampled tick of its scene.
-[[nodiscard]] std::size_t thermal_conformance_sample_count();
+// Scene ids in output order.
+[[nodiscard]] std::vector<std::string_view> thermal_conformance_scenes();
+// Rows of thermal-conformance-cpu.csv: every observable at every sampled tick of its scene (of one scene if given).
+[[nodiscard]] std::size_t thermal_conformance_sample_count(std::optional<std::string_view> scene = std::nullopt);
 
-// Writes thermal-conformance-cpu.csv and thermal-conformance.txt into output. Fails when the thresholds do not cover
-// exactly the recorded observables or a CPU value is not finite.
-[[nodiscard]] std::expected<void, std::string> run_thermal_conformance(const std::filesystem::path& thresholds,
-                                                                       const std::filesystem::path& output);
+// Writes thermal-conformance-cpu.csv and thermal-conformance.txt into output for every scene, or only for the given
+// one. Fails when the thresholds do not cover exactly the recorded observables of all scenes, the scene is unknown or
+// a CPU value is not finite.
+[[nodiscard]] std::expected<void, std::string>
+run_thermal_conformance(const std::filesystem::path& thresholds, const std::filesystem::path& output,
+                        std::optional<std::string_view> scene = std::nullopt);
 
 } // namespace strefa::app
