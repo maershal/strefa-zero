@@ -1,8 +1,9 @@
 # Progi zgodności termiki GPU z wyrocznią CPU: StrefaQA --gpu-thermal-conformance <ten plik>.
 #
-# STATUS: TYMCZASOWE do czasu strony GPU (#48). Do tego czasu nic ich nie sprawdza, a PR ze stroną GPU może je
-# zmienić tylko z uzasadnieniem z pomiaru i zgodą właściciela w komentarzu PR. Po scaleniu #48 obowiązuje zasada
-# z CLAUDE.md: progów nie wolno luzować.
+# STATUS: szkic dla termiki v2. Dziś niczego nie sprawdza: testy physics.thermal_conformance_cpu.* zapisują tylko
+# wartości CPU i pilnują, że plik pokrywa dokładnie obserwable z kodu. Strona GPU (#48) jest odłożona do K35/K36;
+# PR z nią może zmienić te progi tylko z uzasadnieniem z pomiaru i zgodą właściciela w komentarzu PR. Od jej scalenia
+# obowiązuje zasada z CLAUDE.md: progów nie wolno luzować.
 #
 # Format: scena obserwabla tolerancja_bezwzględna tolerancja_względna
 # Wartość GPU v przechodzi, gdy |v - cpu| <= max(bezwzględna, względna * |baza|), w każdej chwili próbkowania

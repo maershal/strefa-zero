@@ -248,9 +248,22 @@ if(BUILD_TESTING)
     strefa_add_cpu_test(sim.materials strefa_sim_tests "physics;slow" PROCESSORS 2)
     add_executable(strefa_thermal_conformance_tests tests/thermal_conformance_tests.cpp)
     target_link_libraries(strefa_thermal_conformance_tests PRIVATE strefa_conformance)
-    strefa_add_cpu_test(physics.thermal_conformance_cpu strefa_thermal_conformance_tests "physics;slow"
-        ARGS ${CMAKE_CURRENT_SOURCE_DIR}/tests/conformance/thermal_thresholds.txt
-             ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-cpu)
+    # One entry per scene (each builds a sim::World: up to 2 worker threads) plus a fast entry for the parser and
+    # the thresholds file, which also checks that this list names every scene of src/app/thermal_conformance.cpp.
+    # No scene takes over 10 s in Release (1-7 s on a desktop), so none is labelled `slow`.
+    set(strefa_thermal_scenes rod chamber pulse open_beam door water_heater lava_water ice_heater gunpowder_line
+        acid_stone)
+    set(strefa_thermal_thresholds ${CMAKE_CURRENT_SOURCE_DIR}/tests/conformance/thermal_thresholds.txt)
+    string(REPLACE ";" "," strefa_thermal_scene_list "${strefa_thermal_scenes}")
+    strefa_add_cpu_test(physics.thermal_conformance_cpu.thresholds strefa_thermal_conformance_tests unit
+        ARGS ${strefa_thermal_thresholds} ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-cpu/thresholds
+             --scenes ${strefa_thermal_scene_list})
+    foreach(scene IN LISTS strefa_thermal_scenes)
+        strefa_add_cpu_test(physics.thermal_conformance_cpu.${scene} strefa_thermal_conformance_tests physics
+            PROCESSORS 2
+            ARGS ${strefa_thermal_thresholds} ${CMAKE_CURRENT_BINARY_DIR}/thermal-conformance-cpu/${scene}
+                 --scene ${scene})
+    endforeach()
     add_executable(strefa_numerics_tests tests/numerics_tests.cpp)
     target_link_libraries(strefa_numerics_tests PRIVATE strefa_sim)
     strefa_add_cpu_test(sim.numerics_parallel strefa_numerics_tests determinism PROCESSORS 4)
@@ -314,7 +327,7 @@ if(BUILD_TESTING)
         set_tests_properties(gpu.thermal PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 900 SKIP_RETURN_CODE 77)
         # --gpu-thermal-conformance has no gpu.* test yet: today it compares nothing, and a green GPU test would
         # pretend conformance (a skip would fail the nightly --fail-on-skipped). It comes with the GPU side (#48);
-        # the CPU side is physics.thermal_conformance_cpu.
+        # the CPU side is physics.thermal_conformance_cpu.*.
         add_test(NAME gpu.vfx COMMAND strefa_qa --gpu-vfx-check --gl-debug --profile ${CMAKE_CURRENT_BINARY_DIR}/vfx-profile)
         set_tests_properties(gpu.vfx PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 600 SKIP_RETURN_CODE 77)
         add_test(NAME gpu.lighting COMMAND strefa_qa --gpu-lighting-check --gl-debug --profile ${CMAKE_CURRENT_BINARY_DIR}/lighting-profile)
