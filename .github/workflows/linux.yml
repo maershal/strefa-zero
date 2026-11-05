@@ -55,6 +55,7 @@ jobs:
         run: |
           ./scripts/test-ci-changes.sh
           ./scripts/test-pr-hygiene.sh
+          ./scripts/test-nightly-issue.sh
           ./scripts/test-check-architecture.sh
       - name: Install clang-format
         run: sudo apt-get update && sudo apt-get install -y clang-format-18

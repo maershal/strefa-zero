@@ -1,10 +1,17 @@
 name: Nightly
 
 # Full ThreadSanitizer run of every CPU test (~24 min CPU); pull requests run only the TSan subset in linux.yml.
+# Not a required check: a failed scheduled run opens or updates the issue labelled `nightly`
+# (scripts/nightly-issue.sh); a manual run does so only with report_issue.
 on:
   schedule:
     - cron: '30 2 * * *'
   workflow_dispatch:
+    inputs:
+      report_issue:
+        description: 'Open or update the `nightly` issue when a test fails'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -42,7 +49,16 @@ jobs:
           ccache --show-stats
       - name: Test summary
         if: always()
-        run: python3 scripts/junit-summary.py 'Linux (TSan, pełny)' build/junit/cpu.xml >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          mkdir -p build/junit
+          python3 scripts/junit-summary.py 'Linux (TSan, pełny)' build/junit/cpu.xml \
+            | tee build/junit/summary.md >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: nightly-tsan-summary
+          retention-days: 14
+          path: build/junit/summary.md
       - uses: actions/upload-artifact@v7
         if: failure()
         with:
@@ -50,3 +66,31 @@ jobs:
           path: |
             build/junit/
             build/tsan/Testing/Temporary/
+
+  report:
+    needs: tsan-full
+    if: >-
+      always() && needs.tsan-full.result != 'success' && needs.tsan-full.result != 'skipped'
+      && (github.event_name == 'schedule' || inputs.report_issue)
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      issues: write
+    steps:
+      - uses: actions/checkout@v7
+      # A cancelled or timed-out job may leave no summary: the issue then names the job result instead.
+      - uses: actions/download-artifact@v8
+        continue-on-error: true
+        with:
+          name: nightly-tsan-summary
+          path: build/junit
+      - name: Open or update the nightly issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          ./scripts/nightly-issue.sh --title 'Nocny przebieg TSan: niezaliczone testy CPU' --run-name TSan \
+            --summary build/junit/summary.md \
+            --fallback 'Brak podsumowania JUnit (tsan-full: ${{ needs.tsan-full.result }}).' \
+            --artifacts-note '(raporty JUnit, logi CTest)' --skip-artifact nightly-tsan-summary

@@ -3,7 +3,7 @@ name: Nightly GPU
 # Every `graphics` test on Mesa llvmpipe, split over parallel shards (each serial, one GL context at a time);
 # pull requests run only the `ci-smoke` subset in linux.yml.
 # Not a required check: a red run is a report to read, not a merge gate. A failed scheduled run opens or updates
-# the issue labelled `nightly`; a manual run does so only with report_issue.
+# the issue labelled `nightly` (scripts/nightly-issue.sh); a manual run does so only with report_issue.
 on:
   schedule:
     - cron: '0 3 * * *'
@@ -181,24 +181,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          set -euo pipefail
-          run_url="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          {
-            echo "Nocny przebieg GPU [#$GITHUB_RUN_NUMBER]($run_url) na \`$GITHUB_REF_NAME\` ($GITHUB_SHA) nie przeszedł."
-            echo
-            cat build/summary.md 2>/dev/null \
-              || echo "Brak podsumowania JUnit (build: ${{ needs.build.result }}, graphics: ${{ needs.graphics.result }})."
-            echo
-            echo "**Artefakty** (raporty JUnit, profile, progress.txt):"
-            gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/artifacts" \
-              --jq ".artifacts[] | select(.name != \"nightly-gpu-build\") | \"- [\(.name)]($run_url/artifacts/\(.id))\""
-          } > build/issue.md
-          gh label create nightly --color B60205 --description 'Porażki nocnego przebiegu nightly-gpu' --force
-          number=$(gh issue list --label nightly --state open --limit 1 --json number --jq '.[0].number // empty')
-          if [ -n "$number" ]; then
-            gh issue edit "$number" --body-file build/issue.md
-            gh issue comment "$number" --body "Kolejny nieudany przebieg: $run_url"
-          else
-            gh issue create --title 'Nocny przebieg GPU: niezaliczone testy graphics' --label nightly \
-              --body-file build/issue.md
-          fi
+          ./scripts/nightly-issue.sh --title 'Nocny przebieg GPU: niezaliczone testy graphics' --run-name GPU \
+            --summary build/summary.md \
+            --fallback 'Brak podsumowania JUnit (build: ${{ needs.build.result }}, graphics: ${{ needs.graphics.result }}).' \
+            --artifacts-note '(raporty JUnit, profile, progress.txt)' --skip-artifact nightly-gpu-build
