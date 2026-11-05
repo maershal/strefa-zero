@@ -6,7 +6,8 @@ name: Nightly GPU
 # the issue labelled `nightly` (scripts/nightly-issue.sh); a manual run does so only with report_issue.
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # Off the full hour, when scheduled runs queue longest; 30 min after nightly.yml.
+    - cron: '47 1 * * *'
   workflow_dispatch:
     inputs:
       report_issue:
@@ -16,6 +17,11 @@ on:
 
 permissions:
   contents: read
+
+# One run per branch at a time; a queued run waits instead of cancelling the one that is running.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 
 env:
   CMAKE_C_COMPILER_LAUNCHER: ccache
