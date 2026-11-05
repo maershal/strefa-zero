@@ -122,7 +122,8 @@ compute, protokół misji (`gpu.gameplay`), ekran misji (`gpu.mission_ui_quick`)
 pod obciążeniem, pierścień odczytów, instrumentację, renderer, reaktywność modelu referencyjnego CPU (1 i 4 wątki)
 i pędzel GPU po historii fikstur (`gpu.brush_history`).
 Pełny zestaw `graphics` uruchamia co noc workflow `nightly-gpu.yml` (także ręcznie) w czterech równoległych
-częściach. Porażka nocnego przebiegu otwiera albo aktualizuje zgłoszenie z etykietą `nightly`. Porażki progów
+częściach, a `nightly.yml` wszystkie testy CPU pod ThreadSanitizerem. Porażka nocnego przebiegu otwiera albo
+aktualizuje zgłoszenie z etykietą `nightly` (osobne dla każdego workflow, `scripts/nightly-issue.sh`). Porażki progów
 czasu ściennego (etykieta `perf-wallclock`) podsumowanie wymienia osobno. `--test-suite cpu`
 wybiera tylko testy bez okna, `--test-suite all` pełny CTest, a `--skip-tests` samą kompilację.
 `--junit-dir KATALOG` zapisuje raport JUnit każdego przebiegu CTest.
