@@ -163,10 +163,12 @@ struct SweepPoint {
 };
 struct Tank {
     std::vector<std::uint32_t> walls;
-    static constexpr int left = 10, columns = 300, floor = 187;
+    // Derived from the world size (today: 300 columns from x = 10, floor at y = 187).
+    static constexpr int left = 10, floor = height - 5, columns = width - 2 * left;
+    static_assert(columns > 0 && left + columns < width - 1, "Zbiornik nie mieści się w świecie");
 };
-// The same tank for every N: 300 columns between two walls on a floor; particles one per cell from the floor up, so
-// only the fill height changes with N (32000 particles fill 107 rows).
+// The same tank for every N: Tank::columns columns between two walls on a floor; particles one per cell from the floor
+// up, so only the fill height changes with N (32000 particles fill 107 rows of 300 columns).
 Tank tank() {
     Tank t;
     t.walls.assign(static_cast<std::size_t>(width * height), 0);
@@ -441,10 +443,14 @@ std::expected<void, std::string> model_tick_cost(const std::filesystem::path& sh
                  << ',' << w.b << ',' << w.r2 << '\n';
         }
         if (plan.sweep) {
+            // Two fits per material and metric: over every N ("all") and over N >= N_max / 4 ("upper", the linear
+            // regime). crossover_n = (cost at the smallest N - a) / b: where the fitted line meets the flat level,
+            // i.e. from which N the tick is throughput-bound. analyze-cost-model.py uses the same definitions.
             std::ofstream sweep_fit{output / "sweep-fit.csv"};
-            sweep_fit
-                    << std::setprecision(9)
-                    << "material,metric,points,a_ms,b_ms_per_1000,r2,knee_n,extrapolated_64k_ms,extrapolated_128k_ms\n";
+            sweep_fit << std::setprecision(9)
+                      << "material,metric,range,points,a_ms,b_ms_per_1000,r2,flat_ms,crossover_n,"
+                         "extrapolated_64k_ms,extrapolated_128k_ms\n";
+            const unsigned upper_from = plan.counts.empty() ? 0U : plan.counts.back() / 4;
             for (const char* material : {"grains", "water"})
                 for (unsigned metric = 0; metric < 2; ++metric) {
                     std::vector<std::pair<double, double>> points;
@@ -453,11 +459,19 @@ std::expected<void, std::string> model_tick_cost(const std::filesystem::path& sh
                         for (const auto& v : sweep_samples[{material, n}]) values.push_back(v[metric]);
                         points.emplace_back(n, median(values));
                     }
-                    const auto f = fit(points);
-                    sweep_fit << material << ',' << (metric == 0 ? "gpu_tick_median_ms" : "wall_ms_per_tick") << ','
-                              << points.size() << ',' << f.a << ',' << f.b * 1000 << ',' << f.r2 << ','
-                              << (f.b > 0 ? f.a / f.b : 0) << ',' << f.a + f.b * 65536 << ',' << f.a + f.b * 131072
-                              << '\n';
+                    if (points.empty()) continue;
+                    const double flat = points.front().second;
+                    std::vector<std::pair<double, double>> upper;
+                    for (const auto& point : points)
+                        if (point.first >= upper_from) upper.push_back(point);
+                    for (const auto& [range, chosen] : {std::pair{"all", &points}, std::pair{"upper", &upper}}) {
+                        if (chosen->size() < 2) continue;
+                        const auto f = fit(*chosen);
+                        sweep_fit << material << ',' << (metric == 0 ? "gpu_tick_median_ms" : "wall_ms_per_tick") << ','
+                                  << range << ',' << chosen->size() << ',' << f.a << ',' << f.b * 1000 << ',' << f.r2
+                                  << ',' << flat << ',' << (f.b > 0 ? (flat - f.a) / f.b : 0) << ','
+                                  << f.a + f.b * 65536 << ',' << f.a + f.b * 131072 << '\n';
+                    }
                 }
         }
         info << "segments=" << sequence << "\nstatus=ok\n";

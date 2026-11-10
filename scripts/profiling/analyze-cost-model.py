@@ -47,7 +47,7 @@ def fmt(value, digits=3):
 
 def table(header, body):
     if len(body) > 10:
-        raise ValueError('Report tables have at most 10 rows')
+        raise ValueError('Tabele raportu mają najwyżej 10 wierszy')
     lines = ['| ' + ' | '.join(header) + ' |', '| ' + ' | '.join('---' for _ in header) + ' |']
     lines += ['| ' + ' | '.join(str(c) for c in row) + ' |' for row in body]
     return '\n'.join(lines)
@@ -101,26 +101,27 @@ def main():
     info = dict(line.split('=', 1) for line in (folder / 'cost-model.txt').read_text(encoding='utf-8').splitlines()
                 if '=' in line)
     if info.get('status') != 'ok':
-        raise ValueError('cost-model.txt: run did not finish')
+        raise ValueError('cost-model.txt: przebieg się nie zakończył')
     segments = rows(folder / 'segments.csv')
     series = rows(folder / 'series.csv')
     sweep = rows(folder / 'sweep.csv')
     if len({r['seed'] for r in segments + series + sweep}) != 1:
-        raise ValueError('Seeds differ between files')
+        raise ValueError('Pliki mają różne ziarna losowania')
     quality, session = qualify(folder, segments, sweep, args.clock_fraction, args.probe_tolerance)
     gpu_bad = {k for k, q in quality.items() if q['gpu']}
     cpu_bad = {k for k, q in quality.items() if q['cpu']}
-    md = [f"Plan `{info['plan']}`, renderer `{info['renderer']}`, seed {info['seed']}, prefix L = {info['prefix_chain']}."]
+    md = [f"Plan `{info['plan']}`, renderer `{info['renderer']}`, ziarno {info['seed']}, "
+          f"przebieg wstępny L = {info['prefix_chain']}."]
     reasons = defaultdict(int)
     for q in quality.values():
         for r in q['gpu'] + q['cpu']:
             reasons[r] += 1
-    md.append(f"Segments: {len(segments)}; GPU-qualified {len(segments) - len(gpu_bad)}, GPU+CPU-qualified "
-              f"{len(segments) - len(gpu_bad | cpu_bad)} (reasons: {dict(reasons) or 'none'}); segments with "
-              f"sw_power_cap: {session['segments_with_power_cap']}; telemetry samples: {session['telemetry_samples']}; "
-              f"session max clock: {session['session_max_mhz']} MHz; cool-down waits: "
-              f"{sum(int(s.get('cooldown_s') or 0) for s in segments)} s in "
-              f"{sum(1 for s in segments if int(s.get('cooldown_s') or 0) > 0)} segments.")
+    md.append(f"Odcinki: {len(segments)}; zakwalifikowane dla GPU {len(segments) - len(gpu_bad)}, dla GPU i CPU "
+              f"{len(segments) - len(gpu_bad | cpu_bad)} (powody: {dict(reasons) or 'brak'}); odcinki z "
+              f"sw_power_cap: {session['segments_with_power_cap']}; próbki telemetrii: {session['telemetry_samples']}; "
+              f"maks. zegar sesji: {session['session_max_mhz']} MHz; czekanie na schłodzenie: "
+              f"{sum(int(s.get('cooldown_s') or 0) for s in segments)} s w "
+              f"{sum(1 for s in segments if int(s.get('cooldown_s') or 0) > 0)} odcinkach.")
 
     # Part 1: GPU spans from GPU-qualified segments, submit and wall time from fully qualified ones.
     groups = defaultdict(lambda: defaultdict(list))
@@ -146,7 +147,7 @@ def main():
         for key, p in points.items():
             a, b, r2 = fit(p)
             fits.setdefault(key, {})[field] = dict(fixed_ms=a, ms_per_pass=b, r2=r2, points=len(p))
-    md.append(f'Primed samples dropped because the submission outlasted the prefix: {unclean}.')
+    md.append(f'Odrzucone próbki primed (zlecenie trwało dłużej niż przebieg wstępny): {unclean}.')
 
     def pp(kind, mode, t, l, field='gpu_ms'):
         f = fits.get((kind, mode, t, l), {}).get(field)
@@ -214,33 +215,46 @@ def main():
         md.append('### Sweep: ms na tick (mediana bloków)\n\n' + table(
             ['N', 'ziarna GPU', 'ziarna ścienny', 'ziarna dispatche', 'woda GPU', 'woda ścienny', 'woda dispatche'],
             body))
+        # Same definitions as sweep-fit.csv of StrefaQA (src/gpu/cost_model.cpp): a fit over every N ("all") and
+        # over N >= N_max / 4 ("upper", the linear regime); crossover = (cost at the smallest N - a) / b, the N where
+        # the fitted line meets the flat level, i.e. from which N the tick is throughput-bound.
         body = []
+        upper_from = max(counts) / 4 if counts else 0
+        names = {'gpu_tick_median_ms': 'GPU', 'wall_ms_per_tick': 'ścienny'}
         for material in ('grains', 'water'):
             for metric in ('gpu_tick_median_ms', 'wall_ms_per_tick'):
                 pts = [(n, statistics.median(by[(material, n)][metric])) for n in counts
                        if by[(material, n)].get(metric)]
-                a, b, r2 = fit(pts)
-                # Knee: smallest measured N whose cost exceeds the cost at the smallest N by 25%.
-                knee = next((n for n, y in pts if y > 1.25 * pts[0][1]), None) if pts else None
-                sweep_fits[f'{material}:{metric}'] = dict(a_ms=a, b_ms_per_1000=b * 1000, r2=r2, knee_n=knee,
-                                                          points=len(pts), extrapolated_64k_ms=a + b * 65536,
-                                                          extrapolated_128k_ms=a + b * 131072)
-                body.append([material, metric.replace('_', ' '), len(pts), fmt(a), fmt(b * 1000, 4), fmt(r2),
-                             knee or '–', fmt(a + b * 65536), fmt(a + b * 131072)])
-        md.append('### Dopasowanie a + b·N i ekstrapolacja (64k i 128k to ekstrapolacja poza pomiarem)\n\n' + table(
-            ['Materiał', 'Miara', 'punkty', 'a [ms]', 'b [ms/1000]', 'R²', 'N: +25% ponad min N', '64k [ms]',
+                if not pts:
+                    continue
+                flat = pts[0][1]
+                for rng, chosen in (('all', pts), ('upper', [(n, y) for n, y in pts if n >= upper_from])):
+                    if len(chosen) < 2:
+                        continue
+                    a, b, r2 = fit(chosen)
+                    crossover = (flat - a) / b if b > 0 else None
+                    sweep_fits[f'{material}:{metric}:{rng}'] = dict(
+                        a_ms=a, b_ms_per_1000=b * 1000, r2=r2, flat_ms=flat, crossover_n=crossover,
+                        points=len(chosen), extrapolated_64k_ms=a + b * 65536, extrapolated_128k_ms=a + b * 131072)
+                    body.append([{'grains': 'ziarna', 'water': 'woda'}[material], names[metric],
+                                 f"{chosen[0][0]}–{chosen[-1][0]} ({len(chosen)})", fmt(a), fmt(b * 1000, 4), fmt(r2),
+                                 fmt(crossover, 0), fmt(a + b * 65536), fmt(a + b * 131072)])
+        md.append('### Dopasowanie a + b·N i ekstrapolacja (64k i 128k to ekstrapolacja poza pomiarem)\n\n'
+                  'Próg: N, przy którym prosta przecina koszt przy najmniejszym N.\n\n' + table(
+            ['Materiał', 'Miara', 'zakres N (punkty)', 'a [ms]', 'b [ms/1000]', 'R²', 'próg N', '64k [ms]',
              '128k [ms]'], body))
         for (material, n), v in sorted(by.items()):
             if v.get('gpu_tick_cpu_slow') and v.get('gpu_tick_cpu_ok'):
                 throttle.append(statistics.median(v['gpu_tick_cpu_slow']) / statistics.median(v['gpu_tick_cpu_ok']))
         if throttle:
-            md.append(f'GPU tick with the CPU probe slow vs fast, same point ({len(throttle)} points): median ratio '
-                      f'{fmt(statistics.median(throttle))}, range {fmt(min(throttle))}–{fmt(max(throttle))}.')
+            md.append(f'Tick GPU przy wolnej wobec szybkiej sondzie CPU, ten sam punkt ({len(throttle)} punktów): '
+                      f'mediana stosunku {fmt(statistics.median(throttle))}, zakres '
+                      f'{fmt(min(throttle))}–{fmt(max(throttle))}.')
 
     cpu = [float(s[f'{w}_cpu_ms']) for s in segments for w in ('before', 'after')]
     gpu = [float(s[f'{w}_gpu_ms']) for s in segments for w in ('before', 'after')]
-    md.append(f'Probes: CPU median {fmt(statistics.median(cpu))} ms (min {fmt(min(cpu))}, max {fmt(max(cpu))}); '
-              f'GPU median {fmt(statistics.median(gpu))} ms (min {fmt(min(gpu))}, max {fmt(max(gpu))}).')
+    md.append(f'Sondy: CPU mediana {fmt(statistics.median(cpu))} ms (min {fmt(min(cpu))}, maks. {fmt(max(cpu))}); '
+              f'GPU mediana {fmt(statistics.median(gpu))} ms (min {fmt(min(gpu))}, maks. {fmt(max(gpu))}).')
     (folder / 'summary.md').write_text('\n\n'.join(md) + '\n', encoding='utf-8')
     json.dump(dict(info=info, session=session, gpu_disqualified=sorted(gpu_bad, key=int),
                    cpu_disqualified=sorted(cpu_bad, key=int), reasons=dict(reasons),

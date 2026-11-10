@@ -7,6 +7,7 @@
 #  as -ThreadedOptimization so the run records it. The tool cannot read or change the driver option.
 # -Seed repeats the order of an earlier run (STREFA_BENCHMARK_SEED). The run records AC power, the power plan and the
 # starting GPU temperature; the protocol in CLAUDE.md asks for AC power and a GPU idle for >= 5 min before the start.
+# Windows only (Win32_Battery, powercfg, nvidia-smi); on Linux run StrefaQA --gpu-check cost-model directly.
 param(
     [Parameter(Mandatory = $true)][string]$Executable,
     [Parameter(Mandatory = $true)][string]$Output,
@@ -16,9 +17,10 @@ param(
     [ValidateRange(1, 600)][int]$TimeoutMinutes = 300
 )
 $ErrorActionPreference = 'Stop'
+if (-not $IsWindows) { throw 'profile-cost-model.ps1 działa tylko na Windows (Win32_Battery, powercfg); na Linuksie uruchom StrefaQA --gpu-check cost-model bezpośrednio.' }
 $Executable = (Resolve-Path -LiteralPath $Executable).Path
 $Output = [IO.Path]::GetFullPath($Output)
-if (Test-Path -LiteralPath $Output) { throw 'Choose a new directory; earlier results are preserved.' }
+if (Test-Path -LiteralPath $Output) { throw 'Wybierz nowy katalog; wcześniejsze wyniki zostają nietknięte.' }
 [IO.Directory]::CreateDirectory($Output) | Out-Null
 Import-Module (Join-Path $PSScriptRoot 'GpuTelemetry.psm1')
 $smi = Find-NvidiaSmi $null
@@ -45,11 +47,11 @@ try {
     if ($sampler) { $null = Stop-GpuTelemetry $sampler }
 }
 $p.Refresh(); $code = $p.ExitCode
-if ($null -eq $code) { throw 'Native process exit status unavailable' }
+if ($null -eq $code) { throw 'Brak kodu wyjścia procesu StrefaQA.' }
 [ordered]@{ exit_code = $code; timed_out = (-not $done); finished_utc = [DateTime]::UtcNow.ToString('o') } |
     ConvertTo-Json | Set-Content -Encoding UTF8 (Join-Path $Output 'run-result.json')
-if (-not $done -or $code -ne 0) { throw 'Cost model run failed; inspect the preserved files.' }
-$python = if ($IsWindows) { 'python' } else { 'python3' } # python3.exe on Windows is often the Store stub
-& $python (Join-Path $PSScriptRoot 'analyze-cost-model.py') $Output
-if ($LASTEXITCODE -ne 0) { throw 'analyze-cost-model.py failed' }
+if (-not $done -or $code -ne 0) { throw 'Pomiar modelu kosztu nie powiódł się; sprawdź zachowane pliki.' }
+# python3.exe on Windows is often the Store stub
+& python (Join-Path $PSScriptRoot 'analyze-cost-model.py') $Output
+if ($LASTEXITCODE -ne 0) { throw 'analyze-cost-model.py zakończył się błędem.' }
 Write-Host "cost-model $Plan : PASS"

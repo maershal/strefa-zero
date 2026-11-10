@@ -4,7 +4,7 @@ Pomiar z 2026-11-10 na GTX 1650 (laptop, i5-9300HF, sterownik 610.47, OpenGL 4.3
 `StrefaQA --gpu-check cost-model` (`src/gpu/cost_model.cpp`, `src/gpu/synthetic_passes.cpp`). Procedura:
 [GPU_CHECK.md, sekcja 4b](../maintenance/GPU_CHECK.md#4b-model-kosztu-ticka-gpu-z01-opcjonalnie). Surowe dane (CSV,
 telemetria, `run-spec.json`, manifest SHA-256):
-[z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10)
+[z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10)
 w repozytorium pomiarów (patrz „Dane”).
 
 ## Odpowiedź w skrócie
@@ -31,6 +31,7 @@ odpowiada 0,7–1,5 ms „gdy coś wymusi synchronizację” z [I09](I09_GPU_VFX
 | --- | --- |
 | Zasilanie, plan | sieć (bateria 94%), „Zrównoważony” |
 | GPU na starcie | 50–51 °C, P8, po 5 min bezczynności |
+| Okno, VSync | okno StrefaQA bez prezentacji klatek (narzędzie nie wywołuje `SDL_GL_SwapWindow`), więc VSync nie dotyczy; okno nie było zminimalizowane |
 | „Threaded optimization” | domyślne „Auto” (nie zmieniane; narzędzie tego nie odczytuje) |
 | Kolejność | 3 bloki, w każdym nowa losowa kolejność serii i punktów sweepu (SplitMix64 + Fisher–Yates, ziarno 4521618711065972830) |
 | Powtórzenia | seria syntetyczna 10× w odcinku × 3 bloki; punkt sweepu 120 ticków rozgrzewki + 240 mierzonych × 3 bloki, świeży `ParticleWorld` na punkt |
@@ -151,8 +152,9 @@ Ziarna: 41 dispatchy i 42 bariery na tick, woda: 51 i 52, bez zmiany z N. * Wszy
 wolną sondę CPU po odcinku; podany czas ścienny to mediana mimo to (czasy GPU są zakwalifikowane).
 
 Od 1 do 4 tys. cząstek tick rośnie o 23% (ziarna) i 15% (woda), czyli jest stały. Od 8 tys. rośnie liniowo
-(16k → 32k: ×2,14 ziarna, ×1,88 woda). Przecięcie części stałej (0,58 / 1,54 ms) z nachyleniem z zakresu 8k–32k daje
-próg ok. **4,5 tys. ziaren i 5,5 tys. cząstek wody**: powyżej tick jest ograniczony przepustowością. Ciecz powyżej
+(16k → 32k: ×2,14 ziarna, ×1,88 woda). Prosta dopasowana do 8k–32k przecina koszt przy 1k (0,58 / 1,54 ms) przy
+**ok. 5,1 tys. ziaren i 4,4 tys. cząstek wody** (`crossover_n` w `sweep-fit.csv` i w `analyze-cost-model.py`: 5127
+i 4362): powyżej tick jest ograniczony przepustowością. Ciecz powyżej
 7662 cząstek jest teraz zmierzona do 32 000 (limit `capacity` = 32 768).
 
 ## 4. Ekstrapolacja na 64k i 128k
@@ -163,9 +165,9 @@ siatkę sąsiadów i może zmienić koszt).
 | Materiał | Dopasowanie | a [ms] | b [ms / 1000] | R² | 64k [ms] | 128k [ms] |
 | --- | --- | --- | --- | --- | --- | --- |
 | ziarna | a + b·N, 1k–32k (6 punktów) | 0,286 | 0,1166 | 0,983 | 7,9 | 15,6 |
-| ziarna | a + b·N, 8k–32k (3 punkty) | −0,104 | 0,1326 | — | 8,6 | 17,3 |
+| ziarna | a + b·N, 8k–32k (3 punkty) | −0,104 | 0,1326 | 0,999 | 8,6 | 17,3 |
 | woda | a + b·N, 1k–32k (6 punktów) | 0,906 | 0,2588 | 0,990 | 17,9 | 34,8 |
-| woda | a + b·N, 8k–32k (3 punkty) | 0,300 | 0,2839 | — | 18,9 | 37,5 |
+| woda | a + b·N, 8k–32k (3 punkty) | 0,300 | 0,2839 | 0,999 | 18,9 | 37,5 |
 
 Prosta po całym zakresie źle opisuje płaski początek (dla wody przewiduje 1,17 ms przy 1k zamiast 1,54), więc do
 ekstrapolacji właściwsze jest nachylenie z 8k–32k. Wzrost 16k → 32k jest lekko ponadliniowy dla ziaren (×2,14), więc
@@ -183,7 +185,9 @@ granicy, a 64k wody przekracza budżet ponad 2×.
 - Każda wymuszona synchronizacja w ticku kosztuje ~22–40 µs na każdy następny przebieg ticka; to zostaje głównym
   ryzykiem dla ścieżki gorącej.
 - Pomiary na tym laptopie muszą sprawdzać stan CPU, nie tylko GPU: dławienie CPU ~5× nie ma śladu w `nvidia-smi`.
-  `CalibrationProbe` (`src/gpu/synthetic_passes.hpp`) jest do tego gotowa dla benchmarku termiki i scen (#80).
+  `CalibrationProbe` (`src/gpu/synthetic_passes.hpp`, biblioteka `strefa_diagnostics`) jest do tego gotowa dla
+  benchmarku termiki; benchmark scen jest dziś w `strefa_app` i dostanie ją po przeniesieniu QA poza `StrefaZero`
+  (#39, #80).
 
 ## Ograniczenia
 
@@ -201,14 +205,16 @@ granicy, a 64k wody przekracza budżet ponad 2×.
 
 ## Dane
 
-Folder [z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10)
-(manifest [SHA256SUMS.txt](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/SHA256SUMS.txt)):
+Folder [z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10)
+(manifest [SHA256SUMS.txt](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/SHA256SUMS.txt)):
 
-- `run-3/` — wynik raportu: [summary.md](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/summary.md),
-  [analysis.json](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/analysis.json),
-  [series.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/series.csv),
-  [sweep.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/sweep.csv),
-  [segments.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/segments.csv),
-  [telemetry.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/telemetry.csv),
-  [run-spec.json](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/run-spec.json).
-- `run-1/`, `run-2/` — próby, które ujawniły dławienie CPU ([sondy run-1](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-1/segments.csv)); bez wpływu na wyniki.
+- `run-3/` — wynik raportu: [summary.md](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/summary.md),
+  [analysis.json](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/analysis.json),
+  [series.csv](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/series.csv),
+  [sweep.csv](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/sweep.csv),
+  [segments.csv](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/segments.csv),
+  [telemetry.csv](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/telemetry.csv),
+  [run-spec.json](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-3/run-spec.json).
+- `sweep-fit.csv` w danych pochodzi z narzędzia sprzed poprawki po recenzji (kolumna `knee_n` = a/b, nie próg);
+  progi i dopasowania 8k–32k w raporcie są z `summary.md`, przeliczonego obecnym `analyze-cost-model.py`.
+- `run-1/`, `run-2/` — próby, które ujawniły dławienie CPU ([sondy run-1](https://github.com/maershal/strefa-zero-measurements/blob/1e0c8741339e3206a23219d089be95b176708efe/z01-cost-model-2026-11-10/run-1/segments.csv)); bez wpływu na wyniki.

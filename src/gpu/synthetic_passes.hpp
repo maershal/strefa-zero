@@ -1,7 +1,7 @@
 #pragma once
 // Synthetic compute passes and calibration probes (Z01). Measurement code without ParticleWorld: it compiles its own
 // two programs and buffers in the current OpenGL 4.3 context and restores the bindings it touches, so a benchmark can
-// call it between ticks of a world. Never used by the frame loop; the game does not reference it.
+// call it between ticks of a world. Built into strefa_diagnostics (QA only); the game does not link it.
 #include <cstdint>
 #include <expected>
 #include <memory>
@@ -72,8 +72,8 @@ private:
 // Fixed CPU work (xorshift loop); the median of three runs in milliseconds.
 double cpu_reference_ms();
 
-// Part 3 of Z01: call sample() at the start and at the end of every measured segment. Reusable by the thermal and
-// scene benchmarks (needs only a current GL 4.3 context; restores program and buffer bindings).
+// Part 3 of Z01: call sample() at the start and at the end of every measured segment. Reusable by the benchmarks in
+// strefa_diagnostics (needs only a current GL 4.3 context; restores program and buffer bindings).
 class CalibrationProbe {
 public:
     static std::expected<CalibrationProbe, std::string> create();

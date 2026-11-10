@@ -154,6 +154,8 @@ pwsh ./scripts/profiling/profile-cost-model.ps1 -Executable build/release/Strefa
     -ThreadedOptimization auto
 ```
 
+- Skrypt działa tylko na Windows (`Win32_Battery`, `powercfg`). Na Linuksie uruchom
+  `StrefaQA --gpu-check cost-model --profile <katalog>` bezpośrednio i zbierz telemetrię osobno.
 - Skrypt zapisuje `telemetry.csv` (co 100 ms), `run-spec.json` (zasilanie, plan zasilania, temperatura GPU na starcie)
   i uruchamia `analyze-cost-model.py`. Czasy GPU biorą odcinki bez `hw_*`/`sw_thermal_slowdown`, z zegarem
   w tickach sweepu co najmniej 90% maksimum sesji i z sondą GPU w granicach 15% najszybszej; czasy zależne od CPU
@@ -170,7 +172,9 @@ Pliki: `series.csv` (każde powtórzenie serii syntetycznej: czas GPU z pary `GL
 ścienny), `segments.csv` (odcinek = jedna seria albo jeden punkt sweepu, z sondami przed i po oraz czasem UTC do
 złączenia z telemetrią), `sweep.csv` i `sweep-ticks.csv` (punkt sweepu i jego ticki), `series-summary.csv`,
 `series-fit.csv`, `sweep-fit.csv` (podsumowania bez kwalifikacji telemetrią), `cost-model.txt` (renderer, ziarno,
-plan).
+plan). `sweep-fit.csv` i `analyze-cost-model.py` liczą to samo: dopasowanie a + b·N po wszystkich N (`all`) i po
+N ≥ N_max/4 (`upper`, zakres liniowy) oraz próg `crossover_n` = (koszt przy najmniejszym N − a) / b, czyli N, od
+którego tick jest ograniczony przepustowością.
 
 ## 5. Co odesłać
 
