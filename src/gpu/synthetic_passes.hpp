@@ -56,7 +56,8 @@ public:
     SyntheticPasses& operator=(const SyntheticPasses&) = delete;
     ~SyntheticPasses();
     SeriesTiming run(const SyntheticSeries& series);
-    // Doubles the prefix chain until the busy prefix takes at least target_ms on the GPU; returns its length.
+    // Doubles the prefix chain until the busy prefix takes at least target_ms on the GPU (or twice that in wall
+    // time); returns its length.
     unsigned calibrate_prefix(double target_ms);
     unsigned prefix_chain() const noexcept;
     // Correctness of the chain kernel: GPU result of a small series against a CPU walk of the same cycle.

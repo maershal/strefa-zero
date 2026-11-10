@@ -254,14 +254,16 @@ std::expected<void, std::string> model_tick_cost(const std::filesystem::path& sh
                 before = probe.sample();
                 fastest_cpu = std::min(fastest_cpu, before.cpu_ms);
             }
-            // After an idle wait the GPU sits in a low P-state; ~0.3 s of the busy prefix brings its clock back
-            // before the probe that opens the segment.
+            // After an idle wait the GPU sits in a low P-state; ~0.3 s (wall clock) of the busy prefix brings its
+            // clock back before the probe that opens the segment. Part of the gate, so off in the quick plan (a
+            // software renderer's timestamps and probes would keep it looping).
             fastest_gpu = std::min(fastest_gpu, before.gpu_ms);
-            for (int round = 0; round < 5 && before.gpu_ms > 1.15 * fastest_gpu; ++round) {
-                double busy = 0;
-                for (int i = 0; i < 200 && busy < 300; ++i)
-                    busy += passes.run({SyntheticKind::chain, 32768, passes.prefix_chain(), 1, SubmitMode::cold})
-                                    .gpu_ms;
+            for (int round = 0; plan.max_cooldown_s > 0 && round < 5 && before.gpu_ms > 1.15 * fastest_gpu; ++round) {
+                const auto warm_start = std::chrono::steady_clock::now();
+                for (int i = 0;
+                     i < 200 && std::chrono::steady_clock::now() - warm_start < std::chrono::milliseconds{300}; ++i)
+                    static_cast<void>(
+                            passes.run({SyntheticKind::chain, 32768, passes.prefix_chain(), 1, SubmitMode::cold}));
                 before = probe.sample();
                 fastest_gpu = std::min(fastest_gpu, before.gpu_ms);
             }

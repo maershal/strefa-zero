@@ -233,7 +233,8 @@ unsigned SyntheticPasses::calibrate_prefix(double target_ms) {
     auto& s = *impl_;
     for (s.prefix = 256; s.prefix < (1U << 20); s.prefix *= 2) {
         const auto t = run({SyntheticKind::chain, prefix_threads, s.prefix, 1, SubmitMode::cold});
-        if (t.gpu_ms >= target_ms) break;
+        // Wall clock as well: a software renderer may report near-zero timestamp spans.
+        if (t.gpu_ms >= target_ms || t.wall_ms >= 2 * target_ms) break;
     }
     return s.prefix;
 }
