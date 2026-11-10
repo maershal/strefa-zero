@@ -66,6 +66,11 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
         if (!result) return std::unexpected{result.error()};
         return 0;
     }
+    if (options.gpu_check == "cost-model") {
+        const auto result = gpu::model_tick_cost(assets / "shaders", profile, options.gpu_execution);
+        if (!result) return std::unexpected{result.error()};
+        return 0;
+    }
     if (options.hot_test) {
         const auto result = gpu::validate_hot_reads(profile, options.gpu_execution);
         if (!result) return std::unexpected{result.error()};

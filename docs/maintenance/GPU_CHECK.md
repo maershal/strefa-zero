@@ -141,6 +141,37 @@ spędzony głównie w wolnym reżimie nie robi z niego odniesienia (`gas_referen
 `disqualified_segments`, `qualified_full_gates` i decyzję `performance_accepted` tylko z prób zakwalifikowanych,
 a także `kernel_profiles` (rozkład czasu każdego kernela na scenę) i liczniki dispatchy i barier w `stage_profiles`.
 
+## 4b. Model kosztu ticka GPU (Z01, opcjonalnie)
+
+`StrefaQA --gpu-check cost-model` rozstrzyga, czy koszt ticka siedzi w GPU (minimalny czas krótkiego przebiegu), czy
+w dostarczaniu przebiegów przez sterownik ([raport Z01](../reports/Z01_GPU_COST_MODEL.md)). Pełny plan trwa ok. 1 h
+na laptopie z GTX 1650, w tym ok. 45 min czekania na schłodzenie: przed każdym odcinkiem narzędzie czeka (do 180 s),
+aż sonda CPU wróci do 15% najlepszego odczytu, bo pod ciągłym obciążeniem GPU ten laptop po ok. 40 s zwalnia CPU
+nawet 5× bez żadnego powodu ograniczenia w telemetrii GPU:
+
+```powershell
+pwsh ./scripts/profiling/profile-cost-model.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/cost-model `
+    -ThreadedOptimization auto
+```
+
+- Skrypt zapisuje `telemetry.csv` (co 100 ms), `run-spec.json` (zasilanie, plan zasilania, temperatura GPU na starcie)
+  i uruchamia `analyze-cost-model.py`. Czasy GPU biorą odcinki bez `hw_*`/`sw_thermal_slowdown`, z zegarem
+  w tickach sweepu co najmniej 90% maksimum sesji i z sondą GPU w granicach 15% najszybszej; czasy zależne od CPU
+  (zlecenie, czas ścienny) wymagają jeszcze sondy CPU w granicach 15% najszybszej. Wynik: `summary.md` (tabele do
+  raportu) i `analysis.json`.
+- Powtórka z wyłączoną opcją sterownika: w Panelu sterowania NVIDIA › Zarządzaj ustawieniami 3D › Ustawienia programu
+  dodaj `StrefaQA.exe` i ustaw „Optymalizacja wątkowa” (Threaded optimization) na „Wył.”, potem
+  `-Plan part1 -ThreadedOptimization off -Output gpu-check/cost-model-off`. Po pomiarze przywróć „Automatycznie”.
+  Narzędzie nie odczytuje tej opcji; zapisuje tylko to, co podano w `-ThreadedOptimization`.
+- `-Seed N` powtarza kolejność wcześniejszego pomiaru. `STREFA_COST_MODEL_PLAN=quick` (CTest `gpu.cost_model`) to te
+  same ścieżki kodu w małych rozmiarach, na dowolnym rendererze; jego liczby niczego nie rozstrzygają.
+
+Pliki: `series.csv` (każde powtórzenie serii syntetycznej: czas GPU z pary `GL_TIMESTAMP`, czas CPU zlecenia, czas
+ścienny), `segments.csv` (odcinek = jedna seria albo jeden punkt sweepu, z sondami przed i po oraz czasem UTC do
+złączenia z telemetrią), `sweep.csv` i `sweep-ticks.csv` (punkt sweepu i jego ticki), `series-summary.csv`,
+`series-fit.csv`, `sweep-fit.csv` (podsumowania bez kwalifikacji telemetrią), `cost-model.txt` (renderer, ziarno,
+plan).
+
 ## 5. Co odesłać
 
 Wklej do rozmowy albo do opisu PR:

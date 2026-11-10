@@ -132,7 +132,9 @@ Zgodność termiki GPU z wyrocznią CPU:
 `StrefaQA --gpu-thermal-conformance tests/conformance/thermal_thresholds.txt --profile <katalog>` (na razie zapisuje
 tylko obserwable CPU 10 scen; progi są ustalone w pliku przed zmianami GPU).
 Nazwane testy GPU: `StrefaQA --gpu-check <nazwa> --profile <katalog>`; `lab-blast` sprawdza wybuchy laboratorium
-(z `--gpu-batched-blasts on` także misję). Nowe testy dostają nazwę zamiast osobnej flagi.
+(z `--gpu-batched-blasts on` także misję); `cost-model` mierzy, skąd bierze się koszt ticka GPU (przebiegi
+syntetyczne, sweep liczby cząstek, sondy kalibracyjne; raport [Z01](docs/reports/Z01_GPU_COST_MODEL.md), procedura
+w [GPU_CHECK.md](docs/maintenance/GPU_CHECK.md)). Nowe testy dostają nazwę zamiast osobnej flagi.
 Krótkie testy okna `StrefaQA`: `--mission-ui-smoke-test` (ekran misji: wejście, wyjście i powrót, bez progu
 1700 ticków) i `--mode-fault-test` (wstrzyknięty błąd w każdym trybie musi wrócić do menu z wpisem w
 `errors.log`).
