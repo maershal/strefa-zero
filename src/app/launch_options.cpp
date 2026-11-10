@@ -107,7 +107,8 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
         else if (argument == "--gpu-check" && i + 1 < argc) {
             result.gpu_check = argv[++i];
             if (std::ranges::find(gpu_checks, result.gpu_check) == gpu_checks.end())
-                return std::unexpected{"Nieznany test GPU: " + result.gpu_check + " (dostępne: lab-blast)."};
+                return std::unexpected{"Nieznany test GPU: " + result.gpu_check
+                                       + " (dostępne: lab-blast, cost-model)."};
         } else if (argument == "--gpu-batched-blasts" && i + 1 < argc) {
             const std::string_view value{argv[++i]};
             if (value != "on" && value != "off") return std::unexpected{"Wybuchy wsadowe w misji: on lub off."};

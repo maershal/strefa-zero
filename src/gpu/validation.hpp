@@ -42,6 +42,10 @@ std::expected<void, std::string> validate_execution(const std::filesystem::path&
 std::expected<void, std::string> benchmark_thermal(ParticleWorld&, const std::filesystem::path& output);
 // Scene order of one benchmark block: Fisher-Yates over SplitMix64, identical on every toolchain.
 std::array<unsigned, 4> thermal_benchmark_order(std::uint64_t& state);
+// Z01, --gpu-check cost-model: synthetic pass series, particle-count sweep of the real solver and calibration probes
+// around every segment (CSV into output; STREFA_COST_MODEL_PLAN = full | part1 | quick).
+std::expected<void, std::string> model_tick_cost(const std::filesystem::path& shaders,
+                                                 const std::filesystem::path& output, const ExecutionOptions&);
 std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::path& output);
 std::expected<void, std::string> validate_readback(const std::filesystem::path& output);
 std::expected<void, std::string> profile_readback(const std::filesystem::path& output);
