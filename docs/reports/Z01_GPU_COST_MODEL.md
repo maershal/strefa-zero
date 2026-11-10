@@ -3,8 +3,9 @@
 Pomiar z 2026-11-10 na GTX 1650 (laptop, i5-9300HF, sterownik 610.47, OpenGL 4.3), narzędzie
 `StrefaQA --gpu-check cost-model` (`src/gpu/cost_model.cpp`, `src/gpu/synthetic_passes.cpp`). Procedura:
 [GPU_CHECK.md, sekcja 4b](../maintenance/GPU_CHECK.md#4b-model-kosztu-ticka-gpu-z01-opcjonalnie). Surowe dane (CSV,
-telemetria, `run-spec.json`, manifest SHA-256): folder `z01/` w repozytorium pomiarów — **permalink do uzupełnienia
-po wypchnięciu danych** (patrz „Dane”).
+telemetria, `run-spec.json`, manifest SHA-256):
+[z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10)
+w repozytorium pomiarów (patrz „Dane”).
 
 ## Odpowiedź w skrócie
 
@@ -121,7 +122,7 @@ ziaren, 253 wody), tyle samo co 0,008 ms w I04.5E0.
 (sonda CPU ~1,7× wolniejsza po odcinku). Stosunek czasu GPU ticka: mediana 0,99 (0,89–1,00). Wolniejszy CPU, a więc
 wolniejszy sterownik, nie wydłuża ticka GPU.
 
-**Powtórka z wyłączoną „Threaded optimization”** (do wykonania przez właściciela, [GPU_CHECK.md 4b](../maintenance/GPU_CHECK.md#4b-model-kosztu-ticka-gpu-z01-opcjonalnie),
+**Powtórka z wyłączoną „Threaded optimization”** (do wykonania przez właściciela, #81, [GPU_CHECK.md 4b](../maintenance/GPU_CHECK.md#4b-model-kosztu-ticka-gpu-z01-opcjonalnie),
 `-Plan part1 -ThreadedOptimization off`). Jak odczytać `summary.md` tej serii względem tabeli z punktu 1:
 
 - „CPU zlecenie” wzrośnie (sterownik pracuje w wątku aplikacji). Samo to nie rozstrzyga niczego.
@@ -182,7 +183,7 @@ granicy, a 64k wody przekracza budżet ponad 2×.
 - Każda wymuszona synchronizacja w ticku kosztuje ~22–40 µs na każdy następny przebieg ticka; to zostaje głównym
   ryzykiem dla ścieżki gorącej.
 - Pomiary na tym laptopie muszą sprawdzać stan CPU, nie tylko GPU: dławienie CPU ~5× nie ma śladu w `nvidia-smi`.
-  `CalibrationProbe` (`src/gpu/synthetic_passes.hpp`) jest do tego gotowa dla benchmarku termiki i scen.
+  `CalibrationProbe` (`src/gpu/synthetic_passes.hpp`) jest do tego gotowa dla benchmarku termiki i scen (#80).
 
 ## Ograniczenia
 
@@ -200,6 +201,14 @@ granicy, a 64k wody przekracza budżet ponad 2×.
 
 ## Dane
 
-Do repozytorium pomiarów (folder `z01/`, manifest `SHA256SUMS.txt`) trafiają: `run-3/` (wynik raportu:
-`series.csv`, `segments.csv`, `sweep.csv`, `sweep-ticks.csv`, podsumowania, `telemetry.csv`, `run-spec.json`,
-`analysis.json`, `summary.md`) oraz `run-1/` i `run-2/` (próby, które ujawniły dławienie CPU, bez wpływu na wyniki).
+Folder [z01-cost-model-2026-11-10](https://github.com/maershal/strefa-zero-measurements/tree/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10)
+(manifest [SHA256SUMS.txt](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/SHA256SUMS.txt)):
+
+- `run-3/` — wynik raportu: [summary.md](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/summary.md),
+  [analysis.json](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/analysis.json),
+  [series.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/series.csv),
+  [sweep.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/sweep.csv),
+  [segments.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/segments.csv),
+  [telemetry.csv](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/telemetry.csv),
+  [run-spec.json](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-3/run-spec.json).
+- `run-1/`, `run-2/` — próby, które ujawniły dławienie CPU ([sondy run-1](https://github.com/maershal/strefa-zero-measurements/blob/420672370af217635bf37d0c7e516b9a8bb6ea52/z01-cost-model-2026-11-10/run-1/segments.csv)); bez wpływu na wyniki.
