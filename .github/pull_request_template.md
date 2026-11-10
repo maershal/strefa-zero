@@ -5,6 +5,7 @@
 ## Changes
 
 <!-- What exactly changes. Name every change of behaviour, default value or setting semantics explicitly. A PR that changes src/ also adds an entry to docs/CHANGELOG.md (pr-hygiene checks it). -->
+<!-- A dispatch or draw added to or removed from the default per-tick/per-frame path: "Passes per tick: before -> after". -->
 
 ## Tests
 

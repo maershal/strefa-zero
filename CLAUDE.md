@@ -16,7 +16,7 @@ descriptions in English.
 ./scripts/build.sh --core-only        # no SDL/OpenGL
 ./scripts/build.sh --core-only --configuration RelWithDebInfo --build-dir build/asan -- -DSTREFA_SANITIZE=address,undefined
 ctest --test-dir build/linux-release -R '^gpu\.mission$' --output-on-failure   # one test
-./scripts/format.sh                   # clang-format all C++ (CI runs --check)
+CLANG_FORMAT=clang-format-18 ./scripts/format.sh   # CI job `format` checks with clang-format-18; other versions differ
 ./scripts/lint.sh [files...]          # clang-tidy, advisory
 python3 scripts/check_architecture.py [--report|--update]   # layer rules + size budgets (CI job `architecture`)
 python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenerate/compare tests/golden/<toolchain>.txt
@@ -44,7 +44,9 @@ python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenera
 - `sim.golden_master` compares per-field digests (material, mass, enthalpy, gases, velocity, other, plus the legacy
   checksum) with `tests/golden/<toolchain>.txt` (`gcc`, `clang`, `msvc`; raw IEEE bits, libm differs per toolchain).
   A failure names the case and fields and writes `Testing/Temporary/golden-actual.txt`; `scripts/golden.py` rewrites
-  the reference and prints a Markdown diff for the PR.
+  the reference and prints a Markdown diff for the PR. A CPU physics change updates all three files in the same PR:
+  `gcc.txt` locally, `msvc.txt` and `clang.txt` from the failing CI run of the PR (artifacts
+  `Windows-core-only-test-logs` and `Linux-clang-test-logs`, file `golden-actual.txt`, already in the reference format).
 
 ## Layout
 
@@ -87,6 +89,14 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 - New CLI flags go in `src/app/launch_options.cpp` and are StrefaQA-only unless added to `player_options`
   (keep StrefaZero under 15 options; `app.launch_options` checks it). New check modes go in
   `run_diagnostic_scenario` and need a CTest entry running `strefa_qa` with `SKIP_RETURN_CODE 77` and a `gpu` label.
+  A new boolean flag fails the ratchet (`launch_options_bools` is at its budget): a new check is a name in
+  `gpu_checks` (`src/app/application.hpp`) run as `--gpu-check <name>`, a new switch takes a value `on|off`.
+- A GPU pass (a dispatch or draw issued every tick or frame) is a resource: at game scale the tick cost follows the
+  pass count, not the particle count. A PR that adds or removes a pass on the default path states
+  "passes per tick: before -> after" in its description. The expected counts in `check_instrumentation`
+  (`src/gpu/profiling.cpp`, CTest `gpu.instrumentation`) may go up only with the owner's approval comment in the PR.
+  A new GPU system has from the start a path where the CPU knows there is no work and makes zero GL calls, not a
+  dispatch of zero groups.
 
 ## Architecture ratchet
 
@@ -97,11 +107,14 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   `qa`). Forbidden: `gpu` -> `game`/`ui`/`app`/`sim`; `sim` -> `gpu`/`ui`/`app`; anything -> `gpu` except `app` and
   `qa`; anything -> `sim` except `app`, `qa`, `tools`; anything -> `qa`. Today's violations are counted per edge in
   `tools/architecture_allowlist.txt`.
-- `tools/architecture_budget.json`: sizes measured on `main` (e12c39a values, except the three that #24 raised):
+- `tools/architecture_budget.json`: sizes measured on `main`, lowered by `--update` whenever a PR shrinks one:
   `world.cpp` and its translation unit with the `.inl` files, `ParticleWorld` public declarations and test hooks,
   `application.cpp` and `Application::run()`, parser booleans, `.inl` includes, 320/192 literals (C++ incl. tests, GLSL),
   lines with the 2.65/3.3125 inverse-mass literals, `std::array<GLuint, 8>`, `unsigned& current|bank`, GLSL lines
   > 200 characters. Definitions are in the script; `--report` prints every value and edge.
+- Every budget is at its limit today. `world.cpp`, the `.inl` files it includes and `application.cpp` cannot grow by
+  a single line, `ParticleWorld` gets no new public declaration or test hook, and no new `.inl` include: new code goes
+  into new `.cpp`/`.hpp` files. A new `strefa_*` CMake target needs its module in `TARGET_MODULE` in the script.
 - `strefa_zero_qa_symbols`: `nm -C` lines matching `Benchmark|ScenarioRunner|write_profile_samples` in `StrefaZero`
   built with `-DSTREFA_IPO=OFF` (step in `build-and-test`; LTO would make the count unstable).
   `strefa_zero_tracy_symbols` (lines matching `tracy`, case-insensitive) comes from the same `nm` run and stays 0:
@@ -118,6 +131,9 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   re-run of the `architecture` job after setting the label is enough.
 - `scripts/test-check-architecture.sh` (job `format`) injects violations into a copy of the tree and checks the reported
   reason. Acceptance in #42: an artificial violation commit failed the `architecture` job and was then reverted.
+  It edits the live tree with `sed`: the `#include "sim/material.hpp"` in `gpu/thermal.hpp`, the line
+  `void apply_fluid_velocities_for_test();` in `gpu/world.hpp`, the `target_link_libraries(strefa_sim ...` line and
+  the `include ui gpu` count. A PR that pays off exactly that debt or moves those lines fixes the self-test in the same PR.
 
 ## Measurement data
 
@@ -173,7 +189,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
   reads the diff before the description and every commit since the previous automatic review, and the result is
   posted as a comment review. Findings of severity `minor` and up that a later push leaves unfixed become issues
   labelled `review-followup`, linked from the PR. Every "Out of scope" item gets its own issue before the PR is
-  opened (pr-hygiene checks the `#NNN`). Every item under "Pre-merge checks" must be checked.
+  opened (pr-hygiene checks the `#NNN`). With nothing out of scope the section is the sentence "None." without a
+  list marker (a list item without `#NNN` fails). Every item under "Pre-merge checks" must be checked.
 - Ruleset `main`, target state (GitHub › Settings › Rules; set by the owner, not by an agent; not enforced yet, #31):
   changes only through a PR, required checks `linux-status`, `windows-status` and `hygiene` on an up-to-date branch,
   squash merge only, linear history, no force push or deletion, head branch deleted after merge.
@@ -188,6 +205,8 @@ link to it with permalinks pinned to a commit; there is no need to clone it to w
 - `./scripts/build.sh --test-suite cpu` is green (Windows: `pwsh ./scripts/build.ps1 -Configuration Release -CoreOnly`).
 - `./scripts/format.sh --check` is clean.
 - The PR description lists the GPU tests that were not run locally.
+- A PR touching `src/gpu`, `assets/shaders`, `src/app` or `src/platform`: a green "Nightly GPU" run on its branch
+  (every `graphics` test on Mesa, `gh workflow run nightly-gpu.yml --ref <branch>`), linked in the description.
 
 ## Contracts
 

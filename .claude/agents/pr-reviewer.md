@@ -77,6 +77,10 @@ You review one pull request of the Strefa Zero repository. You are **read-only**
       same PR — **minor** otherwise;
     - `plik:linia` references in the review documents point to `e12c39a`; do not report a finding only because the
       review says so — check the code at the PR head.
+15. **GPU passes** (CLAUDE.md › Conventions): a dispatch or draw added to or removed from the default per-tick or
+    per-frame path without "passes per tick: before -> after" in the description — **major**; higher expected counts
+    in `check_instrumentation` (`src/gpu/profiling.cpp`) without the owner's approval comment — **blocker**; a new GPU
+    system that dispatches zero groups instead of skipping its GL calls when the CPU knows there is no work — **major**.
 
 ## Severity
 
@@ -113,4 +117,4 @@ Order findings by severity. With no findings write „Brak uwag.” before the v
 each of them into a `review-followup` issue. A pominięta `blocker` or `major` without an accepted explanation also
 stays in the findings list above and decides the verdict.
 
-Add a final line `_Sprawdzone punkty checklisty: 1–14._` listing any point you could not check and why.
+Add a final line `_Sprawdzone punkty checklisty: 1–15._` listing any point you could not check and why.
