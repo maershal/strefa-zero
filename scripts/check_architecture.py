@@ -47,6 +47,8 @@ TARGET_MODULE = {
     "strefa_diagnostics": "qa",
     "strefa_conformance": "qa",
     "strefa_qa": "qa",
+    # experiments/ (off by default, never installed): links no project library.
+    "strefa_pbf_cpu_bench": "experiments",
 }
 EXTERNAL_TARGETS = {"strefa_options", "strefa_imgui"}
 # Headers whose module differs from their .cpp: profiling.hpp declares the ProfileOptions/StepProfile types that

@@ -23,6 +23,8 @@ endif()
 option(STREFA_BUILD_APP "Build the SDL3 / OpenGL application" ON)
 option(STREFA_WARNINGS_AS_ERRORS "Treat project warnings as errors" OFF)
 option(STREFA_EXPERIMENTAL_REFLECTION "Build an isolated C++26 reflection probe" OFF)
+# Z01 addendum: CPU microbenchmark of the two PBF passes (experiments/, not the CPU reference model; never installed).
+option(STREFA_EXPERIMENT_PBF_CPU "Build the CPU PBF microbenchmark StrefaPbfCpuBench" OFF)
 # OFF only for the QA symbol count of scripts/check_architecture.py: LTO inlines and drops symbols unpredictably.
 option(STREFA_IPO "Link Release targets with interprocedural optimization when supported" ON)
 # Tracy zones (CPU and GPU): developer builds only (presets `dev`, `linux-dev`); OFF leaves no Tracy symbol in any binary.
@@ -117,6 +119,11 @@ install(TARGETS strefa_physics RUNTIME DESTINATION . COMPONENT StrefaRuntime)
 
 if(STREFA_EXPERIMENTAL_REFLECTION)
     include(cmake/Reflection.cmake)
+endif()
+if(STREFA_EXPERIMENT_PBF_CPU)
+    add_executable(strefa_pbf_cpu_bench experiments/pbf_cpu_bench.cpp)
+    target_link_libraries(strefa_pbf_cpu_bench PRIVATE strefa_options Threads::Threads)
+    set_target_properties(strefa_pbf_cpu_bench PROPERTIES OUTPUT_NAME StrefaPbfCpuBench)
 endif()
 
 if(STREFA_BUILD_APP)
@@ -233,6 +240,11 @@ if(BUILD_TESTING)
     add_executable(strefa_fluid_tests tests/fluid_tests.cpp)
     target_link_libraries(strefa_fluid_tests PRIVATE strefa_launch)
     strefa_add_cpu_test(physics.fluid_reference strefa_fluid_tests physics)
+    if(STREFA_EXPERIMENT_PBF_CPU)
+        # Smoke run of the experiment: it exits 1 when the state checksum differs across thread counts.
+        strefa_add_cpu_test(experiments.pbf_cpu_bench strefa_pbf_cpu_bench determinism PROCESSORS 2
+            ARGS --n 250,1000 --threads 1,2 --seconds 0.05 --blocks 1 --out pbf-cpu-bench-smoke)
+    endif()
     add_executable(strefa_gameplay_tests tests/gameplay_tests.cpp)
     target_link_libraries(strefa_gameplay_tests PRIVATE strefa_gameplay strefa_input)
     strefa_add_cpu_test(game.protocol strefa_gameplay_tests unit)
