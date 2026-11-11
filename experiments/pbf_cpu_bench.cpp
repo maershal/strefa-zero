@@ -442,8 +442,8 @@ Options parse(int argc, char** argv) {
             std::cerr << "Liczba wątków musi być w zakresie 1..64\n";
             std::exit(2);
         }
-    if (o.blocks < 1 || o.seconds <= 0 || o.turbo_tolerance < 1) {
-        std::cerr << "Wymagane: --blocks >= 1, --seconds > 0, --turbo-tolerance >= 1\n";
+    if (o.counts.empty() || o.threads.empty() || o.blocks < 1 || o.seconds <= 0 || o.turbo_tolerance < 1) {
+        std::cerr << "Wymagane: niepuste --n i --threads, --blocks >= 1, --seconds > 0, --turbo-tolerance >= 1\n";
         std::exit(2);
     }
     return o;
@@ -477,8 +477,8 @@ struct Tick {
 struct Segment {
     std::size_t n{};
     int threads{}, block{};
-    std::vector<Tick> ticks;
-    Solver::Stats stats;
+    std::vector<Tick> ticks{};
+    Solver::Stats stats{};
     std::uint64_t checksum{};
 };
 
