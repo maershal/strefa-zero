@@ -13,19 +13,20 @@
 // clamping after the move, the reaction channel write, all other passes of the GPU tick (prediction, XSPH, contacts).
 #include <algorithm>
 #include <atomic>
-#include <barrier>
 #include <bit>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
 #include <cstdio>
 #include <cstdlib>
+#include <filesystem>
 #include <fstream>
 #include <functional>
+#include <iomanip>
 #include <iostream>
+#include <limits>
 #include <numbers>
 #include <ranges>
-#include <span>
 #include <string>
 #include <string_view>
 #include <thread>
@@ -363,9 +364,10 @@ struct Options {
     std::vector<std::size_t> counts{250, 500, 1000, 2000, 4000, 8000, 16000, 32000};
     std::vector<int> threads{1, 2, 4};
     double seconds{1.0};
-    int blocks{3};
+    int blocks{5};
+    double turbo_tolerance{1.10};
     int substeps{2}, iterations{8}; // FluidOptions defaults: 2 x 8 = 16 density + 16 correction passes per tick
-    std::string csv;
+    std::filesystem::path out{"pbf-cpu-bench"};
 };
 
 template<class T> std::vector<T> parse_list(std::string_view text) {
@@ -396,11 +398,13 @@ Options parse(int argc, char** argv) {
             o.seconds = std::stod(std::string{value()});
         else if (arg == "--blocks")
             o.blocks = std::stoi(std::string{value()});
-        else if (arg == "--csv")
-            o.csv = value();
+        else if (arg == "--turbo-tolerance")
+            o.turbo_tolerance = std::stod(std::string{value()});
+        else if (arg == "--out")
+            o.out = std::filesystem::path{std::string{value()}};
         else {
             std::cerr << "Użycie: StrefaPbfCpuBench [--n 1000,2000,...] [--threads 1,2,4] [--seconds S] [--blocks B]"
-                         " [--csv plik]\n";
+                         " [--turbo-tolerance 1.10] [--out katalog]\n";
             std::exit(arg == "--help" ? 0 : 2);
         }
     }
@@ -419,77 +423,79 @@ Options parse(int argc, char** argv) {
 }
 
 double median(std::vector<double> v) {
+    if (v.empty()) return std::nan("");
     std::ranges::sort(v);
     const auto m = v.size() / 2;
     return v.size() % 2 ? v[m] : .5 * (v[m - 1] + v[m]);
 }
-double quantile(std::vector<double> v, double q) {
-    std::ranges::sort(v);
-    return v[static_cast<std::size_t>(q * static_cast<double>(v.size() - 1) + .5)];
+
+// CPU clock probe: a fixed chain of dependent integer operations on the calling thread, so its time is proportional
+// to the core clock. Run before every tick; this laptop switches between turbo and base clock (~1.7x) during a run.
+volatile std::uint64_t probe_sink = 0;
+double probe_us() {
+    const auto t0 = std::chrono::steady_clock::now();
+    std::uint64_t x = 0x9E3779B97F4A7C15ULL ^ probe_sink;
+    for (int k = 0; k < 1 << 16; ++k) {
+        x ^= x << 13;
+        x ^= x >> 7;
+        x ^= x << 17;
+    }
+    probe_sink = x;
+    return std::chrono::duration<double, std::micro>(std::chrono::steady_clock::now() - t0).count();
 }
 
-struct Result {
+struct Tick {
+    double probe_us{}, density_ms{}, correction_ms{}, sort_ms{}, passes_ms{}, tick_ms{};
+};
+struct Segment {
     std::size_t n{};
     int threads{}, block{};
-    std::size_t ticks{};
-    double density_ms{}, correction_ms{}, sort_ms{}, passes_ms{}, tick_ms{}, tick_p10{}, tick_p90{};
+    std::vector<Tick> ticks;
     Solver::Stats stats;
     std::uint64_t checksum{};
 };
 
-Result measure(const Options& o, std::size_t n, int threads, int block) {
+Segment measure(const Options& o, std::size_t n, int threads, int block) {
     using clock = std::chrono::steady_clock;
     auto ms = [](clock::duration d) { return std::chrono::duration<double, std::milli>(d).count(); };
     Solver solver{n};
     Pool pool{threads};
-    std::vector<double> density, correction, sorting, passes, ticks;
-    Result r{.n = n, .threads = threads, .block = block};
+    Segment s{.n = n, .threads = threads, .block = block};
     // One tick: per substep a sort (the GPU re-bins once per substep in the default `reused` neighbour mode), then
-    // `iterations` x (density, correction). The state is reset before each tick, outside the timed region.
-    auto tick = [&](bool record) {
+    // `iterations` x (density, correction). The state reset and the clock probe are outside the timed region.
+    auto tick = [&] {
         solver.reset();
-        double tick_sort = 0, tick_passes = 0;
+        Tick t{.probe_us = probe_us()};
+        std::vector<double> density, correction;
         for (int half = 0; half < o.substeps; ++half) {
             const auto t0 = clock::now();
             solver.sort();
-            const auto t1 = clock::now();
-            tick_sort += ms(t1 - t0);
-            if (record) sorting.push_back(ms(t1 - t0));
+            t.sort_ms += ms(clock::now() - t0);
             for (int it = 0; it < o.iterations; ++it) {
                 const auto a = clock::now();
                 solver.density_pass(pool);
                 const auto b = clock::now();
                 solver.correction_pass(pool);
                 const auto c = clock::now();
-                tick_passes += ms(c - a);
-                if (record) {
-                    density.push_back(ms(b - a));
-                    correction.push_back(ms(c - b));
-                }
+                density.push_back(ms(b - a));
+                correction.push_back(ms(c - b));
+                t.passes_ms += ms(c - a);
             }
         }
-        if (record) {
-            passes.push_back(tick_passes);
-            ticks.push_back(tick_passes + tick_sort);
-        }
+        t.density_ms = median(density);
+        t.correction_ms = median(correction);
+        t.tick_ms = t.passes_ms + t.sort_ms;
+        return t;
     };
     const auto warmup_end = clock::now() + std::chrono::duration<double>(.2 * o.seconds);
-    for (int k = 0; k < 5 || clock::now() < warmup_end; ++k) tick(false);
+    for (int k = 0; k < 5 || clock::now() < warmup_end; ++k) tick();
     const auto end = clock::now() + std::chrono::duration<double>(o.seconds);
-    while (ticks.size() < 20 || clock::now() < end) tick(true);
-    r.ticks = ticks.size();
-    r.density_ms = median(density);
-    r.correction_ms = median(correction);
-    r.sort_ms = median(sorting);
-    r.passes_ms = median(passes);
-    r.tick_ms = median(ticks);
-    r.tick_p10 = quantile(ticks, .1);
-    r.tick_p90 = quantile(ticks, .9);
+    while (s.ticks.size() < 20 || clock::now() < end) s.ticks.push_back(tick());
     // Deterministic final state: one fresh tick, then the diagnostics on the same state.
-    tick(false);
-    r.checksum = solver.checksum();
-    r.stats = solver.stats();
-    return r;
+    tick();
+    s.checksum = solver.checksum();
+    s.stats = solver.stats();
+    return s;
 }
 
 } // namespace
@@ -498,63 +504,91 @@ Result measure(const Options& o, std::size_t n, int threads, int block) {
 int main(int argc, char** argv) {
     using namespace strefa::experiments;
     const Options o = parse(argc, argv);
-    std::ofstream file;
-    if (!o.csv.empty()) {
-        file.open(o.csv);
-        if (!file) {
-            std::cerr << "Nie można otworzyć " << o.csv << '\n';
-            return 1;
-        }
+    std::error_code error;
+    std::filesystem::create_directories(o.out, error);
+    std::ofstream ticks_csv{o.out / "ticks.csv"}, segments_csv{o.out / "segments.csv"},
+            summary_csv{o.out / "summary.csv"};
+    if (error || !ticks_csv || !segments_csv || !summary_csv) {
+        std::cerr << "Nie można zapisać wyników w " << o.out.string() << '\n';
+        return 1;
     }
-    std::ostream& out = o.csv.empty() ? std::cout : file;
     std::cerr << "hardware_concurrency=" << std::thread::hardware_concurrency() << " substeps=" << o.substeps
-              << " iterations=" << o.iterations << " seconds=" << o.seconds << " blocks=" << o.blocks << '\n';
-    out << "block,n,threads,ticks,density_pass_ms,correction_pass_ms,sort_ms,passes_per_tick_ms,tick_ms,tick_p10_ms,"
-           "tick_p90_ms,mean_neighbors,mean_density_ratio,max_density_ratio,checksum\n";
+              << " iterations=" << o.iterations << " seconds=" << o.seconds << " blocks=" << o.blocks
+              << " turbo_tolerance=" << o.turbo_tolerance << '\n';
+    ticks_csv << "block,n,threads,tick,probe_us,density_pass_ms,correction_pass_ms,sort_ms,passes_ms,tick_ms\n";
+    segments_csv << "block,n,threads,ticks,probe_median_us,tick_median_ms,mean_neighbors,mean_density_ratio,"
+                    "max_density_ratio,checksum\n";
     // Configurations in ABBA order across blocks: even blocks forward, odd blocks reversed.
     std::vector<std::pair<std::size_t, int>> plan;
     for (const auto n : o.counts)
         for (const int t : o.threads) plan.emplace_back(n, t);
-    std::vector<Result> results;
+    std::vector<Segment> segments;
     for (int block = 0; block < o.blocks; ++block) {
         auto order = plan;
         if (block % 2) std::ranges::reverse(order);
         for (const auto& [n, t] : order) {
-            const Result r = measure(o, n, t, block);
-            results.push_back(r);
-            char line[512];
-            std::snprintf(line, sizeof line,
-                          "%d,%zu,%d,%zu,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.6f,%.3f,%.6f,%.6f,%016llx\n", r.block, r.n,
-                          r.threads, r.ticks, r.density_ms, r.correction_ms, r.sort_ms, r.passes_ms, r.tick_ms,
-                          r.tick_p10, r.tick_p90, r.stats.neighbors, r.stats.mean_density, r.stats.max_density,
-                          static_cast<unsigned long long>(r.checksum));
-            out << line;
-            out.flush();
+            Segment s = measure(o, n, t, block);
+            std::vector<double> probes, totals;
+            for (std::size_t k = 0; k < s.ticks.size(); ++k) {
+                const Tick& x = s.ticks[k];
+                probes.push_back(x.probe_us);
+                totals.push_back(x.tick_ms);
+                char line[256];
+                std::snprintf(line, sizeof line, "%d,%zu,%d,%zu,%.3f,%.6f,%.6f,%.6f,%.6f,%.6f\n", block, n, t, k,
+                              x.probe_us, x.density_ms, x.correction_ms, x.sort_ms, x.passes_ms, x.tick_ms);
+                ticks_csv << line;
+            }
+            char line[256];
+            std::snprintf(line, sizeof line, "%d,%zu,%d,%zu,%.3f,%.6f,%.3f,%.6f,%.6f,%016llx\n", block, n, t,
+                          s.ticks.size(), median(probes), median(totals), s.stats.neighbors, s.stats.mean_density,
+                          s.stats.max_density, static_cast<unsigned long long>(s.checksum));
+            segments_csv << line;
+            segments_csv.flush();
             std::cerr << line;
+            segments.push_back(std::move(s));
         }
     }
     // The passes are Jacobi with a sequential sort, so every thread count must reach the same bits.
     int status = 0;
-    for (const auto& a : results)
-        for (const auto& b : results)
+    for (const auto& a : segments)
+        for (const auto& b : segments)
             if (a.n == b.n && a.checksum != b.checksum) {
                 std::cerr << "BŁĄD: różne sumy kontrolne dla N=" << a.n << " (" << a.threads << " i " << b.threads
                           << " wątków)\n";
                 status = 1;
             }
-    std::cerr << "\nMediana bloków [ms]: N, wątki, gęstość, korekta, sortowanie, 16+16, tick z sortowaniem\n";
+    // Ticks whose probe is within turbo_tolerance of the fastest probe of the whole run ran at full clock; ticks at
+    // >= 1.5x the fastest probe ran at (about) base clock. Both are reported; the comparison uses the turbo ticks.
+    double best = std::numeric_limits<double>::infinity();
+    for (const auto& s : segments)
+        for (const auto& t : s.ticks) best = std::min(best, t.probe_us);
+    summary_csv << std::setprecision(6)
+                << "n,threads,ticks,turbo_ticks,base_ticks,density_pass_ms,correction_pass_ms,sort_ms,passes_ms,"
+                   "tick_ms,tick_all_ms,tick_base_ms\n";
+    std::cerr << "\nnajszybsza sonda: " << best << " us\n"
+              << "Mediana ticków przy pełnym zegarze [ms]: N, wątki, ticki (turbo/bazowy), gęstość, korekta, "
+                 "sortowanie, 16+16, tick z sortowaniem | wszystkie | zegar bazowy\n";
     for (const auto& [n, t] : plan) {
-        std::vector<double> d, c, s, p, k;
-        for (const auto& r : results)
-            if (r.n == n && r.threads == t) {
-                d.push_back(r.density_ms);
-                c.push_back(r.correction_ms);
-                s.push_back(r.sort_ms);
-                p.push_back(r.passes_ms);
-                k.push_back(r.tick_ms);
-            }
-        std::fprintf(stderr, "%6zu %2d %9.4f %9.4f %9.4f %9.3f %9.3f\n", n, t, median(d), median(c), median(s),
-                     median(p), median(k));
+        std::vector<double> d, c, so, p, k, all, base;
+        std::size_t count = 0;
+        for (const auto& s : segments)
+            if (s.n == n && s.threads == t)
+                for (const auto& x : s.ticks) {
+                    ++count;
+                    all.push_back(x.tick_ms);
+                    if (x.probe_us >= 1.5 * best) base.push_back(x.tick_ms);
+                    if (x.probe_us > o.turbo_tolerance * best) continue;
+                    d.push_back(x.density_ms);
+                    c.push_back(x.correction_ms);
+                    so.push_back(x.sort_ms);
+                    p.push_back(x.passes_ms);
+                    k.push_back(x.tick_ms);
+                }
+        summary_csv << n << ',' << t << ',' << count << ',' << k.size() << ',' << base.size() << ',' << median(d) << ','
+                    << median(c) << ',' << median(so) << ',' << median(p) << ',' << median(k) << ',' << median(all)
+                    << ',' << median(base) << '\n';
+        std::fprintf(stderr, "%6zu %2d %4zu/%-4zu %9.4f %9.4f %9.4f %9.3f %9.3f | %9.3f | %9.3f\n", n, t, k.size(),
+                     base.size(), median(d), median(c), median(so), median(p), median(k), median(all), median(base));
     }
     return status;
 }
