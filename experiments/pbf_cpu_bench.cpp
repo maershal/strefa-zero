@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <atomic>
 #include <bit>
+#include <charconv>
 #include <chrono>
 #include <cmath>
 #include <cstdint>
@@ -29,6 +30,7 @@
 #include <ranges>
 #include <string>
 #include <string_view>
+#include <system_error>
 #include <thread>
 #include <vector>
 
@@ -36,7 +38,9 @@ namespace strefa::experiments {
 namespace {
 
 // The Z01 sweep tank (src/gpu/cost_model.cpp, Tank): 300 columns between two walls from x = 10, floor at
-// y = height - 5, one particle per cell from the floor up. The world size is derived, not written as a literal.
+// y = height - 5, one particle per cell from the floor up. The constants here (tank size, water inverse mass) copy
+// the GPU values by hand, against the "data, not literals" direction; this standalone experiment has no registry to
+// read them from, and the architecture ratchet does not scan experiments/.
 struct Tank {
     static constexpr int left = 10, columns = 300, floor = 187;
     static constexpr int width = 2 * left + columns, height = floor + 5;
@@ -370,12 +374,31 @@ struct Options {
     std::filesystem::path out{"pbf-cpu-bench"};
 };
 
-template<class T> std::vector<T> parse_list(std::string_view text) {
+[[noreturn]] void bad_value(std::string_view option, std::string_view text) {
+    std::cerr << "Nieprawidłowa wartość dla " << option << ": " << text << '\n';
+    std::exit(2);
+}
+
+template<class T> T parse_integer(std::string_view option, std::string_view text) {
+    T value{};
+    const auto [end, error] = std::from_chars(text.data(), text.data() + text.size(), value);
+    if (error != std::errc{} || end != text.data() + text.size()) bad_value(option, text);
+    return value;
+}
+
+// std::strtod rather than std::from_chars: libc++ 18 (CI job `clang`) has no floating-point from_chars.
+double parse_real(std::string_view option, std::string_view text) {
+    const std::string item{text};
+    char* end = nullptr;
+    const double value = std::strtod(item.c_str(), &end);
+    if (item.empty() || end != item.c_str() + item.size() || !std::isfinite(value)) bad_value(option, text);
+    return value;
+}
+
+template<class T> std::vector<T> parse_list(std::string_view option, std::string_view text) {
     std::vector<T> values;
-    for (const auto part : text | std::views::split(',')) {
-        const std::string item{part.begin(), part.end()};
-        values.push_back(static_cast<T>(std::stoll(item)));
-    }
+    for (const auto part : text | std::views::split(','))
+        values.push_back(parse_integer<T>(option, std::string_view{part.begin(), part.end()}));
     return values;
 }
 
@@ -391,15 +414,15 @@ Options parse(int argc, char** argv) {
             return argv[++i];
         };
         if (arg == "--n")
-            o.counts = parse_list<std::size_t>(value());
+            o.counts = parse_list<std::size_t>(arg, value());
         else if (arg == "--threads")
-            o.threads = parse_list<int>(value());
+            o.threads = parse_list<int>(arg, value());
         else if (arg == "--seconds")
-            o.seconds = std::stod(std::string{value()});
+            o.seconds = parse_real(arg, value());
         else if (arg == "--blocks")
-            o.blocks = std::stoi(std::string{value()});
+            o.blocks = parse_integer<int>(arg, value());
         else if (arg == "--turbo-tolerance")
-            o.turbo_tolerance = std::stod(std::string{value()});
+            o.turbo_tolerance = parse_real(arg, value());
         else if (arg == "--out")
             o.out = std::filesystem::path{std::string{value()}};
         else {
@@ -419,6 +442,10 @@ Options parse(int argc, char** argv) {
             std::cerr << "Liczba wątków musi być w zakresie 1..64\n";
             std::exit(2);
         }
+    if (o.blocks < 1 || o.seconds <= 0 || o.turbo_tolerance < 1) {
+        std::cerr << "Wymagane: --blocks >= 1, --seconds > 0, --turbo-tolerance >= 1\n";
+        std::exit(2);
+    }
     return o;
 }
 
@@ -463,6 +490,8 @@ Segment measure(const Options& o, std::size_t n, int threads, int block) {
     Segment s{.n = n, .threads = threads, .block = block};
     // One tick: per substep a sort (the GPU re-bins once per substep in the default `reused` neighbour mode), then
     // `iterations` x (density, correction). The state reset and the clock probe are outside the timed region.
+    // Every tick starts from the same jittered lattice (no gravity or prediction here), so this is one tick from the
+    // initial state, not a fluid after spin-up; the report lists it as a caveat.
     auto tick = [&] {
         solver.reset();
         Tick t{.probe_us = probe_us()};
@@ -518,7 +547,8 @@ int main(int argc, char** argv) {
     ticks_csv << "block,n,threads,tick,probe_us,density_pass_ms,correction_pass_ms,sort_ms,passes_ms,tick_ms\n";
     segments_csv << "block,n,threads,ticks,probe_median_us,tick_median_ms,mean_neighbors,mean_density_ratio,"
                     "max_density_ratio,checksum\n";
-    // Configurations in ABBA order across blocks: even blocks forward, odd blocks reversed.
+    // Configurations alternate direction across blocks (even blocks forward, odd blocks reversed). With 5 blocks that
+    // is 3 forward and 2 reversed, not a balanced ABBA order; kept because the published run-2 used it.
     std::vector<std::pair<std::size_t, int>> plan;
     for (const auto n : o.counts)
         for (const int t : o.threads) plan.emplace_back(n, t);

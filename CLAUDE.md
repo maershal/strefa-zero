@@ -62,6 +62,7 @@ python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenera
 | `src/tools` | `qa_main.cpp` = `StrefaQA` (game + every QA/tuning flag, links `strefa_diagnostics`); `physics_runner.cpp` = `StrefaPhysics`. `src/main.cpp` = `StrefaZero` (player flags only) |
 | `assets/shaders` | GLSL; every shader must also be listed in the `foreach(shader ...)` in `CMakeLists.txt`. `soldier_pose.glsl` is also `#include`d by `src/game/animation.hpp`, so it must stay valid C++ |
 | `tests/` | one executable per `*_tests.cpp`, registered in `CMakeLists.txt` |
+| `experiments/` | standalone measurement tools behind `STREFA_EXPERIMENT_*` options (default OFF, not installed); `pbf_cpu_bench.cpp` = CPU port of the two PBF passes (Z01 report, section 5) |
 | `scripts/` | build/run/package/format/lint; `scripts/profiling/` = Windows-era PowerShell + Python measurement harnesses |
 | `docs/` | guides at top level, `reports/` per iteration, `plans/`; raw measurements are in a separate repo (see below); index in `docs/README.md` |
 

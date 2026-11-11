@@ -199,8 +199,9 @@ sam dla każdej liczby wątków (suma kontrolna w `segments.csv`).
 4,1 / 2,4 GHz), niezależnie od mierzonego punktu. Pierwszy pełny przebieg bez kontroli zegara (`run-1`) dał dla tego
 samego punktu wyniki różniące się między blokami o ×1,7. Dlatego przed każdym tickiem narzędzie uruchamia sondę
 (stały łańcuch zależnych operacji całkowitych, ~98 µs przy pełnym zegarze). Tabela podaje mediany ticków z sondą
-≤ 1,10 × najszybszej (turbo) i osobno ticków z sondą ≥ 1,5 × (zegar bazowy). 5 bloków w kolejności ABBA, po 1 s na
-punkt, co najmniej 19 ticków turbo na punkt.
+≤ 1,10 × najszybszej (turbo) i osobno ticków z sondą ≥ 1,5 × (zegar bazowy). 5 bloków o naprzemiennym kierunku
+(3 w przód, 2 wstecz, więc nie zrównoważone ABBA; sonda zegara i tak odrzuca ticki spoza turbo), po 1 s
+na punkt, co najmniej 19 ticków turbo na punkt.
 
 Czas ticka [ms]. GPU to cały tick wody z punktu 3 (51 dispatchy), a CPU tylko 16 + 16 przebiegów PBF i 2 sortowania:
 
@@ -232,6 +233,10 @@ przewaga GPU stabilizuje się na ok. 12× (4 wątki).
 
 **Zastrzeżenia.**
 
+- Każdy tick zaczyna od tego samego stanu (siatka z drganiami, bez grawitacji i predykcji), więc mierzy pierwszy
+  tick ze stanu początkowego, a nie ciecz po rozbiegu, jak sweep GPU z punktu 3 (240 ticków). Siatka ma jednak już
+  gęstość bliską spoczynkowej: średnio 9,3 sąsiada i gęstość względna 0,98 przy 4k, 9,9 i 1,00 przy 32k
+  (`segments.csv`). Liczby sąsiadów po rozbiegu na GPU Z01 nie zapisało.
 - Uproszczenia na korzyść CPU: brak sprzężenia z ciałem żołnierza, brak testu widoczności przez ściany, brak
   `terrain` po ruchu i brak zapisu kanału reakcji. Liczone są tylko 2 rodzaje przebiegów, a GPU w tabeli płaci za cały
   tick (predykcja, XSPH, sortowanie, kontakty). Między przebiegami wątki czekają na barierze z aktywnym oczekiwaniem
