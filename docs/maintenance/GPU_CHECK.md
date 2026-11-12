@@ -129,6 +129,18 @@ Pliki wyników (wszystkie mają kolumny `seed` i `sequence`, czyli numer odcinka
   `op` (numer programu termiki) i `gpu_ms` (różnica z poprzednim znacznikiem);
 - `thermal-profile-segments.csv`: granice UTC odcinków profilu.
 
+Benchmarki termiki, oświetlenia i efektów czytają dane diagnostyczne (sumy termiki, bufory świata, liczniki puli
+efektów) przez świeży bufor `GL_STREAM_READ` (`gpu/diagnostic_read.hpp`), nigdy wprost z żywego SSBO, żeby sterownik
+nie przenosił buforów symulacji do pamięci hosta między odcinkami. Benchmark termiki czyta same sumy
+(`read_thermal(ThermalRead::totals)`). Kolumny `id131186_runtime` i `id131186_readback` w
+`thermal-pool-segments.csv`, `thermal-profile-segments.csv`, `lighting-sources.csv` i `vfx-debug-segments.csv` liczą
+komunikaty sterownika 131186 (NVIDIA: migracja bufora) w tickach i klatkach odcinka (faza `runtime` w
+`gl-debug.txt`) oraz w przygotowaniu i odczytach wokół niego (faza `validation`). Są puste bez `--gl-debug`.
+Oczekiwana wartość `id131186_runtime` to 0. Podział na fazy jest przybliżony: dziennik używa asynchronicznego wyjścia
+debugowania, więc sterownik może dostarczyć komunikat już po przełączeniu fazy. Przed każdym przełączeniem benchmark
+czeka na GPU (`glFinish`), co czyni to mało prawdopodobnym, ale specyfikacja OpenGL tego nie gwarantuje. Suma obu
+kolumn jest dokładna. Bez `--gl-debug` benchmark nie dodaje oczekiwania przed mierzonymi odcinkami.
+
 `analyze-thermal.py` (schemat 2) traktuje etap gazu jako sondę zegara: odcinek profilu, którego mediana `gas_ms`
 odbiega od mediany wszystkich odcinków o więcej niż 10% (`--gas-tolerance`), jest dyskwalifikowany razem z próbami
 tej sceny w tym bloku. Z `telemetry.csv` dyskwalifikuje też próbę albo odcinek profilu, w którym był aktywny

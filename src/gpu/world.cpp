@@ -7,6 +7,7 @@
 #include "gpu/readback_ring.hpp"
 #include "gpu/render_device.hpp"
 #include "gpu/scene_renderer.hpp"
+#include "gpu/segment_migrations.hpp"
 #include "gpu/shader_library.hpp"
 #include "gpu/thermal_system.hpp"
 #include "gpu/upload_ring.hpp"
@@ -1266,8 +1267,8 @@ const ThermalTotals& ParticleWorld::thermal_totals() const {
     static const ThermalTotals empty;
     return impl_->thermal ? impl_->thermal->totals() : empty;
 }
-ThermalSnapshot ParticleWorld::read_thermal() {
-    return impl_->thermal ? impl_->thermal->snapshot() : ThermalSnapshot{};
+ThermalSnapshot ParticleWorld::read_thermal(ThermalRead what) {
+    return impl_->thermal ? impl_->thermal->snapshot(what) : ThermalSnapshot{};
 }
 void ParticleWorld::request_thermal_inspection(int x, int y) {
     if (impl_->thermal && impl_->thermal_config.enabled) impl_->thermal->request_inspection(x, y);
@@ -1931,16 +1932,7 @@ std::array<std::uint32_t, 240> ParticleWorld::read_phase_mask() {
     s.bins();
     std::array<std::uint32_t, 240> result{};
     constexpr auto offset = static_cast<GLintptr>((16 + 3 * width * height + 480) * 4);
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    GLuint staging{};
-    s.gl.GenBuffers(1, &staging);
-    s.gl.BindBuffer(GL_COPY_WRITE_BUFFER, staging);
-    s.gl.BufferData(GL_COPY_WRITE_BUFFER, sizeof(result), nullptr, GL_STREAM_READ);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, s.buffers[2]);
-    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, offset, 0, sizeof(result));
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, staging);
-    s.gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(result), result.data());
-    s.gl.DeleteBuffers(1, &staging);
+    detail::read_staged(s.gl, s.buffers[2], offset, std::span{result});
     return result;
 }
 void ParticleWorld::start_diagnostic_trace(const TraceConfig& config) {
@@ -1973,22 +1965,12 @@ HotAudit ParticleWorld::audit_hot_view() {
         std::array<float, 4> geometry, motion;
     };
     static_assert(sizeof(HotEntry) == 32);
-    constexpr auto view_bytes = capacity * sizeof(HotEntry), index_bytes = capacity * sizeof(std::uint32_t);
+    constexpr auto view_bytes = capacity * sizeof(HotEntry);
     std::vector<HotEntry> view(capacity);
     std::vector<std::uint32_t> indices(capacity);
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    GLuint staging{};
-    s.gl.GenBuffers(1, &staging);
-    s.gl.BindBuffer(GL_COPY_WRITE_BUFFER, staging);
-    s.gl.BufferData(GL_COPY_WRITE_BUFFER, view_bytes + index_bytes, nullptr, GL_STREAM_READ);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, s.buffers[3]);
-    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
-                           static_cast<GLintptr>(capacity * 24 + s.current * view_bytes), 0, view_bytes);
-    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, capacity * 4, view_bytes, index_bytes);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, staging);
-    s.gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, view_bytes, view.data());
-    s.gl.GetBufferSubData(GL_COPY_READ_BUFFER, view_bytes, index_bytes, indices.data());
-    s.gl.DeleteBuffers(1, &staging);
+    detail::read_staged(s.gl, s.buffers[3], static_cast<GLintptr>(capacity * 24 + s.current * view_bytes),
+                        std::span{view});
+    detail::read_staged(s.gl, s.buffers[3], capacity * 4, std::span{indices});
     const auto actual = readback();
     std::vector<bool> used(capacity);
     const auto count =
@@ -2045,21 +2027,11 @@ BodySnapshot ParticleWorld::read_body() {
     auto& s = *impl_;
     if (s.execution.coupling == CouplingMode::reference) throw std::logic_error{"Wymagane zwarte sprzężenie ciał."};
     BodySnapshot result;
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    // Copy both headers and command bytes to fresh staging. Validation must not
-    // migrate the simulation SSBO to host memory or read consumed argument shadows.
-    GLuint staging{};
-    s.gl.GenBuffers(1, &staging);
-    s.gl.BindBuffer(GL_COPY_WRITE_BUFFER, staging);
-    s.gl.BufferData(GL_COPY_WRITE_BUFFER, sizeof(result), nullptr, GL_STREAM_READ);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, s.buffers[3]);
-    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER, static_cast<GLintptr>(s.body_offset()), 0, 64);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, s.buffers[5]);
-    s.gl.CopyBufferSubData(GL_COPY_READ_BUFFER, GL_COPY_WRITE_BUFFER,
-                           detail::command_offset(detail::body_reduce_command), 64, 24);
-    s.gl.BindBuffer(GL_COPY_READ_BUFFER, staging);
-    s.gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(result), &result);
-    s.gl.DeleteBuffers(1, &staging);
+    // Headers and command bytes through staging: validation must not migrate the simulation SSBO to host memory or
+    // read consumed argument shadows.
+    const auto bytes = std::as_writable_bytes(std::span{&result, 1});
+    detail::read_staged(s.gl, s.buffers[3], static_cast<GLintptr>(s.body_offset()), bytes.first(64));
+    detail::read_staged(s.gl, s.buffers[5], detail::command_offset(detail::body_reduce_command), bytes.subspan(64, 24));
     return result;
 }
 void ParticleWorld::inject_body_for_test(std::span<const std::array<float, 4>> reactions, bool apply) {

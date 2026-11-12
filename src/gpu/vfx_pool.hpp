@@ -33,7 +33,8 @@ public:
             if (p.queries[0]) n += 4;
         return n;
     }
-    VfxSnapshot snapshot(); // explicit diagnostics only
+    VfxSnapshot snapshot();      // explicit diagnostics only, through staging copies
+    VfxCounters read_counters(); // explicit diagnostics only, the counter block alone
     void seed_for_test(std::span<const VfxParticle>);
     GLuint field_texture() const { return field; }
 

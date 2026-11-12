@@ -2,7 +2,8 @@
 # (GpuTelemetry.psm1) into telemetry.csv; analyze-thermal.py then disqualifies trials with hw_*/sw_thermal_slowdown.
 # -TimeoutMinutes (default 90): the benchmark takes ~10 min, several times that in the laptop's slow regime.
 # -Seed repeats the scene order of an earlier run (STREFA_BENCHMARK_SEED); without it every run draws a new order.
-param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality',[switch]$Telemetry,[Nullable[uint64]]$Seed,[ValidateRange(1,600)][int]$TimeoutMinutes=90)
+# -GlDebug (benchmark): adds --gl-debug, so gl-debug.txt and the id131186_* CSV columns count buffer migrations.
+param([Parameter(Mandatory=$true)][string]$Executable,[Parameter(Mandatory=$true)][string]$Output,[ValidateSet('quality','benchmark','window')][string]$Suite='quality',[switch]$Telemetry,[Nullable[uint64]]$Seed,[ValidateRange(1,600)][int]$TimeoutMinutes=90,[switch]$GlDebug)
 $ErrorActionPreference='Stop'
 $Executable=(Resolve-Path -LiteralPath $Executable).Path
 $Output=[IO.Path]::GetFullPath($Output)
@@ -10,10 +11,10 @@ if(Test-Path -LiteralPath $Output){throw 'Choose a new directory; earlier result
 [IO.Directory]::CreateDirectory($Output)|Out-Null
 $flags=switch($Suite){
  'quality' {@('--gpu-thermal-check','--gl-debug')}
- 'benchmark' {@('--gpu-thermal-benchmark')}
+ 'benchmark' {@('--gpu-thermal-benchmark')+@(if($GlDebug){'--gl-debug'})}
  'window' {@('--gpu-smoke-test','--gpu-thermal','on','--show-test-window','--gl-debug')}
 }
-[ordered]@{iteration='I10';executable=$Executable;sha256=(Get-FileHash $Executable -Algorithm SHA256).Hash.ToLowerInvariant();flags=$flags;started_utc=[DateTime]::UtcNow.ToString('o');grid=@(320,192);tick_hz=120;render_hz_in_benchmark=60;blocks=3;warmup_ticks=120;samples=240;order=@('off','candidate','candidate','off');scene_order='random_per_block';seed=$Seed;telemetry=[bool]$Telemetry;hot_budget_ms=.70;cold_budget_ms=.05;default_enabled=$false}|ConvertTo-Json -Depth 4|Set-Content -Encoding UTF8 (Join-Path $Output 'run-spec.json')
+[ordered]@{iteration='I10';executable=$Executable;sha256=(Get-FileHash $Executable -Algorithm SHA256).Hash.ToLowerInvariant();flags=$flags;started_utc=[DateTime]::UtcNow.ToString('o');grid=@(320,192);tick_hz=120;render_hz_in_benchmark=60;blocks=3;warmup_ticks=120;samples=240;order=@('off','candidate','candidate','off');scene_order='random_per_block';seed=$Seed;telemetry=[bool]$Telemetry;gl_debug=($flags -contains '--gl-debug');hot_budget_ms=.70;cold_budget_ms=.05;default_enabled=$false}|ConvertTo-Json -Depth 4|Set-Content -Encoding UTF8 (Join-Path $Output 'run-spec.json')
 $sampler=$null
 if($Telemetry){
  Import-Module (Join-Path $PSScriptRoot 'GpuTelemetry.psm1')

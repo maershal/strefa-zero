@@ -1,5 +1,6 @@
 #include "gpu/thermal_system.hpp"
 
+#include "gpu/diagnostic_read.hpp"
 #include "platform/gpu_zone.hpp"
 
 #include <SDL3/SDL.h>
@@ -362,10 +363,15 @@ void ThermalSystem::capture(bool force) {
     }
     state.invalidate();
 }
-ThermalTotals ThermalSystem::read_totals(GLuint buffer) const {
+// Probe buffers are GL_STREAM_READ copies and are read directly; the live reduction buffer goes through staging.
+ThermalTotals ThermalSystem::read_totals(GLuint buffer, bool staged) const {
     std::vector<std::array<double, 16>> blocks(block_count);
-    gl.BindBuffer(GL_COPY_READ_BUFFER, buffer);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, totals_bytes, blocks.data());
+    if (staged) {
+        detail::read_staged(gl, buffer, 0, std::span{blocks});
+    } else {
+        gl.BindBuffer(GL_COPY_READ_BUFFER, buffer);
+        gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, totals_bytes, blocks.data());
+    }
     std::array<double, 16> sums{};
     for (const auto& b : blocks)
         for (unsigned i = 0; i < sums.size(); ++i) {
@@ -441,7 +447,7 @@ void ThermalSystem::poll() {
         gl.DeleteSync(p.fence);
         p.fence = nullptr;
         if (p.serial == serial) {
-            latest = read_totals(p.buffer);
+            latest = read_totals(p.buffer, false);
             latest.tick = p.tick;
             latest.generation = p.generation;
             if (p.measured) {
@@ -467,20 +473,18 @@ void ThermalSystem::poll() {
     }
     state.invalidate();
 }
-ThermalSnapshot ThermalSystem::snapshot() {
+ThermalSnapshot ThermalSystem::snapshot(ThermalRead what) {
     capture(true);
     glFinish();
     poll();
     ThermalSnapshot s;
-    s.cells.resize(cell_count);
-    s.particles.resize(particle_count);
-    gl.BindBuffer(GL_COPY_READ_BUFFER, cells[cell_bank]);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(s.cells.size() * sizeof(ThermalCell)),
-                        s.cells.data());
-    gl.BindBuffer(GL_COPY_READ_BUFFER, particles[particle_bank]);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(s.particles.size() * sizeof(ThermalParticle)),
-                        s.particles.data());
-    s.totals = read_totals(reduction);
+    if (what == ThermalRead::all) {
+        s.cells.resize(cell_count);
+        s.particles.resize(particle_count);
+        detail::read_staged(gl, cells[cell_bank], 0, std::span{s.cells});
+        detail::read_staged(gl, particles[particle_bank], 0, std::span{s.particles});
+    }
+    s.totals = read_totals(reduction, true);
     s.totals.tick = tick_;
     s.totals.generation = generation;
     dispatches_ = barriers_ = 0; // the forced capture of a diagnostic read is not the work of the next tick

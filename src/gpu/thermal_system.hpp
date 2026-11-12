@@ -25,7 +25,7 @@ public:
     const ThermalTotals& totals() const { return latest; }
     ThermalOptions options;
     ThermalView view{};
-    ThermalSnapshot snapshot();
+    ThermalSnapshot snapshot(ThermalRead what = ThermalRead::all);
     void seed(std::span<const ThermalCell>, std::span<const ThermalParticle>);
     std::vector<ThermalTiming> take_timings();
     std::uint64_t memory_bytes() const;
@@ -90,6 +90,6 @@ private:
     }
     void brush(const ThermalBrush&);
     void capture(bool force = false);
-    ThermalTotals read_totals(GLuint) const;
+    ThermalTotals read_totals(GLuint, bool staged) const;
 };
 } // namespace strefa::gpu::detail
