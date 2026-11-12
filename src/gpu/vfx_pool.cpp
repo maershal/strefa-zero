@@ -1,5 +1,6 @@
 #include "gpu/vfx_pool.hpp"
 
+#include "gpu/diagnostic_read.hpp"
 #include "platform/gpu_zone.hpp"
 
 #include <algorithm>
@@ -342,27 +343,23 @@ std::uint64_t VfxPool::memory_bytes() const {
          + vfx_event_capacity * sizeof(VfxEvent) + 320 * 192 * 10
          + static_cast<std::uint64_t>(scratch_width) * scratch_height * (scratch_linear ? 8 : 4);
 }
+VfxCounters VfxPool::read_counters() {
+    VfxCounters result;
+    detail::read_staged(gl, buffers[4], 0, std::span{&result, 1});
+    if (result.counts[0] > vfx_capacity || result.counts[1] > vfx_capacity)
+        throw std::runtime_error{"Przepełnienie licznika efektów."};
+    state.invalidate();
+    return result;
+}
 VfxSnapshot VfxPool::snapshot() {
     VfxSnapshot result;
-    gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[4]);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(result.counters), &result.counters);
-    if (result.counters.counts[0] > vfx_capacity || result.counters.counts[1] > vfx_capacity)
-        throw std::runtime_error{"Przepełnienie licznika efektów."};
+    result.counters = read_counters();
     result.particles.resize(vfx_capacity);
     result.alive.resize(result.counters.counts[0]);
     result.free.resize(result.counters.counts[1]);
-    gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[0]);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(result.particles.size() * sizeof(VfxParticle)),
-                        result.particles.data());
-    gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[1 + bank]);
-    if (!result.alive.empty())
-        gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(result.alive.size() * 4),
-                            result.alive.data());
-    gl.BindBuffer(GL_COPY_READ_BUFFER, buffers[3]);
-    if (!result.free.empty())
-        gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, static_cast<GLsizeiptr>(result.free.size() * 4),
-                            result.free.data());
+    detail::read_staged(gl, buffers[0], 0, std::span{result.particles});
+    detail::read_staged(gl, buffers[1 + bank], 0, std::span{result.alive});
+    detail::read_staged(gl, buffers[3], 0, std::span{result.free});
     state.invalidate();
     return result;
 }

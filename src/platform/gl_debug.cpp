@@ -37,17 +37,19 @@ struct GlDebugLog::Impl {
     std::array<Entry, 2048> entries{};
     std::size_t count{};
     std::atomic<unsigned> dropped{};
-    std::atomic<DebugPhase> phase{DebugPhase::initialization};
     std::uint64_t started_ns{SDL_GetTicksNS()};
     std::array<std::atomic<unsigned>, 5> phase_messages{}, phase_migrations{}, phase_dropped{};
     std::mutex mutex;
     static void APIENTRY receive(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length,
                                  const GLchar* message, const void* user) {
         auto& self = *static_cast<Impl*>(const_cast<void*>(user));
-        const auto phase = self.phase.load(std::memory_order_relaxed);
+        const auto phase = gl_debug_phase.load(std::memory_order_relaxed);
         const auto index = static_cast<std::size_t>(phase);
         ++self.phase_messages[index];
-        if (id == 131186) ++self.phase_migrations[index];
+        if (id == 131186) {
+            ++self.phase_migrations[index];
+            ++gl_debug_migrations;
+        }
         std::unique_lock lock{self.mutex, std::try_to_lock};
         if (!lock || self.count == self.entries.size()) {
             ++self.dropped;
@@ -68,7 +70,7 @@ struct GlDebugLog::Impl {
 };
 GlDebugLog::GlDebugLog(std::unique_ptr<Impl> impl) : impl_{std::move(impl)} {}
 void GlDebugLog::set_phase(DebugPhase phase) noexcept {
-    impl_->phase.store(phase, std::memory_order_relaxed);
+    gl_debug_phase.store(phase, std::memory_order_relaxed);
 }
 std::unique_ptr<GlDebugLog> GlDebugLog::create(const std::filesystem::path& output) {
     auto impl = std::make_unique<Impl>();
@@ -79,7 +81,9 @@ std::unique_ptr<GlDebugLog> GlDebugLog::create(const std::filesystem::path& outp
     if (major > 4 || (major == 4 && minor >= 3) || SDL_GL_ExtensionSupported("GL_KHR_debug"))
         impl->callback =
                 reinterpret_cast<PFNGLDEBUGMESSAGECALLBACKPROC>(SDL_GL_GetProcAddress("glDebugMessageCallback"));
+    gl_debug_phase.store(DebugPhase::initialization);
     if (impl->callback) {
+        gl_debug_attached = true;
         glEnable(GL_DEBUG_OUTPUT);
         impl->callback(Impl::receive, impl.get());
         const auto control =
@@ -92,6 +96,7 @@ GlDebugLog::~GlDebugLog() {
     if (impl_->callback) {
         impl_->callback(nullptr, nullptr);
         glDisable(GL_DEBUG_OUTPUT);
+        gl_debug_attached = false;
     }
     try {
         std::lock_guard lock{impl_->mutex};

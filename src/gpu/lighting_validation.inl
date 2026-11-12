@@ -19,17 +19,9 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
         set_vfx_options({VfxQuality::off, false});
         renderer.stage = RenderStage::complete;
         auto input = [&] { return detail::RenderState{s.buffers, s.current, s.fluids_enabled, s.mission_enabled}; };
-        auto bytes = [&] {
-            gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
+        auto bytes = [&] { // staged: the benchmark reads all eight buffers around every segment
             std::vector<std::byte> result;
-            for (auto id : s.buffers) {
-                gl.BindBuffer(GL_COPY_READ_BUFFER, id);
-                GLint size{};
-                gl.GetBufferParameteriv(GL_COPY_READ_BUFFER, GL_BUFFER_SIZE, &size);
-                const auto start = result.size();
-                result.resize(start + static_cast<std::size_t>(size));
-                gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, size, result.data() + start);
-            }
+            for (auto id : s.buffers) detail::append_staged(gl, id, result);
             s.invalidate_bindings();
             return result;
         };
@@ -68,7 +60,9 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
             std::ofstream csv{output / "lighting-samples.csv"};
             csv << "scene,quality,block,order,frame,pair_gpu_ms,cpu_submit_ms,memory_bytes\n";
             std::ofstream sources{output / "lighting-sources.csv"};
-            sources << "scene,quality,block,order,stored_sources,rejected_candidates,culled_by_quality\n";
+            sources << "scene,quality,block,order,stored_sources,rejected_candidates,culled_by_quality,"
+                    << detail::SegmentMigrations::header << '\n';
+            detail::SegmentMigrations migrations; // frames in debug phase `runtime`, reads in `validation`
             std::ofstream passes{output / "lighting-passes.csv"};
             passes << "scene,quality,block,order,kind,serial";
             for (auto name : lighting_pass_names) passes << ',' << name << "_ms";
@@ -125,6 +119,7 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
                             opt.lighting.quality = candidate ? quality : LightingQuality::off;
                             opt.lighting.ambient = scene == 1 ? .12F : .85F;
                             renderer.set_options(opt);
+                            migrations.runtime();
                             for (unsigned n = 0; n < 120; ++n) {
                                 if (candidate) {
                                     tick_presentation(visual_tick++);
@@ -152,6 +147,7 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
                                 if (n % 16 == 15) drain();
                             }
                             drain();
+                            migrations.readback();
                             const auto variant = candidate ? std::string{lighting_quality_name(quality)}
                                                            : "off_for_" + std::string{lighting_quality_name(quality)};
                             for (unsigned n = 0; n < 240; ++n) {
@@ -168,14 +164,14 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
                                 for (double ms : sample.milliseconds) passes << ',' << ms;
                                 passes << '\n';
                             }
+                            renderer.take_samples();
+                            require(bytes() == before, "Presentation benchmark changed physical buffers");
                             const auto source_counts = light.snapshot();
                             sources << names[scene] << ',' << variant << ',' << block << ',' << order << ','
                                     << source_counts.counts[0] << ',' << source_counts.counts[1] << ','
                                     << std::max(0, int(source_counts.counts[0])
                                                            - (quality == LightingQuality::low ? 16 : 32))
-                                    << '\n';
-                            renderer.take_samples();
-                            require(bytes() == before, "Presentation benchmark changed physical buffers");
+                                    << ',' << migrations.take() << '\n';
                             if (block == 1 && candidate) {
                                 renderer.save_image(output
                                                     / (std::string{names[scene]} + "-"

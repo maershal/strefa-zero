@@ -9,6 +9,9 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
     counts << "scene,scale,quality,block,order,variant,kind,emitted,rejected,budget_limited_passes,malformed\n";
     std::ofstream passes{output / "vfx-pass-samples.csv"};
     passes << "scene,tick,field_ms,update_ms,emit_ms,draw_ms\n";
+    std::ofstream debug{output / "vfx-debug-segments.csv"};
+    debug << "scene,scale,quality,block,order,variant," << detail::SegmentMigrations::header << '\n';
+    detail::SegmentMigrations migrations; // frames in debug phase `runtime`, setup and reads in `validation`
     for (int scale : {3, 5})
         for (unsigned scene = 0; scene < 4; ++scene) {
             s.renderer.resize_for_test(scale);
@@ -59,6 +62,7 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
                         pool.reset(s.epoch);
                         if (scene == 3 && mode != VfxQuality::off) pool.seed_for_test(full);
                         unsigned tick = 0;
+                        migrations.runtime();
                         const auto update_vfx = [&] {
                             if (!pool.enabled()) return;
                             pool.begin_tick(s.renderer.terrain_image, s.epoch, ++tick, 1.F / 120.F);
@@ -106,7 +110,8 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
                         }
                         glFinish();
                         pool.poll();
-                        const auto counters = pool.snapshot().counters;
+                        migrations.readback();
+                        const auto counters = pool.read_counters(); // staged, the pool lives on
                         if (scene == 3 && mode != VfxQuality::off && counters.counts[0] != vfx_capacity)
                             throw std::runtime_error{"Nasycony benchmark utracił żywe cząstki."};
                         for (unsigned frame = 0; frame < frames.size(); ++frame) {
@@ -130,6 +135,9 @@ std::expected<void, std::string> ParticleWorld::run_vfx_benchmark(const std::fil
                                    << ',' << vfx_quality_name(mode) << ',' << vfx_kind_names[kind] << ','
                                    << counters.emitted[kind] << ',' << counters.rejected[kind] << ','
                                    << counters.clock[2] << ',' << counters.clock[3] << '\n';
+                        debug << names[scene] << ',' << scale << ','
+                              << vfx_quality_name(static_cast<VfxQuality>(quality)) << ',' << block << ',' << order
+                              << ',' << vfx_quality_name(mode) << ',' << migrations.take() << '\n';
                         csv.flush();
                         if (block == 1 && order == 1)
                             s.renderer.save_image(output

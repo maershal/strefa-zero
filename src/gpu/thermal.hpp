@@ -115,6 +115,9 @@ struct ThermalTiming {
     // Profile mode, in the GPU row of the tick (heat_ms...): every solver kernel of ThermalSystem::tick, in order.
     std::vector<ThermalOperationTiming> operations;
 };
+// What a diagnostic read copies: `totals` reads only the reduction blocks (a few kB), `all` also every cell and
+// particle (about 10 MB).
+enum class ThermalRead { totals, all };
 struct ThermalSnapshot {
     std::vector<ThermalCell> cells;
     std::vector<ThermalParticle> particles;

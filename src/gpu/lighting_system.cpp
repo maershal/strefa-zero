@@ -1,5 +1,6 @@
 #include "gpu/lighting_system.hpp"
 
+#include "gpu/diagnostic_read.hpp"
 #include "platform/gpu_zone.hpp"
 
 #include <algorithm>
@@ -432,9 +433,7 @@ std::vector<std::uint16_t> LightingSystem::read_seeds() const {
 }
 LightingSnapshot LightingSystem::snapshot() const {
     LightingSnapshot s;
-    gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    gl.BindBuffer(GL_COPY_READ_BUFFER, pool);
-    gl.GetBufferSubData(GL_COPY_READ_BUFFER, 0, sizeof(s), &s);
+    detail::read_staged(gl, pool, 0, std::span{&s, 1});
     return s;
 }
 std::uint64_t LightingSystem::memory_bytes() const {

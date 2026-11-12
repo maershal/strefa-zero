@@ -120,7 +120,7 @@ public:
     void set_thermal_view(ThermalView);
     void set_thermal_brush(const ThermalBrush&);
     const ThermalTotals& thermal_totals() const;
-    ThermalSnapshot read_thermal(); // Explicit synchronous diagnostics only.
+    ThermalSnapshot read_thermal(ThermalRead what = ThermalRead::all); // Explicit synchronous diagnostics only.
     void request_thermal_inspection(int x, int y);
     const ThermalInspection& thermal_inspection() const;
     std::uint64_t thermal_memory() const;

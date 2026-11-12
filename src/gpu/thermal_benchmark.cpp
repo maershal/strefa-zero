@@ -1,5 +1,7 @@
 #include "gpu/validation.hpp"
 
+#include "gpu/diagnostic_read.hpp"
+
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
@@ -93,8 +95,12 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
         operations << std::setprecision(12) << "seed,sequence,scene,block,tick,index,op,gpu_ms\n";
         pools << std::setprecision(12)
               << "seed,sequence,scene,stage,block,order,variant,mass,H,chemical,oxygen,fuel,"
-                 "steam,smoke,finite,start_utc_unix_ns,end_utc_unix_ns\n";
-        segments << "seed,sequence,scene,block,start_utc_unix_ns,end_utc_unix_ns\n";
+                 "steam,smoke,finite,start_utc_unix_ns,end_utc_unix_ns,"
+              << detail::SegmentMigrations::header << '\n';
+        segments << "seed,sequence,scene,block,start_utc_unix_ns,end_utc_unix_ns," << detail::SegmentMigrations::header
+                 << '\n';
+        // Ticks run in the debug phase `runtime`, setup and the totals read in `validation` (gl-debug.txt).
+        detail::SegmentMigrations migrations;
         info << "schema=2\nseed=" << seed
              << "\nscene_order=random_per_block_splitmix64_fisher_yates\nseed_override=STREFA_BENCHMARK_SEED\n";
         info.flush();
@@ -143,6 +149,7 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                         t.transport = mode >= 2;
                         t.reactions = mode >= 3;
                         world.set_thermal_options(t);
+                        migrations.runtime();
                         const auto started = utc_unix_ns();
                         advance(120, 16);
                         struct Row {
@@ -167,6 +174,7 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                         }
                         glFinish();
                         world.poll();
+                        migrations.readback();
                         GLuint64 previous_start = 0;
                         for (unsigned n = 0; n < rows.size(); ++n) {
                             const auto& row = rows[n];
@@ -181,12 +189,13 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                                 << ',' << world.thermal_memory() << '\n';
                             gl.remove(3, row.q.data());
                         }
-                        const auto stat = world.read_thermal().totals;
+                        // Totals only, through a staging copy: the world lives through every segment.
+                        const auto stat = world.read_thermal(ThermalRead::totals).totals;
                         pools << seed << ',' << sequence << ',' << scene_names[scene] << ',' << stage_names[stage]
                               << ',' << block << ',' << order << ',' << stage_names[mode] << ',' << stat.mass << ','
                               << stat.enthalpy << ',' << stat.chemical << ',' << stat.oxygen << ',' << stat.fuel << ','
                               << stat.steam << ',' << stat.smoke << ',' << stat.finite << ',' << started << ','
-                              << utc_unix_ns() << '\n';
+                              << utc_unix_ns() << ',' << migrations.take() << '\n';
                         csv.flush();
                         pools.flush();
                         if (block == 1 && order == 1) {
@@ -204,10 +213,13 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                 detailed.enabled = detailed.profile = true;
                 world.set_thermal_options(detailed);
                 world.take_thermal_timings(); // drop timings of earlier segments
+                migrations.runtime();
                 const auto started = utc_unix_ns();
                 advance(120, 8);
+                const auto ended = utc_unix_ns();
+                migrations.readback();
                 segments << seed << ',' << sequence << ',' << scene_names[scene] << ',' << block << ',' << started
-                         << ',' << utc_unix_ns() << '\n';
+                         << ',' << ended << ',' << migrations.take() << '\n';
                 for (const auto& row : world.take_thermal_timings()) {
                     passes << seed << ',' << sequence << ',' << scene_names[scene] << ',' << block << ',' << row.tick
                            << ',' << row.heat_ms << ',' << row.gas_ms << ',' << row.reaction_ms << ',' << row.cpu_ms
