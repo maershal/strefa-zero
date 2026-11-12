@@ -1,6 +1,5 @@
 #include "gpu/world.hpp"
 
-#include "gpu/diagnostic_read.hpp"
 #include "gpu/diagnostic_trace.hpp"
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/event_ring.hpp"
@@ -8,6 +7,7 @@
 #include "gpu/readback_ring.hpp"
 #include "gpu/render_device.hpp"
 #include "gpu/scene_renderer.hpp"
+#include "gpu/segment_migrations.hpp"
 #include "gpu/shader_library.hpp"
 #include "gpu/thermal_system.hpp"
 #include "gpu/upload_ring.hpp"
