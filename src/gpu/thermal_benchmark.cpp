@@ -1,6 +1,5 @@
-#include "gpu/validation.hpp"
-
 #include "gpu/diagnostic_read.hpp"
+#include "gpu/validation.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
