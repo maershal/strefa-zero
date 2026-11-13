@@ -33,6 +33,11 @@ std::expected<void, std::string> validate_work(const std::filesystem::path& outp
 std::expected<void, std::string> validate_coupling(const std::filesystem::path& output, bool benchmark = false,
                                                    bool reference_control = false, bool legacy_check = false,
                                                    const ExecutionOptions& layout = {});
+// Z05, --gpu-check coupling-bitwise: the single-group body reduction against the summation order of the former
+// two-dispatch reduction, bit for bit, on injected batches and on reactions from the scripted mission route.
+std::expected<void, std::string> validate_coupling_bitwise(const std::filesystem::path& shaders,
+                                                           const std::filesystem::path& output,
+                                                           const ExecutionOptions& layout);
 void validate_coupling_replay(const std::filesystem::path& output, std::ostream& checks,
                               const ExecutionOptions& layout);
 std::expected<void, std::string> validate_neighbors(const std::filesystem::path& output, bool benchmark = false);

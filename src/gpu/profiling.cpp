@@ -181,8 +181,8 @@ void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality 
                 const unsigned bin_passes = mode == NeighborMode::linked ? 2U : 5U;
                 const auto coupling = world.execution_options().coupling;
                 const unsigned reductions = coupling == CouplingMode::combined ? 26U : 42U;
-                const unsigned passes = coupling == CouplingMode::reference ? 1U : 2U;
-                const unsigned body_work = variant.options.body_coupling ? 2U + reductions * passes : 0U;
+                // One dispatch per reduction in every coupling mode: the compact modes reduce in one group (Z05).
+                const unsigned body_work = variant.options.body_coupling ? 2U + reductions : 0U;
                 require(p.calls.presentation_dispatches == presentation,
                         "Incorrect I11 presentation dispatch accounting");
                 require(p.calls.dispatches - p.calls.presentation_dispatches
