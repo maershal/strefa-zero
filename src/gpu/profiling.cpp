@@ -161,7 +161,10 @@ void check_timer_modes(ParticleWorld& world, std::ostream& report) {
                   "reset)\n";
     }
 }
-void check_instrumentation(ParticleWorld& world, std::ostream& report) {
+// Lighting `off` (the default) issues no presentation dispatch; `low` adds exactly four per mission tick (birth
+// preparation, field command, moisture, light list). Physical dispatches must not depend on the lighting quality.
+void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality quality) {
+    const unsigned presentation = quality == LightingQuality::off ? 0U : 4U;
     for (const auto& variant : variants()) {
         drain(world);
         world.set_profile_options(variant.options);
@@ -180,7 +183,8 @@ void check_instrumentation(ParticleWorld& world, std::ostream& report) {
                 const unsigned reductions = coupling == CouplingMode::combined ? 26U : 42U;
                 const unsigned passes = coupling == CouplingMode::reference ? 1U : 2U;
                 const unsigned body_work = variant.options.body_coupling ? 2U + reductions * passes : 0U;
-                require(p.calls.presentation_dispatches == 4U, "Incorrect I11 presentation dispatch accounting");
+                require(p.calls.presentation_dispatches == presentation,
+                        "Incorrect I11 presentation dispatch accounting");
                 require(p.calls.dispatches - p.calls.presentation_dispatches
                                 == 76U + body_work + builds * bin_passes + (diagnostic_due ? 2U : 0U),
                         "Incorrect measured physical dispatch count");
@@ -222,8 +226,18 @@ void check_instrumentation(ParticleWorld& world, std::ostream& report) {
             require(world.mission().status[1] > epoch && world.mission().status[2] == 0,
                     "Old profiling readback survived reset");
         }
-        report << variant.name << "=passed\n";
+        report << variant.name << "_lighting_" << lighting_quality_name(quality) << "=passed\n";
     }
+}
+void check_instrumentation(ParticleWorld& world, std::ostream& report) {
+    const auto saved_render = world.render_options();
+    for (const auto quality : {LightingQuality::off, LightingQuality::low}) {
+        auto render = saved_render;
+        render.lighting.quality = quality;
+        world.set_render_options(render);
+        check_variants(world, report, quality);
+    }
+    world.set_render_options(saved_render);
     check_timer_modes(world, report);
     world.set_profile_options({});
     world.reset_mission();

@@ -57,6 +57,7 @@ public:
         if (!value.lighting.valid()) throw std::invalid_argument{"Nieprawidłowe opcje oświetlenia."};
         options = value;
         lighting.set_profile(value.profile_passes);
+        lighting.set_enabled(value.lighting.quality != LightingQuality::off);
     }
     RenderOptions get_options() const { return options; }
     std::vector<RenderSample> take_samples();

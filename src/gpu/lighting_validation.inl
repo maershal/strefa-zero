@@ -70,6 +70,7 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
             std::array<GLuint, 480> queries{};
             gl.GenQueries(static_cast<GLsizei>(queries.size()), queries.data());
             for (unsigned scene = 0; scene < names.size(); ++scene) {
+                renderer.set_options({.lighting = {.quality = LightingQuality::low}}); // fixture ticks light
                 if (scene == 2) {
                     set_thermal_options({true});
                     reset_thermal_scene(1);
@@ -185,7 +186,7 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
             gl.DeleteQueries(static_cast<GLsizei>(queries.size()), queries.data());
             renderer.set_options(original);
             set_vfx_options(old_vfx);
-            report << "benchmark=PASS; 6 scenes, 2 qualities, 3 ABBA, 240 frames; candidate pair contains 2 presentation ticks and render; off reference omits I11 ticks to include their full incremental cost, frozen physics\n";
+            report << "benchmark=PASS; 6 scenes, 2 qualities, 3 ABBA, 240 frames; candidate pair contains 2 presentation ticks and render; off reference omits I11 ticks like the game at quality off, frozen physics\n";
             return {};
         }
         std::vector<std::uint32_t> walls(width * height);
@@ -194,12 +195,12 @@ std::expected<void, std::string> ParticleWorld::validate_lighting(const std::fil
         walls[65 * width + 149] = 1;
         load({}, walls);
         light.set_lamps(std::array{lamp(130.5F, 60.5F)});
-        tick_presentation(1);
         RenderOptions options;
         options.lighting.quality = LightingQuality::low;
         options.lighting.ambient = 0;
         options.lighting.bloom = 0;
         renderer.set_options(options);
+        tick_presentation(1); // quality `off` skips presentation ticks
         const auto physical = bytes();
         renderer.render(input(), 1);
         drain();

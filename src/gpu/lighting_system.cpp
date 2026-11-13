@@ -109,6 +109,7 @@ void LightingSystem::initialize(ShaderLibrary& library, const std::filesystem::p
     state.invalidate();
 }
 void LightingSystem::reset(unsigned gen) {
+    skipped_ = false;
     generation = gen;
     last_tick = 0;
     tick_known = false;
@@ -127,6 +128,10 @@ void LightingSystem::reset(unsigned gen) {
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 320, 192, GL_RED_INTEGER, GL_UNSIGNED_SHORT, mask.data());
     state.invalidate();
 }
+void LightingSystem::set_enabled(bool value) {
+    if (value && !enabled_ && skipped_) reset(generation);
+    enabled_ = value;
+}
 void LightingSystem::set_lamps(std::span<const PointLight> values) {
     if (values.size() > 8) throw std::invalid_argument{"Najwyżej osiem stałych lamp."};
     for (const auto& p : values)
@@ -144,6 +149,10 @@ void LightingSystem::bind_birth() {
     image(7, moisture, GL_READ_WRITE, GL_R32F);
 }
 void LightingSystem::prepare_birth(const std::array<GLuint, 8>& buffers, unsigned current, bool conditional) {
+    if (!enabled_) {
+        skipped_ = true;
+        return;
+    }
     PresentationCounterScope observation{gl};
     state.invalidate();
     state.base(0, buffers[current]);
@@ -217,6 +226,12 @@ std::vector<LightingSample> LightingSystem::take_samples() {
 }
 void LightingSystem::tick(const std::array<GLuint, 8>& buffers, unsigned current, unsigned gen, unsigned tick_id,
                           bool events, GLuint terrain, GLuint heat, GLuint thermal_particles) {
+    if (!enabled_) {
+        skipped_ = true;
+        return;
+    }
+    // Thermal presentation writes `thermal_image` (an image store) right before this tick.
+    gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     if (gen != generation) reset(gen);
     if (tick_known && tick_id <= last_tick) return;
     STREFA_ZONE("LightingSystem::tick");
