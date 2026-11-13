@@ -111,6 +111,7 @@ void SceneRenderer::initialize(ShaderLibrary& library, const std::filesystem::pa
             uniforms[program][name] = gl.GetUniformLocation(program, name);
     allocate_targets();
     lighting.initialize(library, shaders, defines);
+    lighting.set_enabled(options.lighting.quality != LightingQuality::off);
 }
 void SceneRenderer::extent(GLuint program, const char* uniform) {
     gl.Uniform4f(location(program, uniform), static_cast<float>(rw), static_cast<float>(rh), 0.F, 0.F);

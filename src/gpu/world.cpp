@@ -1037,7 +1037,6 @@ bool ParticleWorld::step() {
     if (measure) s.end_timer(timer);
     const auto timer_closed = stamp();
     if (s.thermal && s.thermal_config.enabled) s.thermal->presentation(s.renderer.lighting.thermal_image);
-    s.gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     s.renderer.lighting.tick(s.buffers, s.current, s.epoch, tick, events, s.renderer.terrain_image,
                              s.thermal && s.thermal_config.enabled ? s.renderer.lighting.thermal_image : 0,
                              s.thermal && s.thermal_config.enabled ? s.thermal->presentation_particles() : 0);

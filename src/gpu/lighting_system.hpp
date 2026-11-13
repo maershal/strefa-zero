@@ -23,6 +23,9 @@ public:
     std::array<float, 2> camera(const LightingOptions&) const;
     std::vector<LightingSample> take_samples();
     void set_profile(bool value) { profile = value; }
+    // Quality `off` skips the presentation tick and birth preparation entirely (no GL calls). Enabling after a
+    // skipped tick restarts the presentation state from zero: dry moisture, empty light list.
+    void set_enabled(bool value);
     std::uint64_t memory_bytes() const;
     std::vector<float> read_moisture() const;
     std::vector<float> read_light() const;
@@ -43,6 +46,7 @@ private:
     std::array<GLuint, 3> bloom_down{}, bloom_up{};
     unsigned generation{}, last_tick{}, light_count{}, lamp_count{3};
     bool tick_known{}, profile{}, jfa_valid{};
+    bool enabled_{true}, skipped_{};
     int rw{}, rh{};
     std::uint64_t serial{};
     std::unordered_map<GLuint, std::unordered_map<std::string, GLint>> uniforms;

@@ -37,7 +37,7 @@ Wilgoć jest oddzielną teksturą **R32F 256×128**. R16F z planu zastąpiono R3
 
 Kontakt z ciekłą wodą zwiększa wilgoć o 4/s, poza kontaktem ubywa 1/30 na sekundę. Mnożnik temperatury to `clamp(1 + max(T−293,15;0)/100; 1; 8)`. Przy termice off używana jest temperatura otoczenia; przy I10 pole kontaktu uwzględnia udział fazy ciekłej nośnika. Model opisuje wygląd, bez pobierania masy wody, zmiany entalpii i kohezji solvera.
 
-Przed przydzielaniem slotów przez pędzel, gruz i kondensację osobny przebieg zeruje wilgoć nieaktywnych ID. Alokatory korzystają wyłącznie z tych wolnych slotów. Shadery numeryczne pozostają bajtowo zgodne z zachowaną bazą I10; obraz wilgoci nie jest częścią ich interfejsu. Reset zeruje cały bufor; zmiana materiału usuwa wilgoć w następnym ticku. Prezentacja pozostaje aktualizowana również przy świetle off, aby przełączanie jakości nie traciło historii. Render i powtórzony tick nie zmieniają wilgoci. Nagrania v1–v3 zachowują format i odtwarzają stan wyglądu z resetu oraz wykonanych ticków.
+Przed przydzielaniem slotów przez pędzel, gruz i kondensację osobny przebieg zeruje wilgoć nieaktywnych ID. Alokatory korzystają wyłącznie z tych wolnych slotów. Shadery numeryczne pozostają bajtowo zgodne z zachowaną bazą I10; obraz wilgoci nie jest częścią ich interfejsu. Reset zeruje cały bufor; zmiana materiału usuwa wilgoć w następnym ticku. Od Z04 przy świetle off prezentacja nie jest aktualizowana; włączenie światła zaczyna jej stan od zera (sekcja [Z04](#z04-światło-off-bez-przebiegów-prezentacji)). Render i powtórzony tick nie zmieniają wilgoci. Nagrania v1–v3 zachowują format i odtwarzają stan wyglądu z resetu oraz wykonanych ticków.
 
 ## Uruchamianie i pomiary
 
@@ -53,7 +53,7 @@ python scripts/profiling/analyze-lighting.py wyniki-pomiarow --controls
 
 Kontrola jakości obejmuje niezależny orakl odcinek/AABB, JFA względem dokładnego pola, cienką ścianę, destrukcję, wilgoć, gorące wysychanie, ponowne użycie slotu, potwierdzone zdarzenia bez VFX, HDR/sRGB oraz niezmienność fizyki i obrazu stanu podczas renderowania. Oddzielny test CPU sprawdza 30/60/144 FPS, ustawienia i CLI.
 
-Macierz ma 6 scen × 2 jakości × 3 bloki ABBA × 4 segmenty × 240 próbek = **34 560 klatek**. Każdy segment poprzedza 120 klatek rozgrzewki. Fizyka jest zamrożona na identycznej kopii GPU. Kandydat wykonuje dwie aktualizacje prezentacji, w tym odpowiednie przygotowanie wolnych ID, oraz render; diagnostyczna referencja off pomija nowe aktualizacje, aby ich koszt był w całości wliczony do przyrostu. To referencja renderu zgodnego z I10, nie pomiar całej aplikacji I10. Zwykły runtime off nadal utrzymuje historię wilgoci.
+Macierz ma 6 scen × 2 jakości × 3 bloki ABBA × 4 segmenty × 240 próbek = **34 560 klatek**. Każdy segment poprzedza 120 klatek rozgrzewki. Fizyka jest zamrożona na identycznej kopii GPU. Kandydat wykonuje dwie aktualizacje prezentacji, w tym odpowiednie przygotowanie wolnych ID, oraz render; diagnostyczna referencja off pomija nowe aktualizacje, aby ich koszt był w całości wliczony do przyrostu. To referencja renderu zgodnego z I10, nie pomiar całej aplikacji I10. Do Z04 zwykły runtime off nadal wykonywał te aktualizacje; od Z04 referencja off odpowiada grze przy świetle off.
 
 Liczniki `dispatches` i czas CPU submit nadal obejmują pełną pracę. Dodatkowy `presentation_dispatches` oznacza rzeczywiste wywołania prezentacji, dzięki czemu test kontraktu solvera porównuje `dispatches − presentation_dispatches` i niezależnie wymaga czterech wywołań prezentacji w swojej scenie. Nie odejmuje się ich od kosztu I11. Kompletność framebufferów jest sprawdzana przy inicjalizacji; nie odpytuje się jej co tick ani dla każdego poziomu bloom.
 
@@ -112,3 +112,13 @@ Porównanie obrazów: [off / low / high](https://github.com/maershal/strefa-zero
 Skopiowany plik `StrefaZero.exe` (SHA-256 `4e1558eb8b091975224f1c5710db8df1e4ff3d74c2f6fe49b6944c5118f53658`) przeszedł trzy kolejne, rozłączne uruchomienia: kontrolę jakości I11 z debugiem GL, smoke CPU/OpenGL 4.3 oraz smoke OpenGL 3.3. Wszystkie procesy zwróciły 0 bez timeoutu. Metadane i logi są w `i11/package-quality`, `i11/package-cpu` i `i11/package-legacy`. Końcowy ZIP zawiera manifest źródeł, hashe wszystkich plików, licencje i raport; jego osobna suma SHA-256 znajduje się obok archiwum.
 
 W publikacji GitHub nowe surowe BMP są załącznikiem wydania; [instrukcja pobrania obrazów](../QA_IMAGES.md) odtwarza ich pierwotne ścieżki w repozytorium. Pozostałe dane I11 i porównanie PNG są dostępne bezpośrednio w Git.
+
+## Z04: światło off bez przebiegów prezentacji
+
+Data: 2026-11-13. Przy jakości `off` (ustawienie domyślne) `LightingSystem` pomija tick prezentacji (licznik pola, czyszczenie i splat cząstek do pola 320×192, wilgoć, lista świateł) oraz przygotowanie narodzin: zero wywołań GL, także bez bariery przed tickiem. Jakość przekazuje `SceneRenderer::set_options`; warunek jest w `LightingSystem`, `world.cpp` jest o linię krótszy (bariera po prezentacji termiki przeniesiona do ticku światła). Ustawienia domyślne bez zmian.
+
+Przebiegi prezentacji na tick misji: przed 4 dispatche + 1 rysowanie pośrednie (splat pola), po 0 przy `off`; przy `low`/`high` bez zmian (4 + 1). `gpu.instrumentation` sprawdza obie jakości i tę samą liczbę dispatchy fizycznych.
+
+Konsekwencja wizualna: stan prezentacji nie ma historii z czasu, gdy światło było wyłączone. Jeśli w trakcie sceny przy `off` minął choć jeden tick, włączenie światła zaczyna od zera: cały piasek jest suchy (mokre ziarna jaśnieją od razu i wilgotnieją znów w kontakcie z wodą, 4/s), lista świateł jest pusta (błysk eksplozji czy lufy sprzed włączenia nie świeci; lampy sceny wracają w pierwszym ticku), a miękkie cienie JFA są budowane od nowa. Przełączanie między `low` i `high` nie zmienia stanu. Fizyka bez zmian: wilgoć nie jest częścią interfejsu shaderów numerycznych.
+
+Benchmark I11: referencja off już wcześniej pomijała ticki prezentacji, więc teraz odpowiada grze przy świetle off. Przygotowanie każdej sceny benchmarku (w tym krok z wybuchem, którego błysk jest zamrażany jako lampa) działa przy `low`, jak dotąd z aktywnym tickiem prezentacji.
