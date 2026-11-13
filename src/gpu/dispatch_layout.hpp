@@ -8,6 +8,9 @@ inline constexpr unsigned active_command = 0, draw_command = 3, rebuild_command 
                           terrain_command = 13, blast_command = 16, blast_terrain_command = 19, debris_command = 22,
                           reduction_command = 25, body_reduce_command = 28, body_final_command = 31, pbf_command = 34,
                           command_words = 37;
+// Since Z05 one dispatch of coupling.comp reduces the body queue: body_final_command is still written (a flag that
+// the queue spans several blocks) and cleared, but never dispatched, and bodyPartial is unused. Both keep their place,
+// so the command and metadata layouts do not change.
 inline constexpr std::size_t body_metadata_size = 64 + 65536 * 4 + 1024 * 16;
 inline constexpr std::ptrdiff_t command_offset(unsigned command) {
     return 32768 * 8 + command * 4;

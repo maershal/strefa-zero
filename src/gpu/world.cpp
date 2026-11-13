@@ -207,7 +207,7 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
         compile(liquids, "liquids.comp", {0, 1, 2, 3, 4, 5, 6});
         if (execution.neighbors != NeighborMode::linked) compile(neighbors, "neighbors.comp", {0, 1, 2, 3, 4, 5, 6, 7});
         compile(mission_kernels, "mission.comp", {0, 1, 3, 4, 5, 6, 7, 8});
-        if (execution.coupling != CouplingMode::reference) compile(coupling_kernels, "coupling.comp", {0, 1, 2});
+        if (execution.coupling != CouplingMode::reference) compile(coupling_kernels, "coupling.comp", {0, 2});
     }
     void configure_hot(Kernel& k, bool in_place, unsigned op) {
         const auto set = [&](GLint location, int value, int& cached) {
@@ -498,13 +498,8 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
         if (profile_options.collect && op == 3) ++calls.body_reductions;
         if (op == 3 && execution.coupling != CouplingMode::reference) {
             prepare(coupling_kernels, 0, false, true);
-            auto token = trace.begin(PassFamily::coupling, 0, epoch, metrics.steps + (trace_step ? 1 : 0));
-            indirect(detail::body_reduce_command);
-            gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
-            trace.end(token, bins_valid, execution.soa, buffers[current], buffers[2], buffers[3]);
-            prepare(coupling_kernels, 1, false, true);
-            token = trace.begin(PassFamily::coupling, 1, epoch, metrics.steps + (trace_step ? 1 : 0));
-            indirect(detail::body_final_command);
+            const auto token = trace.begin(PassFamily::coupling, 0, epoch, metrics.steps + (trace_step ? 1 : 0));
+            indirect(detail::body_reduce_command); // group 0 reduces the whole queue (Z05)
             gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
             trace.end(token, bins_valid, execution.soa, buffers[current], buffers[2], buffers[3]);
             return;

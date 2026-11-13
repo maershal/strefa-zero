@@ -33,7 +33,7 @@ enum class SmokeScenario {
 // StrefaZero accepts only the player options; StrefaQA and the contract tests accept every option.
 enum class OptionScope { player, all };
 // Names accepted by --gpu-check: one StrefaQA check per name instead of one boolean flag per check.
-inline constexpr std::array<std::string_view, 2> gpu_checks{"lab-blast", "cost-model"};
+inline constexpr std::array<std::string_view, 3> gpu_checks{"lab-blast", "cost-model", "coupling-bitwise"};
 
 struct LaunchOptions {
     bool smoke_test{false};

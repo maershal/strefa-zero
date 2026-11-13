@@ -10,25 +10,52 @@ void applyBody(vec4 sum){
     if(sum.z>0)game.locomotion.z=1;
     bodyQueue.x=0u;atomicExchange(slots[2*N+BODY_REDUCE_COMMAND],0u);atomicExchange(slots[2*N+BODY_FINAL_COMMAND],0u);
 }
+// Shared tree over runs of `width` lanes (strides width/2 ... 1); each run's sum ends in its first lane.
+void reduceShared(uint lane,uint width){
+    for(uint stride=width/2u;stride>0u;stride/=2u){if((lane&(width-1u))<stride)partial[lane]+=partial[lane+stride];barrier();}
+}
+vec4 entry(uint index,uint count){return index<count?terms[uint(N)+bodyIds[index]]:vec4(0);}
+// Node (column, width) of the per-block tree: the entries column, column+width, ... of the block, paired as the
+// strides L/2 ... width pair them. Leaves taken in bit-reversed order merge by a binary counter into that tree.
+vec4 columnSum(uint first,uint width,uint depth,uint count){
+    vec4 stack[9];
+    uint leaves=1u<<depth;
+    for(uint t=0u;t<leaves;++t){
+        uint m=depth==0u?0u:bitfieldReverse(t)>>(32u-depth);
+        vec4 value=entry(first+m*width,count);
+        uint level=0u;
+        for(;((t>>level)&1u)!=0u;++level)value=stack[level]+value;
+        stack[level]=value;
+    }
+    return stack[depth];
+}
+// One work group reduces the whole queue with the summation order of the former two dispatches: a tree per block
+// of L entries (strides L/2 ... 1); one block is the result; with several blocks lane k sums blocks k, k+L, ...
+// from zero (formerly bodyPartial) and the same tree combines the lanes. Up to L blocks are reduced at once:
+// lane = slot*width + column computes the tree node at stride `width` serially, the shared tree finishes it.
+// The indirect command keeps ceil(count/L) groups, the meaning validations read; groups other than 0 leave.
+// bodyStats.z counts blocks, bodyStats.w the multi-block combinations.
 void main(){
     uint lane=gl_LocalInvocationID.x,id=gl_GlobalInvocationID.x;
     if(operation==2){
         if(id<uint(bodyTestCount))appendBodyEntry(id,terms[uint(N)+id]);return;
     }
-    vec4 sum=vec4(0);
-    uint count=min(bodyQueue.x,uint(2*N));
-    if(operation==0){if(id<count)sum=terms[uint(N)+bodyIds[id]];}
-    else {
-        uint groups=(count+uint(LOCAL_SIZE)-1u)/uint(LOCAL_SIZE);
-        for(uint k=lane;k<groups;k+=uint(LOCAL_SIZE))sum+=bodyPartial[k];
+    if(gl_WorkGroupID.x!=0u)return;
+    uint count=min(bodyQueue.x,uint(2*N)),blocks=gl_NumWorkGroups.x,depth=0u;
+    while(depth<findMSB(uint(LOCAL_SIZE))&&(1u<<depth)<blocks)++depth;
+    uint slots=1u<<depth,width=uint(LOCAL_SIZE)>>depth,slot=lane>>findMSB(width),column=lane&(width-1u);
+    vec4 carry=vec4(0);
+    for(uint batch=0u;batch*slots<blocks;++batch){
+        uint block=batch*slots+slot;
+        partial[lane]=columnSum(block*uint(LOCAL_SIZE)+column,width,depth,count);barrier();
+        reduceShared(lane,width);
+        if(lane<slots&&batch*slots+lane<blocks)carry+=partial[lane*width];
+        barrier();
     }
-    partial[lane]=sum;barrier();
-    for(uint stride=uint(LOCAL_SIZE)/2u;stride>0u;stride/=2u){if(lane<stride)partial[lane]+=partial[lane+stride];barrier();}
+    if(blocks>1u){partial[lane]=carry;barrier();reduceShared(lane,uint(LOCAL_SIZE));}
     if(lane==0u){
-        if(operation==0){
-            if(gl_WorkGroupID.x==0u)bodyStats.z+=gl_NumWorkGroups.x;
-            if(gl_NumWorkGroups.x==1u)applyBody(partial[0]);
-            else bodyPartial[gl_WorkGroupID.x]=partial[0];
-        }else {bodyStats.w++;applyBody(partial[0]);}
+        bodyStats.z+=blocks;
+        if(blocks>1u)bodyStats.w++;
+        applyBody(partial[0]); // one block: its own tree result, as the former single-group reduction applied it
     }
 }
