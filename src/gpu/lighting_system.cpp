@@ -230,7 +230,7 @@ void LightingSystem::tick(const std::array<GLuint, 8>& buffers, unsigned current
         skipped_ = true;
         return;
     }
-    // Thermal presentation writes `thermal_image` (an image store) right before this tick.
+    // Kept from the former call site in `world.cpp`; thermal presentation already ends with its own image barrier.
     gl.MemoryBarrier(GL_SHADER_IMAGE_ACCESS_BARRIER_BIT);
     if (gen != generation) reset(gen);
     if (tick_known && tick_id <= last_tick) return;

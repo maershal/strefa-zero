@@ -26,7 +26,6 @@ public:
     // Quality `off` skips the presentation tick and birth preparation entirely (no GL calls). Enabling after a
     // skipped tick restarts the presentation state from zero: dry moisture, empty light list.
     void set_enabled(bool value);
-    bool enabled() const { return enabled_; }
     std::uint64_t memory_bytes() const;
     std::vector<float> read_moisture() const;
     std::vector<float> read_light() const;
