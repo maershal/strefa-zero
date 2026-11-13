@@ -17,6 +17,9 @@ void reduceShared(uint lane,uint width){
 vec4 entry(uint index,uint count){return index<count?terms[uint(N)+bodyIds[index]]:vec4(0);}
 // Node (column, width) of the per-block tree: the entries column, column+width, ... of the block, paired as the
 // strides L/2 ... width pair them. Leaves taken in bit-reversed order merge by a binary counter into that tree.
+#if LOCAL_SIZE > 256
+#error "columnSum: stack[9] holds depth <= log2(LOCAL_SIZE) <= 8"
+#endif
 vec4 columnSum(uint first,uint width,uint depth,uint count){
     vec4 stack[9];
     uint leaves=1u<<depth;

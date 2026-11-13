@@ -4,6 +4,7 @@
 
 #include <SDL3/SDL.h>
 
+#include <algorithm>
 #include <array>
 #include <bit>
 #include <cmath>
@@ -194,8 +195,11 @@ std::expected<void, std::string> validate_coupling_bitwise(const std::filesystem
                 config.spawn_x = 160;
                 config.spawn_y = 100;
                 world.configure_mission(config);
-                for (unsigned count :
-                     {0U, 1U, group - 1, group, group + 1, 1000U, static_cast<unsigned>(2 * capacity)}) {
+                // 2L+1 and 5L+1: block counts 3 and 6 leave slots of the batch empty. L²+L+1 (L = 64, 128): more
+                // than L blocks with a partial last batch.
+                const unsigned full = static_cast<unsigned>(2 * capacity);
+                for (unsigned count : {0U, 1U, group - 1, group, group + 1, 2 * group + 1, 5 * group + 1, 1000U,
+                                       std::min(group * group + group + 1, full), full}) {
                     std::vector<Vec4> input(count);
                     for (unsigned i = 0; i < count; ++i) input[i] = reaction(i);
                     const auto r = reduce_and_compare(world, probe, input, group, count, true);
