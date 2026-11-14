@@ -140,10 +140,14 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                         if (scene == 0) {
                             ThermalOptions t;
                             t.enabled = true;
+                            t.gas_gate = false;
                             world.set_thermal_options(t);
                         }
                         load(scene);
+                        // The I10 series measures the ungated gas stage: analyze-thermal.py uses gas_ms as a clock
+                        // probe that does not depend on the scene, which the gas-stage gate would break.
                         ThermalOptions t;
+                        t.gas_gate = false;
                         t.enabled = mode != 0;
                         t.transport = mode >= 2;
                         t.reactions = mode >= 3;
@@ -210,6 +214,7 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                 load(scene);
                 ThermalOptions detailed;
                 detailed.enabled = detailed.profile = true;
+                detailed.gas_gate = false;
                 world.set_thermal_options(detailed);
                 world.take_thermal_timings(); // drop timings of earlier segments
                 migrations.runtime();

@@ -37,15 +37,17 @@ private:
     GLint linear_location{};
     GLuint graphics{}, condensation{}, events{}, reduce_program{}, vao{};
     std::array<GLuint, 2> particles{}, cells{};
-    GLuint auxiliary{}, reduction{};
+    GLuint auxiliary{}, reduction{}, gate_program{}, gas_snapshot{};
+    GLint gate_force{-1}, gate_audit_location{-1};
+    unsigned gate_signature{~0u}; // pressure iterations and audit flag of the last gated stage; a change forces a run
     unsigned particle_bank{}, cell_bank{}, generation{}, tick_{}, serial{}, command_id{};
     struct Kernel {
         GLuint program{};
         GLint dt{-1}, segment{-1}, radius{-1}, dose{-1}, tool{-1}, pressure{-1}, radiation{-1}, generation{-1},
-                tick{-1}, command{-1};
+                tick{-1}, command{-1}, gas_gate{-1};
         ThermalBrush previous;
         bool brush_known{};
-        int previous_radiation{-1}, previous_pressure{-1};
+        int previous_radiation{-1}, previous_pressure{-1}, previous_gate{-1};
         unsigned previous_generation{~0u}, previous_tick{~0u}, previous_command{~0u};
     };
     std::array<Kernel, 24> kernels;
@@ -81,7 +83,9 @@ private:
     unsigned dispatches_{}, barriers_{}; // since the end of the previous tick
     void dispatch(GLuint groups, GLbitfield barrier);
     void bind();
-    void run(int, unsigned);
+    void run(int, unsigned, bool gated = false);
+    void gate(int force);
+    void stamp(unsigned kernel);
     void swap_cells() { cell_bank ^= 1; }
     void swap_particles(unsigned& current) {
         particle_bank ^= 1;

@@ -216,7 +216,33 @@ z cząstkami rozjeżdżają się po 5–13 tickach, również `control` bez term
 i do indeksu sąsiadów atomowo (`granular.comp`, `neighbors.comp`), więc kolejność w komórce, a z nią kolejność sum
 float, zmienia się między przebiegami. Pierwsze różnią się cząstki świata, termika dopiero za nimi. Test
 `gpu.thermal_bits` (120 ticków) wymaga powtórzenia `fire` i `idle` oraz tego, że w `idle` kolejny tick nie zmienia
-ani jednego słowa.
+ani jednego słowa. Drugi przebieg każdej sceny to przebieg audytu bramki gazu (`ThermalOptions::gate_audit`: etap
+liczy się zawsze), więc powtórzenie `fire` i `idle` dowodzi też, że przebieg z bramką jest bitowo równy przebiegowi bez
+pomijania. Wiersze `gate <scena>` w `thermal-bits-info.txt` podają liczbę pominiętych etapów gazu i naruszeń audytu,
+które muszą wynosić 0, a pusty świat musi mieć pominięte etapy.
+
+## 4d. Bramka etapu gazu termiki (ABBA w jednym procesie)
+
+`StrefaQA --gpu-check thermal-gate` mierzy dokładną bramkę etapu gazu (`ThermalOptions::gas_gate`,
+`assets/shaders/thermal_gate.comp`). Każdy blok losuje kolejność scen `cold`, `idle`, `fire`, `quench`. Każda scena to
+kwadrat ABBA: bramka wyłączona, włączona, włączona, wyłączona. Każdy odcinek startuje ze świeżego świata: 120 ticków
+rozgrzewki i 240 mierzonych (para `GL_TIMESTAMP` wokół `step()`, czyli cały tick fizyki z termiką). Przed każdym
+odcinkiem i po nim działają sondy kalibracyjne Z01 z tą samą bramką stygnięcia co w modelu kosztu (sekcja 4b):
+
+```powershell
+pwsh ./scripts/profiling/profile-thermal-gate.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/thermal-gate
+```
+
+Skrypt zapisuje `telemetry.csv`, `run-spec.json` i uruchamia `analyze-thermal-gate.py`. Odcinek się kwalifikuje, gdy
+nie ma w nim `hw_*` ani `sw_thermal_slowdown`, mediana zegara grafiki wynosi co najmniej 90% maksimum sesji, a sondy
+GPU przed nim i po nim mieszczą się w 15% najszybszej. Kwadrat liczy się tylko wtedy, gdy kwalifikują się wszystkie
+cztery odcinki. Jego efekt to średnia (włączona) minus średnia (wyłączona) median odcinków, więc liniowy dryf
+w kwadracie się znosi. Wynik: `summary.md` i `analysis.json`. `STREFA_THERMAL_GATE_PLAN=quick` (CTest
+`gpu.thermal_gate`) przechodzi te same ścieżki kodu w 1 bloku po 24 ticki, tylko odcinki A i B (mniej światów dla
+renderera programowego w nocnym CI); jego liczby niczego nie rozstrzygają.
+Dowód bitowy bramki daje `thermal-bits` (sekcja 4c): skróty `fire` i `idle` identyczne z `main`, a przebieg audytu
+(`ThermalOptions::gate_audit`) w każdej scenie liczy etapy, które bramka by pominęła, choć zmieniłyby choć jedno
+słowo. Ta liczba musi wynosić 0.
 
 ## 5. Co odesłać
 

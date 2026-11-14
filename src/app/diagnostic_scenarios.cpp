@@ -76,6 +76,11 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
         if (!result) return std::unexpected{result.error()};
         return 0;
     }
+    if (options.gpu_check == "thermal-gate") {
+        const auto result = gpu::benchmark_thermal_gate(assets / "shaders", profile, options.gpu_execution);
+        if (!result) return std::unexpected{result.error()};
+        return 0;
+    }
     if (options.gpu_check == "coupling-bitwise") {
         const auto result = gpu::validate_coupling_bitwise(assets / "shaders", profile, options.gpu_execution);
         if (!result) return std::unexpected{result.error()};

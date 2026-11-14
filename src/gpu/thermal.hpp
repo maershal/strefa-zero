@@ -15,6 +15,9 @@ struct ThermalOptions {
     bool enabled{}, transport{true}, reactions{true}, profile{};
     unsigned pressure_iterations{32};
     bool radiation{};
+    // Exact gas-stage gate (thermal_gate.comp): skips the gas stage while it would leave the state unchanged bit for
+    // bit. gate_audit runs the stage anyway and counts the skips that would have changed a word (must stay 0).
+    bool gas_gate{true}, gate_audit{};
     bool operator==(const ThermalOptions&) const = default;
 };
 enum class ThermalTool { none, heat, cool, wood, ice, lava, fuel, smoke, steam };
@@ -97,6 +100,9 @@ struct ThermalTotals {
     double radiated{}, mass{}, enthalpy{}, chemical{}, external_mass{}, external_enthalpy{}, external_chemical{},
             released_heat{}, oxygen{}, fuel{}, steam{}, smoke{}, divergence_l2{}, divergence_max{};
     std::uint64_t tick{}, generation{};
+    // Gas-stage gate since the system was created (ThermalSystem::snapshot only): gated ticks, skipped ticks (in audit
+    // mode: ticks the gate would have skipped) and, in audit mode, cells a would-be-skipped stage changed.
+    std::uint64_t gate_ticks{}, gate_skips{}, gate_violations{};
     bool finite{true};
 };
 // One thermal kernel of a profiled tick: index of the compute program and its GPU time (timestamp after its dispatch

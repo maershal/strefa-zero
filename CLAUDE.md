@@ -97,7 +97,9 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
   "passes per tick: before -> after" in its description. The expected counts in `check_instrumentation`
   (`src/gpu/profiling.cpp`, CTest `gpu.instrumentation`) may go up only with the owner's approval comment in the PR.
   A new GPU system has from the start a path where the CPU knows there is no work and makes zero GL calls, not a
-  dispatch of zero groups.
+  dispatch of zero groups. Exception (owner decision, 2026-11-14, after the Z01 measurement of 1.0-1.3 us per
+  zero-group indirect dispatch): the exact gas-stage gate of the thermal model (`thermal_gate.comp`) skips through
+  indirect commands with zero groups, because the CPU-side bank swaps would otherwise need a GPU->CPU readback.
 
 ## Architecture ratchet
 
