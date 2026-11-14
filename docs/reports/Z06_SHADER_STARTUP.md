@@ -1,46 +1,65 @@
 # Z06 — start trybu GPU: kompilacja shaderów
 
-Pomiar z 2026-11-14 na GTX 1650 (laptop, i5-9300HF, sterownik 610.47, zasilanie sieciowe, plan „Zrównoważony”,
-GPU 52–56 °C przed każdym przebiegiem). Narzędzie: `scripts/profiling/shader-startup.ps1` (opis w nagłówku
-skryptu), które uruchamia `StrefaQA --mission-ui-smoke-test` w świeżym profilu i czyta `gpu-startup.txt`.
-A = `main` (`fdd1e26`), B = obie części Z06 (część 1: równoległa kompilacja i błędy, część 2: ekran postępu
-i raport); kolejność ABBA, 3 powtórzenia na tryb, czyli 6 przebiegów na wariant,
-przerwa 15 s przed każdym.
+Pomiar z 2026-11-14 na GTX 1650 (laptop, i5-9300HF, sterownik 610.47, zasilanie sieciowe, plan „Zrównoważony”).
+Narzędzie: `scripts/profiling/shader-startup.ps1` (opis w nagłówku skryptu), które uruchamia
+`StrefaQA --mission-ui-smoke-test` w świeżym profilu (ustawienia domyślne: okno 1280×800, VSync włączony) i czyta
+`gpu-startup.txt`. A = `main` (`fdd1e26`), B = obie części Z06 (część 1: równoległa kompilacja i błędy, część 2:
+ekran postępu i raport); kolejność ABBA, 3 powtórzenia na tryb, czyli 6 przebiegów na wariant, przerwa 15 s przed
+każdym. Surowe dane: [z06-shader-startup-2026-11-14](https://github.com/maershal/strefa-zero-measurements/tree/079ac28fc1f30ac3e7276aa17b96acfc23ccc044/z06-shader-startup-2026-11-14).
 
 ## Odpowiedź w skrócie
 
-- Pierwsze wejście do trybu GPU na zimno (bez cache sterownika i bez cache binarnego) skraca się z **10,46 s do
-  4,69 s** (mediana, −55%). Programów jest dziś 69, nie 42 jak w I05.
-- Okno odpowiada podczas kompilacji: klatka „Kompilacja shaderów… n/m” co 100 ms. Najdłuższa przerwa bez obsługi
-  zdarzeń wynosi 0,47–0,54 s (wcześniej całe ~10 s). Przyczyna przerw opisana niżej.
-- Drugie i kolejne uruchomienia na tym samym sterowniku trwają ok. 80 ms przed zmianą i po niej, bo działa wtedy
-  własny cache dyskowy sterownika NVIDIA.
+- Pierwsze wejście do trybu GPU na zimno (bez cache sterownika i bez cache binarnego) skraca się z **10,7 s do
+  4,9 s** (mediana, −54%; w serii bez telemetrii 10,46 → 4,69 s). Programów jest dziś 69, nie 42 jak w I05.
+- Okno odpowiada podczas kompilacji: klatka „Kompilacja shaderów… n/m” co 100 ms (33 klatki na zimno). Najdłuższa
+  przerwa bez obsługi zdarzeń wynosi 0,44–0,52 s (wcześniej cały start, ok. 10 s). Przyczyna przerw opisana niżej.
+- Drugie i kolejne uruchomienia na tym samym sterowniku trwają ok. 80–90 ms przed zmianą i po niej, bo działa
+  wtedy własny cache dyskowy sterownika NVIDIA.
 - **Rekomendacja: nie włączać domyślnie cache binarnego (`--shader-cache`) w StrefaZero.** Na GTX 1650 wczytanie
-  69 binariów (ok. 260 ms) jest ok. 3× wolniejsze niż cache sterownika (ok. 82 ms), a pierwszego startu nie skraca,
-  bo na zimno cache binarny też jest pusty.
+  69 binariów jest ok. 2,5–3× wolniejsze niż cache sterownika (seria z telemetrią: 333 wobec 136 ms, bez
+  telemetrii: 259 wobec 82 ms), a pierwszego startu nie skraca, bo na zimno cache binarny też jest pusty.
 
-## Pomiar (GTX 1650, mediana z 6 przebiegów)
+## Pomiar główny (GTX 1650, z telemetrią)
 
-`first_world_ms` mierzy od wyboru trybu do otwartego świata (z kompilacją VFX, kerneli świata, renderera
-i oświetlenia). `compile_ms` to czas biblioteki shaderów bez rysowania klatek postępu.
+Przed pierwszym przebiegiem 300 s bezczynności (GPU 54 °C), przed przebiegami 57–58 °C, maksimum 62 °C. Telemetria
+`GpuTelemetry.psm1` co 100 ms przez całą serię: żaden przebieg nie miał `hw_*` ani `sw_thermal_slowdown` (0 z 36
+zdyskwalifikowanych), `sw_power_cap` w żadnym. `first_world_ms` mierzy od wyboru trybu do otwartego świata
+(z kompilacją VFX, kerneli świata, renderera i oświetlenia). `compile_ms` to czas biblioteki shaderów bez
+rysowania klatek postępu. Mediany z 6 przebiegów (min–max).
 
-| Tryb | A: `first_world_ms` | B: `first_world_ms` | A: `compile_ms` | B: `compile_ms` | B: najdłuższa przerwa okna |
-| --- | --- | --- | --- | --- | --- |
-| zimny (cache sterownika wyłączony, bez binariów) | 10 460 (10 355–10 498) | 4 686 (4 644–4 726) | 10 381 | 4 577 | 515 ms |
-| cache sterownika (drugi start) | 82,1 (80,8–84,3) | 84,8 (81,1–86,1) | 30,6 | 33,3 | 9 ms |
-| cache binarny `--shader-cache on`, sterownik bez cache | 259 (255–267) | 266 (258–276) | 0 (69 trafień) | 0 (69 trafień) | 11 ms |
+| Tryb | A: `first_world_ms` | B: `first_world_ms` | A: `compile_ms` | B: `compile_ms` | B: najdłuższa przerwa okna | B: klatki |
+| --- | --- | --- | --- | --- | --- | --- |
+| zimny (cache sterownika wyłączony, bez binariów) | 10 740 (10 541–10 889) | 4 938 (4 797–5 483) | 10 556 | 4 708 | 485 ms (441–502) | 33 |
+| cache sterownika (drugi start) | 135,7 (132,5–173,3) | 135,7 (131,0–136,0) | 31,1 | 33,4 | 34 ms | 1 |
+| cache binarny `--shader-cache on`, sterownik bez cache | 333 (324–399) | 369 (344–463) | 0 (69 trafień) | 0 (69 trafień) | 17 ms | 1 |
 
-Czas na program na zimno: A 10 381 / 69 = 150 ms, kompilacja po kolei. W B programy kompilują się równolegle,
-więc czas pojedynczego programu nie ma sensu; 4 577 ms to 66 ms na program w przeliczeniu. Na zimno w B część
+Telemetria co 100 ms spowalnia sam start: pełne zapytanie `nvidia-smi` (zegary, moc, przyczyny zdarzeń zegara)
+dodaje ok. 50 ms do ciepłego startu (sprawdzenie po serii: B z cache sterownika 82–98 ms bez `nvidia-smi`,
+134–151 ms z pełnym zapytaniem co 100 ms, 83–84 ms co 500 ms poza pierwszym przebiegiem; tabela w README danych).
+Porównanie A–B jest więc ważne w obrębie serii, a bezwzględne czasy ciepłego startu podaje seria bez telemetrii.
+
+Czas na program na zimno: A 10 556 / 69 = 153 ms, kompilacja po kolei. W B programy kompilują się równolegle,
+więc czas pojedynczego programu nie ma sensu; 4 708 ms to 68 ms na program w przeliczeniu. Na zimno w B część
 `submit_ms` (zlecenia, ok. 350–370 ms) to głównie czekanie `glCreateProgram` na zajęte wątki kompilatora
 sterownika, ok. 5 ms na program.
 
-B jest wolniejsze o ok. 2,7 ms w trybie z cache sterownika i ok. 7 ms z cache binarnym (różnice w granicach
-rozrzutu pojedynczych przebiegów, ale w tę samą stronę w obu trybach). Prawdopodobna przyczyna to uruchamianie
-wątków kompilatora sterownika (`glMaxShaderCompilerThreadsKHR`); nie mierzyłem tego osobno.
+Z cache binarnym B jest wolniejsze o 35 ms (mediana; rozrzut B 344–463 ms), w serii bez telemetrii o 7 ms. B rysuje
+w tym trybie jedną klatkę postępu (start trwa ponad 100 ms), a z VSync `present` może czekać do jednej klatki
+ekranu; osobno tego nie mierzyłem. Z cache sterownika różnicy nie ma (135,7 ms w obu wariantach; bez telemetrii
+B wolniejsze o 2,7 ms, w granicach rozrzutu).
 
-Przebieg kontrolny po ostatniej poprawce (raportowanie postępu także przy zlecaniu): na zimno A 10 714 ms, B 4 829 ms
-(mediany z 4 przebiegów ABBA), najdłuższa przerwa 474–543 ms. Ta poprawka nie skróciła przerwy; patrz niżej.
+## Serie bez telemetrii (GTX 1650)
+
+Ta sama macierz wcześniej tego samego dnia, bez telemetrii i bez bezczynności przed serią (GPU 52–56 °C przed
+przebiegami). Seria kontrolna po ostatniej poprawce (raportowanie postępu także przy zlecaniu): tylko tryb zimny,
+4 przebiegi ABBA na wariant.
+
+| Tryb | A: `first_world_ms` | B: `first_world_ms` | A: `compile_ms` | B: `compile_ms` | B: najdłuższa przerwa okna |
+| --- | --- | --- | --- | --- | --- |
+| zimny | 10 460 (10 355–10 498) | 4 686 (4 644–4 726) | 10 381 | 4 577 | 440–515 ms |
+| cache sterownika | 82,1 (80,8–84,3) | 84,8 (81,1–86,1) | 30,6 | 33,3 | 8–9 ms |
+| cache binarny | 259 (255–267) | 266 (258–276) | 0 | 0 | 9–11 ms |
+| zimny, kontrola | 10 749 (10 667–10 821) | 4 857 (4 820–5 714) | 10 665 | 4 711 | 474–543 ms |
 
 ## Mesa (llvmpipe, tylko informacyjnie)
 
@@ -56,7 +75,8 @@ jednym przebiegiem. llvmpipe ma `GL_KHR_parallel_shader_compile`, ale kompiluje 
 
 Rozrzut jest większy niż różnica A–B, więc nie wyciągam wniosku o spowolnieniu. Zysk na Mesie to odpowiadające
 okno: w A okno stoi przez cały start (ok. 3 s), w B najdłużej 0,24 s, bo funkcja postępu jest wywoływana po każdym
-zleconym programie. Na CI (Mesa) ekran postępu jest więc ćwiczony w każdym teście okna, który otwiera tryb GPU.
+zleconym programie. Na CI (Mesa) ekran postępu jest więc ćwiczony w każdym teście okna, który otwiera tryb GPU,
+a `gpu.shader_progress_frames` sprawdza, że rysuje klatki.
 
 ## Co się zmieniło
 
@@ -73,13 +93,21 @@ zleconym programie. Na CI (Mesa) ekran postępu jest więc ćwiczony w każdym t
   (pierwszą klatkę też dopiero po 100 ms, więc start z cache zwykle nie rysuje żadnej), obsługuje zdarzenia okna
   i po każdej klatce unieważnia pamięć stanu GL urządzenia. Licznik m rośnie wraz ze zleceniami kolejnych grup
   (VFX, kernele, renderer, oświetlenie), więc pasek może cofnąć się przy przejściu do następnej grupy. Zamknięcie
-  okna w trakcie kompilacji kerneli lub renderera przerywa otwieranie świata błędem i kończy pętlę aplikacji;
-  podczas kompilacji VFX tylko zgłasza wyjście, które następuje po otwarciu świata.
+  okna podczas kompilacji przerywa otwieranie świata błędem i kończy pętlę aplikacji: w trakcie kerneli lub
+  renderera od razu, w trakcie VFX (budowanych w konstruktorze `RenderDevice`, którego nie da się przerwać) po ich
+  zakończeniu, przy pierwszym programie kerneli.
 - Błąd kompilacji podaje plik, etap (obliczeniowy, wierzchołków, fragmentów), definicje wstawione po pierwszej
   linii (z liczbą linii, o które przesuwają numery w logu sterownika), specjalizację restrict i pełny log. Błąd
-  linkowania podaje pliki i etapy. Po błędzie biblioteka usuwa całą niesprawdzoną partię programów.
+  linkowania podaje pliki i etapy. Po błędzie (także wyjątku z funkcji postępu, czyli zamknięciu okna) biblioteka
+  usuwa całą partię programów; binarki cache zapisuje dopiero po udanej całej partii.
 - `gpu-startup.txt` ma nowe pola: `parallel_compile`, `submit_ms`, `progress_ms`, `progress_gap_ms` (najdłuższy
-  czas bez wywołania funkcji postępu). `compile_ms` nie obejmuje czasu rysowania klatek postępu.
+  czas bez wywołania funkcji postępu), `progress_frames` (narysowane klatki ekranu). `compile_ms` nie obejmuje
+  czasu rysowania klatek postępu.
+- Testy: `gpu.shader_cache` sprawdza partię równoległą (wymaganą, gdy sterownik zgłasza rozszerzenie),
+  sekwencyjną, treść błędu i przerwanie partii z funkcji postępu (bez programów, liczników i binarek po nim).
+  `gpu.mission_ui_quick` startuje z pustym cache sterownika (`gpu.mission_ui_quick_clean`), a
+  `gpu.shader_progress_frames` wymaga co najmniej jednej klatki ekranu, gdy kompilacja trwała ponad 500 ms dłużej
+  niż najdłuższa przerwa między wywołaniami postępu (lokalnie na GTX 1650: 45 klatek przy 6,7 s kompilacji).
 
 ## Dlaczego okno stoi nadal do ok. 0,5 s
 
@@ -100,8 +128,10 @@ niż wcześniej.
 
 ## Dane
 
-Surowe CSV (GTX 1650: 36 + 8 przebiegów, Mesa: 16) i log: do repozytorium pomiarów (folder `z06-shader-startup-2026-11-14`), link
-w opisie PR. Powtórzenie pomiaru:
+Surowe dane w [z06-shader-startup-2026-11-14](https://github.com/maershal/strefa-zero-measurements/tree/079ac28fc1f30ac3e7276aa17b96acfc23ccc044/z06-shader-startup-2026-11-14) (manifest `SHA256SUMS.txt`): seria z telemetrią
+(36 przebiegów, `telemetry.csv`), serie bez telemetrii (36 + 8 przebiegów), Mesa (16 przebiegów), skrypty
+i sprawdzenie narzutu telemetrii. Powtórzenie pomiaru (domyślnie 300 s bezczynności, przerwa 15 s, telemetria co
+100 ms; `-TelemetryIntervalMs 500` dla bezwzględnych czasów ciepłego startu):
 
 ```powershell
 pwsh scripts/profiling/shader-startup.ps1 -Baseline <main>\build\release\StrefaQA.exe -Candidate build\release\StrefaQA.exe -Output shader-startup
