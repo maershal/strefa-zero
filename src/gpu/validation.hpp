@@ -44,6 +44,11 @@ std::expected<void, std::string> validate_coupling_bitwise(const std::filesystem
 std::expected<void, std::string> validate_thermal_bits(const std::filesystem::path& shaders,
                                                        const std::filesystem::path& output,
                                                        const ExecutionOptions& layout);
+// --gpu-check thermal-gate: ABBA (gate off, on, on, off) of ThermalOptions::gas_gate in the cold, idle, fire and quench
+// scenes, calibration probes around every segment (STREFA_THERMAL_GATE_PLAN = full | quick).
+std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::path& shaders,
+                                                        const std::filesystem::path& output,
+                                                        const ExecutionOptions& layout);
 void validate_coupling_replay(const std::filesystem::path& output, std::ostream& checks,
                               const ExecutionOptions& layout);
 std::expected<void, std::string> validate_neighbors(const std::filesystem::path& output, bool benchmark = false);

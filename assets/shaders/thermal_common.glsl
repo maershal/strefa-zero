@@ -32,3 +32,10 @@ bool validCell(ivec2 c){return all(greaterThanEqual(c,ivec2(0)))&&all(lessThan(c
 int indexOf(ivec2 c){return c.y*TW+c.x;}
 ivec2 coordinate(int i){return ivec2(i%TW,i/TW);}
 const ivec2 directions[4]=ivec2[4](ivec2(-1,0),ivec2(1,0),ivec2(0,-1),ivec2(0,1));
+// Bitwise equality (distinguishes -0 from 0 and compares NaN payloads), for the exact gas-stage gate.
+bool sameBits(vec4 a,vec4 b){return all(equal(floatBitsToUint(a),floatBitsToUint(b)));}
+bool sameCell(ThermalCell a,ThermalCell b){
+    return sameBits(a.matter,b.matter)&&sameBits(a.gas0,b.gas0)&&sameBits(a.gas1,b.gas1)&&sameBits(a.flow,b.flow)
+        &&sameBits(a.demand,b.demand)&&sameBits(a.budget,b.budget)&&sameBits(a.extra,b.extra)
+        &&sameBits(a.factors,b.factors);
+}

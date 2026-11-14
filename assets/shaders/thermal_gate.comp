@@ -1,0 +1,27 @@
+#version 430 core
+layout(local_size_x=1) in;
+#include "thermal_common.glsl"
+// Exact gate of the gas stage (thermal.comp ops 9, 14, 10, 11, 12, 13). The stage reads only gas0, gas1, flow and the
+// walls of the cells and uses no atomics, so it is a deterministic function of them. Its kernels run through indirect
+// commands with zero groups (skip) only when
+// - op 8, which writes the stage's input, found it equal to gasSnapshot, the input of the last run (z = 0),
+// - op 2 saw no terrain change (z = 0),
+// - that run changed no word: ops 9, 11, 12, 13 clear y when they do,
+// - op 8 changed no word of any record (x = 0): both cell banks then hold the same records, so the CPU's bank swap
+//   after a skipped stage reads the same data,
+// - the CPU did not force a run (options changed).
+// One thread decides and resets the flags for the next tick.
+layout(std430,binding=7) buffer ThermalAux {int heads[TC];int links[TN];uint pa[TC];float pb[TC];float divergence[TC];
+    uvec4 sourceState;uvec4 eventState;
+    uvec4 gateState;    // x: op 8 changed a record, y: last run was a fixed point, z: input changed, w: skip decided
+    uvec4 gateCommand;  // indirect arguments of the gas kernels
+    uvec4 gateCounters; // x: gated ticks, y: skipped (audit: skippable) ticks, z: audit: words a skippable stage changed
+};
+uniform int force,audit;
+void main(){
+    bool skip=force==0&&gateState.x==0u&&gateState.z==0u&&gateState.y!=0u;
+    gateCounters.x+=1u;
+    if(skip)gateCounters.y+=1u;
+    gateCommand=uvec4(skip&&audit==0?0u:uint((TC+127)/128),1u,1u,0u);
+    gateState=uvec4(0u,1u,0u,skip?1u:0u);
+}

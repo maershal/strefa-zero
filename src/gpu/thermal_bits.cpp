@@ -75,11 +75,13 @@ struct State {
     std::vector<ThermalParticle> heat;
     std::vector<Grain> particles;
     std::vector<std::uint32_t> terrain;
+    ThermalTotals totals;
 };
 State capture(ParticleWorld& world) {
     glFinish();
     auto thermal = world.read_thermal(ThermalRead::all);
-    State s{std::move(thermal.cells), std::move(thermal.particles), world.readback(), world.read_terrain()};
+    State s{std::move(thermal.cells), std::move(thermal.particles), world.readback(), world.read_terrain(),
+            thermal.totals};
     world.invalidate_gl_state();
     return s;
 }
@@ -125,16 +127,25 @@ constexpr unsigned brush_ticks = 10, after_brush = 120;
 
 // One scene from a fresh world: checkpoint digests every 60 ticks, per-field digests at the end, the fixed-point
 // probe (words a single further tick changes) and, in the cold scene, a heat brush and its aftermath.
-std::vector<std::string> run_scene(const std::filesystem::path& shaders, const ExecutionOptions& layout,
-                                   std::shared_ptr<RenderDevice>& device, unsigned scene, unsigned ticks,
-                                   unsigned every) {
+struct SceneRun {
+    std::vector<std::string> rows; // digests, compared between runs and builds
+    ThermalTotals gate;            // gas-stage gate counters at the end, reported apart from the digests
+};
+// audit: the gas stage runs every tick and the gate only counts the skips it would have made and the cells such a
+// stage changed (ThermalOptions::gate_audit).
+SceneRun run_scene(const std::filesystem::path& shaders, const ExecutionOptions& layout,
+                   std::shared_ptr<RenderDevice>& device, unsigned scene, unsigned ticks, unsigned every,
+                   bool audit = false) {
     auto made = ParticleWorld::create(shaders, layout, {}, {}, device);
     require(made.has_value(), made ? "" : made.error());
     auto& world = **made;
     if (!device) device = world.render_device();
     world.set_vfx_options({VfxQuality::off, false});
+    ThermalOptions initial;
+    initial.gate_audit = audit;
+    world.set_thermal_options(initial); // reset_thermal_scene keeps these options and enables thermal
     if (scene == 0 || scene >= 5) {
-        ThermalOptions options;
+        ThermalOptions options = initial;
         options.enabled = scene != 5;
         world.set_thermal_options(options);
         world.reset(scene == 6 ? Scene::empty : Scene::sand_water);
@@ -180,7 +191,7 @@ std::vector<std::string> run_scene(const std::filesystem::path& shaders, const E
         rows.push_back(std::format("{} brush tick={} fields {}", name, at, fields(brushed)));
     }
     require(glGetError() == GL_NO_ERROR, std::format("Błąd OpenGL w scenie {}.", name));
-    return rows;
+    return {std::move(rows), capture(world).totals};
 }
 } // namespace
 
@@ -193,9 +204,18 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
         const auto every = checkpoint_every();
         std::shared_ptr<RenderDevice> device;
         std::array<std::vector<std::vector<std::string>>, 2> runs;
-        for (auto& run : runs)
-            for (unsigned scene = 0; scene < scene_names.size(); ++scene)
-                run.push_back(run_scene(shaders, layout, device, scene, ticks, every));
+        // The repeat run is the audit run of the gas-stage gate: the stage computes every tick, so a scene that repeats
+        // also proves the gated run equal to the ungated one. Two worlds per scene: each world created in this process
+        // keeps memory, and software renderers (Mesa llvmpipe, nightly CI) hold GPU buffers in RAM.
+        std::array<std::vector<ThermalTotals>, 2> gate_runs;
+        for (unsigned run = 0; run < runs.size(); ++run)
+            for (unsigned scene = 0; scene < scene_names.size(); ++scene) {
+                auto result = run_scene(shaders, layout, device, scene, ticks, every, run == 1);
+                runs[run].push_back(std::move(result.rows));
+                gate_runs[run].push_back(result.gate);
+            }
+        const auto& gates = gate_runs[0];
+        const auto& audits = gate_runs[1];
         // Header separate from the digests: digests are diffed between builds, the header names the machine.
         std::ofstream info{output / "thermal-bits-info.txt"};
         const auto text = [](GLenum name) {
@@ -226,6 +246,20 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
                 failures.push_back(std::format("scena {} nie powtarza się w jednym procesie", scene_names[scene]));
         }
         // The empty world with thermal on is in equilibrium: one more tick must not change a single word.
+        // Gas-stage gate: skipped ticks of the first run, and the audit run in which every would-be skip is checked
+        // against the stage it replaced.
+        for (unsigned scene = 0; scene < scene_names.size(); ++scene) {
+            info << "gate " << scene_names[scene] << " ticks=" << gates[scene].gate_ticks
+                 << " skipped=" << gates[scene].gate_skips << " audit_ticks=" << audits[scene].gate_ticks
+                 << " audit_skippable=" << audits[scene].gate_skips
+                 << " audit_violations=" << audits[scene].gate_violations << '\n';
+            if (audits[scene].gate_violations != 0)
+                failures.push_back(
+                        std::format("bramka gazu w scenie {} pominęłaby etap, który zmienia stan", scene_names[scene]));
+        }
+        // The empty world reaches the gas fixed point at once; a gate that never skips would pass the audit too.
+        if (gates.back().gate_skips == 0 || audits.back().gate_skips == 0)
+            failures.push_back("bramka gazu nie pominęła żadnego etapu w pustym świecie");
         const auto& idle = runs[0].back();
         const auto fixed = std::ranges::find_if(idle, [](const std::string& r) { return r.contains("fixed_point"); });
         if (fixed == idle.end() || !fixed->contains("cells_changed=0 heat_changed=0 particles_changed=0"))

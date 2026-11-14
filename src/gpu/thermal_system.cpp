@@ -20,6 +20,10 @@ namespace strefa::gpu::detail {
 namespace {
 constexpr unsigned cell_count = 320 * 192, particle_count = 32768, block_count = 240;
 constexpr std::size_t totals_bytes = block_count * 16 * sizeof(double);
+// ThermalAux (thermal.comp): heads, links, pa, pb, divergence, sourceState, eventState, then the gas-stage gate.
+constexpr std::size_t gate_offset = (4 * cell_count + particle_count) * sizeof(std::uint32_t) + 32;
+constexpr std::size_t gate_command_offset = gate_offset + 16, auxiliary_bytes = gate_offset + 48;
+constexpr std::size_t snapshot_bytes = cell_count * 64; // gas-stage snapshot, bound at 3 for op 8 only
 std::string material_defines() {
     static_assert(sim::physical.size() == 20, "Review thermal shader table dimensions when adding materials");
     std::ostringstream out;
@@ -74,6 +78,7 @@ ThermalSystem::~ThermalSystem() {
     gl.DeleteBuffers(2, cells.data());
     if (auxiliary) gl.DeleteBuffers(1, &auxiliary);
     if (reduction) gl.DeleteBuffers(1, &reduction);
+    if (gas_snapshot) gl.DeleteBuffers(1, &gas_snapshot);
     if (vao) gl.DeleteVertexArrays(1, &vao);
 }
 void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::path& folder,
@@ -94,6 +99,7 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
         k.generation = gl.GetUniformLocation(k.program, "sourceGeneration");
         k.tick = gl.GetUniformLocation(k.program, "sourceTick");
         k.command = gl.GetUniformLocation(k.program, "sourceCommand");
+        k.gas_gate = gl.GetUniformLocation(k.program, "gasGate");
         state.use(k.program);
         if (k.dt >= 0) gl.Uniform1f(k.dt, 1.F / 120.F);
     }
@@ -106,6 +112,9 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
             {{GL_VERTEX_SHADER, folder / "liquid_surface.vert"}, {GL_FRAGMENT_SHADER, folder / "thermal_draw.frag"}},
             material_defines());
     presentation_program = library.program({{GL_COMPUTE_SHADER, folder / "lighting_thermal.comp"}}, material_defines());
+    gate_program = library.program({{GL_COMPUTE_SHADER, folder / "thermal_gate.comp"}}, config);
+    gate_force = gl.GetUniformLocation(gate_program, "force");
+    gate_audit_location = gl.GetUniformLocation(gate_program, "audit");
     linear_location = gl.GetUniformLocation(graphics, "linearOutput");
     view_location = gl.GetUniformLocation(graphics, "viewMode");
     extent_location = gl.GetUniformLocation(graphics, "renderExtent");
@@ -116,6 +125,7 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     gl.GenBuffers(2, cells.data());
     gl.GenBuffers(1, &auxiliary);
     gl.GenBuffers(1, &reduction);
+    gl.GenBuffers(1, &gas_snapshot);
     gl.GenVertexArrays(1, &vao);
     const auto allocate = [&](GLuint b, std::size_t bytes) {
         gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, b);
@@ -123,8 +133,16 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     };
     for (auto b : particles) allocate(b, particle_count * sizeof(ThermalParticle));
     for (auto b : cells) allocate(b, cell_count * sizeof(ThermalCell));
-    allocate(auxiliary, (4 * cell_count + particle_count) * sizeof(std::uint32_t) + 32);
+    allocate(auxiliary, auxiliary_bytes);
     allocate(reduction, totals_bytes);
+    allocate(gas_snapshot, snapshot_bytes);
+    // Gate state starts as "no fixed point known" and the snapshot as all-ones words, so the first tick runs the stage.
+    const std::array<std::uint32_t, 12> gate_zero{};
+    gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, auxiliary);
+    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, gate_offset, sizeof(gate_zero), gate_zero.data());
+    const std::vector<std::uint32_t> ones(snapshot_bytes / 4, ~0u);
+    gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, gas_snapshot);
+    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, 0, snapshot_bytes, ones.data());
     state.invalidate();
 }
 // Every thermal dispatch goes through here so profile mode can count dispatches and barriers.
@@ -144,9 +162,10 @@ void ThermalSystem::bind() {
     state.base(6, cells[cell_bank ^ 1]);
     state.base(7, auxiliary);
 }
-void ThermalSystem::run(int op, unsigned n) {
+void ThermalSystem::run(int op, unsigned n, bool gated) {
     STREFA_GPU_ZONE(thermal_zone_name(op));
     bind();
+    if (op == 8) state.base(3, gas_snapshot); // op 8 reads no thermal particles (thermal.comp)
     auto& k = kernels[static_cast<unsigned>(op)];
     state.use(k.program);
     const bool first = !k.brush_known;
@@ -175,23 +194,51 @@ void ThermalSystem::run(int op, unsigned n) {
         gl.Uniform1i(k.tick, std::bit_cast<int>(tick_));
         k.previous_tick = tick_;
     }
+    const int gas_gate = options.transport && (options.gas_gate || options.gate_audit) ? 1 : 0;
+    if (k.gas_gate >= 0 && (first || k.previous_gate != gas_gate)) {
+        gl.Uniform1i(k.gas_gate, gas_gate);
+        k.previous_gate = gas_gate;
+    }
     if (k.command >= 0 && (first || k.previous_command != command_id)) {
         gl.Uniform1i(k.command, std::bit_cast<int>(command_id));
         k.previous_command = command_id;
     }
-    dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
-    // Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
-    // capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
-    if (active && active->measured) {
-        auto& p = *active;
-        if (p.operations == p.operation_queries.size()) {
-            p.operation_queries.push_back(0);
-            gl.GenQueries(1, &p.operation_queries.back());
-            p.operation_kernels.push_back(0);
-        }
-        p.operation_kernels[p.operations] = static_cast<unsigned>(op);
-        gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
+    if (gated) {
+        // Same grid as the direct dispatch, or zero groups when the gate skips the gas stage (thermal_gate.comp).
+        gl.BindBuffer(GL_DISPATCH_INDIRECT_BUFFER, auxiliary);
+        gl.DispatchComputeIndirect(static_cast<GLintptr>(gate_command_offset));
+        gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        ++dispatches_;
+        ++barriers_;
+    } else {
+        dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
     }
+    stamp(static_cast<unsigned>(op));
+}
+// Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
+// capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
+void ThermalSystem::stamp(unsigned kernel) {
+    if (!active || !active->measured) return;
+    auto& p = *active;
+    if (p.operations == p.operation_queries.size()) {
+        p.operation_queries.push_back(0);
+        gl.GenQueries(1, &p.operation_queries.back());
+        p.operation_kernels.push_back(0);
+    }
+    p.operation_kernels[p.operations] = kernel;
+    gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
+}
+// Gas-stage gate (thermal_gate.comp): one thread writes the indirect command of the gas kernels from the flags of ops
+// 2 and 8 (input) and 9, 11, 12, 13 (last run); force = 1 runs the stage regardless. Profile index 22 (thermal.comp
+// has no op 22).
+void ThermalSystem::gate(int force) {
+    STREFA_GPU_ZONE("thermal gate");
+    state.base(7, auxiliary);
+    state.use(gate_program);
+    gl.Uniform1i(gate_force, force);
+    gl.Uniform1i(gate_audit_location, options.gate_audit ? 1 : 0);
+    dispatch(1, GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
+    stamp(22);
 }
 void ThermalSystem::brush(const ThermalBrush& b) {
     pending_brush = b;
@@ -201,6 +248,7 @@ void ThermalSystem::reset(const std::array<GLuint, 8>& buffers, unsigned current
     physical_bank = current;
     generation = gen;
     particle_bank = cell_bank = tick_ = command_id = 0;
+    gate_signature = ~0u; // op 0 rewrites the terrain marker op 2 compares: the next gas stage runs ungated by history
     ++serial;
     latest = {};
     inspected = {};
@@ -277,17 +325,27 @@ void ThermalSystem::tick(const std::array<GLuint, 8>& buffers, unsigned& current
     swap_cells();
     if (active && active->measured) gl.QueryCounter(active->queries[1], GL_TIMESTAMP);
     if (options.transport) {
-        run(9, cell_count);
-        run(14, cell_count);
+        const bool gated = options.gas_gate || options.gate_audit;
+        if (gated) {
+            const unsigned signature = options.pressure_iterations * 2 + (options.gate_audit ? 1 : 0);
+            gate(signature != gate_signature ? 1 : 0);
+            gate_signature = signature;
+        } else {
+            gate_signature = ~0u; // the stage ran ungated: the next gated tick must run it again
+        }
+        run(9, cell_count, gated);
+        run(14, cell_count, gated);
         for (unsigned k = 0; k < options.pressure_iterations; ++k) {
             pressure_bank = k % 2;
-            run(10, cell_count);
+            run(10, cell_count, gated);
         }
         pressure_bank = options.pressure_iterations % 2;
-        run(11, cell_count);
-        run(12, cell_count);
-        run(13, cell_count);
+        run(11, cell_count, gated);
+        run(12, cell_count, gated);
+        run(13, cell_count, gated);
         swap_cells();
+    } else {
+        gate_signature = ~0u;
     }
     if (active && active->measured) gl.QueryCounter(active->queries[2], GL_TIMESTAMP);
     if (options.reactions) {
@@ -485,6 +543,11 @@ ThermalSnapshot ThermalSystem::snapshot(ThermalRead what) {
         detail::read_staged(gl, particles[particle_bank], 0, std::span{s.particles});
     }
     s.totals = read_totals(reduction, true);
+    std::array<std::uint32_t, 4> counters{};
+    detail::read_staged(gl, auxiliary, static_cast<GLintptr>(gate_offset + 32), std::span{counters});
+    s.totals.gate_ticks = counters[0];
+    s.totals.gate_skips = counters[1];
+    s.totals.gate_violations = counters[2];
     s.totals.tick = tick_;
     s.totals.generation = generation;
     dispatches_ = barriers_ = 0; // the forced capture of a diagnostic read is not the work of the next tick
@@ -539,7 +602,7 @@ std::vector<ThermalTiming> ThermalSystem::take_timings() {
 }
 std::uint64_t ThermalSystem::memory_bytes() const {
     std::uint64_t n = 2 * particle_count * sizeof(ThermalParticle) + 2 * cell_count * sizeof(ThermalCell)
-                    + (4 * cell_count + particle_count) * 4 + 32 + totals_bytes;
+                    + auxiliary_bytes + snapshot_bytes + totals_bytes;
     for (const auto& p : probes)
         if (p.buffer) n += totals_bytes;
     for (const auto& p : inspections)
