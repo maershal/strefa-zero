@@ -38,6 +38,12 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
 std::expected<void, std::string> validate_coupling_bitwise(const std::filesystem::path& shaders,
                                                            const std::filesystem::path& output,
                                                            const ExecutionOptions& layout);
+// --gpu-check thermal-bits: digests of the thermal cells/particles and of the world particles/terrain after a fixed
+// tick sequence in the cold (sand_water), fire, oil, quench and phases scenes, run twice and required to repeat;
+// compared between two builds on one machine and driver, never against a reference in the repository.
+std::expected<void, std::string> validate_thermal_bits(const std::filesystem::path& shaders,
+                                                       const std::filesystem::path& output,
+                                                       const ExecutionOptions& layout);
 void validate_coupling_replay(const std::filesystem::path& output, std::ostream& checks,
                               const ExecutionOptions& layout);
 std::expected<void, std::string> validate_neighbors(const std::filesystem::path& output, bool benchmark = false);

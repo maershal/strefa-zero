@@ -188,6 +188,36 @@ plan). `sweep-fit.csv` i `analyze-cost-model.py` liczą to samo: dopasowanie a +
 N ≥ N_max/4 (`upper`, zakres liniowy) oraz próg `crossover_n` = (koszt przy najmniejszym N − a) / b, czyli N, od
 którego tick jest ograniczony przepustowością.
 
+## 4c. Skróty bitowe termiki (optymalizacje bitowo neutralne)
+
+`StrefaQA --gpu-check thermal-bits --profile <katalog>` uruchamia ustaloną liczbę ticków (domyślnie 600,
+`STREFA_THERMAL_BITS_TICKS`, wielokrotność 60) w scenach `cold` (sand_water z termiką), `fire`, `oil`, `quench`,
+`phases`, `control` (sand_water bez termiki) i `idle` (pusty świat z termiką) i zapisuje co 60 ticków
+(`STREFA_THERMAL_BITS_EVERY`, dzielnik 60) skróty FNV-1a komórek i cząstek termiki oraz cząstek świata (bieżący bank,
+wszystkie sloty) i terenu, czytanych przez bufor pośredni. Na końcu: skróty per pole rekordu i próba punktu stałego
+(ile słów zmienia jeden kolejny tick, także per pole). W scenie `cold` po próbie idzie jeszcze pędzel grzejący
+(10 ticków) i 120 ticków bez wejścia.
+
+Każda scena liczy się dwa razy w jednym procesie. Sceny, które się powtarzają, trafiają do `thermal-bits.txt` i ten
+plik porównuje się między dwoma buildami na tej samej maszynie i tym samym sterowniku:
+
+```powershell
+./build-a/StrefaQA.exe --gpu-check thermal-bits --profile gpu-check/bits-a
+./build-b/StrefaQA.exe --gpu-check thermal-bits --profile gpu-check/bits-b
+Compare-Object (Get-Content gpu-check/bits-a/thermal-bits.txt) (Get-Content gpu-check/bits-b/thermal-bits.txt)
+```
+
+Pusty wynik `Compare-Object` oznacza bitowo ten sam stan. Skróty nie są wzorcem w repozytorium. Sceny, które się nie
+powtarzają, trafiają do `thermal-bits-unstable.txt`, a `thermal-bits-info.txt` podaje dla każdej sceny
+`repeat <scena>=yes|no` z pierwszym różnym wierszem. Ich skróty niczego nie dowodzą między buildami.
+
+Stan na `main` (GTX 1650, sterownik 610.47): powtarzają się tylko `fire` i `idle`, czyli sceny bez cząstek. Sceny
+z cząstkami rozjeżdżają się po 5–13 tickach, również `control` bez termiki: solver cząstek dopisuje do listy aktywnych
+i do indeksu sąsiadów atomowo (`granular.comp`, `neighbors.comp`), więc kolejność w komórce, a z nią kolejność sum
+float, zmienia się między przebiegami. Pierwsze różnią się cząstki świata, termika dopiero za nimi. Test
+`gpu.thermal_bits` (120 ticków) wymaga powtórzenia `fire` i `idle` oraz tego, że w `idle` kolejny tick nie zmienia
+ani jednego słowa.
+
 ## 5. Co odesłać
 
 Wklej do rozmowy albo do opisu PR:
