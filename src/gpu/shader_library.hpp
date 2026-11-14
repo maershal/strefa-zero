@@ -11,15 +11,21 @@
 #include <vector>
 
 namespace strefa::gpu::detail {
-// Called while programs build: finished and requested programs of the current batch. It may render a frame
+// Called while programs build: programs finished and requested since the last set_progress() (several
+// batches add up; after a failed batch done stays behind total). It may render a frame
 // (the context is current and no program is bound by the library) and may throw to cancel the batch.
 using ShaderProgress = std::function<void(unsigned done, unsigned total)>;
+// automatic: parallel compilation when the driver offers it; off: one by one even then (A/B comparisons and
+// the sequential half of gpu.shader_cache).
+enum class ParallelCompile { automatic, off };
 // Owns all linked programs for one device/configuration. Scene changes only
 // replace data; they never destroy or compile programs.
 class ShaderLibrary {
 public:
     using Stages = std::initializer_list<std::pair<GLenum, std::filesystem::path>>;
-    explicit ShaderLibrary(Api& gl) : gl_{gl} {}
+    explicit ShaderLibrary(Api& gl, ParallelCompile mode = ParallelCompile::automatic)
+        : gl_{gl},
+          parallel_allowed_{mode == ParallelCompile::automatic} {}
     ~ShaderLibrary();
     ShaderLibrary(const ShaderLibrary&) = delete;
     ShaderLibrary& operator=(const ShaderLibrary&) = delete;
@@ -31,13 +37,12 @@ public:
     // Uniform locations of a submitted program are valid only after finish().
     GLuint submit(Stages stages, const std::string& defines = {}, bool particle_restrict = false);
     // Checks every submitted program in submission order; on failure deletes the whole
-    // batch and throws a message naming the file, the stage and the defines.
+    // batch and throws a message naming the file, the stage and the defines. Program
+    // binaries are written only after the whole batch succeeded.
     void finish();
     void configure_cache(const std::filesystem::path&);
     // Restarts the done/total counters reported to the callback.
     void set_progress(ShaderProgress progress);
-    // Validation only: forces the sequential path on a driver with the extension.
-    void allow_parallel(bool allowed) { parallel_allowed_ = allowed; }
     bool parallel() const noexcept { return parallel_; }
     ShaderCacheStats stats() const noexcept { return stats_; }
     std::size_t size() const noexcept { return programs_.size(); }
@@ -48,9 +53,10 @@ private:
         std::vector<std::pair<GLenum, GLuint>> shaders;
         std::vector<std::filesystem::path> files;
         std::string defines, key;
-        bool particle_restrict{}, cached{}, checked{};
+        bool particle_restrict{}, cached{};
     };
     Api& gl_;
+    bool parallel_allowed_;
     std::vector<GLuint> programs_;
     std::vector<Pending> pending_;
     unsigned batch_done_{}, batch_total_{};
@@ -63,7 +69,7 @@ private:
     ShaderCacheStats stats_;
     ShaderProgress progress_;
     std::chrono::steady_clock::time_point last_report_{};
-    bool parallel_probed_{}, parallel_{}, parallel_allowed_{true};
+    bool parallel_probed_{}, parallel_{};
     bool load_binary(GLuint, const std::string& key);
     void save_binary(GLuint, const std::string& key);
     void probe_parallel();

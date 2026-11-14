@@ -51,9 +51,11 @@ std::expected<int, std::string> validate_shader_cache(const std::filesystem::pat
         // Batched submission (parallel where the driver allows it) and the forced sequential path give the
         // same results; a broken shader names its file, stage and defines and leaves the library usable.
         bool parallel{};
+        const bool advertised = SDL_GL_ExtensionSupported("GL_KHR_parallel_shader_compile")
+                             || SDL_GL_ExtensionSupported("GL_ARB_parallel_shader_compile");
         for (const bool allowed : {true, false}) {
-            gpu::detail::ShaderLibrary library{api};
-            library.allow_parallel(allowed);
+            gpu::detail::ShaderLibrary library{api, allowed ? gpu::detail::ParallelCompile::automatic
+                                                            : gpu::detail::ParallelCompile::off};
             unsigned reports{};
             library.set_progress([&](unsigned done, unsigned total) { reports += done <= total ? 1U : 1000U; });
             std::array<GLuint, 3> programs{};
@@ -72,8 +74,9 @@ std::expected<int, std::string> validate_shader_cache(const std::filesystem::pat
                 if (value != 7 + i) throw std::runtime_error{"Kompilacja wsadowa: niepoprawny wynik programu."};
             }
             if (allowed) parallel = library.parallel();
+            // A driver that advertises the extension must take the parallel path, so CI exercises it.
             if (library.stats().programs != programs.size() || reports < programs.size() || reports >= 1000
-                || (!allowed && library.parallel()))
+                || (!allowed && library.parallel()) || (allowed && advertised != library.parallel()))
                 throw std::runtime_error{"Kompilacja wsadowa: niepoprawne liczniki postępu lub programów."};
             const auto broken = root / "sources" / "broken.comp";
             std::ofstream{broken} << "#version 430\nlayout(local_size_x=1) in;\nvoid main(){ missing_symbol(); }\n";
@@ -93,6 +96,31 @@ std::expected<int, std::string> validate_shader_cache(const std::filesystem::pat
                 || library.program({{GL_COMPUTE_SHADER, shader}}, "#define EXTRA 0u\n") == 0
                 || glGetError() != GL_NO_ERROR)
                 throw std::runtime_error{"Po błędzie kompilacji biblioteka zostawiła programy partii lub błąd GL."};
+            // Cancelling from the progress callback (the window closed) deletes the batch, counts nothing and
+            // writes no program binary for it.
+            {
+                gpu::detail::ShaderLibrary cancelled{api, allowed ? gpu::detail::ParallelCompile::automatic
+                                                                  : gpu::detail::ParallelCompile::off};
+                const auto binaries = root / ("cancelled-" + std::to_string(allowed));
+                cancelled.configure_cache(binaries);
+                cancelled.set_progress([](unsigned done, unsigned) {
+                    if (done >= 1) throw std::runtime_error{"cancelled"};
+                });
+                bool thrown{};
+                try {
+                    for (unsigned i = 0; i < 3; ++i)
+                        cancelled.submit({{GL_COMPUTE_SHADER, shader}},
+                                         "#define EXTRA " + std::to_string(i + 4) + "u\n");
+                    cancelled.finish();
+                } catch (const std::runtime_error& error) {
+                    thrown = std::string_view{error.what()} == "cancelled";
+                }
+                const auto stats = cancelled.stats();
+                if (!thrown || cancelled.size() != 0 || stats.programs != 0 || stats.source_builds != 0
+                    || (std::filesystem::exists(binaries) && !std::filesystem::is_empty(binaries))
+                    || glGetError() != GL_NO_ERROR)
+                    throw std::runtime_error{"Przerwana kompilacja zostawiła programy, liczniki lub binarki partii."};
+            }
             ++cases;
         }
         const std::string defines = "#define EXTRA 0u\n";

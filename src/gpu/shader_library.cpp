@@ -329,13 +329,9 @@ void ShaderLibrary::check(Pending& pending) {
             throw std::runtime_error{describe("Błąd linkowania programu: " + files + ".", pending.defines,
                                               pending.particle_restrict, info(pending.program, false))};
         }
-        ++stats_.source_builds;
-        if (stats_.enabled && stats_.supported) save_binary(pending.program, pending.key);
     }
     for (auto [kind, shader] : pending.shaders) gl.DeleteShader(shader); // freed with the program
     pending.shaders.clear();
-    pending.checked = true;
-    ++stats_.programs;
 }
 void ShaderLibrary::report() {
     if (!progress_) return;
@@ -366,6 +362,14 @@ void ShaderLibrary::finish() {
         discard_pending();
         throw;
     }
+    // Counted and cached only once the whole batch is kept, so a failed batch leaves no binaries behind.
+    for (const auto& pending : pending_) {
+        if (!pending.cached) {
+            ++stats_.source_builds;
+            if (stats_.enabled && stats_.supported) save_binary(pending.program, pending.key);
+        }
+        ++stats_.programs;
+    }
     pending_.clear();
     if (built) stats_.compile_ms += milliseconds(began) - (stats_.progress_ms - progress_before);
 }
@@ -374,7 +378,6 @@ void ShaderLibrary::discard_pending() {
         for (auto [kind, shader] : pending.shaders) gl_.DeleteShader(shader);
         gl_.DeleteProgram(pending.program);
         std::erase(programs_, pending.program);
-        if (pending.checked) --stats_.programs;
     }
     pending_.clear();
 }
