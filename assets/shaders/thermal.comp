@@ -8,7 +8,7 @@ layout(std430,binding=4) buffer ThermalTerrain {uint walls[];};
 layout(std430,binding=5) buffer GasInput {ThermalCell grid[];};
 layout(std430,binding=6) buffer GasOutput {ThermalCell nextGrid[];};
 layout(std430,binding=7) buffer ThermalAux {int heads[TC];int links[TN];uint pa[TC];float pb[TC];float divergence[TC];uvec4 sourceState;uvec4 eventState;
-    uvec4 gateState;uvec4 gateCommand;uvec4 gateCounters;GasSample gasSnapshot[TC];}; // gas gate: thermal_gate.comp
+    uvec4 gateState;uvec4 gateCommand;uvec4 gateCounters;}; // gas-stage gate, see thermal_gate.comp
 uniform int radiationEnabled;
 #ifdef THERMAL_OPERATION
 const int operation=THERMAL_OPERATION;
@@ -20,11 +20,14 @@ uniform int tool,pressureBank,sourceGeneration,sourceTick,sourceCommand,gasGate;
 void gasChanged(){gateState.y=0u;if(gateState.w!=0u)atomicAdd(gateCounters.z,1u);}
 // Op 8 writes the gas stage's input: x = op 8 changed the record (the banks then differ), z = the input differs from
 // the snapshot of the last run's input (the snapshot is refreshed).
+// Op 8 reads no thermal particles, so ThermalSystem binds the snapshot buffer at binding 3 for it: one 64-byte record
+// per cell, gas0/gas1/flow in its first three vec4s. (Declared in ThermalAux, the snapshot made every thermal program
+// use gigabytes of RAM on Mesa llvmpipe.)
 void gateInput(int id,ThermalCell c){
     if(!sameCell(c,grid[id]))gateState.x=1u;
-    GasSample s=gasSnapshot[id];
-    if(!sameBits(s.gas0,c.gas0)||!sameBits(s.gas1,c.gas1)||!sameBits(s.flow,c.flow)){
-        gasSnapshot[id]=GasSample(c.gas0,c.gas1,c.flow);gateState.z=1u;
+    ThermalParticle s=nextTp[id];
+    if(!sameBits(s.matter,c.gas0)||!sameBits(s.request,c.gas1)||!sameBits(s.transfer,c.flow)){
+        nextTp[id]=ThermalParticle(c.gas0,c.gas1,c.flow,vec4(0));gateState.z=1u;
     }
 }
 uniform float timeStep,brushRadius,dose;

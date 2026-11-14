@@ -22,8 +22,8 @@ constexpr unsigned cell_count = 320 * 192, particle_count = 32768, block_count =
 constexpr std::size_t totals_bytes = block_count * 16 * sizeof(double);
 // ThermalAux (thermal.comp): heads, links, pa, pb, divergence, sourceState, eventState, then the gas-stage gate.
 constexpr std::size_t gate_offset = (4 * cell_count + particle_count) * sizeof(std::uint32_t) + 32;
-constexpr std::size_t gate_command_offset = gate_offset + 16, snapshot_offset = gate_offset + 48;
-constexpr std::size_t snapshot_bytes = cell_count * 48, auxiliary_bytes = snapshot_offset + snapshot_bytes;
+constexpr std::size_t gate_command_offset = gate_offset + 16, auxiliary_bytes = gate_offset + 48;
+constexpr std::size_t snapshot_bytes = cell_count * 64; // gas-stage snapshot, bound at 3 for op 8 only
 std::string material_defines() {
     static_assert(sim::physical.size() == 20, "Review thermal shader table dimensions when adding materials");
     std::ostringstream out;
@@ -78,6 +78,7 @@ ThermalSystem::~ThermalSystem() {
     gl.DeleteBuffers(2, cells.data());
     if (auxiliary) gl.DeleteBuffers(1, &auxiliary);
     if (reduction) gl.DeleteBuffers(1, &reduction);
+    if (gas_snapshot) gl.DeleteBuffers(1, &gas_snapshot);
     if (vao) gl.DeleteVertexArrays(1, &vao);
 }
 void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::path& folder,
@@ -124,6 +125,7 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     gl.GenBuffers(2, cells.data());
     gl.GenBuffers(1, &auxiliary);
     gl.GenBuffers(1, &reduction);
+    gl.GenBuffers(1, &gas_snapshot);
     gl.GenVertexArrays(1, &vao);
     const auto allocate = [&](GLuint b, std::size_t bytes) {
         gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, b);
@@ -133,12 +135,14 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     for (auto b : cells) allocate(b, cell_count * sizeof(ThermalCell));
     allocate(auxiliary, auxiliary_bytes);
     allocate(reduction, totals_bytes);
+    allocate(gas_snapshot, snapshot_bytes);
     // Gate state starts as "no fixed point known" and the snapshot as all-ones words, so the first tick runs the stage.
     const std::array<std::uint32_t, 12> gate_zero{};
     gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, auxiliary);
     gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, gate_offset, sizeof(gate_zero), gate_zero.data());
     const std::vector<std::uint32_t> ones(snapshot_bytes / 4, ~0u);
-    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, snapshot_offset, snapshot_bytes, ones.data());
+    gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, gas_snapshot);
+    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, 0, snapshot_bytes, ones.data());
     state.invalidate();
 }
 // Every thermal dispatch goes through here so profile mode can count dispatches and barriers.
@@ -161,6 +165,7 @@ void ThermalSystem::bind() {
 void ThermalSystem::run(int op, unsigned n, bool gated) {
     STREFA_GPU_ZONE(thermal_zone_name(op));
     bind();
+    if (op == 8) state.base(3, gas_snapshot); // op 8 reads no thermal particles (thermal.comp)
     auto& k = kernels[static_cast<unsigned>(op)];
     state.use(k.program);
     const bool first = !k.brush_known;
@@ -597,7 +602,7 @@ std::vector<ThermalTiming> ThermalSystem::take_timings() {
 }
 std::uint64_t ThermalSystem::memory_bytes() const {
     std::uint64_t n = 2 * particle_count * sizeof(ThermalParticle) + 2 * cell_count * sizeof(ThermalCell)
-                    + auxiliary_bytes + totals_bytes;
+                    + auxiliary_bytes + snapshot_bytes + totals_bytes;
     for (const auto& p : probes)
         if (p.buffer) n += totals_bytes;
     for (const auto& p : inspections)

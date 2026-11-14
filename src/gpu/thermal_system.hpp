@@ -37,7 +37,7 @@ private:
     GLint linear_location{};
     GLuint graphics{}, condensation{}, events{}, reduce_program{}, vao{};
     std::array<GLuint, 2> particles{}, cells{};
-    GLuint auxiliary{}, reduction{}, gate_program{};
+    GLuint auxiliary{}, reduction{}, gate_program{}, gas_snapshot{};
     GLint gate_force{-1}, gate_audit_location{-1};
     unsigned gate_signature{~0u}; // pressure iterations and audit flag of the last gated stage; a change forces a run
     unsigned particle_bank{}, cell_bank{}, generation{}, tick_{}, serial{}, command_id{};

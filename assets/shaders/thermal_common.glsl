@@ -1,7 +1,6 @@
 // Property tables are generated from sim/material.hpp by ThermalSystem.
 struct ThermalParticle {vec4 matter;vec4 request;vec4 transfer;vec4 history;};
 struct ThermalCell {vec4 matter;vec4 gas0;vec4 gas1;vec4 flow;vec4 demand;vec4 budget;vec4 extra;vec4 factors;};
-struct GasSample {vec4 gas0;vec4 gas1;vec4 flow;}; // gas-stage input of the last run (thermal_gate.comp)
 const int TW=320,TH=192,TC=61440,TN=32768;
 const float AMBIENT=293.15;
 float enthalpy(int m,float t){return thermalProperties[m].y*t+thermalProperties[m].w;}
