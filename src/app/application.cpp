@@ -656,7 +656,7 @@ private:
         if (!simulation_) return;
         app::write_gpu_startup(store_.path().parent_path() / "gpu-startup.txt", simulation_->shader_cache_stats(),
                                {simulation_.creations(), view_switches_, first_world_ms_, view_switch_ms_,
-                                view_switch_max_ms_, bool(lab_worker_)});
+                                view_switch_max_ms_, bool(lab_worker_), progress_frames_});
     }
     // HUD pacing for the GPU views; restarts with every scene.
     void update_clock_stats(double sim_seconds, double wall) {
@@ -902,7 +902,7 @@ private:
                     utf8_path(SDL_GetBasePath()) / "assets" / "shaders", execution_, gpu_profiling_, {mission},
                     shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{},
                     render_device_);
-            progress.release();
+            progress_frames_ += progress.release();
             if (!opened) {
                 message_ = opened.error();
                 return false;
@@ -1051,7 +1051,7 @@ private:
     gpu::ExecutionOptions execution_;
     platform::GlDebugLog* gl_debug_{};
     bool shader_cache_{};
-    unsigned view_switches_{};
+    unsigned view_switches_{}, progress_frames_{};
     double first_world_ms_{}, view_switch_ms_{}, view_switch_max_ms_{};
     std::filesystem::path last_recording_;
     double mission_step_submit_ms_{}, world_render_submit_ms_{};

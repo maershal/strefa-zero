@@ -9,6 +9,7 @@
 
 #include <fstream>
 #include <stdexcept>
+#include <utility>
 
 namespace strefa::app {
 namespace {
@@ -24,11 +25,13 @@ ShaderProgressScreen::ShaderProgressScreen(platform::Window& window, ui::Session
 ShaderProgressScreen::~ShaderProgressScreen() {
     release();
 }
-void ShaderProgressScreen::release() {
-    if (!device_) return;
-    device_->library.set_progress({});
-    device_->context.state.invalidate();
-    device_.reset();
+unsigned ShaderProgressScreen::release() {
+    if (device_) {
+        device_->library.set_progress({});
+        device_->context.state.invalidate();
+        device_.reset();
+    }
+    return std::exchange(frames_, 0U);
 }
 gpu::detail::ShaderProgress ShaderProgressScreen::callback() {
     return [this](unsigned done, unsigned total) { update(done, total); };
@@ -68,6 +71,7 @@ void ShaderProgressScreen::update(unsigned done, unsigned total) {
     window_.clear();
     gui_.render();
     window_.present();
+    ++frames_;
     if (device_) device_->context.state.invalidate();
 }
 void write_gpu_startup(const std::filesystem::path& file, const gpu::ShaderCacheStats& cache,
@@ -80,8 +84,8 @@ void write_gpu_startup(const std::filesystem::path& file, const gpu::ShaderCache
             << "\nparallel_compile=" << cache.parallel << "\ncompile_ms=" << cache.compile_ms
             << "\ncache_load_ms=" << cache.load_ms << "\nsubmit_ms=" << cache.submit_ms
             << "\nprogress_ms=" << cache.progress_ms << "\nprogress_gap_ms=" << cache.progress_gap_ms
-            << "\nfirst_world_ms=" << times.first_world_ms << "\nview_switches=" << times.view_switches
-            << "\nview_switch_total_ms=" << times.view_switch_total_ms
+            << "\nprogress_frames=" << times.progress_frames << "\nfirst_world_ms=" << times.first_world_ms
+            << "\nview_switches=" << times.view_switches << "\nview_switch_total_ms=" << times.view_switch_total_ms
             << "\nview_switch_max_ms=" << times.view_switch_max_ms
             << "\ncpu_laboratory_created=" << times.cpu_laboratory_created << '\n';
 }
