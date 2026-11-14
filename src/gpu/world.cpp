@@ -1382,9 +1382,7 @@ MissionSnapshot ParticleWorld::read_mission() const {
 std::vector<std::uint32_t> ParticleWorld::read_terrain() const {
     auto& s = *impl_;
     std::vector<std::uint32_t> result(width * height * 4);
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, s.buffers[4]);
-    s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, result.size() * 4, result.data());
+    detail::read_staged(s.gl, s.buffers[4], 0, std::span{result});
     return result;
 }
 void ParticleWorld::set_actor_textures(unsigned parts, unsigned weapons, int w, int h) {
@@ -1811,10 +1809,7 @@ void ParticleWorld::reset_mission() {
 std::vector<Grain> ParticleWorld::readback() const {
     auto& s = *impl_;
     std::vector<Grain> result(capacity);
-    s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
-    s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, s.buffers[s.current]);
-    s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(result.size() * sizeof(Grain)),
-                          result.data());
+    detail::read_staged(s.gl, s.buffers[s.current], 0, std::span{result});
     if (s.execution.soa) {
         std::vector<std::array<float, 4>> packed(capacity * 4);
         std::memcpy(packed.data(), result.data(), capacity * sizeof(Grain));
