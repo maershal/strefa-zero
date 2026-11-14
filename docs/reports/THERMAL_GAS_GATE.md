@@ -46,7 +46,7 @@ Etap jest pomijany tylko wtedy, gdy jednocześnie:
 
 Decyzję podejmuje jeden wątek (`thermal_gate.comp`), który zapisuje komendę indirect dla 37 kerneli gazu. Na tick
 dochodzi jeden dispatch (51 → 52). Przy gazie w spoczynku 37 z nich ma zero grup. Domyślna ścieżka gry (termika
-wyłączona) bez zmian. Zgodnie z decyzją właściciela to wyjątek od reguły „bez dispatchy z zerem grup” w `CLAUDE.md`.
+wyłączona) bez zmian. Zgodnie z decyzją właściciela ([komentarz w PR](https://github.com/maershal/strefa-zero/pull/98#issuecomment-6880001851)) to wyjątek od reguły „bez dispatchy z zerem grup” w `CLAUDE.md`.
 
 ## Dowód bitowy
 
