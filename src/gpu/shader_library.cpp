@@ -1,5 +1,6 @@
 #include "gpu/shader_library.hpp"
 
+#include <algorithm>
 #include <array>
 #include <chrono>
 #include <cstring>
@@ -45,6 +46,8 @@ std::string restricted_particle_storage(std::string text) {
 }
 } // namespace
 ShaderLibrary::~ShaderLibrary() {
+    for (auto& pending : pending_)
+        for (auto [kind, shader] : pending.shaders) gl_.DeleteShader(shader);
     for (auto id : programs_) gl_.DeleteProgram(id);
 }
 namespace {
@@ -69,6 +72,11 @@ std::string cache_name(const std::string& source, GLenum format) {
 constexpr std::uint64_t cache_magic = 0x314e4942425a5353ULL; // SZ program binary, schema 1
 constexpr std::uint64_t max_binary_bytes = 64 * 1024 * 1024;
 } // namespace
+void ShaderLibrary::set_progress(ShaderProgress progress) {
+    progress_ = std::move(progress);
+    batch_done_ = batch_total_ = 0;
+    last_report_ = {};
+}
 void ShaderLibrary::configure_cache(const std::filesystem::path& path) {
     cache_ = path;
     stats_.enabled = !path.empty();
@@ -168,9 +176,54 @@ void ShaderLibrary::save_binary(GLuint program, const std::string& key) {
         std::filesystem::remove(temporary, error);
     }
 }
-GLuint ShaderLibrary::program(std::initializer_list<std::pair<GLenum, std::filesystem::path>> stages,
-                              const std::string& defines, bool particle_restrict) {
+namespace {
+const char* stage_name(GLenum kind) {
+    switch (kind) {
+    case GL_COMPUTE_SHADER: return "obliczeniowy";
+    case GL_VERTEX_SHADER: return "wierzchołków";
+    case GL_FRAGMENT_SHADER: return "fragmentów";
+    case GL_GEOMETRY_SHADER: return "geometrii";
+    default: return "nieznany";
+    }
+}
+// Driver logs count lines after the defines inserted below line 1 and after #include expansion.
+std::string describe(std::string_view headline, const std::string& defines, bool particle_restrict,
+                     const std::string& log) {
+    std::string text{headline};
+    const auto shift = std::count(defines.begin(), defines.end(), '\n');
+    if (defines.empty())
+        text += "\nDefinicje: brak.";
+    else
+        text += "\nDefinicje (wstawione po 1. linii, numery linii w logu są przesunięte o " + std::to_string(shift)
+              + "):\n" + defines;
+    if (particle_restrict) text += "\nSpecjalizacja restrict banków PBF: tak.";
+    if (!text.ends_with('\n')) text += '\n';
+    return text + "Log sterownika:\n" + log;
+}
+} // namespace
+void ShaderLibrary::probe_parallel() {
+    parallel_probed_ = true;
+    if (!parallel_allowed_) return;
+    const char* name = SDL_GL_ExtensionSupported("GL_KHR_parallel_shader_compile") ? "glMaxShaderCompilerThreadsKHR"
+                     : SDL_GL_ExtensionSupported("GL_ARB_parallel_shader_compile") ? "glMaxShaderCompilerThreadsARB"
+                                                                                   : nullptr;
+    if (!name) return;
+    const auto threads = reinterpret_cast<PFNGLMAXSHADERCOMPILERTHREADSKHRPROC>(SDL_GL_GetProcAddress(name));
+    if (!threads) return;
+    threads(0xFFFFFFFFU); // the implementation-defined maximum
+    parallel_ = stats_.parallel = true;
+}
+GLuint ShaderLibrary::program(Stages stages, const std::string& defines, bool particle_restrict) {
+    const auto id = submit(stages, defines, particle_restrict);
+    finish();
+    return id;
+}
+GLuint ShaderLibrary::submit(Stages stages, const std::string& defines, bool particle_restrict) {
+    if (!parallel_probed_) probe_parallel();
     auto& gl = gl_;
+    Pending pending;
+    pending.defines = defines;
+    pending.particle_restrict = particle_restrict;
     std::vector<std::pair<GLenum, std::string>> sources;
     std::string key = "strefa-program-v1\n" + driver_;
     for (const auto& [kind, path] : stages) {
@@ -179,52 +232,150 @@ GLuint ShaderLibrary::program(std::initializer_list<std::pair<GLenum, std::files
         if (!defines.empty()) text.insert(text.find('\n') + 1, defines);
         key += '\n' + std::to_string(kind) + ':' + std::to_string(text.size()) + ':' + text;
         sources.emplace_back(kind, std::move(text));
+        pending.files.push_back(path);
     }
-    const auto result = gl.CreateProgram();
-    std::vector<GLuint> shaders;
+    pending.key = std::move(key);
+    // With parallel compilation glCreateProgram can wait for the driver's busy compiler
+    // threads (about 5 ms each on GTX 1650), so it counts as compilation time.
+    const auto created = Clock::now();
+    pending.program = gl.CreateProgram();
+    const double create_ms = milliseconds(created);
     const bool use_cache = stats_.enabled && stats_.supported;
     try {
-        if (use_cache && load_binary(result, key)) {
-            programs_.push_back(result);
-            ++stats_.programs;
-            return result;
-        }
-        const auto began = Clock::now();
-        if (use_cache) program_parameter_(result, GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL_TRUE);
-        for (const auto& [kind, text] : sources) {
-            const auto shader = gl.CreateShader(kind);
-            shaders.push_back(shader);
-            const auto* pointer = text.c_str();
-            gl.ShaderSource(shader, 1, &pointer, nullptr);
-            gl.CompileShader(shader);
-            GLint valid{};
-            gl.GetShaderiv(shader, GL_COMPILE_STATUS, &valid);
-            if (!valid) {
-                std::array<char, 8192> log{};
-                gl.GetShaderInfoLog(shader, static_cast<GLsizei>(log.size()), nullptr, log.data());
-                throw std::runtime_error{log.data()};
+        if (use_cache && load_binary(pending.program, pending.key)) {
+            pending.cached = true;
+            stats_.load_ms += create_ms;
+        } else {
+            stats_.compile_ms += create_ms;
+            stats_.submit_ms += create_ms;
+            const auto began = Clock::now();
+            if (use_cache) program_parameter_(pending.program, GL_PROGRAM_BINARY_RETRIEVABLE_HINT, GL_TRUE);
+            for (const auto& [kind, text] : sources) {
+                const auto shader = gl.CreateShader(kind);
+                pending.shaders.emplace_back(kind, shader);
+                const auto* pointer = text.c_str();
+                gl.ShaderSource(shader, 1, &pointer, nullptr);
+                gl.CompileShader(shader);
+                gl.AttachShader(pending.program, shader);
             }
-            gl.AttachShader(result, shader);
+            gl.LinkProgram(pending.program);
+            stats_.compile_ms += milliseconds(began);
+            stats_.submit_ms += milliseconds(began);
         }
-        gl.LinkProgram(result);
-        GLint valid{};
-        gl.GetProgramiv(result, GL_LINK_STATUS, &valid);
-        if (!valid) {
-            std::array<char, 8192> log{};
-            gl.GetProgramInfoLog(result, static_cast<GLsizei>(log.size()), nullptr, log.data());
-            throw std::runtime_error{log.data()};
-        }
-        ++stats_.source_builds;
-        stats_.compile_ms += milliseconds(began);
-        if (use_cache) save_binary(result, key);
-        programs_.push_back(result);
-        ++stats_.programs;
+        programs_.push_back(pending.program);
+        pending_.push_back(std::move(pending));
     } catch (...) {
-        for (auto shader : shaders) gl.DeleteShader(shader);
-        gl.DeleteProgram(result);
+        for (auto [kind, shader] : pending.shaders) gl.DeleteShader(shader);
+        gl.DeleteProgram(pending.program);
         throw;
     }
-    for (auto shader : shaders) gl.DeleteShader(shader);
-    return result;
+    ++batch_total_;
+    const auto id = pending_.back().program;
+    if (!parallel_) {
+        finish(); // without the extension: built and checked one by one, as before
+        return id;
+    }
+    // A long batch submission still services the window between programs.
+    try {
+        report();
+    } catch (...) {
+        discard_pending();
+        throw;
+    }
+    return id;
+}
+bool ShaderLibrary::complete(const Pending& pending) const {
+    if (pending.cached) return true;
+    GLint done{};
+    gl_.GetProgramiv(pending.program, GL_COMPLETION_STATUS_KHR, &done);
+    return done != 0;
+}
+void ShaderLibrary::check(Pending& pending) {
+    auto& gl = gl_;
+    if (!pending.cached) {
+        GLint linked{};
+        gl.GetProgramiv(pending.program, GL_LINK_STATUS, &linked);
+        if (!linked) {
+            const auto info = [&](GLuint id, bool shader) {
+                GLint length{};
+                if (shader)
+                    gl.GetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
+                else
+                    gl.GetProgramiv(id, GL_INFO_LOG_LENGTH, &length);
+                std::string log(static_cast<std::size_t>(std::max(length, 1)), '\0');
+                if (shader)
+                    gl.GetShaderInfoLog(id, static_cast<GLsizei>(log.size()), nullptr, log.data());
+                else
+                    gl.GetProgramInfoLog(id, static_cast<GLsizei>(log.size()), nullptr, log.data());
+                log.resize(std::strlen(log.c_str()));
+                return log;
+            };
+            for (std::size_t i = 0; i < pending.shaders.size(); ++i) {
+                const auto [kind, shader] = pending.shaders[i];
+                GLint compiled{};
+                gl.GetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+                if (!compiled) {
+                    const auto& file = pending.files[i];
+                    throw std::runtime_error{describe("Błąd kompilacji shadera „" + file.filename().string()
+                                                              + "” (etap " + stage_name(kind)
+                                                              + ").\nPlik: " + file.generic_string(),
+                                                      pending.defines, pending.particle_restrict, info(shader, true))};
+                }
+            }
+            std::string files;
+            for (std::size_t i = 0; i < pending.files.size(); ++i)
+                files += (i ? ", " : "") + pending.files[i].filename().string() + " ("
+                       + stage_name(pending.shaders[i].first) + ")";
+            throw std::runtime_error{describe("Błąd linkowania programu: " + files + ".", pending.defines,
+                                              pending.particle_restrict, info(pending.program, false))};
+        }
+        ++stats_.source_builds;
+        if (stats_.enabled && stats_.supported) save_binary(pending.program, pending.key);
+    }
+    for (auto [kind, shader] : pending.shaders) gl.DeleteShader(shader); // freed with the program
+    pending.shaders.clear();
+    pending.checked = true;
+    ++stats_.programs;
+}
+void ShaderLibrary::report() {
+    if (!progress_) return;
+    const auto began = Clock::now();
+    if (last_report_ != Clock::time_point{})
+        stats_.progress_gap_ms = std::max(stats_.progress_gap_ms, milliseconds(last_report_));
+    progress_(batch_done_, batch_total_);
+    last_report_ = Clock::now();
+    stats_.progress_ms += std::chrono::duration<double, std::milli>(last_report_ - began).count();
+}
+void ShaderLibrary::finish() {
+    const auto began = Clock::now();
+    const double progress_before = stats_.progress_ms;
+    bool built{};
+    try {
+        for (auto& pending : pending_) {
+            built = built || !pending.cached;
+            // Poll so the callback keeps the window alive; without one the status query blocks.
+            while (parallel_ && progress_ && !complete(pending)) {
+                report();
+                SDL_Delay(1);
+            }
+            check(pending);
+            ++batch_done_;
+            report();
+        }
+    } catch (...) {
+        discard_pending();
+        throw;
+    }
+    pending_.clear();
+    if (built) stats_.compile_ms += milliseconds(began) - (stats_.progress_ms - progress_before);
+}
+void ShaderLibrary::discard_pending() {
+    for (auto& pending : pending_) {
+        for (auto [kind, shader] : pending.shaders) gl_.DeleteShader(shader);
+        gl_.DeleteProgram(pending.program);
+        std::erase(programs_, pending.program);
+        if (pending.checked) --stats_.programs;
+    }
+    pending_.clear();
 }
 } // namespace strefa::gpu::detail
