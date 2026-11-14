@@ -2,6 +2,7 @@
 
 #include "app/clock_stats.hpp"
 #include "app/frame_profile.hpp"
+#include "app/gpu_startup.hpp"
 #include "app/launch_config.hpp"
 #include "app/scenario_runner.hpp"
 #include "app/scene_benchmark.hpp"
@@ -653,16 +654,9 @@ private:
     // and again at exit with the view switches.
     void write_gpu_startup() const {
         if (!simulation_) return;
-        const auto cache = simulation_->shader_cache_stats();
-        std::ofstream startup{store_.path().parent_path() / "gpu-startup.txt"};
-        startup << "world_creations=" << simulation_.creations() << "\nprograms=" << cache.programs
-                << "\nsource_builds=" << cache.source_builds << "\ncache_hits=" << cache.hits
-                << "\ncache_misses=" << cache.misses << "\ncache_rejected=" << cache.rejected
-                << "\ncache_write_failures=" << cache.write_failures << "\ncache_supported=" << cache.supported
-                << "\ncompile_ms=" << cache.compile_ms << "\ncache_load_ms=" << cache.load_ms
-                << "\nfirst_world_ms=" << first_world_ms_ << "\nview_switches=" << view_switches_
-                << "\nview_switch_total_ms=" << view_switch_ms_ << "\nview_switch_max_ms=" << view_switch_max_ms_
-                << "\ncpu_laboratory_created=" << bool(lab_worker_) << '\n';
+        app::write_gpu_startup(store_.path().parent_path() / "gpu-startup.txt", simulation_->shader_cache_stats(),
+                               {simulation_.creations(), view_switches_, first_world_ms_, view_switch_ms_,
+                                view_switch_max_ms_, bool(lab_worker_), progress_frames_});
     }
     // HUD pacing for the GPU views; restarts with every scene.
     void update_clock_stats(double sim_seconds, double wall) {
@@ -687,11 +681,11 @@ private:
         clock_stats_ = {speed_meter_.speed(SimulationWorld::tick_seconds), lost_seconds_, timed ? metrics.gpu_ms : 0,
                         gpu_monitor_.slowed()};
     }
-    void ensure_render_device() {
+    void ensure_render_device(gpu::detail::ShaderProgress progress = {}) {
         if (render_device_ || !gpu_available_) return;
         render_device_ = std::make_shared<gpu::RenderDevice>(
                 utf8_path(SDL_GetBasePath()) / "assets/shaders",
-                shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{});
+                shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{}, progress);
         render_device_->vfx.set_options(vfx_options_);
     }
     void update_mission(const ui::MissionHudInput& input, double elapsed, bool focused, bool scripted) {
@@ -897,7 +891,9 @@ private:
             }
             const bool existing = bool(simulation_);
             const auto open_started = SDL_GetTicksNS();
-            ensure_render_device();
+            ShaderProgressScreen progress{window_, gui_, state_.applied.ui_scale, [this] { request_quit(); }};
+            ensure_render_device(progress.callback());
+            progress.watch(render_device_);
             if (render_device_) render_device_->vfx.set_options(vfx_options_);
             if (state_.screen != ui::Screen::gpu_laboratory && state_.screen != ui::Screen::gpu_mission
                 && render_device_)
@@ -906,6 +902,7 @@ private:
                     utf8_path(SDL_GetBasePath()) / "assets" / "shaders", execution_, gpu_profiling_, {mission},
                     shader_cache_ ? store_.path().parent_path() / "shader-cache" : std::filesystem::path{},
                     render_device_);
+            progress_frames_ += progress.release();
             if (!opened) {
                 message_ = opened.error();
                 return false;
@@ -1054,7 +1051,7 @@ private:
     gpu::ExecutionOptions execution_;
     platform::GlDebugLog* gl_debug_{};
     bool shader_cache_{};
-    unsigned view_switches_{};
+    unsigned view_switches_{}, progress_frames_{};
     double first_world_ms_{}, view_switch_ms_{}, view_switch_max_ms_{};
     std::filesystem::path last_recording_;
     double mission_step_submit_ms_{}, world_render_submit_ms_{};

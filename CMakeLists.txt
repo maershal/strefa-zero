@@ -153,11 +153,11 @@ if(STREFA_BUILD_APP)
     endforeach()
 
     configure_file(cmake/build_info.hpp.in generated/build_info.hpp @ONLY)
-    add_library(strefa_ui STATIC src/ui/session.cpp src/ui/menu.cpp src/ui/laboratory.cpp src/ui/mission_hud.cpp src/ui/gpu_laboratory.cpp)
+    add_library(strefa_ui STATIC src/ui/session.cpp src/ui/menu.cpp src/ui/shader_progress.cpp src/ui/laboratory.cpp src/ui/mission_hud.cpp src/ui/gpu_laboratory.cpp)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_input PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-    add_library(strefa_app STATIC src/app/application.cpp src/app/entry.cpp src/app/simulation_world.cpp
+    add_library(strefa_app STATIC src/app/application.cpp src/app/gpu_startup.cpp src/app/entry.cpp src/app/simulation_world.cpp
         src/app/scene_benchmark_run.cpp)
     target_link_libraries(strefa_app PUBLIC
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
@@ -457,8 +457,21 @@ if(BUILD_TESTING)
             -DPROFILE=${CMAKE_CURRENT_BINARY_DIR}/scene-benchmark-profile -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/scene_benchmark_check.cmake)
         set_tests_properties(gpu.scene_benchmark_content PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
             FIXTURES_REQUIRED scene_benchmark_output SKIP_REGULAR_EXPRESSION "STREFA_SKIPPED")
+        # A fresh profile and empty driver shader caches (NVIDIA on Windows honours only a new cache path, Mesa the
+        # switch): the first start compiles every program, so gpu.shader_progress_frames can require frames of the
+        # "Kompilacja shaderów" screen.
+        add_test(NAME gpu.mission_ui_quick_clean COMMAND ${CMAKE_COMMAND} -E rm -rf
+            ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-driver-cache)
+        set_tests_properties(gpu.mission_ui_quick_clean PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
+            FIXTURES_SETUP mission_ui_quick_clean)
         add_test(NAME gpu.mission_ui_quick COMMAND strefa_qa --mission-ui-smoke-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile)
-        set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77)
+        set_tests_properties(gpu.mission_ui_quick PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 120 SKIP_RETURN_CODE 77
+            FIXTURES_REQUIRED mission_ui_quick_clean FIXTURES_SETUP mission_ui_quick_output
+            ENVIRONMENT "MESA_SHADER_CACHE_DISABLE=true;__GL_SHADER_DISK_CACHE_PATH=${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-driver-cache")
+        add_test(NAME gpu.shader_progress_frames COMMAND ${CMAKE_COMMAND}
+            -DPROFILE=${CMAKE_CURRENT_BINARY_DIR}/mission-ui-quick-profile -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/shader_progress_check.cmake)
+        set_tests_properties(gpu.shader_progress_frames PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 30
+            FIXTURES_REQUIRED mission_ui_quick_output SKIP_REGULAR_EXPRESSION "STREFA_SKIPPED")
         add_test(NAME app.mode_faults COMMAND strefa_qa --mode-fault-test --profile ${CMAKE_CURRENT_BINARY_DIR}/mode-faults-profile)
         set_tests_properties(app.mode_faults PROPERTIES LABELS "integration;graphics" TIMEOUT 60)
         add_test(NAME gpu.granular_physics COMMAND strefa_qa --gpu-test --profile ${CMAKE_CURRENT_BINARY_DIR}/gpu-test-profile)
@@ -499,7 +512,8 @@ if(BUILD_TESTING)
         foreach(smoke_test app.opengl_smoke app.opengl33_smoke app.mode_faults gpu.platform_dispatch gpu.gameplay
             gpu.mission_ui_quick gpu.shader_cache gpu.lighting_pressure gpu.readback_ring gpu.instrumentation
             gpu.renderer app.laboratory_responsiveness app.laboratory_four_threads gpu.scene_benchmark_clean
-            gpu.scene_benchmark gpu.scene_benchmark_content gpu.brush_history gpu.lab_blast gpu.lab_blast_mission)
+            gpu.scene_benchmark gpu.scene_benchmark_content gpu.brush_history gpu.lab_blast gpu.lab_blast_mission
+            gpu.mission_ui_quick_clean gpu.shader_progress_frames)
             set_property(TEST ${smoke_test} APPEND PROPERTY LABELS ci-smoke)
         endforeach()
         set_property(TEST app.opengl33_smoke app.mode_faults APPEND PROPERTY LABELS ci-gl33)
