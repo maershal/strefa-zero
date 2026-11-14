@@ -2,7 +2,7 @@
 
 Pomiar z 2026-11-14 na GTX 1650 (laptop, i5-9300HF, sterownik 610.47, zasilanie sieciowe, plan „Zrównoważony”).
 Kandydat 1 z planu bitowo neutralnych optymalizacji termiki (#96), po narzędziu `--gpu-check thermal-bits` (#97).
-Surowe dane: [thermal-gas-gate-2026-11-14](MEASUREMENTS_LINK).
+Surowe dane: [thermal-gas-gate-2026-11-14](https://github.com/maershal/strefa-zero-measurements/tree/fca0806f02aa9b00d5911a6c766b42e7dadcd27d/thermal-gas-gate-2026-11-14).
 
 ## Odpowiedź w skrócie
 
