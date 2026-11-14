@@ -49,6 +49,12 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
 std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::path& shaders,
                                                         const std::filesystem::path& output,
                                                         const ExecutionOptions& layout);
+// Z08, --gpu-check iteration-sweep: the existing quality gates (fluid quality, liquids, grains, flow, coupling,
+// mission) and the GPU cost per tick for a grid of PBF/contact iteration counts at two substeps
+// (STREFA_ITERATION_SWEEP_PLAN = full | gates | timing | quick). Fails only when the default 8/12 fails a gate.
+std::expected<void, std::string> sweep_solver_iterations(const std::filesystem::path& shaders,
+                                                         const std::filesystem::path& output,
+                                                         const ExecutionOptions& layout);
 void validate_coupling_replay(const std::filesystem::path& output, std::ostream& checks,
                               const ExecutionOptions& layout);
 std::expected<void, std::string> validate_neighbors(const std::filesystem::path& output, bool benchmark = false);
