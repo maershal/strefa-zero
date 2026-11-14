@@ -1,6 +1,6 @@
 {
-  "world_cpp_lines": 2125,
-  "world_tu_lines": 4060,
+  "world_cpp_lines": 2060,
+  "world_tu_lines": 3995,
   "particle_world_public_decls": 88,
   "particle_world_test_hooks": 30,
   "application_cpp_lines": 1199,

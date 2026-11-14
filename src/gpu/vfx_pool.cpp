@@ -43,17 +43,18 @@ GLint VfxPool::location(GLuint program, const char* name) const {
 }
 void VfxPool::initialize(ShaderLibrary& library, const std::filesystem::path& folder) {
     if (initialized) return;
-    const auto compute = [&](const char* file) { return library.program({{GL_COMPUTE_SHADER, folder / file}}); };
+    const auto compute = [&](const char* file) { return library.submit({{GL_COMPUTE_SHADER, folder / file}}); };
     init = compute("vfx_init.comp");
     prepare = compute("vfx_prepare.comp");
     update = compute("vfx_update.comp");
     events_program = compute("vfx_events.comp");
     water_program = compute("vfx_water.comp");
     finish = compute("vfx_finish.comp");
-    graphics = library.program(
+    graphics = library.submit(
             {{GL_VERTEX_SHADER, folder / "vfx_draw.vert"}, {GL_FRAGMENT_SHADER, folder / "vfx_draw.frag"}});
-    copy = library.program(
+    copy = library.submit(
             {{GL_VERTEX_SHADER, folder / "liquid_surface.vert"}, {GL_FRAGMENT_SHADER, folder / "vfx_canvas.frag"}});
+    library.finish();
     for (GLuint program : {init, prepare, update, events_program, water_program, finish, graphics, copy}) {
         ProgramUniforms u;
         u.id = program;

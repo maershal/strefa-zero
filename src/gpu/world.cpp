@@ -1,5 +1,6 @@
 #include "gpu/world.hpp"
 
+#include "gpu/compute_kernels.hpp"
 #include "gpu/diagnostic_trace.hpp"
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/event_ring.hpp"
@@ -95,17 +96,7 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
     std::uint64_t readback_age{};
     double poll_timer_ms{}, poll_fence_ms{}, poll_read_ms{};
     ExecutionOptions execution;
-    struct Kernel {
-        GLuint id{};
-        unsigned local_size{};
-        bool particle_restrict{};
-        GLint operation{-1}, dirty{-1}, substep{-1}, stroke{-1}, radius{-1}, material{-1}, input{-1}, coupling{-1},
-                test_count{-1};
-        GLint hot_read{-1}, hot_write{-1}, hot_valid{-1};
-        int hot_read_value{-2}, hot_write_value{-2}, hot_valid_value{-2};
-        unsigned family{};
-        int dirty_value{-1};
-    };
+    using Kernel = detail::ComputeKernel;
     std::array<Kernel, 21> granular;
     std::array<Kernel, 7> liquids;
     std::array<Kernel, 8> neighbors;
@@ -150,64 +141,8 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
     int half_step{};
     void invalidate_bindings() { device.state.invalidate(); }
     void compile_kernels(const std::filesystem::path& shaders) {
-        const auto compile = [&](auto& kernels, const char* file, std::initializer_list<unsigned> operations) {
-            for (unsigned op : operations) {
-                if (std::string_view{file} == "liquids.comp" && op >= 5 && !execution.fluid.fields()) continue;
-                const bool separate =
-                        execution.specialized
-                        || (std::string_view{file} == "neighbors.comp" || std::string_view{file} == "coupling.comp");
-                if (!separate && op != *operations.begin()) continue;
-                auto& k = kernels[separate ? op : 0];
-                const bool scalar = (std::string_view{file} == "granular.comp" && (op == 10 || op == 12 || op == 20))
-                                 || (std::string_view{file} == "liquids.comp" && op == 3)
-                                 || (std::string_view{file} == "mission.comp" && (op == 0 || op == 1 || op == 4));
-                k.local_size = execution.specialized && scalar ? 1U : execution.local_size;
-                if (std::string_view{file} == "liquids.comp" && !(execution.specialized && scalar))
-                    k.local_size = execution.effective_pbf_size();
-                if (std::string_view{file} == "mission.comp" && op == 3 && execution.specialized)
-                    k.local_size = execution.reduction_size;
-                if (std::string_view{file} == "coupling.comp") k.local_size = execution.reduction_size;
-                auto defines = "#define LOCAL_SIZE " + std::to_string(k.local_size) + "\n#define PARTICLE_LOCAL_SIZE "
-                             + std::to_string(execution.local_size) + "u\n#define GPU_CONDITIONAL_WORK "
-                             + (execution.conditional_work ? "1\n" : "0\n");
-                defines += layout_defines();
-                defines += "#define PBF_LOCAL_SIZE " + std::to_string(execution.effective_pbf_size()) + "u\n";
-                if (separate)
-                    defines += "#define PASS_OPERATION " + std::to_string(op) + "\n#define PASS_"
-                             + std::string{file}.substr(0, std::string{file}.find('.')) + "_" + std::to_string(op)
-                             + " 1\n";
-                if (std::string_view{file} == "neighbors.comp") k.local_size = 256;
-                k.particle_restrict = execution.effective_pbf_restrict() && std::string_view{file} == "liquids.comp"
-                                   && (op == 1 || op == 4);
-                k.id = shader_library.program({{GL_COMPUTE_SHADER, shaders / file}}, defines, k.particle_restrict);
-                const auto location = [&](const char* name) { return gl.GetUniformLocation(k.id, name); };
-                k.operation = location("operation");
-                k.dirty = location("dirtyOnly");
-                k.substep = location("substep");
-                k.stroke = location("stroke");
-                k.radius = location("brushRadius");
-                k.material = location("material");
-                k.input = location("inputControl");
-                k.coupling = location("disableBodyCoupling");
-                k.test_count = location("bodyTestCount");
-                k.hot_read = location("hotReadBank");
-                k.hot_write = location("hotWriteBank");
-                k.hot_valid = location("hotValid");
-                k.family = std::string_view{file} == "granular.comp" ? 0U
-                         : std::string_view{file} == "mission.comp"  ? 1U
-                                                                     : 2U;
-                if (debug_groups) {
-                    const auto label =
-                            std::string{file} + " / " + std::to_string(op) + " / " + std::to_string(k.local_size);
-                    gl.ObjectLabel(GL_PROGRAM, k.id, -1, label.c_str());
-                }
-            }
-        };
-        compile(granular, "granular.comp", {0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 19, 20});
-        compile(liquids, "liquids.comp", {0, 1, 2, 3, 4, 5, 6});
-        if (execution.neighbors != NeighborMode::linked) compile(neighbors, "neighbors.comp", {0, 1, 2, 3, 4, 5, 6, 7});
-        compile(mission_kernels, "mission.comp", {0, 1, 3, 4, 5, 6, 7, 8});
-        if (execution.coupling != CouplingMode::reference) compile(coupling_kernels, "coupling.comp", {0, 2});
+        detail::compile_kernels(shader_library, gl, execution, layout_defines(), shaders, debug_groups,
+                                {granular, liquids, neighbors, mission_kernels, coupling_kernels});
     }
     void configure_hot(Kernel& k, bool in_place, unsigned op) {
         const auto set = [&](GLint location, int value, int& cached) {

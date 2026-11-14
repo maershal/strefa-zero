@@ -73,8 +73,7 @@ void SceneRenderer::allocate_targets() {
 void SceneRenderer::initialize(ShaderLibrary& library, const std::filesystem::path& shaders,
                                const std::string& defines) {
     const auto graphics = [&](const char* vertex, const char* fragment, const std::string& config = std::string{}) {
-        return library.program({{GL_VERTEX_SHADER, shaders / vertex}, {GL_FRAGMENT_SHADER, shaders / fragment}},
-                               config);
+        return library.submit({{GL_VERTEX_SHADER, shaders / vertex}, {GL_FRAGMENT_SHADER, shaders / fragment}}, config);
     };
     actors = graphics("mission.vert", "mission.frag");
     grains = graphics("granular.vert", "granular.frag", defines);
@@ -83,8 +82,8 @@ void SceneRenderer::initialize(ShaderLibrary& library, const std::filesystem::pa
     splat = graphics("liquid_splat.vert", "liquid_splat.frag", defines);
     filter = graphics("liquid_surface.vert", "liquid_filter.frag");
     composition = graphics("liquid_surface.vert", "liquid_surface.frag");
-    thickness = library.program({{GL_COMPUTE_SHADER, shaders / "liquid_thickness.comp"}});
-    field_prepare = library.program({{GL_COMPUTE_SHADER, shaders / "vfx_field_command.comp"}});
+    thickness = library.submit({{GL_COMPUTE_SHADER, shaders / "liquid_thickness.comp"}});
+    field_prepare = library.submit({{GL_COMPUTE_SHADER, shaders / "vfx_field_command.comp"}});
     field_splat = graphics("vfx_field.vert", "liquid_splat.frag", defines + "\n#define VFX_FIELD 1\n");
     gl.GenBuffers(1, &field_command);
     gl.BindBuffer(GL_DRAW_INDIRECT_BUFFER, field_command);
@@ -101,6 +100,7 @@ void SceneRenderer::initialize(ShaderLibrary& library, const std::filesystem::pa
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    library.finish(); // the whole batch builds in parallel where the driver allows it
     for (GLuint program : {field_splat, actors, grains, background, terrain, splat, filter, thickness, composition,
                            reference_splat, reference_surface})
         for (const char* name :

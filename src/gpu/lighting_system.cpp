@@ -40,10 +40,10 @@ GLint LightingSystem::location(GLuint p, const char* n) const {
 void LightingSystem::initialize(ShaderLibrary& library, const std::filesystem::path& folder,
                                 const std::string& defines) {
     auto compute = [&](const char* f, const std::string& d = std::string{}) {
-        return library.program({{GL_COMPUTE_SHADER, folder / f}}, d);
+        return library.submit({{GL_COMPUTE_SHADER, folder / f}}, d);
     };
     auto graphics = [&](const char* v, const char* f, const std::string& d = std::string{}) {
-        return library.program({{GL_VERTEX_SHADER, folder / v}, {GL_FRAGMENT_SHADER, folder / f}}, d);
+        return library.submit({{GL_VERTEX_SHADER, folder / v}, {GL_FRAGMENT_SHADER, folder / f}}, d);
     };
     birth_program = compute("presentation_prepare_birth.comp", defines);
     field_program = compute("vfx_field_command.comp");
@@ -57,6 +57,7 @@ void LightingSystem::initialize(ShaderLibrary& library, const std::filesystem::p
     apply_program = graphics("liquid_surface.vert", "lighting_apply.frag");
     bloom_program = graphics("liquid_surface.vert", "lighting_bloom.frag");
     post_program = graphics("liquid_surface.vert", "lighting_post.frag");
+    library.finish();
     for (GLuint p : {birth_program, field_vertex, moisture_program, event_program, shadow_program, jfa_program,
                      light_program, apply_program, bloom_program, post_program})
         for (const char* n : {"heatEnabled", "sourceGeneration", "sourceTick", "missionEnabled", "mode", "jump",
