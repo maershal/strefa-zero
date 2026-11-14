@@ -20,6 +20,10 @@ namespace strefa::gpu::detail {
 namespace {
 constexpr unsigned cell_count = 320 * 192, particle_count = 32768, block_count = 240;
 constexpr std::size_t totals_bytes = block_count * 16 * sizeof(double);
+// ThermalAux (thermal.comp): heads, links, pa, pb, divergence, sourceState, eventState, then the gas-stage gate.
+constexpr std::size_t gate_offset = (4 * cell_count + particle_count) * sizeof(std::uint32_t) + 32;
+constexpr std::size_t gate_command_offset = gate_offset + 16, snapshot_offset = gate_offset + 48;
+constexpr std::size_t snapshot_bytes = cell_count * 48, auxiliary_bytes = snapshot_offset + snapshot_bytes;
 std::string material_defines() {
     static_assert(sim::physical.size() == 20, "Review thermal shader table dimensions when adding materials");
     std::ostringstream out;
@@ -94,6 +98,7 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
         k.generation = gl.GetUniformLocation(k.program, "sourceGeneration");
         k.tick = gl.GetUniformLocation(k.program, "sourceTick");
         k.command = gl.GetUniformLocation(k.program, "sourceCommand");
+        k.gas_gate = gl.GetUniformLocation(k.program, "gasGate");
         state.use(k.program);
         if (k.dt >= 0) gl.Uniform1f(k.dt, 1.F / 120.F);
     }
@@ -106,6 +111,9 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
             {{GL_VERTEX_SHADER, folder / "liquid_surface.vert"}, {GL_FRAGMENT_SHADER, folder / "thermal_draw.frag"}},
             material_defines());
     presentation_program = library.program({{GL_COMPUTE_SHADER, folder / "lighting_thermal.comp"}}, material_defines());
+    gate_program = library.program({{GL_COMPUTE_SHADER, folder / "thermal_gate.comp"}}, config);
+    gate_force = gl.GetUniformLocation(gate_program, "force");
+    gate_audit_location = gl.GetUniformLocation(gate_program, "audit");
     linear_location = gl.GetUniformLocation(graphics, "linearOutput");
     view_location = gl.GetUniformLocation(graphics, "viewMode");
     extent_location = gl.GetUniformLocation(graphics, "renderExtent");
@@ -123,8 +131,14 @@ void ThermalSystem::initialize(ShaderLibrary& library, const std::filesystem::pa
     };
     for (auto b : particles) allocate(b, particle_count * sizeof(ThermalParticle));
     for (auto b : cells) allocate(b, cell_count * sizeof(ThermalCell));
-    allocate(auxiliary, (4 * cell_count + particle_count) * sizeof(std::uint32_t) + 32);
+    allocate(auxiliary, auxiliary_bytes);
     allocate(reduction, totals_bytes);
+    // Gate state starts as "no fixed point known" and the snapshot as all-ones words, so the first tick runs the stage.
+    const std::array<std::uint32_t, 12> gate_zero{};
+    gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, auxiliary);
+    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, gate_offset, sizeof(gate_zero), gate_zero.data());
+    const std::vector<std::uint32_t> ones(snapshot_bytes / 4, ~0u);
+    gl.BufferSubData(GL_SHADER_STORAGE_BUFFER, snapshot_offset, snapshot_bytes, ones.data());
     state.invalidate();
 }
 // Every thermal dispatch goes through here so profile mode can count dispatches and barriers.
@@ -144,7 +158,7 @@ void ThermalSystem::bind() {
     state.base(6, cells[cell_bank ^ 1]);
     state.base(7, auxiliary);
 }
-void ThermalSystem::run(int op, unsigned n) {
+void ThermalSystem::run(int op, unsigned n, bool gated) {
     STREFA_GPU_ZONE(thermal_zone_name(op));
     bind();
     auto& k = kernels[static_cast<unsigned>(op)];
@@ -175,11 +189,25 @@ void ThermalSystem::run(int op, unsigned n) {
         gl.Uniform1i(k.tick, std::bit_cast<int>(tick_));
         k.previous_tick = tick_;
     }
+    const int gas_gate = options.transport && (options.gas_gate || options.gate_audit) ? 1 : 0;
+    if (k.gas_gate >= 0 && (first || k.previous_gate != gas_gate)) {
+        gl.Uniform1i(k.gas_gate, gas_gate);
+        k.previous_gate = gas_gate;
+    }
     if (k.command >= 0 && (first || k.previous_command != command_id)) {
         gl.Uniform1i(k.command, std::bit_cast<int>(command_id));
         k.previous_command = command_id;
     }
-    dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
+    if (gated) {
+        // Same grid as the direct dispatch, or zero groups when the gate skips the gas stage (thermal_gate.comp).
+        gl.BindBuffer(GL_DISPATCH_INDIRECT_BUFFER, auxiliary);
+        gl.DispatchComputeIndirect(static_cast<GLintptr>(gate_command_offset));
+        gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
+        ++dispatches_;
+        ++barriers_;
+    } else {
+        dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
+    }
     // Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
     // capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
     if (active && active->measured) {
@@ -192,6 +220,16 @@ void ThermalSystem::run(int op, unsigned n) {
         p.operation_kernels[p.operations] = static_cast<unsigned>(op);
         gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
     }
+}
+// Gas-stage gate (thermal_gate.comp): one thread writes the indirect command of the gas kernels from the flags of ops
+// 2 and 8 (input) and 9, 11, 12, 13 (last run); force = 1 runs the stage regardless.
+void ThermalSystem::gate(int force) {
+    STREFA_GPU_ZONE("thermal gate");
+    state.base(7, auxiliary);
+    state.use(gate_program);
+    gl.Uniform1i(gate_force, force);
+    gl.Uniform1i(gate_audit_location, options.gate_audit ? 1 : 0);
+    dispatch(1, GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
 }
 void ThermalSystem::brush(const ThermalBrush& b) {
     pending_brush = b;
@@ -277,17 +315,27 @@ void ThermalSystem::tick(const std::array<GLuint, 8>& buffers, unsigned& current
     swap_cells();
     if (active && active->measured) gl.QueryCounter(active->queries[1], GL_TIMESTAMP);
     if (options.transport) {
-        run(9, cell_count);
-        run(14, cell_count);
+        const bool gated = options.gas_gate || options.gate_audit;
+        if (gated) {
+            const unsigned signature = options.pressure_iterations * 2 + (options.gate_audit ? 1 : 0);
+            gate(signature != gate_signature ? 1 : 0);
+            gate_signature = signature;
+        } else {
+            gate_signature = ~0u; // the stage ran ungated: the next gated tick must run it again
+        }
+        run(9, cell_count, gated);
+        run(14, cell_count, gated);
         for (unsigned k = 0; k < options.pressure_iterations; ++k) {
             pressure_bank = k % 2;
-            run(10, cell_count);
+            run(10, cell_count, gated);
         }
         pressure_bank = options.pressure_iterations % 2;
-        run(11, cell_count);
-        run(12, cell_count);
-        run(13, cell_count);
+        run(11, cell_count, gated);
+        run(12, cell_count, gated);
+        run(13, cell_count, gated);
         swap_cells();
+    } else {
+        gate_signature = ~0u;
     }
     if (active && active->measured) gl.QueryCounter(active->queries[2], GL_TIMESTAMP);
     if (options.reactions) {
@@ -485,6 +533,11 @@ ThermalSnapshot ThermalSystem::snapshot(ThermalRead what) {
         detail::read_staged(gl, particles[particle_bank], 0, std::span{s.particles});
     }
     s.totals = read_totals(reduction, true);
+    std::array<std::uint32_t, 4> counters{};
+    detail::read_staged(gl, auxiliary, static_cast<GLintptr>(gate_offset + 32), std::span{counters});
+    s.totals.gate_ticks = counters[0];
+    s.totals.gate_skips = counters[1];
+    s.totals.gate_violations = counters[2];
     s.totals.tick = tick_;
     s.totals.generation = generation;
     dispatches_ = barriers_ = 0; // the forced capture of a diagnostic read is not the work of the next tick
@@ -539,7 +592,7 @@ std::vector<ThermalTiming> ThermalSystem::take_timings() {
 }
 std::uint64_t ThermalSystem::memory_bytes() const {
     std::uint64_t n = 2 * particle_count * sizeof(ThermalParticle) + 2 * cell_count * sizeof(ThermalCell)
-                    + (4 * cell_count + particle_count) * 4 + 32 + totals_bytes;
+                    + auxiliary_bytes + totals_bytes;
     for (const auto& p : probes)
         if (p.buffer) n += totals_bytes;
     for (const auto& p : inspections)

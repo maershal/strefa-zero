@@ -1,6 +1,7 @@
 // Property tables are generated from sim/material.hpp by ThermalSystem.
 struct ThermalParticle {vec4 matter;vec4 request;vec4 transfer;vec4 history;};
 struct ThermalCell {vec4 matter;vec4 gas0;vec4 gas1;vec4 flow;vec4 demand;vec4 budget;vec4 extra;vec4 factors;};
+struct GasSample {vec4 gas0;vec4 gas1;vec4 flow;}; // gas-stage input of the last run (thermal_gate.comp)
 const int TW=320,TH=192,TC=61440,TN=32768;
 const float AMBIENT=293.15;
 float enthalpy(int m,float t){return thermalProperties[m].y*t+thermalProperties[m].w;}
@@ -32,3 +33,10 @@ bool validCell(ivec2 c){return all(greaterThanEqual(c,ivec2(0)))&&all(lessThan(c
 int indexOf(ivec2 c){return c.y*TW+c.x;}
 ivec2 coordinate(int i){return ivec2(i%TW,i/TW);}
 const ivec2 directions[4]=ivec2[4](ivec2(-1,0),ivec2(1,0),ivec2(0,-1),ivec2(0,1));
+// Bitwise equality (distinguishes -0 from 0 and compares NaN payloads), for the exact gas-stage gate.
+bool sameBits(vec4 a,vec4 b){return all(equal(floatBitsToUint(a),floatBitsToUint(b)));}
+bool sameCell(ThermalCell a,ThermalCell b){
+    return sameBits(a.matter,b.matter)&&sameBits(a.gas0,b.gas0)&&sameBits(a.gas1,b.gas1)&&sameBits(a.flow,b.flow)
+        &&sameBits(a.demand,b.demand)&&sameBits(a.budget,b.budget)&&sameBits(a.extra,b.extra)
+        &&sameBits(a.factors,b.factors);
+}
