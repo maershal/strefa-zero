@@ -216,8 +216,10 @@ z cząstkami rozjeżdżają się po 5–13 tickach, również `control` bez term
 i do indeksu sąsiadów atomowo (`granular.comp`, `neighbors.comp`), więc kolejność w komórce, a z nią kolejność sum
 float, zmienia się między przebiegami. Pierwsze różnią się cząstki świata, termika dopiero za nimi. Test
 `gpu.thermal_bits` (120 ticków) wymaga powtórzenia `fire` i `idle` oraz tego, że w `idle` kolejny tick nie zmienia
-ani jednego słowa. Każda scena liczy się jeszcze raz w trybie audytu bramki gazu (`ThermalOptions::gate_audit`); wiersze
-`gate <scena>` w `thermal-bits-info.txt` podają liczbę pominiętych etapów gazu i naruszeń audytu, które muszą wynosić 0.
+ani jednego słowa. Drugi przebieg każdej sceny to przebieg audytu bramki gazu (`ThermalOptions::gate_audit`: etap
+liczy się zawsze), więc powtórzenie `fire` i `idle` dowodzi też, że przebieg z bramką jest bitowo równy przebiegowi bez
+pomijania. Wiersze `gate <scena>` w `thermal-bits-info.txt` podają liczbę pominiętych etapów gazu i naruszeń audytu,
+które muszą wynosić 0, a pusty świat musi mieć pominięte etapy.
 
 ## 4d. Bramka etapu gazu termiki (ABBA w jednym procesie)
 
@@ -236,7 +238,8 @@ nie ma w nim `hw_*` ani `sw_thermal_slowdown`, mediana zegara grafiki wynosi co 
 GPU przed nim i po nim mieszczą się w 15% najszybszej. Kwadrat liczy się tylko wtedy, gdy kwalifikują się wszystkie
 cztery odcinki. Jego efekt to średnia (włączona) minus średnia (wyłączona) median odcinków, więc liniowy dryf
 w kwadracie się znosi. Wynik: `summary.md` i `analysis.json`. `STREFA_THERMAL_GATE_PLAN=quick` (CTest
-`gpu.thermal_gate`) przechodzi te same ścieżki kodu w 1 bloku po 24 ticki; jego liczby niczego nie rozstrzygają.
+`gpu.thermal_gate`) przechodzi te same ścieżki kodu w 1 bloku po 24 ticki, tylko odcinki A i B (mniej światów dla
+renderera programowego w nocnym CI); jego liczby niczego nie rozstrzygają.
 Dowód bitowy bramki daje `thermal-bits` (sekcja 4c): skróty `fire` i `idle` identyczne z `main`, a przebieg audytu
 (`ThermalOptions::gate_audit`) w każdej scenie liczy etapy, które bramka by pominęła, choć zmieniłyby choć jedno
 słowo. Ta liczba musi wynosić 0.

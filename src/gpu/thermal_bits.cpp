@@ -204,16 +204,18 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
         const auto every = checkpoint_every();
         std::shared_ptr<RenderDevice> device;
         std::array<std::vector<std::vector<std::string>>, 2> runs;
-        std::vector<ThermalTotals> gates;
-        for (auto& run : runs)
+        // The repeat run is the audit run of the gas-stage gate: the stage computes every tick, so a scene that repeats
+        // also proves the gated run equal to the ungated one. Two worlds per scene: each world created in this process
+        // keeps memory, and software renderers (Mesa llvmpipe, nightly CI) hold GPU buffers in RAM.
+        std::array<std::vector<ThermalTotals>, 2> gate_runs;
+        for (unsigned run = 0; run < runs.size(); ++run)
             for (unsigned scene = 0; scene < scene_names.size(); ++scene) {
-                auto result = run_scene(shaders, layout, device, scene, ticks, every);
-                run.push_back(std::move(result.rows));
-                if (&run == &runs[0]) gates.push_back(result.gate);
+                auto result = run_scene(shaders, layout, device, scene, ticks, every, run == 1);
+                runs[run].push_back(std::move(result.rows));
+                gate_runs[run].push_back(result.gate);
             }
-        std::vector<ThermalTotals> audits;
-        for (unsigned scene = 0; scene < scene_names.size(); ++scene)
-            audits.push_back(run_scene(shaders, layout, device, scene, ticks, every, true).gate);
+        const auto& gates = gate_runs[0];
+        const auto& audits = gate_runs[1];
         // Header separate from the digests: digests are diffed between builds, the header names the machine.
         std::ofstream info{output / "thermal-bits-info.txt"};
         const auto text = [](GLenum name) {

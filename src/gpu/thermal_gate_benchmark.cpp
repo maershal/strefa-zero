@@ -32,13 +32,14 @@ void require(bool condition, const std::string& message) {
 struct Plan {
     std::string name{"full"};
     unsigned blocks{4}, warmup{120}, measured{240}, max_cooldown_s{180};
+    unsigned positions{4}; // ABBA; the quick plan runs A and B only (fewer worlds for software renderers in CI)
 };
 Plan plan_from_environment() {
     const char* text = SDL_getenv("STREFA_THERMAL_GATE_PLAN");
     const std::string_view name = text ? text : "";
     if (name.empty() || name == "full") return {};
     require(name == "quick", "STREFA_THERMAL_GATE_PLAN: full lub quick.");
-    return {"quick", 1, 12, 24, 0};
+    return {"quick", 1, 12, 24, 0, 2};
 }
 std::uint64_t seed_from_environment() {
     const char* text = SDL_getenv("STREFA_BENCHMARK_SEED");
@@ -113,7 +114,7 @@ std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::p
             for (unsigned i = 0; i < order.size(); ++i) info << (i ? "," : "") << scene_names[order[i]];
             info << '\n';
             for (const unsigned scene : order)
-                for (unsigned position = 0; position < 4; ++position) {
+                for (unsigned position = 0; position < plan.positions; ++position) {
                     const bool gate = position == 1 || position == 2;
                     // Cool-down gate of the cost model: CPU probe within 15% of the fastest, GPU clock warmed up.
                     auto before = probe.sample();
