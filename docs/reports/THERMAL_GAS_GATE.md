@@ -91,5 +91,7 @@ komórkę), ponowne odczyty pól w ops 9, 11, 12, 13 i 37 dispatchy indirect zam
 - Bramka dotyczy tylko etapu gazu. Etapy ciepła i reakcji, integracja w `ParticleWorld::step` (dwa `rebuild_active()`,
   teren, kondensacja) i przebiegi po wszystkich 32 768 slotach zostają; to kandydaci 2 i 3 z #96, zablokowani dla
   dowodu bitowego przez #95.
+- Benchmark termiki I10 (`--gpu-thermal-benchmark`) mierzy etap gazu bez bramki (`gas_gate = false`), bo jego
+  analizator traktuje `gas_ms` jako sondę zegara niezależną od sceny. Jego liczby pozostają porównywalne z I10.
 - Pomiar w jednym procesie: A i B to ten sam plik wykonywalny z opcją wyłączoną i włączoną. Przy wyłączonej bramce
   shader omija wszystkie jej porównania (`gasGate == 0`), ale zostają nieużywane rozgałęzienia.

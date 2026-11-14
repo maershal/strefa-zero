@@ -85,6 +85,7 @@ private:
     void bind();
     void run(int, unsigned, bool gated = false);
     void gate(int force);
+    void stamp(unsigned kernel);
     void swap_cells() { cell_bank ^= 1; }
     void swap_particles(unsigned& current) {
         particle_bank ^= 1;

@@ -255,6 +255,9 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
                 failures.push_back(
                         std::format("bramka gazu w scenie {} pominęłaby etap, który zmienia stan", scene_names[scene]));
         }
+        // The empty world reaches the gas fixed point at once; a gate that never skips would pass the audit too.
+        if (gates.back().gate_skips == 0 || audits.back().gate_skips == 0)
+            failures.push_back("bramka gazu nie pominęła żadnego etapu w pustym świecie");
         const auto& idle = runs[0].back();
         const auto fixed = std::ranges::find_if(idle, [](const std::string& r) { return r.contains("fixed_point"); });
         if (fixed == idle.end() || !fixed->contains("cells_changed=0 heat_changed=0 particles_changed=0"))

@@ -208,21 +208,24 @@ void ThermalSystem::run(int op, unsigned n, bool gated) {
     } else {
         dispatch((n + 127) / 128, GL_SHADER_STORAGE_BARRIER_BIT);
     }
-    // Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
-    // capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
-    if (active && active->measured) {
-        auto& p = *active;
-        if (p.operations == p.operation_queries.size()) {
-            p.operation_queries.push_back(0);
-            gl.GenQueries(1, &p.operation_queries.back());
-            p.operation_kernels.push_back(0);
-        }
-        p.operation_kernels[p.operations] = static_cast<unsigned>(op);
-        gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
+    stamp(static_cast<unsigned>(op));
+}
+// Profile mode: a timestamp after each solver kernel of tick(); the first follows the start stamp (queries[0]).
+// capture() clears active, so kernels of condense() and erase() are not attributed to the tick.
+void ThermalSystem::stamp(unsigned kernel) {
+    if (!active || !active->measured) return;
+    auto& p = *active;
+    if (p.operations == p.operation_queries.size()) {
+        p.operation_queries.push_back(0);
+        gl.GenQueries(1, &p.operation_queries.back());
+        p.operation_kernels.push_back(0);
     }
+    p.operation_kernels[p.operations] = kernel;
+    gl.QueryCounter(p.operation_queries[p.operations++], GL_TIMESTAMP);
 }
 // Gas-stage gate (thermal_gate.comp): one thread writes the indirect command of the gas kernels from the flags of ops
-// 2 and 8 (input) and 9, 11, 12, 13 (last run); force = 1 runs the stage regardless.
+// 2 and 8 (input) and 9, 11, 12, 13 (last run); force = 1 runs the stage regardless. Profile index 22 (thermal.comp
+// has no op 22).
 void ThermalSystem::gate(int force) {
     STREFA_GPU_ZONE("thermal gate");
     state.base(7, auxiliary);
@@ -230,6 +233,7 @@ void ThermalSystem::gate(int force) {
     gl.Uniform1i(gate_force, force);
     gl.Uniform1i(gate_audit_location, options.gate_audit ? 1 : 0);
     dispatch(1, GL_SHADER_STORAGE_BARRIER_BIT | GL_COMMAND_BARRIER_BIT);
+    stamp(22);
 }
 void ThermalSystem::brush(const ThermalBrush& b) {
     pending_brush = b;
@@ -239,6 +243,7 @@ void ThermalSystem::reset(const std::array<GLuint, 8>& buffers, unsigned current
     physical_bank = current;
     generation = gen;
     particle_bank = cell_bank = tick_ = command_id = 0;
+    gate_signature = ~0u; // op 0 rewrites the terrain marker op 2 compares: the next gas stage runs ungated by history
     ++serial;
     latest = {};
     inspected = {};
