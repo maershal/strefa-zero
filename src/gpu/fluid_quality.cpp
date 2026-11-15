@@ -1,4 +1,5 @@
 #include "gpu/world.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -118,7 +119,7 @@ void boundary_checks(ParticleWorld& w, std::ostream& checks) {
     for (int x = 110; x < 140; ++x) walls[50 * width + x] = 1;
     walls[50 * width + 170] = 1;
     w.load({}, walls);
-    auto weights = w.read_boundary_weights();
+    auto weights = test::read_boundary_weights(w);
     const auto weighted = w.execution_options().fluid.boundary == FluidBoundary::volume;
     require(std::abs(weights[50 * width + 50] - 1) < 1e-5, "Interior boundary volume");
     require(std::abs(weights[50 * width + 120] - (weighted ? 1.7288135593 : 1)) < 1e-5, "Thin boundary volume");
@@ -137,20 +138,20 @@ void boundary_checks(ParticleWorld& w, std::ostream& checks) {
                             "Boundary volume CPU mismatch");
                 }
     w.paint({169.5F, 50.5F, 169.5F, 50.5F, 1, Material::wall});
-    const auto edited = w.read_boundary_weights();
+    const auto edited = test::read_boundary_weights(w);
     auto terrain = w.read_terrain();
     terrain.resize(width * height);
     w.load({}, terrain);
-    const auto rebuilt = w.read_boundary_weights();
+    const auto rebuilt = test::read_boundary_weights(w);
     require(edited == rebuilt, "Wall edit left stale boundary weights");
     checks << "boundary_unit_volume_CPU,thin_line,isolated,corner,edit=passed\n";
     walls.assign(width * height, 0);
     for (int y = 0; y < height; ++y) walls[y * width + 156] = 1;
     std::vector<Grain> one{particle(155.65F, 60)}, two{one[0], particle(157.35F, 60)};
     w.load(two, walls);
-    const auto blocked = w.read_fluid_terms();
+    const auto blocked = test::read_fluid_terms(w);
     w.load(one, walls);
-    const auto alone = w.read_fluid_terms();
+    const auto alone = test::read_fluid_terms(w);
     require(std::abs(blocked[0][1] - alone[0][1]) < 1e-6, "Weighted density crossed thin wall");
     checks << "thin_wall_pressure_occlusion=passed\n";
     // Implicit world boundaries must not borrow volume from an empty cell.
@@ -170,7 +171,7 @@ void boundary_checks(ParticleWorld& w, std::ostream& checks) {
             }
             edgeDensity += volume * kernel(.5 - x - .5, 60.5 - y - .5);
         }
-    require(std::abs(w.read_fluid_terms()[0][1] - edgeDensity / 1.014612762210833) < 1e-5,
+    require(std::abs(test::read_fluid_terms(w)[0][1] - edgeDensity / 1.014612762210833) < 1e-5,
             "Implicit world boundary density CPU mismatch");
     checks << "implicit_world_boundary_double_oracle=passed\n";
     walls.assign(width * height, 0);
@@ -180,7 +181,7 @@ void boundary_checks(ParticleWorld& w, std::ostream& checks) {
     capsule.spawn_x = 100;
     capsule.spawn_y = 80;
     w.configure_mission(capsule);
-    const auto capsuleTerms = w.read_fluid_terms();
+    const auto capsuleTerms = test::read_fluid_terms(w);
     double reference = kernel(0, 0);
     const auto inside = [](int x, int y) {
         const double a = x + .5, b = y + .5 - std::clamp(y + .5, -14.0, -4.0);
@@ -228,10 +229,10 @@ void boundary_checks(ParticleWorld& w, std::ostream& checks) {
     tick(w, 1);
     terrain = w.read_terrain();
     require(terrain[50 * width + 170] == 0, "Boundary fixture failed to destroy wall");
-    const auto destroyed = w.read_boundary_weights();
+    const auto destroyed = test::read_boundary_weights(w);
     terrain.resize(width * height);
     w.load({}, terrain);
-    require(destroyed == w.read_boundary_weights(), "Destruction left stale boundary weights");
+    require(destroyed == test::read_boundary_weights(w), "Destruction left stale boundary weights");
     checks << "destruction_boundary_refresh=passed\n";
 }
 void fields_checks(const std::filesystem::path& shaders, const ExecutionOptions& source, std::ostream& checks) {
@@ -251,7 +252,7 @@ void fields_checks(const std::filesystem::path& shaders, const ExecutionOptions&
     std::vector<Grain> pair{particle(80, 60), particle(81, 60)};
     pair[1].motion[2] = 3.3125F;
     surface->load(pair, walls);
-    surface->apply_fluid_velocities_for_test();
+    test::apply_fluid_velocities_for_test(*surface);
     auto result = surface->readback();
     const double rho = kernel(0, 0) + kernel(1, 0), g = -54 / (64 * std::numbers::pi), normal = -2 * g / rho;
     const double coh = 35840 / (209 * std::numbers::pi * 256), force = 75.6 * coh + .5 * (2 * normal);
@@ -268,7 +269,7 @@ void fields_checks(const std::filesystem::path& shaders, const ExecutionOptions&
     walls[60 * width + 100] = 1;
     std::vector<Grain> wallProbe{particle(102, 60.5F)};
     adh->load(wallProbe, walls);
-    adh->apply_fluid_velocities_for_test();
+    test::apply_fluid_velocities_for_test(*adh);
     const double alpha = 8 * std::sqrt(2.0) * std::tgamma(1.75)
                        / (3 * std::pow(std::numbers::pi, 1.5) * std::tgamma(1.25)) * std::pow(2, -2.25);
     const double expectedAdhesion = -2.65 * 3.1875 * alpha * std::pow(.5, .25) / 240;
@@ -281,9 +282,9 @@ void fields_checks(const std::filesystem::path& shaders, const ExecutionOptions&
     actor.spawn_y = 80;
     adh->configure_mission(actor);
     const auto state = adh->read_mission();
-    adh->apply_fluid_velocities_for_test();
+    test::apply_fluid_velocities_for_test(*adh);
     const auto moved = adh->readback();
-    const auto body = adh->read_body();
+    const auto body = test::read_body(*adh);
     const double expectedReaction = -moved[0].motion[0] * (state.body[0] / moved[0].motion[2]) / 240;
     require(std::abs(expectedReaction) > 1e-9 && std::abs(body.total_sum[0] - expectedReaction) < 1e-7,
             "Capsule adhesion lost opposite impulse");
@@ -316,13 +317,13 @@ void fields_checks(const std::filesystem::path& shaders, const ExecutionOptions&
             }
         vort->load(particles, walls);
         base->load(particles, walls);
-        const auto fields = vort->fluid_fields_for_test();
+        const auto fields = test::fluid_fields_for_test(*vort);
         const auto center = capacity + 60;
         if (mode < 2) require(std::abs(fields[center][2]) < 1e-6, "Spurious omega at rest/translation");
         if (mode == 2) require(fields[center][2] > 0, "Wrong positive rotation curl");
         if (mode == 3) require(fields[center][2] < 0, "Wrong negative rotation curl");
-        vort->apply_fluid_velocities_for_test();
-        base->apply_fluid_velocities_for_test();
+        test::apply_fluid_velocities_for_test(*vort);
+        test::apply_fluid_velocities_for_test(*base);
         const auto a = vort->readback(), b = base->readback();
         for (unsigned i = 0; i < particles.size(); ++i) {
             const double delta = std::hypot(a[i].motion[0] - b[i].motion[0], a[i].motion[1] - b[i].motion[1]);
@@ -413,7 +414,7 @@ std::expected<void, std::string> validate_fluid_quality(const std::filesystem::p
                 tick(world, 60);
                 const auto state = world.readback();
                 const auto t = totals(state, initial);
-                const auto terms = world.read_fluid_terms();
+                const auto terms = test::read_fluid_terms(world);
                 double compression = 0;
                 for (unsigned i = 0; i < state.size(); ++i)
                     if (state[i].motion[3] == 5 || state[i].motion[3] == 6)

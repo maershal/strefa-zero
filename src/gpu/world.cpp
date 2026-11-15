@@ -1,5 +1,3 @@
-#include "gpu/world.hpp"
-
 #include "gpu/compute_kernels.hpp"
 #include "gpu/diagnostic_trace.hpp"
 #include "gpu/dispatch_layout.hpp"
@@ -12,6 +10,7 @@
 #include "gpu/shader_library.hpp"
 #include "gpu/thermal_system.hpp"
 #include "gpu/upload_ring.hpp"
+#include "gpu/world_test_access.hpp" // includes gpu/world.hpp
 #include "platform/gpu_zone.hpp"
 
 #include <SDL3/SDL.h>
@@ -35,7 +34,7 @@
 
 namespace strefa::gpu {
 namespace {
-using detail::Api;
+using detail::Api, detail::WorldAccess;
 struct ParticleAliasError : std::logic_error {
     using std::logic_error::logic_error;
 };
@@ -1196,8 +1195,8 @@ const ThermalTotals& ParticleWorld::thermal_totals() const {
     static const ThermalTotals empty;
     return impl_->thermal ? impl_->thermal->totals() : empty;
 }
-ThermalSnapshot ParticleWorld::read_thermal(ThermalRead what) {
-    return impl_->thermal ? impl_->thermal->snapshot(what) : ThermalSnapshot{};
+ThermalSnapshot test::read_thermal(ParticleWorld& world, ThermalRead what) {
+    return WorldAccess::impl(world).thermal ? WorldAccess::impl(world).thermal->snapshot(what) : ThermalSnapshot{};
 }
 void ParticleWorld::request_thermal_inspection(int x, int y) {
     if (impl_->thermal && impl_->thermal_config.enabled) impl_->thermal->request_inspection(x, y);
@@ -1300,18 +1299,18 @@ ShaderCacheStats ParticleWorld::shader_cache_stats() const noexcept {
 ExecutionOptions ParticleWorld::execution_options() const noexcept {
     return impl_->execution;
 }
-std::array<bool, 5> ParticleWorld::pbf_restrict_programs() const {
-    for (const auto kernels :
-         {std::span<const Impl::Kernel>{impl_->granular}, std::span<const Impl::Kernel>{impl_->mission_kernels},
-          std::span<const Impl::Kernel>{impl_->neighbors}, std::span<const Impl::Kernel>{impl_->coupling_kernels}})
+std::array<bool, 5> test::pbf_restrict_programs(const ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
+    const detail::ComputeKernelSet set{s.granular, s.liquids, s.neighbors, s.mission_kernels, s.coupling_kernels};
+    for (const auto kernels : {set.granular, set.mission, set.neighbors, set.coupling})
         for (const auto& kernel : kernels)
             if (kernel.particle_restrict) throw std::logic_error{"Kwalifikatory PBF wyszły poza dwa programy."};
     std::array<bool, 5> result{};
-    for (unsigned i = 0; i < result.size(); ++i) result[i] = impl_->liquids[i].particle_restrict;
+    for (unsigned i = 0; i < result.size(); ++i) result[i] = s.liquids[i].particle_restrict;
     return result;
 }
-std::array<std::string, 5> ParticleWorld::pbf_program_sources_for_test() const {
-    auto& s = *impl_;
+std::array<std::string, 5> test::pbf_program_sources_for_test(const ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     std::array<std::string, 5> result;
     for (unsigned i = 0; i < result.size(); ++i) {
         if (!s.liquids[i].id) continue;
@@ -1329,8 +1328,8 @@ std::array<std::string, 5> ParticleWorld::pbf_program_sources_for_test() const {
     }
     return result;
 }
-void ParticleWorld::probe_pbf_alias_for_test(unsigned operation, unsigned source, unsigned binding) {
-    auto& s = *impl_;
+void test::probe_pbf_alias_for_test(ParticleWorld& world, unsigned operation, unsigned source, unsigned binding) {
+    auto& s = WorldAccess::impl(world);
     if ((operation != 1 && operation != 4) || !s.liquids[operation].particle_restrict || source > 8 || binding >= 8
         || source == binding)
         throw std::invalid_argument{"Nieprawidłowa próba błędu wiązań PBF."};
@@ -1352,8 +1351,8 @@ void ParticleWorld::probe_pbf_alias_for_test(unsigned operation, unsigned source
     s.pbf_fault_source = s.pbf_fault_binding = 8;
     throw std::logic_error{"Próba aliasu PBF nie została odrzucona."};
 }
-std::array<std::uint32_t, 37> ParticleWorld::read_dispatch_commands() const {
-    auto& s = *impl_;
+std::array<std::uint32_t, 37> test::read_dispatch_commands(const ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     std::array<std::uint32_t, 37> result{};
     s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
     s.gl.BindBuffer(GL_SHADER_STORAGE_BUFFER, s.buffers[5]);
@@ -1428,12 +1427,12 @@ void ParticleWorld::configure_mission(const MissionConfig& config) {
     s.mission_enabled = true;
     s.grains_enabled = true;
 }
-void ParticleWorld::restore_coupling_checkpoint(const MissionSnapshot& checkpoint, std::uint64_t tick) {
+void test::restore_coupling_checkpoint(ParticleWorld& world, const MissionSnapshot& checkpoint, std::uint64_t tick) {
     if (checkpoint.status[0] == 0 || checkpoint.events[0] != 0 || checkpoint.counts[2] != 0)
         throw std::invalid_argument{"Punkt kontrolny sprzężenia wymaga aktywnej sceny bez pocisków i zniszczeń."};
     for (float value : checkpoint.actor)
         if (!std::isfinite(value)) throw std::invalid_argument{"Nieskończona wartość w punkcie kontrolnym sprzężenia."};
-    auto& s = *impl_;
+    auto& s = WorldAccess::impl(world);
     s.reset_body();
     s.explosions.clear();
     s.next_generation();
@@ -1818,8 +1817,8 @@ std::vector<Grain> ParticleWorld::readback() const {
     }
     return result;
 }
-NeighborSnapshot ParticleWorld::read_neighbors() {
-    auto& s = *impl_;
+NeighborSnapshot test::read_neighbors(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
@@ -1846,8 +1845,8 @@ NeighborSnapshot ParticleWorld::read_neighbors() {
     s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER, capacity * 8, capacity * 16, result.anchors.data());
     return result;
 }
-std::array<std::uint32_t, 240> ParticleWorld::read_phase_mask() {
-    auto& s = *impl_;
+std::array<std::uint32_t, 240> test::read_phase_mask(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     if (s.execution.neighbors == NeighborMode::linked || !s.execution.phase_gating)
         throw std::logic_error{"Wymagany posortowany indeks z bramkowaniem faz."};
     // Keep the same anchor generation as the neighbor index. With reuse enabled
@@ -1859,8 +1858,8 @@ std::array<std::uint32_t, 240> ParticleWorld::read_phase_mask() {
     detail::read_staged(s.gl, s.buffers[2], offset, std::span{result});
     return result;
 }
-void ParticleWorld::start_diagnostic_trace(const TraceConfig& config) {
-    auto& s = *impl_;
+void test::start_diagnostic_trace(ParticleWorld& world, const TraceConfig& config) {
+    auto& s = WorldAccess::impl(world);
     if ((config.mode == CostMode::bounds || config.mode == CostMode::snapshots)
         && s.execution.neighbors != NeighborMode::reused)
         throw std::invalid_argument{"Ślad przestrzenny wymaga produkcyjnego indeksu."};
@@ -1868,19 +1867,19 @@ void ParticleWorld::start_diagnostic_trace(const TraceConfig& config) {
             static_cast<std::size_t>(16 + 3 * width * height + 480 + (s.execution.phase_gating ? 240 : 0)) * 4;
     s.trace.start(config, capacity * sizeof(Grain), cells, capacity * 24);
 }
-TraceReport ParticleWorld::read_diagnostic_trace() {
-    impl_->trace_step = false;
-    return impl_->trace.read();
+TraceReport test::read_diagnostic_trace(ParticleWorld& world) {
+    WorldAccess::impl(world).trace_step = false;
+    return WorldAccess::impl(world).trace.read();
 }
-void ParticleWorld::capture_diagnostic_snapshot(std::string label) {
-    auto& s = *impl_;
+void test::capture_diagnostic_snapshot(ParticleWorld& world, std::string label) {
+    auto& s = WorldAccess::impl(world);
     if (!s.bins_valid || s.execution.neighbors != NeighborMode::reused)
         throw std::logic_error{"Migawka wymaga istniejącego, poprawnego indeksu."};
     s.trace.capture(std::move(label), s.epoch, s.metrics.steps, 0, s.execution.soa, s.buffers[s.current], s.buffers[2],
                     s.buffers[3]);
 }
-HotAudit ParticleWorld::audit_hot_view() {
-    auto& s = *impl_;
+HotAudit test::audit_hot_view(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     HotAudit result;
     if (s.read_mode() != NeighborReads::sorted) return result;
     result.indexed = s.bins_valid;
@@ -1895,7 +1894,7 @@ HotAudit ParticleWorld::audit_hot_view() {
     detail::read_staged(s.gl, s.buffers[3], static_cast<GLintptr>(capacity * 24 + s.current * view_bytes),
                         std::span{view});
     detail::read_staged(s.gl, s.buffers[3], capacity * 4, std::span{indices});
-    const auto actual = readback();
+    const auto actual = world.readback();
     std::vector<bool> used(capacity);
     const auto count =
             static_cast<unsigned>(std::ranges::count_if(actual, [](const auto& p) { return p.motion[3] > .5F; }));
@@ -1918,8 +1917,8 @@ HotAudit ParticleWorld::audit_hot_view() {
         }
     return result;
 }
-std::vector<std::array<float, 4>> ParticleWorld::audit_neighbors(bool pairs) {
-    auto& s = *impl_;
+std::vector<std::array<float, 4>> test::audit_neighbors(ParticleWorld& world, bool pairs) {
+    auto& s = WorldAccess::impl(world);
     if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
@@ -1934,9 +1933,9 @@ std::vector<std::array<float, 4>> ParticleWorld::audit_neighbors(bool pairs) {
     s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, static_cast<GLsizeiptr>(result.size() * 16), result.data());
     return result;
 }
-void ParticleWorld::displace_for_test(std::span<const std::array<float, 4>> deltas) {
+void test::displace_for_test(ParticleWorld& world, std::span<const std::array<float, 4>> deltas) {
     if (deltas.size() > capacity) throw std::invalid_argument{"Za dużo testowych przesunięć."};
-    auto& s = *impl_;
+    auto& s = WorldAccess::impl(world);
     if (s.execution.neighbors == NeighborMode::linked) throw std::logic_error{"Wymagany posortowany indeks."};
     s.invalidate_bindings();
     s.bins();
@@ -1947,8 +1946,8 @@ void ParticleWorld::displace_for_test(std::span<const std::array<float, 4>> delt
     s.neighbor_dispatch(6, 128);
     s.current = 1 - s.current;
 }
-BodySnapshot ParticleWorld::read_body() {
-    auto& s = *impl_;
+BodySnapshot test::read_body(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     if (s.execution.coupling == CouplingMode::reference) throw std::logic_error{"Wymagane zwarte sprzężenie ciał."};
     BodySnapshot result;
     // Headers and command bytes through staging: validation must not migrate the simulation SSBO to host memory or
@@ -1958,8 +1957,8 @@ BodySnapshot ParticleWorld::read_body() {
     detail::read_staged(s.gl, s.buffers[5], detail::command_offset(detail::body_reduce_command), bytes.subspan(64, 24));
     return result;
 }
-void ParticleWorld::inject_body_for_test(std::span<const std::array<float, 4>> reactions, bool apply) {
-    auto& s = *impl_;
+void test::inject_body_for_test(ParticleWorld& world, std::span<const std::array<float, 4>> reactions, bool apply) {
+    auto& s = WorldAccess::impl(world);
     if (s.execution.coupling == CouplingMode::reference || reactions.size() > 2 * capacity)
         throw std::invalid_argument{"Nieprawidłowa testowa paczka ciał."};
     s.invalidate_bindings();
@@ -1987,8 +1986,8 @@ std::vector<double> ParticleWorld::take_timings() {
 std::vector<double> ParticleWorld::take_presentation_timings() {
     return std::exchange(impl_->presentation_timings, {});
 }
-std::vector<std::array<float, 4>> ParticleWorld::read_fluid_terms() {
-    auto& s = *impl_;
+std::vector<std::array<float, 4>> test::read_fluid_terms(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     s.invalidate_bindings();
     s.bins();
     s.liquid_dispatch(3);
@@ -1999,8 +1998,8 @@ std::vector<std::array<float, 4>> ParticleWorld::read_fluid_terms() {
     s.gl.GetBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, capacity * 16, result.data());
     return result;
 }
-std::vector<float> ParticleWorld::read_boundary_weights() const {
-    auto& s = *impl_;
+std::vector<float> test::read_boundary_weights(const ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     std::vector<float> result(width * height, 1);
     if (s.execution.fluid.boundary == FluidBoundary::volume) {
         s.gl.MemoryBarrier(GL_BUFFER_UPDATE_BARRIER_BIT);
@@ -2011,8 +2010,8 @@ std::vector<float> ParticleWorld::read_boundary_weights() const {
     }
     return result;
 }
-std::vector<std::array<float, 4>> ParticleWorld::fluid_fields_for_test() {
-    auto& s = *impl_;
+std::vector<std::array<float, 4>> test::fluid_fields_for_test(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     if (!s.execution.fluid.fields()) throw std::logic_error{"Pola cieczy są wyłączone."};
     s.invalidate_bindings();
     s.bins();
@@ -2027,8 +2026,8 @@ std::vector<std::array<float, 4>> ParticleWorld::fluid_fields_for_test() {
     s.invalidate_bindings();
     return result;
 }
-void ParticleWorld::apply_fluid_velocities_for_test() {
-    auto& s = *impl_;
+void test::apply_fluid_velocities_for_test(ParticleWorld& world) {
+    auto& s = WorldAccess::impl(world);
     s.invalidate_bindings();
     s.bins();
     if (s.execution.fluid.fields()) {
@@ -2038,8 +2037,8 @@ void ParticleWorld::apply_fluid_velocities_for_test() {
     s.liquid_dispatch(4, true);
     if (s.mission_enabled && s.execution.fluid.velocity_reaction()) s.mission_dispatch(3);
 }
-void ParticleWorld::project_liquids_for_test(unsigned iterations) {
-    auto& s = *impl_;
+void test::project_liquids_for_test(ParticleWorld& world, unsigned iterations) {
+    auto& s = WorldAccess::impl(world);
     s.invalidate_bindings();
     for (unsigned i = 0; i < iterations; ++i) {
         s.bins();

@@ -1,4 +1,5 @@
 #include "gpu/world.hpp"
+#include "gpu/world_test_access.hpp"
 #include "platform/gl_debug.hpp"
 #include "platform/window.hpp"
 
@@ -44,7 +45,7 @@ int main(int argc, char** argv) {
         options.enabled = true;
         options.reactions = false;
         world.set_thermal_options(options);
-        const auto initial = world.read_thermal().totals;
+        const auto initial = strefa::gpu::test::read_thermal(world).totals;
         world.set_thermal_brush({{158.5F, 90.5F, 158.5F, 90.5F}, 1, .05F, strefa::gpu::ThermalTool::smoke});
         const auto steps = [&] {
             for (unsigned n = 0; n < 600; ++n) {
@@ -57,7 +58,7 @@ int main(int argc, char** argv) {
             glFinish();
         };
         const auto sample = [&](const char* phase) {
-            const auto snapshot = world.read_thermal();
+            const auto snapshot = strefa::gpu::test::read_thermal(world);
             double right = 0;
             for (int y = 0; y < strefa::gpu::height; ++y)
                 for (int x = 161; x < strefa::gpu::width; ++x)

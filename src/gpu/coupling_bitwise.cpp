@@ -1,6 +1,7 @@
 #include "gpu/diagnostic_read.hpp"
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -99,10 +100,10 @@ struct Outcome {
 // the result, the running total and the actor with the two-pass order, bit for bit.
 Outcome reduce_and_compare(ParticleWorld& world, const BufferProbe& probe, std::span<const Vec4> input, unsigned group,
                            unsigned queued, bool actor_moves_freely) {
-    const auto before = world.read_body();
+    const auto before = test::read_body(world);
     const auto actor_before = world.read_mission().actor;
-    world.inject_body_for_test(input, false);
-    const auto pending = world.read_body();
+    test::inject_body_for_test(world, input, false);
+    const auto pending = test::read_body(world);
     require(pending.queue[0] == queued && pending.queue[2] == 0,
             std::format("Queue holds {} reactions, expected {}", pending.queue[0], queued));
     require(pending.commands[0] == (queued + group - 1) / group && pending.commands[3] == (queued > group ? 1U : 0U),
@@ -117,8 +118,8 @@ Outcome reduce_and_compare(ParticleWorld& world, const BufferProbe& probe, std::
     }
     Outcome result;
     result.expected = two_pass_sum(entries, group);
-    world.inject_body_for_test({});
-    const auto after = world.read_body();
+    test::inject_body_for_test(world, {});
+    const auto after = test::read_body(world);
     const auto actor_after = world.read_mission().actor;
     require(after.queue[0] == 0 && after.commands[0] == 0 && after.commands[3] == 0, "Reduction left pending work");
     require(after.stats[0] - before.stats[0] == queued && after.stats[1] - before.stats[1] == (queued ? 1U : 0U),
@@ -231,7 +232,7 @@ std::expected<void, std::string> validate_coupling_bitwise(const std::filesystem
             for (unsigned tick = 0; tick < 1700;) {
                 world.step(scripted_mission_input(tick++));
                 if (tick % 100 != 0) continue;
-                require(world.read_body().queue[0] == 0, "Mission tick left reactions pending");
+                require(test::read_body(world).queue[0] == 0, "Mission tick left reactions pending");
                 auto input = probe.reactions();
                 unsigned queued = 0;
                 for (auto& v : input) {

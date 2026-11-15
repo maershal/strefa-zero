@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -246,29 +247,29 @@ void validate_trace(const std::filesystem::path& shaders, const std::filesystem:
         for (int x = 0; x < width; ++x) walls[y * width + x] = 1;
     auto reference = create();
     reference->load(initial, walls);
-    static_cast<void>(reference->read_neighbors());
+    static_cast<void>(test::read_neighbors(*reference));
     std::vector<std::array<float, 4>> delta(256);
     delta[255] = {-96.2F, 0, 0, 0};
-    reference->displace_for_test(delta);
+    test::displace_for_test(*reference, delta);
     for (unsigned tick = 0; tick < 4; ++tick) reference->step();
     const auto expected = reference->readback();
     for (const auto mode : {CostMode::off, CostMode::passes, CostMode::bounds, CostMode::snapshots}) {
         auto world = create();
         world->load(initial, walls);
-        static_cast<void>(world->read_neighbors());
+        static_cast<void>(test::read_neighbors(*world));
         TraceConfig config;
         config.mode = mode;
         config.max_events = 1024;
         config.max_samples = 8;
         config.max_snapshots = 2;
         const auto before = world->counters();
-        world->start_diagnostic_trace(config);
+        test::start_diagnostic_trace(*world, config);
         if (mode == CostMode::off)
             require((world->counters() - before).api_calls == 0, "Disabled trace allocated GL resources");
-        world->displace_for_test(delta);
-        if (mode == CostMode::snapshots) world->capture_diagnostic_snapshot("large_outlier");
+        test::displace_for_test(*world, delta);
+        if (mode == CostMode::snapshots) test::capture_diagnostic_snapshot(*world, "large_outlier");
         for (unsigned tick = 0; tick < 4; ++tick) world->step();
-        if (mode == CostMode::snapshots) world->capture_diagnostic_snapshot("after_four_steps");
+        if (mode == CostMode::snapshots) test::capture_diagnostic_snapshot(*world, "after_four_steps");
         drain(*world);
         const auto actual = world->readback();
         double max_error = 0;
@@ -285,7 +286,7 @@ void validate_trace(const std::filesystem::path& shaders, const std::filesystem:
                 }
         }
         require(max_error < .0001, "Diagnostic capture changed the authoritative state");
-        const auto trace = world->read_diagnostic_trace();
+        const auto trace = test::read_diagnostic_trace(*world);
         require(mode == CostMode::off ? trace.dispatches.empty() : !trace.dispatches.empty(),
                 "Diagnostic enable policy is incorrect");
         if (mode == CostMode::passes) require(trace.timestamp_pairs == 4, "Sparse pass trace lost a sampled tick");
@@ -298,30 +299,30 @@ void validate_trace(const std::filesystem::path& shaders, const std::filesystem:
         if (mode == CostMode::snapshots) require(trace.captures.size() == 2, "Explicit snapshots were lost");
         write_trace(trace, output / std::string{cost_mode_name(mode)});
         const auto after = world->counters();
-        require(world->read_diagnostic_trace().dispatches.empty() && (world->counters() - after).api_calls == 0,
+        require(test::read_diagnostic_trace(*world).dispatches.empty() && (world->counters() - after).api_calls == 0,
                 "Consumed trace still performs GL work");
         report << "mode=" << cost_mode_name(mode) << " max_state_error=" << max_error << " passed\n";
         report.flush();
     }
     auto reset = create();
     reset->load(initial, walls);
-    static_cast<void>(reset->read_neighbors());
+    static_cast<void>(test::read_neighbors(*reset));
     TraceConfig config;
     config.mode = CostMode::bounds;
     config.max_events = 1024;
-    reset->start_diagnostic_trace(config);
+    test::start_diagnostic_trace(*reset, config);
     reset->step();
     reset->reset(Scene::empty);
     reset->step();
     drain(*reset);
-    const auto generations = reset->read_diagnostic_trace();
+    const auto generations = test::read_diagnostic_trace(*reset);
     require(std::ranges::any_of(
                     generations.dispatches,
                     [&](const auto& p) { return p.generation != generations.dispatches.front().generation; }),
             "Reset lost trace generation tags");
     config.mode = CostMode::passes;
     config.max_events = 1;
-    reset->start_diagnostic_trace(config);
+    test::start_diagnostic_trace(*reset, config);
     bool overflow = false;
     try {
         reset->step();
@@ -330,7 +331,7 @@ void validate_trace(const std::filesystem::path& shaders, const std::filesystem:
     }
     require(overflow, "Diagnostic capacity silently truncated the trace");
     glFinish();
-    static_cast<void>(reset->read_diagnostic_trace());
+    static_cast<void>(test::read_diagnostic_trace(*reset));
     require(glGetError() == GL_NO_ERROR, "OpenGL error in diagnostic trace validation");
     report << "generation_reset=passed\ncapacity_overflow=explicit_failure\nstatus=passed\n";
 }
@@ -407,7 +408,7 @@ std::expected<void, std::string> profile_cost(const std::filesystem::path& outpu
             };
             run(120, false);
             clear(world);
-            world.start_diagnostic_trace(TraceConfig{.mode = mode});
+            test::start_diagnostic_trace(world, TraceConfig{.mode = mode});
             const auto started = SDL_GetTicksNS();
             run(240, scenario == 3);
             const double wall_ms = static_cast<double>(SDL_GetTicksNS() - started) / 1e6;
@@ -423,7 +424,7 @@ std::expected<void, std::string> profile_cost(const std::filesystem::path& outpu
             metric("cpu_submit_ms", cpu);
             metric("batch_mean_step_wall_ms", {wall_ms / 240});
             write_profile_samples(world, output / scene);
-            auto trace = world.read_diagnostic_trace();
+            auto trace = test::read_diagnostic_trace(world);
             unsigned alive = 0;
             bool finite = true;
             for (const auto& p : world.readback())

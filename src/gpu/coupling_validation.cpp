@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -112,8 +113,8 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                         const auto actor_before = world->read_mission().actor;
                         checks << "case mode=" << static_cast<int>(mode) << " group=" << local << " count=" << count
                                << std::endl;
-                        world->inject_body_for_test(input, false);
-                        const auto queued = world->read_body();
+                        test::inject_body_for_test(*world, input, false);
+                        const auto queued = test::read_body(*world);
                         require(queued.queue[0] == count && queued.queue[2] == 0,
                                 "Compact queue lost a reaction or overflowed");
                         require(queued.commands[0] == (count + local - 1) / local
@@ -122,14 +123,14 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                         require(queued.commands[1] == 1 && queued.commands[2] == 1 && queued.commands[4] == 1
                                         && queued.commands[5] == 1,
                                 "Indirect reduction has invalid Y/Z dimensions");
-                        world->inject_body_for_test({});
-                        const auto result = world->read_body();
+                        test::inject_body_for_test(*world, {});
+                        const auto result = test::read_body(*world);
                         checks << "queue=" << result.queue[0] << " commands=" << result.commands[0] << ","
                                << result.commands[3] << " stats=" << result.stats[0] << "," << result.stats[1] << ","
                                << result.stats[2] << "," << result.stats[3] << std::endl;
                         if (result.commands[0] || result.commands[3]) {
-                            world->inject_body_for_test({});
-                            const auto replay = world->read_body();
+                            test::inject_body_for_test(*world, {});
+                            const auto replay = test::read_body(*world);
                             checks << "replay count=" << replay.queue[0] << " commands=" << replay.commands[0] << ","
                                    << replay.commands[3] << " batches=" << replay.stats[1] << std::endl;
                         }
@@ -150,8 +151,8 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                                             < .00001,
                                     "Committed reaction was not applied exactly to the actor");
                         if (count) require(world->read_mission().locomotion[2] > .5F, "Support-only reaction was lost");
-                        world->inject_body_for_test({});
-                        require(world->read_body().stats == result.stats,
+                        test::inject_body_for_test(*world, {});
+                        require(test::read_body(*world).stats == result.stats,
                                 "Empty replay applied a previous reaction batch");
                     }
                     world->load({}, floor_at(187));
@@ -159,20 +160,20 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                     air.spawn_y = 80;
                     world->configure_mission(air);
                     const std::array<std::array<float, 4>, 2> support{{{0, 0, 0, 0}, {0, 0, 1, 0}}};
-                    world->inject_body_for_test(support);
-                    require(world->read_body().stats[0] == 1 && world->read_mission().locomotion[2] > .5F,
+                    test::inject_body_for_test(*world, support);
+                    require(test::read_body(*world).stats[0] == 1 && world->read_mission().locomotion[2] > .5F,
                             "Zero XY or support-only reaction was handled incorrectly");
                     const std::array<std::array<float, 4>, 1> pending{{{.25F, -.125F, 1, 0}}};
-                    world->inject_body_for_test(pending, false);
-                    require(world->read_body().queue[0] == 1, "Reset test did not seed an in-flight reaction");
+                    test::inject_body_for_test(*world, pending, false);
+                    require(test::read_body(*world).queue[0] == 1, "Reset test did not seed an in-flight reaction");
                     world->reset_mission();
                     world->step();
-                    require(world->read_body().queue[0] == 0 && world->read_body().stats[0] == 0,
+                    require(test::read_body(*world).queue[0] == 0 && test::read_body(*world).stats[0] == 0,
                             "Old-generation reaction affected a reset world");
                     bool rejected = false;
                     try {
                         std::vector<std::array<float, 4>> too_many(2 * capacity + 1);
-                        world->inject_body_for_test(too_many);
+                        test::inject_body_for_test(*world, too_many);
                     } catch (const std::invalid_argument&) {
                         rejected = true;
                     }
@@ -272,7 +273,7 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                                     "Local aggregate particle displacement exceeds reference variation");
                         }
                         if (local) {
-                            const auto stats = world->read_body();
+                            const auto stats = test::read_body(*world);
                             require(stats.stats[0] > 0 && stats.queue[2] == 0,
                                     "Geometry comparison exercised no local reactions");
                         }
@@ -353,7 +354,7 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                     };
                     run(120);
                     BodySnapshot initial_body;
-                    if (variant.mode != CouplingMode::reference) initial_body = world->read_body();
+                    if (variant.mode != CouplingMode::reference) initial_body = test::read_body(*world);
                     clear(*world);
                     external.clear();
                     const auto began = SDL_GetTicksNS();
@@ -382,7 +383,7 @@ std::expected<void, std::string> validate_coupling(const std::filesystem::path& 
                         steps << '\n';
                     }
                     if (variant.mode != CouplingMode::reference) {
-                        const auto state = world->read_body();
+                        const auto state = test::read_body(*world);
                         metric(test.name, variant.name, repeat, "body_measured_reactions",
                                {static_cast<double>(state.stats[0] - initial_body.stats[0])});
                         if (std::string_view{test.name} == "coupled_tank")

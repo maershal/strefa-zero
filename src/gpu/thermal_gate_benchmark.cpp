@@ -7,6 +7,7 @@
 #include "gpu/render_device.hpp"
 #include "gpu/synthetic_passes.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -147,7 +148,7 @@ std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::p
                         if (n % 16 == 15) world.poll(false);
                     }
                     glFinish();
-                    const auto gate_before = world.read_thermal(ThermalRead::totals).totals;
+                    const auto gate_before = test::read_thermal(world, ThermalRead::totals).totals;
                     world.invalidate_gl_state();
                     std::vector<std::array<GLuint, 2>> queries(plan.measured);
                     std::vector<double> cpu(plan.measured);
@@ -163,7 +164,7 @@ std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::p
                     }
                     glFinish();
                     const auto end = utc_now_ns();
-                    const auto gate_after = world.read_thermal(ThermalRead::totals).totals;
+                    const auto gate_after = test::read_thermal(world, ThermalRead::totals).totals;
                     world.invalidate_gl_state();
                     std::vector<double> gpu(plan.measured);
                     for (unsigned n = 0; n < plan.measured; ++n) {

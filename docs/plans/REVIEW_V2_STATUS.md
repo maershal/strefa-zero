@@ -67,7 +67,8 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Tracy (dev, `STREFA_TRACY=OFF`), strefy CPU/GPU, RenderDoc F11 w StrefaQA, Nsight w `GPU_CHECK.md` (R §10, A §4 D7) | zrobione; strefy w `PassRunner` — po fazie C | K07, [ADR 0002](../adr/0002-narzedzia-profilowania.md) |
 | Detonator w laboratorium GPU, gruz z prędkością, impuls ∝ odwrotnej masy, do 8 wybuchów na tick (R §11, szybkie wygrane) | zrobione; misja za flagą `batched_blasts` (domyślnie wyłączoną) | N06 |
 | Bitowo neutralne przyspieszenie termiki: narzędzie skrótów, bramka etapu gazu (R §5.3 p. 1) | bramka gazu zrobiona (cold −17,1%, idle −33,3%); integracja warunkowa i przebiegi po żywych ID zablokowane przez niedeterminizm solvera cząstek | #97, #98, #95, #96 |
-| Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B–E | nie rozpoczęte | — |
+| Rozbiór `ParticleWorld` (A faza C): haki poza klasą, `PassRunner`, misja osobno ([plan](PLAN_ROZBIOR_PARTICLE_WORLD.md)) | krok 1/9: 21 z 30 haków w `gpu/world_test_access.hpp`; reszta otwarta | Z09, #59, #66, #67 |
+| Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B, D, E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
 z `tools/architecture_budget.json`, np. `strefa_zero_qa_symbols` = 35, `size_literals_glsl` = 75,

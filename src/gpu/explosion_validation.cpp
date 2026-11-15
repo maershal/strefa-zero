@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL_opengl.h>
 
@@ -64,12 +65,12 @@ void validate_debris_history(ParticleWorld& world, std::ostream& report) {
         config.mode = bounds ? CostMode::bounds : CostMode::passes;
         config.max_events = 4096;
         config.max_samples = 1;
-        world.start_diagnostic_trace(config);
+        test::start_diagnostic_trace(world, config);
         world.queue_explosion({1, blast_x, blast_y, blast_radius, 0});
         require(world.step(), label + ": explosion tick refused by backpressure");
         glFinish();
         world.poll();
-        const auto trace = world.read_diagnostic_trace();
+        const auto trace = test::read_diagnostic_trace(world);
 
         const auto mission = world.read_mission();
         const auto terrain = world.read_terrain();

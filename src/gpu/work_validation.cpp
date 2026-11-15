@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -45,8 +46,8 @@ double compare(const std::vector<Grain>& reference, const std::vector<Grain>& ca
 }
 void check_mask(ParticleWorld& world) {
     const auto state = world.readback();
-    const auto index = world.read_neighbors();
-    const auto mask = world.read_phase_mask();
+    const auto index = test::read_neighbors(world);
+    const auto mask = test::read_phase_mask(world);
     std::array<std::uint32_t, 240> expected{};
     std::vector<unsigned> active;
     for (unsigned id = 0; id < capacity; ++id)
@@ -160,15 +161,15 @@ std::expected<void, std::string> validate_work(const std::filesystem::path& outp
                     if (fixture == 2) {
                         std::vector<std::array<float, 4>> deltas(256);
                         deltas[255] = {-96.2F, 0, 0, 0};
-                        reference->displace_for_test(deltas);
-                        candidate->displace_for_test(deltas);
+                        test::displace_for_test(*reference, deltas);
+                        test::displace_for_test(*candidate, deltas);
                         if (flags.first) check_mask(*candidate);
                         if (mode == NeighborMode::reused)
-                            require(candidate->read_neighbors().displacement > 96,
+                            require(test::read_neighbors(*candidate).displacement > 96,
                                     "Outlier failed to exercise a multi-tile displacement");
                     }
-                    reference->project_liquids_for_test(1);
-                    candidate->project_liquids_for_test(1);
+                    test::project_liquids_for_test(*reference, 1);
+                    test::project_liquids_for_test(*candidate, 1);
                     glFinish();
                     const auto expected = reference->readback(), actual = candidate->readback();
                     const auto error = compare(expected, actual);
@@ -189,7 +190,7 @@ std::expected<void, std::string> validate_work(const std::filesystem::path& outp
                     check_mask(*candidate);
                     candidate->paint({150, 120, 155, 120, 9, Material::erase});
                     check_mask(*candidate);
-                    require(std::ranges::all_of(candidate->read_phase_mask(), [](auto bits) { return bits == 0; }),
+                    require(std::ranges::all_of(test::read_phase_mask(*candidate), [](auto bits) { return bits == 0; }),
                             "Erased liquid left a stale phase bit");
                     std::vector<Grain> dense(capacity, particle(80.25F, 70.25F));
                     dense.back().motion[3] = 6;
@@ -212,7 +213,7 @@ std::expected<void, std::string> validate_work(const std::filesystem::path& outp
         auto linked = create(fallback);
         auto walls = floor_at(180);
         linked->load(std::array{particle(20, 181.9F), particle(200, 80, 5)}, walls);
-        linked->project_liquids_for_test(1);
+        test::project_liquids_for_test(*linked, 1);
         glFinish();
         require(linked->readback()[0].position[1] < 180, "Linked-list fallback skipped required terrain projection");
         require(glGetError() == GL_NO_ERROR, "OpenGL error in linked-list fallback");

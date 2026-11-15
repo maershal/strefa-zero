@@ -82,6 +82,9 @@ struct HotAudit {
     unsigned active{}, mismatches{};
 };
 static_assert(offsetof(BodySnapshot, commands) == 64 && sizeof(BodySnapshot) == 88);
+namespace detail {
+struct WorldAccess;
+} // namespace detail
 // Owns GL resources; all methods (including destruction) require the owning
 // context on its thread. No GL dependency leaks into the CPU reference model.
 class ParticleWorld {
@@ -105,8 +108,6 @@ public:
     void reset_mission();
     void queue_explosion(const Explosion& event);        // monotonically increasing nonzero ID per world generation
     void configure_mission(const MissionConfig& config); // attach to a loaded validation scene
-    void restore_coupling_checkpoint(const MissionSnapshot&,
-                                     std::uint64_t engine_tick); // validation only, after load(), no projectiles/events
     const MissionSnapshot& mission() const noexcept;
     MissionSnapshot read_mission() const;            // synchronous validation only
     std::vector<std::uint32_t> read_terrain() const; // validation only
@@ -120,7 +121,6 @@ public:
     void set_thermal_view(ThermalView);
     void set_thermal_brush(const ThermalBrush&);
     const ThermalTotals& thermal_totals() const;
-    ThermalSnapshot read_thermal(ThermalRead what = ThermalRead::all); // Explicit synchronous diagnostics only.
     void request_thermal_inspection(int x, int y);
     const ThermalInspection& thermal_inspection() const;
     std::uint64_t thermal_memory() const;
@@ -146,16 +146,6 @@ public:
     // Explicit validation/scene-loading boundary, never used by the frame loop.
     void load(std::span<const Grain> grains, std::span<const std::uint32_t> walls);
     std::vector<Grain> readback() const;
-    NeighborSnapshot read_neighbors();                // synchronous validation only
-    std::array<std::uint32_t, 240> read_phase_mask(); // same anchor generation, validation only
-    HotAudit audit_hot_view(); // no rebuild: compare current cache bank against authoritative ID state
-    void start_diagnostic_trace(const TraceConfig& config); // CLI only, off by default
-    TraceReport read_diagnostic_trace();                    // explicit GPU drain required; no index rebuild
-    void capture_diagnostic_snapshot(std::string label);    // current generation only, no rebuild
-    std::vector<std::array<float, 4>> audit_neighbors(bool pairs = true); // <=256 stable IDs for pair audit
-    void displace_for_test(std::span<const std::array<float, 4>> deltas);
-    BodySnapshot read_body(); // synchronous validation only
-    void inject_body_for_test(std::span<const std::array<float, 4>> reactions, bool apply = true);
     void save_image(const std::filesystem::path& path) const;
     std::vector<double> take_timings(); // physics part of each tick (Metrics::physics_ms)
     std::vector<double> take_presentation_timings();
@@ -170,21 +160,12 @@ public:
     UploadStats upload_stats() const noexcept;
     ShaderCacheStats shader_cache_stats() const noexcept;
     ExecutionOptions execution_options() const noexcept;
-    std::array<bool, 5> pbf_restrict_programs() const;               // validation only
-    std::array<std::string, 5> pbf_program_sources_for_test() const; // source retrieved from attached GL shaders
-    void probe_pbf_alias_for_test(unsigned operation, unsigned source,
-                                  unsigned binding);              // must reject before GL, source 8 = unbound
-    std::array<std::uint32_t, 37> read_dispatch_commands() const; // validation only
     std::vector<StepProfile> take_step_profiles();
     std::vector<GroupProfile> take_group_profiles();
-    std::vector<std::array<float, 4>> read_fluid_terms();
-    void project_liquids_for_test(unsigned iterations);
     // Explicit synchronous diagnostics, never used by the interactive loop.
-    std::vector<float> read_boundary_weights() const;
-    std::vector<std::array<float, 4>> fluid_fields_for_test();
-    void apply_fluid_velocities_for_test();
 
 private:
+    friend struct detail::WorldAccess; // test access (gpu/world_test_access.hpp)
     struct Impl;
     explicit ParticleWorld(std::shared_ptr<RenderDevice>);
     std::unique_ptr<Impl> impl_;

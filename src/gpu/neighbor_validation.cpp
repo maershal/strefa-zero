@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -52,7 +53,7 @@ bool visible_cpu(const Grain& a, const Grain& b, const std::vector<std::uint32_t
 }
 void check_index(ParticleWorld& world) {
     const auto state = world.readback();
-    const auto index = world.read_neighbors();
+    const auto index = test::read_neighbors(world);
     std::vector<unsigned> seen(capacity);
     unsigned active = 0;
     for (const auto& p : state)
@@ -78,7 +79,7 @@ void check_index(ParticleWorld& world) {
     require(std::ranges::count(seen, 1U) == active, "Sorted view lost active IDs");
 }
 void check_pairs(ParticleWorld& world, const std::vector<std::uint32_t>& walls) {
-    const auto pairs = world.audit_neighbors();
+    const auto pairs = test::audit_neighbors(world);
     const auto state = world.readback();
     check_index(world);
     for (unsigned i = 0; i < 256; ++i)
@@ -163,16 +164,16 @@ std::expected<void, std::string> validate_neighbors(const std::filesystem::path&
                 std::vector<std::array<float, 4>> deltas(256);
                 for (unsigned i = 0; i < 240; ++i)
                     if (particles[i].motion[3] > .5F) deltas[i] = {i % 2 ? 4.23F : -3.17F, i % 3 ? -.37F : .61F, 0, 0};
-                world->displace_for_test(deltas);
+                test::displace_for_test(*world, deltas);
                 check_pairs(*world, walls);
                 if (mode == NeighborMode::reused) {
-                    const auto stats = world->read_neighbors();
+                    const auto stats = test::read_neighbors(*world);
                     require(stats.builds == 1 && stats.displacement > 4,
                             "Large correction did not exercise extended-range fallback");
                 }
                 world->load(particles, walls);
                 for (unsigned i = 0; i < 4; ++i) {
-                    world->project_liquids_for_test(3);
+                    test::project_liquids_for_test(*world, 3);
                     check_pairs(*world, walls);
                 }
                 // Dense cells have no per-cell capacity or candidate cap.
@@ -180,7 +181,7 @@ std::expected<void, std::string> validate_neighbors(const std::filesystem::path&
                     std::vector<Grain> dense(count, particle(120.37F, 80.23F));
                     world->load(dense, walls);
                     check_index(*world);
-                    const auto index = world->read_neighbors();
+                    const auto index = test::read_neighbors(*world);
                     require(index.counts[80 * width + 120] == count, "Dense-cell list was truncated");
                     if (count <= 256) check_pairs(*world, walls);
                 }
@@ -310,11 +311,11 @@ std::expected<void, std::string> validate_neighbors(const std::filesystem::path&
                         steps << '\n';
                     }
                     if (variant.options.neighbors != NeighborMode::linked) {
-                        const auto index = world->read_neighbors();
+                        const auto index = test::read_neighbors(*world);
                         metric(count, variant.name, repeat, "gpu_actual_index_builds",
                                {static_cast<double>(index.builds)});
                         metric(count, variant.name, repeat, "final_displacement_bound", {index.displacement});
-                        const auto counts = world->audit_neighbors(false);
+                        const auto counts = test::audit_neighbors(*world, false);
                         std::vector<double> candidates, neighbors;
                         const auto state = world->readback();
                         for (unsigned i = 0; i < capacity; ++i)

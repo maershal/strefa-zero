@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -136,7 +137,7 @@ void validate_coupling_replay(const std::filesystem::path& output, std::ostream&
         for (unsigned index = 0; index < replicas.size(); ++index) {
             auto& world = *replicas[index];
             world.load(before, walls);
-            world.restore_coupling_checkpoint(checkpoint, engine_tick);
+            test::restore_coupling_checkpoint(world, checkpoint, engine_tick);
             world.step(input);
             const auto actual = world.readback();
             const auto actor = world.read_mission();
@@ -144,7 +145,7 @@ void validate_coupling_replay(const std::filesystem::path& output, std::ostream&
             ledgers[index].add(error);
             BodySnapshot body;
             if (index > 0) {
-                body = world.read_body();
+                body = test::read_body(world);
                 require(body.queue[0] == 0 && body.queue[2] == 0,
                         "Common-state replay left pending/overflowed reactions");
                 reaction_counts[index] += body.stats[0];
