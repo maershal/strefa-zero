@@ -1,0 +1,325 @@
+# Rejestr materiałów modelu CPU (sim::Material). Kolejność tabel [[material]] to ID materiału:
+# nowe materiały dopisuj na końcu, bo ID są zapisane w nagraniach i w tablicach shaderów termiki.
+# Po zmianie: python3 scripts/gen_materials.py (generuje src/sim/material_tables.hpp).
+# Jednostki: znormalizowana masa/objętość, entalpia w kJ na jednostkę masy, temperatury w K;
+# przewodność jest przyspieszona do skali czasu gry.
+
+[[material]]
+id = "empty"
+name = "Gumka"
+description = "Usuwa materiał. Prawy przycisk myszy działa jak gumka."
+phase = "empty"
+color = [13, 21, 25]
+density = 0
+heat_capacity = 1
+conductance = 0.01
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "stone"
+name = "Kamień"
+description = "Stała przeszkoda; kwas i wybuch mogą ją zniszczyć."
+phase = "solid"
+color = [105, 115, 112]
+density = 2.6
+heat_capacity = 0.84
+conductance = 1.0
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 7
+
+[[material]]
+id = "sand"
+name = "Piasek"
+description = "Sypie się, usypuje skarpy i wypiera ciecze."
+phase = "powder"
+color = [218, 187, 111]
+density = 1.6
+heat_capacity = 0.8
+conductance = 0.25
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0.15
+
+[[material]]
+id = "water"
+name = "Woda"
+description = "Płynie, gasi ogień, przy lawie zamienia się w parę."
+phase = "liquid"
+color = [49, 120, 214]
+density = 1
+heat_capacity = 4.18
+conductance = 0.7
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "oil"
+name = "Olej"
+description = "Lżejszy od wody, unosi się na niej i płonie."
+phase = "liquid"
+color = [153, 127, 54]
+density = 0.85
+heat_capacity = 2
+conductance = 0.12
+spawn_temperature = 293.15
+ignition = 560
+burn_rate = 0.12
+heat_release = 12000
+residue = 0.02
+strength = 0
+
+[[material]]
+id = "wood"
+name = "Drewno"
+description = "Stała, palna konstrukcja."
+phase = "solid"
+color = [126, 83, 48]
+density = 0.6
+heat_capacity = 1.7
+conductance = 0.12
+spawn_temperature = 293.15
+ignition = 550
+burn_rate = 0.065
+heat_release = 16000
+residue = 0.12
+strength = 1.8
+
+[[material]]
+id = "fire"
+name = "Ogień"
+description = "Gorące produkty spalania; ochładzają się i przemieszczają z powietrzem."
+phase = "flame"
+color = [255, 150, 40]
+density = 0.5
+heat_capacity = 1
+conductance = 0.2
+spawn_temperature = 1500
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "smoke"
+name = "Dym"
+description = "Gęstość i temperatura wpływają na ruch. Masa pozostaje w świecie lub opuszcza otwartą granicę."
+phase = "gas"
+color = [93, 100, 105]
+density = 0.02
+heat_capacity = 1
+conductance = 0.08
+spawn_temperature = 380
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "steam"
+name = "Para"
+description = "Skrapla się po oddaniu ciepła, bez licznika czasu."
+phase = "gas"
+color = [182, 213, 221]
+density = 0.03
+heat_capacity = 2
+conductance = 0.1
+spawn_temperature = 410
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "acid"
+name = "Kwas"
+description = "Rozpuszcza kamień, piasek, drewno i węgiel."
+phase = "liquid"
+color = [136, 224, 66]
+density = 1.1
+heat_capacity = 2.2
+conductance = 0.4
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "lava"
+name = "Lawa"
+description = "Powoli płynie, zapala otoczenie; woda chłodzi ją do kamienia."
+phase = "liquid"
+color = [255, 91, 21]
+density = 2.4
+heat_capacity = 1.1
+conductance = 1.5
+spawn_temperature = 1650
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "gas"
+name = "Gaz"
+description = "Palny gaz unosi się i zapala od ognia."
+phase = "gas"
+color = [100, 158, 94]
+density = 0.025
+heat_capacity = 1.5
+conductance = 0.08
+spawn_temperature = 293.15
+ignition = 600
+burn_rate = 0.6
+heat_release = 10000
+residue = 0
+strength = 0
+
+[[material]]
+id = "coal"
+name = "Węgiel"
+description = "Ciężki, palny proszek."
+phase = "powder"
+color = [50, 56, 60]
+density = 1.3
+heat_capacity = 1
+conductance = 0.25
+spawn_temperature = 293.15
+ignition = 650
+burn_rate = 0.03
+heat_release = 24000
+residue = 0.1
+strength = 0.25
+
+[[material]]
+id = "gunpowder"
+name = "Proch"
+description = "Proszek; zapłon lub trafienie powoduje wybuch łańcuchowy."
+phase = "powder"
+color = [119, 109, 127]
+density = 1.4
+heat_capacity = 1
+conductance = 0.2
+spawn_temperature = 293.15
+ignition = 650
+burn_rate = 0
+heat_release = 3000
+residue = 0
+strength = 0.15
+
+[[material]]
+id = "thermite"
+name = "Termit"
+description = "Reakcja termitowa dostarcza ciepło; pozostaje metal, który może się stopić."
+phase = "powder"
+color = [176, 136, 111]
+density = 3
+heat_capacity = 1
+conductance = 2
+spawn_temperature = 293.15
+ignition = 850
+burn_rate = 0.2
+heat_release = 4500
+residue = 0.65
+strength = 0.2
+
+[[material]]
+id = "nitroglycerin"
+name = "Nitrogliceryna"
+description = "Wybuchowa ciecz. Ogień, pocisk lub wybuch wyzwala reakcję łańcuchową."
+phase = "liquid"
+color = [181, 221, 64]
+density = 1.2
+heat_capacity = 1.5
+conductance = 0.25
+spawn_temperature = 293.15
+ignition = 500
+burn_rate = 0
+heat_release = 4500
+residue = 0
+strength = 0
+
+[[material]]
+id = "metal"
+name = "Metal"
+description = "Przewodzi ciepło, topi się po dostarczeniu energii; osłania przed podmuchem."
+phase = "solid"
+color = [110, 132, 152]
+density = 7.8
+heat_capacity = 0.45
+conductance = 8
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 24
+
+[[material]]
+id = "ice"
+name = "Lód"
+description = "Topi się po pochłonięciu ciepła utajonego, odbierając energię otoczeniu."
+phase = "solid"
+color = [156, 217, 238]
+density = 0.917
+heat_capacity = 2.1
+conductance = 1.2
+spawn_temperature = 260
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 2
+
+[[material]]
+id = "molten_metal"
+name = "Stopiony metal"
+description = "Płynny metal; po oddaniu ciepła krzepnie z powrotem w metal."
+phase = "liquid"
+color = [255, 166, 67]
+density = 7
+heat_capacity = 0.82
+conductance = 5
+spawn_temperature = 2000
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0
+
+[[material]]
+id = "ash"
+name = "Popiół"
+description = "Niepalna, lekka pozostałość po spalaniu."
+phase = "powder"
+color = [104, 104, 100]
+density = 0.25
+heat_capacity = 1
+conductance = 0.08
+spawn_temperature = 293.15
+ignition = 0
+burn_rate = 0
+heat_release = 0
+residue = 0
+strength = 0.08
