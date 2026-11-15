@@ -14,6 +14,7 @@ zostawia tylko funkcje dostępu i `enthalpy_offset`. Wartości są te same co do
 tabel i został z nimi porównany), więc `sim.golden_master` i `material_defines()` się nie zmieniają. Zostaje do
 zrobienia w [#110](https://github.com/maershal/strefa-zero/issues/110): `enthalpy_offset`, mapowanie
 `thermal_material()` i indeksy materiałów w GLSL.
+
 ## Z10: indeks sąsiadów w kolejności stabilnych ID (determinizm solvera, krok 1)
 
 Budowa indeksu sąsiadów dostała szósty przebieg (`neighbors.comp`, operacja 8): atomowy rozrzut zapisuje ID do bufora

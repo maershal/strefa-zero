@@ -38,7 +38,7 @@ expect not-finite 'stone.density: must be finite' '/^id = "stone"$/,/^$/s/^densi
 expect multiline-name 'stone.name: expected a single-line string' '/^id = "stone"$/,/^$/s/^name = .*/name = "a\\nb"/'
 expect renamed-id 'append-only' 's/^id = "sand"$/id = "gravel"/'
 expect swapped-order 'append-only' 's/^id = "sand"$/id = "tmp"/;s/^id = "water"$/id = "sand"/;s/^id = "tmp"$/id = "water"/'
-last_table=$(tr -d '' <"$root/src/sim/materials.toml" | grep -n '^\[\[material\]\]$' | tail -n 1 | cut -d: -f1)
+last_table=$(tr -d '\r' <"$root/src/sim/materials.toml" | grep -n '^\[\[material\]\]$' | tail -n 1 | cut -d: -f1)
 expect removed-last 'append-only' "$last_table,\$d"
 
 # A material appended to the registry without its id in PINNED_IDS.
