@@ -180,7 +180,7 @@ public:
         }
         const bool snapshot_tick =
                 std::ranges::find(config_.snapshot_ticks, event.tick) != config_.snapshot_ticks.end();
-        const bool checkpoint = (event.family == PassFamily::neighbors && event.operation == 4)
+        const bool checkpoint = (event.family == PassFamily::neighbors && event.operation == 8)
                              || (event.family == PassFamily::granular && event.operation == 3
                                  && (iteration_ == 0 || iteration_ == 11));
         if (config_.mode == CostMode::snapshots && in_step_ && snapshot_tick && checkpoint && indexed)

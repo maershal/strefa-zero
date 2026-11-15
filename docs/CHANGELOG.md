@@ -2,6 +2,16 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Z10: indeks sąsiadów w kolejności stabilnych ID (determinizm solvera, krok 1)
+
+Budowa indeksu sąsiadów dostała szósty przebieg (`neighbors.comp`, operacja 8): atomowy rozrzut zapisuje ID do bufora
+roboczego, a nowy przebieg ustawia każdą cząstkę w jej komórce według rangi stabilnego ID. Kolejność wpisów komórki,
+a z nią kolejność sum float w PBF i kontaktach, nie zależy już od wyścigu wątków GPU. Scena `control`
+(`--gpu-check thermal-bits`: piasek i woda bez termiki) powtarza się bit w bit w jednym procesie i między procesami
+(GTX 1650, 600 ticków); test `gpu.thermal_bits` teraz tego wymaga. Sceny z termiką nadal się rozjeżdżają (lista
+aktywnych, przydział slotów przy narodzinach, dowiązania termiki; #95). Przebiegi na tick: misja 98 → 100, bo indeks
+jest budowany dwa razy na tick. Wyniki solvera zmieniają się w granicach kolejności sumowania.
+
 ## Z09: rozbiór `ParticleWorld`, krok 2 — `Impl` we własnym nagłówku
 
 Definicja `ParticleWorld::Impl` i jej pomocniki (`hash`, `seeded_position`, kontrola aliasów banków PBF) przeniesione

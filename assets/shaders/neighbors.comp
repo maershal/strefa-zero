@@ -56,12 +56,22 @@ void main(){
     }
     if(operation==4){
         if(id>=aliveCount)return;uint stable=slots[N+id];Grain p=readParticle(stable);uint c=uint(cell(p.position.xy));
-        uint index=cellStart(c)+atomicAdd(cells[CURSOR_BASE+c],1u);
-        order[index]=stable;sortedIndex[stable]=index;anchors[stable]=vec4(p.position.xy,p.residual.xy);
+        // The atomic cursor leaves the order inside a cell to thread timing; operation 8 sorts it by stable ID.
+        cells[SCATTER_BASE+cellStart(c)+atomicAdd(cells[CURSOR_BASE+c],1u)]=stable;
+        anchors[stable]=vec4(p.position.xy,p.residual.xy);
+        atomicMax(cells[0],floatBitsToUint(length(p.residual.xy)));return;
+    }
+    if(operation==8){
+        // Rank among the stable IDs of the same cell: the index, and with it the float summation order of every
+        // neighbor loop, is a function of the particle state alone (#95). One writer per entry.
+        if(id>=aliveCount)return;uint stable=slots[N+id];Grain p=readParticle(stable);uint c=uint(cell(p.position.xy));
+        uint start=cellStart(c),count=cells[COUNT_BASE+c],index=start;
+        for(uint k=0u;k<count;++k)if(cells[SCATTER_BASE+start+k]<stable)++index;
+        order[index]=stable;sortedIndex[stable]=index;
 #if HOT_READS == 2
         HotParticle value=HotParticle(vec4(p.position.xy,p.residual.xy),p.motion);
         hot[index]=value;hot[uint(N)+index]=value;
 #endif
-        atomicMax(cells[0],floatBitsToUint(length(p.residual.xy)));return;
+        return;
     }
 }
