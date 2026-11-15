@@ -64,4 +64,7 @@ Kolejność zwalnia miejsce w API najwcześniej: krok 1 zdejmuje 21 deklaracji b
 
 | Krok | Stan | PR |
 | --- | --- | --- |
-| 1 | w recenzji | — |
+| 1 | w recenzji | #107 |
+| 2–6 | otwarte | #105 |
+| 7–8 | otwarte | #106 |
+| 9 | otwarte | #66, #67 |
