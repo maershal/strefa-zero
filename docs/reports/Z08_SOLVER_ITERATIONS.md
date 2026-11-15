@@ -38,7 +38,11 @@ Koszt: plan `timing`, 4 bloki, w każdym losowa kolejność 18 odcinków (9 konf
 z bramką stygnięcia przed i po odcinku, dispatche z 16 ticków po pomiarze. 300 s bezczynności przed startem (GPU 57 °C),
 telemetria co 100 ms: 0 z 72 odcinków zdyskwalifikowanych (`hw_*`, `sw_thermal_slowdown`, zegar < 90% maksimum
 1920 MHz, sondy > 15% od najszybszej), `sw_power_cap` w 16. Δ to mediana z 4 bloków różnicy wobec 8/12 w tym samym
-bloku.
+bloku. Zamiast kolejności ABBA każdy blok losuje kolejność wszystkich 18 odcinków, a Δ porównuje odcinki z tego samego
+bloku: przy 9 konfiguracjach ABBA dla każdej pary wymagałoby wielokrotnie dłuższej sesji, a losowa kolejność tak samo
+rozkłada dryf termiczny między konfiguracje. Tryb `--gpu-check` działa w ukrytym oknie (domyślny rozmiar z ustawień,
+okno nigdy nie jest pokazywane) i pomiar nie wywołuje `SDL_GL_SwapWindow`, więc VSync (ustawienie domyślne, włączone)
+ani rozmiar okna nie wchodzą do zmierzonego czasu `step()`; nie dotyczy go też problem zminimalizowanego okna z #44.
 
 ## Wyniki
 
@@ -75,8 +79,8 @@ Zakres Δ misji między blokami: najwyżej 0,11 ms (np. 5/10: −0,74…−0,69)
 ### Przebiegi
 
 Każda iteracja PBF i każda iteracja kontaktu to 4 dispatche na tick (2 na podkrok): dispatche misji = 34 + 4 × (PBF +
-kontakty), od 114 (8/12) do 74 (4/6). Wobec opisu zadania (140 przebiegów, w tym 32 PBF i 24 kontakty) tick misji ma
-od Z05 114 dispatchy (`gpu.instrumentation`). Koszt w misji: ok. 0,028 ms na dispatch ((2,724 − 1,590) / 40), zgodnie
+kontakty), od 114 (8/12) do 74 (4/6). Raport [Z01](Z01_GPU_COST_MODEL.md) liczył 140 przebiegów na tick misji; od Z05
+jest ich 114 (`docs/CHANGELOG.md`, wpis o jednym dispatchu redukcji sprzężenia; `gpu.instrumentation`). Koszt w misji: ok. 0,028 ms na dispatch ((2,724 − 1,590) / 40), zgodnie
 z obserwacją Z01, że koszt idzie za liczbą przebiegów. Żadna konfiguracja nie osiąga celu 1,5 ms na tick misji
 (4/6: 1,59 ms, bez bramki ziaren).
 
@@ -115,9 +119,18 @@ $env:STREFA_ITERATION_SWEEP_PLAN = 'gates'
 ./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-gates
 $env:STREFA_ITERATION_SWEEP_CONFIGS = '6/9,5/10,4/10,5/9,4/9,4/8,8/12,6/8'   # potem '4/11,5/11'
 ./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-gates-2
-$env:STREFA_ITERATION_SWEEP_GATES = 'granular,coupling'                       # powtórzenia, po 5 procesów
-$env:STREFA_ITERATION_SWEEP_CONFIGS = '8/12,7/11,6/10,5/11,4/11,5/10,6/8,5/8,4/6'
-Remove-Item Env:STREFA_ITERATION_SWEEP_GATES, Env:STREFA_ITERATION_SWEEP_PLAN
+# powtórzenia bramek ziaren i sprzężenia, 5 procesów
+$env:STREFA_ITERATION_SWEEP_GATES = 'granular,coupling'
+$env:STREFA_ITERATION_SWEEP_CONFIGS = '8/12,7/11,6/10,6/9,5/11,5/10,5/9,4/11,4/10,4/9,6/8'
+foreach ($n in 1..5) {
+    ./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-repeat-$n
+}
+Remove-Item Env:STREFA_ITERATION_SWEEP_GATES, Env:STREFA_ITERATION_SWEEP_CONFIGS, Env:STREFA_ITERATION_SWEEP_PLAN
 pwsh ./scripts/profiling/profile-iteration-sweep.ps1 -Executable build/release/StrefaQA.exe -Output gpu-check/iteration-sweep-timing -Plan timing
-python ./scripts/profiling/analyze-iteration-sweep.py gpu-check/iteration-sweep-timing --gates gpu-check/iteration-sweep-gates*/iteration-sweep-gates.csv gpu-check/iteration-sweep-repeat-*/iteration-sweep-gates.csv
+# PowerShell nie rozwija `*` w argumentach programów natywnych: ścieżki trzeba rozwinąć samemu
+$gates = (Get-ChildItem gpu-check/iteration-sweep-gates*/iteration-sweep-gates.csv, gpu-check/iteration-sweep-repeat-*/iteration-sweep-gates.csv).FullName
+python ./scripts/profiling/analyze-iteration-sweep.py gpu-check/iteration-sweep-timing --gates @gates
 ```
+
+W surowych danych powtórzenia 4/11 i 5/11 są w osobnych katalogach `iteration-sweep-repeat-11-<n>` (dołożone po
+pierwszej serii); powyższa pętla zbiera je razem z resztą.

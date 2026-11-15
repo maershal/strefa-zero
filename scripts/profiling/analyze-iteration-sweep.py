@@ -41,6 +41,9 @@ def main():
     segments = rows(args.folder / 'iteration-sweep-timing.csv')
     if not segments:
         sys.exit('Brak iteration-sweep-timing.csv')
+    missing = [str(path) for path in args.gates or [] if not path.is_file()]
+    if missing:
+        sys.exit('Brak pliku bramek (PowerShell nie rozwija * w argumentach): ' + ', '.join(missing))
     gates = [g for path in (args.gates or [args.folder / 'iteration-sweep-gates.csv']) for g in rows(path)]
     telemetry = [r for r in rows(args.folder / 'telemetry.csv') if r.get('utc_unix_ns')]
     clocks = [float(r['graphics_mhz']) for r in telemetry if r.get('graphics_mhz')]
