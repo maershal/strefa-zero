@@ -8,8 +8,8 @@
 #include <vector>
 
 // Test and validation access to ParticleWorld, kept out of its public API (Z09). Explicit synchronous diagnostics:
-// never used by the interactive loop. The definitions still live in world.cpp; a later step moves them to
-// strefa_diagnostics once ParticleWorld::Impl has its own header.
+// never used by the interactive loop. The definitions still live in world.cpp; the next step moves them to
+// strefa_diagnostics on top of gpu/world_impl.hpp.
 namespace strefa::gpu::detail {
 struct WorldAccess {
     using Impl = ParticleWorld::Impl;
