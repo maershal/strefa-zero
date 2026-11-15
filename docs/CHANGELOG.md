@@ -2,6 +2,18 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Z08: ile iteracji solvera trzeba (`--gpu-check iteration-sweep`)
+
+Nowy pomiar `StrefaQA --gpu-check iteration-sweep` (`src/gpu/iteration_sweep.cpp`, CTest `gpu.iteration_sweep` w planie
+quick): dla iteracji PBF/kontaktu 8/12, 7/11, 6/10, 6/8, 5/8, 4/6 przy 2 podkrokach uruchamia bez zmian istniejące
+walidacje cieczy (I07 i `--gpu-liquid-test`), ziaren, przepływu, sprzężenia Q i misji, zapisuje PASS/FAIL per bramka,
+miary I07 oraz GPU ms/tick i dispatche na tick misji i przerwania tamy (`STREFA_ITERATION_SWEEP_CONFIGS` i
+`_GATES` zawężają przebieg; `scripts/profiling/profile-iteration-sweep.ps1`, `analyze-iteration-sweep.py`). GTX 1650:
+ciecze przechodzą wszystkie bramki już przy 4 iteracjach PBF, wiąże penetracja ziaren (11 kontaktów zawsze, 10 na
+granicy); najtańsza konfiguracja ze wszystkimi bramkami w powtórzeniach to 5/10 (114 → 94 dispatchy misji, −0,72 ms),
+z zapasem 5/11 (−16 dispatchy, −0,66 ms) ([raport Z08](reports/Z08_SOLVER_ITERATIONS.md)).
+Ustawienia domyślne, shadery i symulacja bez zmian.
+
 ## Termika GPU: dokładna bramka etapu gazu
 
 Etap gazu termiki GPU (ops 9, 14, 10 × 32, 11, 12, 13) jest pomijany przez komendy indirect z zerem grup, gdy wiadomo, że nie zmieniłby ani jednego słowa: jego wejście (`gas0`, `gas1`, `flow`) jest bitowo równe wejściu ostatniego uruchomienia (migawka w osobnym buforze, 64 B na komórkę, przypiętym do bindingu 3 tylko dla op 8, który ją porównuje i odświeża; zadeklarowana w bloku `ThermalAux` podnosiła pamięć procesu na Mesa llvmpipe o gigabajty), ostatnie uruchomienie niczego nie zmieniło (ops 9, 11, 12, 13 zgłaszają zmiany), teren się nie zmienił (op 2), op 8 nie zmienił rekordu (oba banki komórek są wtedy równe) i CPU nie wymusił uruchomienia. Decyzję zapisuje jeden wątek nowego `thermal_gate.comp`. Nowe pola `ThermalOptions::gas_gate` (domyślnie włączona, gdy termika działa) i `gate_audit` (etap liczy się zawsze, bramka liczy zmiany etapów, które by pominęła) oraz liczniki `ThermalTotals::gate_*` (tylko `ThermalSystem::snapshot`). `thermal-bits` liczy też przebieg audytu i wymaga 0 naruszeń we wszystkich scenach; skróty `fire` i `idle` są identyczne z `main`. Nowy pomiar `StrefaQA --gpu-check thermal-gate` (ABBA w jednym procesie z sondami Z01, `scripts/profiling/profile-thermal-gate.ps1`, `analyze-thermal-gate.py`, CTest `gpu.thermal_gate` w planie quick). GTX 1650: tick −1,17 ms w scenie zimnej (−17,1%), −1,18 ms w pustym świecie (−33,3%), +0,15 ms w ogniu (+4,3%) i +0,16 ms w gaszeniu (+2,7%), gdzie gaz nigdy nie stoi ([raport](reports/THERMAL_GAS_GATE.md)). Dispatchy termiki na tick 51 → 52; domyślna ścieżka gry (termika wyłączona) bez zmian. Wyjątek od reguły „bez dispatchy z zerem grup” zapisany w `CLAUDE.md` (decyzja właściciela). Pamięć termiki rośnie o 3,9 MB (migawka). Benchmark termiki I10 (`--gpu-thermal-benchmark`) mierzy dalej etap gazu bez bramki (`gas_gate = false`), bo `analyze-thermal.py` używa `gas_ms` jako sondy zegara niezależnej od sceny. `thermal-bits` wymaga też, żeby bramka pomijała etapy w pustym świecie; drugi przebieg każdej sceny to przebieg audytu (14 światów zamiast 21, bo każdy świat w procesie zostawia pamięć), a szybki plan `thermal-gate` liczy tylko odcinki A i B. Reset termiki wymusza uruchomienie etapu w następnym ticku. W trybie profilu dispatch bramki ma własny znacznik (indeks 22).
