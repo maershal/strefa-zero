@@ -57,6 +57,7 @@ jobs:
           ./scripts/test-pr-hygiene.sh
           ./scripts/test-nightly-issue.sh
           ./scripts/test-check-architecture.sh
+          ./scripts/test-gen-materials.sh
       - name: Check generated material tables
         run: python3 scripts/gen_materials.py --check
       - name: Install clang-format

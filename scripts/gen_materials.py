@@ -1,13 +1,16 @@
 #!/usr/bin/env python3
 """Generates src/sim/material_tables.hpp from the material registry src/sim/materials.toml.
 
-Usage: scripts/gen_materials.py [--check]
+Usage: python3 scripts/gen_materials.py [--check] [--registry FILE] [--output FILE]
   (no flag)  rewrite the generated file
   --check    exit 1 when the generated file differs from the registry (CI job `format`)
+  --registry, --output  other paths, used by scripts/test-gen-materials.sh
 
 The order of the [[material]] tables is the material ID (sim::Material). Numbers are emitted with
 repr(), which round-trips a double exactly, so the tables carry the same bits as the registry values.
 """
+import argparse
+import math
 import sys
 import tomllib
 from pathlib import Path
@@ -20,32 +23,42 @@ PHASES = ("empty", "solid", "powder", "liquid", "gas", "flame")
 PHYSICAL = ("density", "heat_capacity", "conductance", "spawn_temperature", "ignition", "burn_rate",
             "heat_release", "residue", "strength")
 KEYS = {"id", "name", "description", "phase", "color", *PHYSICAL}
+# Material IDs are stored in recordings and index the thermal shader tables, so an ID never moves: the registry
+# must start with exactly this list. A new material is appended to the registry and to this list in the same PR.
+PINNED_IDS = ("empty", "stone", "sand", "water", "oil", "wood", "fire", "smoke", "steam", "acid", "lava", "gas",
+              "coal", "gunpowder", "thermite", "nitroglycerin", "metal", "ice", "molten_metal", "ash")
 
 
 def fail(message: str) -> None:
     sys.exit(f"gen_materials: {message}")
 
 
-def cpp_string(text: str) -> str:
+def cpp_string(material: str, key: str, text: object) -> str:
+    if not isinstance(text, str) or any(ord(c) < 32 or ord(c) == 127 for c in text):
+        fail(f"{material}.{key}: expected a single-line string")
     return '"' + text.replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
 def number(material: str, key: str, value: object) -> str:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         fail(f"{material}.{key}: expected a number, got {value!r}")
+    if not math.isfinite(value):
+        fail(f"{material}.{key}: must be finite")
     return repr(value)
 
 
-def load() -> list[dict]:
-    with REGISTRY.open("rb") as stream:
+def load(registry: Path) -> list[dict]:
+    with registry.open("rb") as stream:
         materials = tomllib.load(stream).get("material", [])
     if not materials:
-        fail(f"{REGISTRY.name} has no [[material]] table")
+        fail(f"{registry.name} has no [[material]] table")
     if len(materials) > 255:
         fail("sim::Material is a std::uint8_t: at most 255 materials")
     seen = set()
     for index, entry in enumerate(materials):
         name = entry.get("id", f"#{index}")
+        if not isinstance(name, str):
+            fail(f"#{index}: id must be a string")
         if missing := sorted(KEYS - entry.keys()):
             fail(f"{name}: missing {', '.join(missing)}")
         if unknown := sorted(entry.keys() - KEYS):
@@ -56,8 +69,14 @@ def load() -> list[dict]:
         if entry["phase"] not in PHASES:
             fail(f"{name}: phase must be one of {', '.join(PHASES)}")
         color = entry["color"]
-        if len(color) != 3 or any(isinstance(c, bool) or not isinstance(c, int) or not 0 <= c <= 255 for c in color):
+        if (not isinstance(color, list) or len(color) != 3
+                or any(isinstance(c, bool) or not isinstance(c, int) or not 0 <= c <= 255 for c in color)):
             fail(f"{name}: color must be three integers 0-255")
+    ids = tuple(entry["id"] for entry in materials)
+    if ids[:len(PINNED_IDS)] != PINNED_IDS:
+        fail("material IDs are append-only: the registry must start with PINNED_IDS in the same order")
+    if len(ids) != len(PINNED_IDS):
+        fail(f"new material {ids[len(PINNED_IDS)]}: append its id to PINNED_IDS in scripts/gen_materials.py")
     return materials
 
 
@@ -85,8 +104,8 @@ def render(materials: list[dict]) -> str:
     ]
     for m in materials:
         r, g, b = m["color"]
-        out.append(f"    {{{cpp_string(m['name'])}, {cpp_string(m['description'])}, Phase::{m['phase']}, "
-                   f"{{{r}, {g}, {b}}}}},")
+        name, description = (cpp_string(m["id"], key, m[key]) for key in ("name", "description"))
+        out.append(f"    {{{name}, {description}, Phase::{m['phase']}, {{{r}, {g}, {b}}}}},")
     out += [
         "}};",
         "// " + ", ".join(PHYSICAL),
@@ -100,16 +119,19 @@ def render(materials: list[dict]) -> str:
 
 
 def main() -> None:
-    arguments = sys.argv[1:]
-    if arguments not in ([], ["--check"]):
-        fail("usage: gen_materials.py [--check]")
-    text = render(load())
-    if arguments:
-        current = OUTPUT.read_text(encoding="utf-8").replace("\r\n", "\n") if OUTPUT.exists() else ""
+    parser = argparse.ArgumentParser(description="Generate the material tables from the TOML registry.")
+    parser.add_argument("--check", action="store_true")
+    parser.add_argument("--registry", type=Path, default=REGISTRY)
+    parser.add_argument("--output", type=Path, default=OUTPUT)
+    arguments = parser.parse_args()
+    text = render(load(arguments.registry))
+    if arguments.check:
+        output = arguments.output
+        current = output.read_text(encoding="utf-8").replace("\r\n", "\n") if output.exists() else ""
         if current != text:
-            fail(f"{OUTPUT.relative_to(ROOT).as_posix()} is stale: run python3 scripts/gen_materials.py")
+            fail(f"{output.name} is stale: run python3 scripts/gen_materials.py")
         return
-    with OUTPUT.open("w", encoding="utf-8", newline="\n") as stream:
+    with arguments.output.open("w", encoding="utf-8", newline="\n") as stream:
         stream.write(text)
 
 

@@ -20,7 +20,7 @@ CLANG_FORMAT=clang-format-18 ./scripts/format.sh   # CI job `format` checks with
 ./scripts/lint.sh [files...]          # clang-tidy, advisory
 python3 scripts/check_architecture.py [--report|--update]   # layer rules + size budgets (CI job `architecture`)
 python3 scripts/golden.py --build-dir build/linux-release [--check]   # regenerate/compare tests/golden/<toolchain>.txt
-python3 scripts/gen_materials.py [--check]   # src/sim/materials.toml -> src/sim/material_tables.hpp (CI job `format`)
+python3 scripts/gen_materials.py [--check]   # src/sim/materials.toml -> src/sim/material_tables.hpp (CI job `format`, self-test `scripts/test-gen-materials.sh`)
 ```
 
 - Warnings are errors (`STREFA_WARNINGS_AS_ERRORS=ON` in scripts and presets).
@@ -54,7 +54,7 @@ python3 scripts/gen_materials.py [--check]   # src/sim/materials.toml -> src/sim
 | Path | Contents |
 | --- | --- |
 | `src/core` | settings schema (`meta::Field`), validation |
-| `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp`. Material IDs and tables: edit `materials.toml` (order = ID, append only), never the generated `material_tables.hpp` |
+| `src/sim` | `strefa_sim`: SDL-free CPU world (thermal, MAC/PCG liquids, air, reactions, scenes), worker pool in `executor.hpp`. Material IDs and tables: edit `materials.toml` (order = ID, append only, enforced by `PINNED_IDS` in `scripts/gen_materials.py`), never the generated `material_tables.hpp` |
 | `src/game` | `strefa_input` (`input.hpp`: input buffer, actor state for the HUD; no CPU model), `strefa_gameplay` (`GameplaySession`, world protocol, pose/IK) |
 | `src/gpu` | `strefa_gpu`: `ParticleWorld` (`world.cpp`, incl. the `*_validation.inl` member checks), renderer, VFX, thermal, lighting, readback/upload rings. The free `*_validation.cpp`/`*_profile.cpp`/`profiling.cpp` check modes (declared in `gpu/validation.hpp`) build into `strefa_diagnostics` |
 | `src/platform` | SDL window, GL context, textures, settings storage |

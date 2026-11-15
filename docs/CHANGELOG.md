@@ -7,7 +7,9 @@ Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raport
 Identyfikatory materiałów modelu CPU (`sim::Material`) oraz tabele `materials` i `physical` nie są już pisane ręcznie:
 źródłem jest `src/sim/materials.toml` (kolejność tabel `[[material]]` to ID), a `scripts/gen_materials.py` generuje
 z niego `src/sim/material_tables.hpp`, który leży w repozytorium. Job `format` uruchamia skrypt z `--check` i pada,
-gdy wygenerowany plik nie odpowiada rejestrowi. Typy wierszy są w `sim/material_types.hpp`, a `sim/material.hpp`
+gdy wygenerowany plik nie odpowiada rejestrowi. ID są tylko dopisywane: rejestr musi zaczynać się od listy
+`PINNED_IDS` ze skryptu (ID są w nagraniach i indeksują tablice shaderów termiki), a ścieżki błędów skryptu sprawdza
+`scripts/test-gen-materials.sh`. Typy wierszy są w `sim/material_types.hpp`, a `sim/material.hpp`
 zostawia tylko funkcje dostępu i `enthalpy_offset`. Wartości są te same co do bitu (rejestr powstał skryptem z dawnych
 tabel i został z nimi porównany), więc `sim.golden_master` i `material_defines()` się nie zmieniają. Zostaje do
 zrobienia w [#110](https://github.com/maershal/strefa-zero/issues/110): `enthalpy_offset`, mapowanie

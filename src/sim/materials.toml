@@ -1,8 +1,9 @@
-# Rejestr materiałów modelu CPU (sim::Material). Kolejność tabel [[material]] to ID materiału:
-# nowe materiały dopisuj na końcu, bo ID są zapisane w nagraniach i w tablicach shaderów termiki.
-# Po zmianie: python3 scripts/gen_materials.py (generuje src/sim/material_tables.hpp).
-# Jednostki: znormalizowana masa/objętość, entalpia w kJ na jednostkę masy, temperatury w K;
-# przewodność jest przyspieszona do skali czasu gry.
+# Material registry of the CPU model (sim::Material). The order of the [[material]] tables is the material ID:
+# append new materials at the end (IDs are stored in recordings and index the thermal shader tables) and add
+# the id to PINNED_IDS in scripts/gen_materials.py.
+# After a change: python3 scripts/gen_materials.py (writes src/sim/material_tables.hpp).
+# Units: normalized mass/volume, enthalpy in kJ per unit mass, temperatures in K; conductance is accelerated
+# for game-scale time. `name` and `description` are UI strings and stay in Polish.
 
 [[material]]
 id = "empty"
