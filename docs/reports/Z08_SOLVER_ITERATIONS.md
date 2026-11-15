@@ -126,8 +126,11 @@ porównujemy.
 ```powershell
 $env:STREFA_ITERATION_SWEEP_PLAN = 'gates'
 ./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-gates
-$env:STREFA_ITERATION_SWEEP_CONFIGS = '6/9,5/10,4/10,5/9,4/9,4/8,8/12,6/8'   # potem '4/11,5/11'
+$env:STREFA_ITERATION_SWEEP_CONFIGS = '6/9,5/10,4/10,5/9,4/9,4/8,8/12,6/8'
 ./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-gates-2
+# każdy przebieg nadpisuje iteration-sweep-gates.csv w swoim katalogu: osobny katalog na każdy
+$env:STREFA_ITERATION_SWEEP_CONFIGS = '4/11,5/11'
+./build/release/StrefaQA.exe --gpu-check iteration-sweep --profile gpu-check/iteration-sweep-gates-3
 # powtórzenia bramek ziaren i sprzężenia, 5 procesów
 $env:STREFA_ITERATION_SWEEP_GATES = 'granular,coupling'
 $env:STREFA_ITERATION_SWEEP_CONFIGS = '8/12,7/11,6/10,6/9,5/11,5/10,5/9,4/11,4/10,4/9,6/8'
