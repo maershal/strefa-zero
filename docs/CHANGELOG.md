@@ -2,6 +2,19 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## B1: rejestr materiałów w TOML
+
+Identyfikatory materiałów modelu CPU (`sim::Material`) oraz tabele `materials` i `physical` nie są już pisane ręcznie:
+źródłem jest `src/sim/materials.toml` (kolejność tabel `[[material]]` to ID), a `scripts/gen_materials.py` generuje
+z niego `src/sim/material_tables.hpp`, który leży w repozytorium. Job `format` uruchamia skrypt z `--check` i pada,
+gdy wygenerowany plik nie odpowiada rejestrowi. ID są tylko dopisywane: rejestr musi zaczynać się od listy
+`PINNED_IDS` ze skryptu (ID są w nagraniach i indeksują tablice shaderów termiki), a ścieżki błędów skryptu sprawdza
+`scripts/test-gen-materials.sh`. Typy wierszy są w `sim/material_types.hpp`, a `sim/material.hpp`
+zostawia tylko funkcje dostępu i `enthalpy_offset`. Wartości są te same co do bitu (rejestr powstał skryptem z dawnych
+tabel i został z nimi porównany), więc `sim.golden_master` i `material_defines()` się nie zmieniają. Zostaje do
+zrobienia w [#110](https://github.com/maershal/strefa-zero/issues/110): `enthalpy_offset`, mapowanie
+`thermal_material()` i indeksy materiałów w GLSL.
+
 ## Z10: indeks sąsiadów w kolejności stabilnych ID (determinizm solvera, krok 1)
 
 Budowa indeksu sąsiadów dostała szósty przebieg (`neighbors.comp`, operacja 8): atomowy rozrzut zapisuje ID do bufora

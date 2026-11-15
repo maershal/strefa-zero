@@ -6,3 +6,6 @@ docs/plans/reviews/** -text
 
 # References written by scripts/golden.py; excluded from the pr-hygiene size count.
 tests/golden/*.txt linguist-generated=true
+
+# Written by scripts/gen_materials.py from src/sim/materials.toml.
+src/sim/material_tables.hpp linguist-generated=true

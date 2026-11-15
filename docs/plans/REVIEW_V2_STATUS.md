@@ -68,7 +68,8 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Detonator w laboratorium GPU, gruz z prędkością, impuls ∝ odwrotnej masy, do 8 wybuchów na tick (R §11, szybkie wygrane) | zrobione; misja za flagą `batched_blasts` (domyślnie wyłączoną) | N06 |
 | Bitowo neutralne przyspieszenie termiki: narzędzie skrótów, bramka etapu gazu (R §5.3 p. 1) | bramka gazu zrobiona (cold −17,1%, idle −33,3%); integracja warunkowa i przebiegi po żywych ID zablokowane przez niedeterminizm solvera cząstek (Z10: indeks sąsiadów po stabilnym ID, scena bez termiki powtarza się bitowo; lista aktywnych, narodziny i dowiązania termiki otwarte) | #97, #98, #95, #96 |
 | Rozbiór `ParticleWorld` (A faza C): haki poza klasą, `PassRunner`, misja osobno ([plan](PLAN_ROZBIOR_PARTICLE_WORLD.md)) | kroki 1–2/9: 21 z 30 haków w `gpu/world_test_access.hpp`, `Impl` w `gpu/world_impl.hpp`; reszta otwarta | #107, #105, #106, #59, #66, #67 |
-| Wszystko z F1–F7 (laboratorium, rejestr, termika v2, UI) i fazy A3, A5–A7, B, D, E | nie rozpoczęte | — |
+| Rejestr materiałów z TOML (A faza B, R §8.1) | krok B1: ID i tabele `materials`/`physical` modelu CPU generowane z `sim/materials.toml`, `--check` w CI; `enthalpy_offset`, `thermal_material()` i indeksy w GLSL otwarte | #110 |
+| Wszystko z F1–F7 (laboratorium, termika v2, UI) i fazy A3, A5–A7, reszta B, D, E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
 z `tools/architecture_budget.json`, np. `strefa_zero_qa_symbols` = 35, `size_literals_glsl` = 75,
