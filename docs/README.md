@@ -30,6 +30,7 @@ Raport każdego etapu: cel, kontrakt, walidacja, pomiary i otwarte ograniczenia.
 | Z01 | [Z01_GPU_COST_MODEL](reports/Z01_GPU_COST_MODEL.md) — skąd bierze się koszt ticka GPU |
 | Termika | [THERMAL_GAS_GATE](reports/THERMAL_GAS_GATE.md) — dokładna bramka etapu gazu termiki GPU |
 | Z06 | [Z06_SHADER_STARTUP](reports/Z06_SHADER_STARTUP.md) — start trybu GPU: równoległa kompilacja shaderów, ekran postępu, cache |
+| Z08 | [Z08_SOLVER_ITERATIONS](reports/Z08_SOLVER_ITERATIONS.md) — ile iteracji solvera wymagają bramki jakości |
 | Linux | [LINUX_WSL_QA](reports/LINUX_WSL_QA.md) |
 | Demo | [DEMO_CLOCK](reports/DEMO_CLOCK.md) — zegar i tempo |
 
