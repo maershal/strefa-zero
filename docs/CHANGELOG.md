@@ -2,6 +2,13 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Z09: rozbiór `ParticleWorld`, krok 2 — `Impl` we własnym nagłówku
+
+Definicja `ParticleWorld::Impl` i jej pomocniki (`hash`, `seeded_position`, kontrola aliasów banków PBF) przeniesione
+bez zmian z `world.cpp` do `gpu/world_impl.hpp`; pomocniki są teraz funkcjami `inline` w `strefa::gpu::detail`.
+`world.cpp` 2054 → 1576 linii. Przygotowuje krok 3: ciała haków testowych mogą przejść do `strefa_diagnostics`.
+Zachowanie, wywołania GL i liczniki bez zmian.
+
 ## Z09: rozbiór `ParticleWorld`, krok 1 — haki testowe poza klasą
 
 21 z 30 haków testowych `ParticleWorld` (odczyty indeksu, ciał, cieczy, śladu diagnostycznego, termiki, próby PBF,

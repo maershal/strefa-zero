@@ -86,7 +86,7 @@ allow_edge() {
     sed -i '$a include sim gpu 1' tools/architecture_allowlist.txt
     python3 "$check" --root . >/dev/null || fail "extended allowlist does not pass on its own"
 }
-expect 'world_cpp_lines = 2' raise-budget raise_budget
+expect 'world_cpp_lines = ' raise-budget raise_budget
 expect '`include sim gpu 1` przekracza main (0)' allow-new-edge allow_edge
 
 if ((failures)); then
