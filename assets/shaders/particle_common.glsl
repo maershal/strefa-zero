@@ -1,7 +1,8 @@
 #include "particle_storage.glsl"
 #if SORTED_NEIGHBORS
-// Header, cell counts, exclusive local prefixes, scatter cursors, block sums
-// and block offsets. The cell grid is never a fixed-capacity particle list.
+// Header, cell counts, exclusive local prefixes, scatter cursors, block sums,
+// block offsets, the phase tile mask and the unordered scatter of the current
+// index build. The cell grid is never a fixed-capacity particle list.
 layout(std430,binding=2) coherent buffer Cells {uint cells[];};
 #if HOT_READS == 2
 struct HotParticle {vec4 geometry;vec4 motion;};
@@ -22,7 +23,8 @@ layout(std430,binding=3) buffer Sorted {
 const uint CELL_COUNT=61440u,HEADER=16u,COUNT_BASE=HEADER,START_BASE=HEADER+CELL_COUNT,
     CURSOR_BASE=HEADER+2u*CELL_COUNT,BLOCK_BASE=HEADER+3u*CELL_COUNT,
     BLOCK_OFFSET_BASE=BLOCK_BASE+240u,
-    PHASE_MASK_BASE=BLOCK_OFFSET_BASE+240u,PHASE_TILE_COLUMNS=20u,PHASE_TILE_COUNT=240u;
+    PHASE_MASK_BASE=BLOCK_OFFSET_BASE+240u,PHASE_TILE_COLUMNS=20u,PHASE_TILE_COUNT=240u,
+    SCATTER_BASE=PHASE_MASK_BASE+PHASE_TILE_COUNT; // unordered scatter of one index build, one word per particle
 #else
 layout(std430,binding=2) buffer Heads {int head[];};
 #if COUPLING_MODE != 0

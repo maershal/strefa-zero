@@ -50,7 +50,7 @@ void compile_kernels(ShaderLibrary& library, Api& gl, const ExecutionOptions& ex
     submit(kernels.granular, "granular.comp", {0, 1, 2, 3, 4, 5, 7, 8, 9, 10, 11, 12, 19, 20});
     submit(kernels.liquids, "liquids.comp", {0, 1, 2, 3, 4, 5, 6});
     if (execution.neighbors != NeighborMode::linked)
-        submit(kernels.neighbors, "neighbors.comp", {0, 1, 2, 3, 4, 5, 6, 7});
+        submit(kernels.neighbors, "neighbors.comp", {0, 1, 2, 3, 4, 5, 6, 7, 8});
     submit(kernels.mission, "mission.comp", {0, 1, 3, 4, 5, 6, 7, 8});
     if (execution.coupling != CouplingMode::reference) submit(kernels.coupling, "coupling.comp", {0, 2});
     library.finish();

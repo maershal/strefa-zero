@@ -99,7 +99,7 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
     using Kernel = detail::ComputeKernel;
     std::array<Kernel, 21> granular;
     std::array<Kernel, 7> liquids;
-    std::array<Kernel, 8> neighbors;
+    std::array<Kernel, 9> neighbors;
     bool bins_valid{};
     NeighborReads read_mode() const { return effective_neighbor_reads(execution.neighbor_reads, execution.neighbors); }
     std::string fluid_defines() const {
@@ -366,7 +366,7 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
         const auto token = trace.begin(PassFamily::neighbors, op, epoch, metrics.steps + (trace_step ? 1 : 0));
         gl.DispatchCompute(groups, 1, 1);
         gl.MemoryBarrier(GL_SHADER_STORAGE_BARRIER_BIT);
-        trace.end(token, bins_valid || op == 4, execution.soa, buffers[current], buffers[2], buffers[3]);
+        trace.end(token, bins_valid || op == 8, execution.soa, buffers[current], buffers[2], buffers[3]);
     }
     void bins() {
         if (execution.neighbors == NeighborMode::reused && bins_valid) return;
@@ -382,6 +382,7 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
             neighbor_dispatch(2, 240);
             neighbor_dispatch(3, 1);
             neighbor_dispatch(4, 128);
+            neighbor_dispatch(8, 128); // in-cell order by stable ID (#95)
         }
         bins_valid = true;
     }
@@ -473,6 +474,13 @@ struct ParticleWorld::Impl final : detail::ExplosionPasses {
         return execution.neighbors == NeighborMode::linked
                      ? capacity * 4
                      : capacity * 24 + (read_mode() == NeighborReads::sorted ? capacity * 64 : 0);
+    }
+    // Header, three words per cell, block sums and offsets, the phase mask and the unordered scatter (neighbors.comp).
+    std::size_t cell_buffer_size() const {
+        return static_cast<std::size_t>(execution.neighbors == NeighborMode::linked
+                                                ? width * height
+                                                : 16 + 3 * width * height + 480 + 240 + capacity)
+             * 4;
     }
     std::size_t index_buffer_size() const {
         return body_offset() + (execution.coupling == CouplingMode::reference ? 0 : detail::body_metadata_size);

@@ -73,10 +73,7 @@ ParticleWorld::create(const std::filesystem::path& shaders, const ExecutionOptio
         const std::array<std::size_t, 8> sizes{
                 capacity * sizeof(Grain),
                 capacity * sizeof(Grain),
-                static_cast<std::size_t>(
-                        s.execution.neighbors == NeighborMode::linked
-                                ? width * height * 4
-                                : (16 + 3 * width * height + 480 + (s.execution.phase_gating ? 240 : 0)) * 4),
+                s.cell_buffer_size(),
                 s.index_buffer_size(),
                 static_cast<std::size_t>(width * height * (execution.fluid.boundary == FluidBoundary::volume ? 20 : 16)
                                          + (execution.fluid.boundary == FluidBoundary::volume ? 144 * 4 : 0)),
@@ -1385,9 +1382,7 @@ void test::start_diagnostic_trace(ParticleWorld& world, const TraceConfig& confi
     if ((config.mode == CostMode::bounds || config.mode == CostMode::snapshots)
         && s.execution.neighbors != NeighborMode::reused)
         throw std::invalid_argument{"Ślad przestrzenny wymaga produkcyjnego indeksu."};
-    const auto cells =
-            static_cast<std::size_t>(16 + 3 * width * height + 480 + (s.execution.phase_gating ? 240 : 0)) * 4;
-    s.trace.start(config, capacity * sizeof(Grain), cells, capacity * 24);
+    s.trace.start(config, capacity * sizeof(Grain), s.cell_buffer_size(), capacity * 24);
 }
 TraceReport test::read_diagnostic_trace(ParticleWorld& world) {
     WorldAccess::impl(world).trace_step = false;

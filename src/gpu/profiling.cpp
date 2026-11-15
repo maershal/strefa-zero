@@ -190,7 +190,7 @@ void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality 
                 require(fluid.substeps == 2, "Instrumentation counts are defined for 2 substeps only");
                 const unsigned solver_dispatches =
                         20U + fluid.substeps * (2U * fluid.pbf_iterations + fluid.contact_iterations);
-                const unsigned bin_passes = mode == NeighborMode::linked ? 2U : 5U;
+                const unsigned bin_passes = mode == NeighborMode::linked ? 2U : 6U;
                 const auto coupling = world.execution_options().coupling;
                 // A body reduction per contact iteration and a final one; outside `combined` also one per PBF
                 // iteration: 26/42 at 2 x 8/12, 24/34 at 2 x 5/11.

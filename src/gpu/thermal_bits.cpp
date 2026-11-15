@@ -242,8 +242,10 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
             if (!repeats && diverged < first.size()) info << " first_difference=\"" << first[diverged] << '"';
             info << '\n';
             for (const auto& row : first) (repeats ? report : unstable) << row << '\n';
-            // Scenes without particles never run the particle solver and must repeat.
-            if (!repeats && (scene_names[scene] == "fire" || scene_names[scene] == "idle"))
+            // Scenes without particles never run the particle solver and must repeat. So must "control": without
+            // thermal the solver has no order-dependent sum left since the neighbor index is sorted by ID (#95).
+            if (!repeats
+                && (scene_names[scene] == "fire" || scene_names[scene] == "idle" || scene_names[scene] == "control"))
                 failures.push_back(std::format("scena {} nie powtarza się w jednym procesie", scene_names[scene]));
         }
         // The empty world with thermal on is in equilibrium: one more tick must not change a single word.
