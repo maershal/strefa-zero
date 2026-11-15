@@ -40,10 +40,11 @@ struct Config {
     unsigned pbf{}, contact{};
     std::string name() const { return std::format("{}/{}", pbf, contact); }
 };
-constexpr Config baseline{8, 12};
+// The configuration that must pass every gate: the shipped default.
+const Config baseline{FluidOptions{}.pbf_iterations, FluidOptions{}.contact_iterations};
 struct Plan {
     std::string name{"full"};
-    std::vector<Config> configs{{8, 12}, {7, 11}, {6, 10}, {6, 8}, {5, 8}, {4, 6}};
+    std::vector<Config> configs{{8, 12}, {7, 11}, {6, 10}, {5, 11}, {6, 8}, {5, 8}, {4, 6}};
     std::vector<std::string_view> gates{"fluid_quality", "liquids", "granular", "flow", "coupling", "mission"};
     unsigned blocks{4}, warmup{120}, measured{240}, max_cooldown_s{180};
 };
@@ -73,7 +74,7 @@ Plan named_plan(std::string_view name) {
     }
     require(name == "quick", "STREFA_ITERATION_SWEEP_PLAN: full, gates, timing lub quick.");
     plan.name = "quick";
-    plan.configs = {{8, 12}, {4, 6}};
+    plan.configs = {baseline, {4, 6}};
     plan.gates = {"liquids", "granular"};
     plan.blocks = 1;
     plan.warmup = 12;

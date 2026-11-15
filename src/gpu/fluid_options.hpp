@@ -15,7 +15,9 @@ struct FluidOptions {
     FluidBoundary boundary{FluidBoundary::unit};
     FluidSurface surface{FluidSurface::legacy};
     float s_corr{.0001F}, tension_scale{1}, curvature_scale{1}, adhesion{}, vorticity{};
-    unsigned substeps{2}, pbf_iterations{8}, contact_iterations{12};
+    // 5/11 since Z09: the cheapest count passing every quality gate with margin
+    // (docs/reports/Z08_SOLVER_ITERATIONS.md).
+    unsigned substeps{2}, pbf_iterations{5}, contact_iterations{11};
     bool operator==(const FluidOptions&) const = default;
     bool fields() const noexcept { return surface == FluidSurface::akinci2d || vorticity > 0; }
     bool velocity_reaction() const noexcept { return adhesion > 0; }
@@ -27,6 +29,13 @@ struct FluidOptions {
             && s_corr <= .008F && std::isfinite(tension_scale) && tension_scale >= 0 && tension_scale <= 4
             && std::isfinite(curvature_scale) && curvature_scale >= 0 && curvature_scale <= 4 && std::isfinite(adhesion)
             && adhesion >= 0 && adhesion <= 20 && std::isfinite(vorticity) && vorticity >= 0 && vorticity <= 10;
+    }
+    // The pre-Z09 default (2 substeps x 8 PBF / 12 contact): STREFA_SESSION 1 recordings were made with it.
+    static FluidOptions legacy_iterations() {
+        FluidOptions f;
+        f.pbf_iterations = 8;
+        f.contact_iterations = 12;
+        return f;
     }
     static FluidOptions balanced() {
         FluidOptions f;

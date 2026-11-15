@@ -201,7 +201,12 @@ std::expected<void, std::string> validate_neighbors(const std::filesystem::path&
                 profile.collect = true;
                 world->set_profile_options(profile);
                 world->step();
-                require(world->step_profile().calls.bins == (mode == NeighborMode::reused ? 2U : 43U),
+                // Sorted: per substep one rebuild per contact and PBF iteration and a final one, plus the periodic
+                // diagnostic rebuild of the first tick (43 at 2 x 8/12, 35 at 2 x 5/11).
+                const auto& fluid = world->execution_options().fluid;
+                const unsigned sorted_builds =
+                        fluid.substeps * (fluid.contact_iterations + fluid.pbf_iterations + 1U) + 1U;
+                require(world->step_profile().calls.bins == (mode == NeighborMode::reused ? 2U : sorted_builds),
                         "Production schedule rebuilt an unexpected number of indices");
                 checks << "layout=" << (soa ? "soa" : "aos")
                        << " mode=" << (mode == NeighborMode::sorted ? "sorted" : "reused")

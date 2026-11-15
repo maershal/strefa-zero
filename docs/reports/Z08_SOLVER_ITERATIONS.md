@@ -12,6 +12,15 @@ Najtańsza konfiguracja, która przeszła wszystkie bramki we wszystkich powtór
 dispatchy na tick misji (**−20 przebiegów, −0,72 ms, −26%**), ale w bramce ziaren ma tylko 0,009 komórki zapasu,
 a ta sama liczba kontaktów zawiodła w 6/10 i 4/10; z zapasem jest **5/11** (−16 przebiegów, −0,66 ms, −24%).
 
+## Decyzja (Z09)
+
+Właściciel zostawił wybór w rozmowie; od Z09 domyślne jest **5/11** (zapas w bramce ziaren, 11 kontaktów przeszło
+bramkę ziaren we wszystkich 18 przebiegach: 7/11, 5/11, 4/11), nie 5/10 (0,009 komórki zapasu, 10 kontaktów
+zawiodło w 6/10 i 4/10). Z nową konfiguracją domyślną przechodzi wszystkie 74 testy `graphics` na GTX 1650. W ticku
+1200 sceny I07 przy 8/12 i 5/11 wyglądają na obrazach prawie tak samo; powierzchnia spoczywającego zbiornika jest przy
+5/11 nieco bardziej poszarpana, zgodnie z wyższą energią kinetyczną z tabeli miar I07. Dawną konfigurację przywraca
+`--gpu-fluid-iterations 8/12` (potrzebna do starszych nagrań).
+
 ## Co zmierzono
 
 `StrefaQA --gpu-check iteration-sweep` (`src/gpu/iteration_sweep.cpp`, procedura w `docs/maintenance/GPU_CHECK.md`,

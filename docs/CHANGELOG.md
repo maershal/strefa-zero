@@ -2,6 +2,19 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Z09: domyślne iteracje solvera 5/11
+
+Domyślna konfiguracja cieczy i ziaren to teraz 2 podkroki × 5 iteracji PBF / 11 kontaktu (było 8/12): najtańsza
+konfiguracja, która w Z08 przeszła wszystkie bramki jakości we wszystkich powtórzeniach z zapasem. Tick misji ma 98
+zamiast 114 dispatchy (GTX 1650: ok. −0,66 ms, −24%). `--gpu-fluid-substeps 2` daje nową konfigurację domyślną.
+Nowa opcja StrefaQA `--gpu-fluid-iterations <PBF>/<kontakt>` (np. `8/12`) przywraca dawną liczbę iteracji, żeby
+odtworzyć starsze nagrania: v2/v3 zapisują konfigurację cieczy i wymagają jej zgodności, v1 wymaga teraz jawnie 8/12
+(`FluidOptions::legacy_iterations()`). Oczekiwane liczniki `gpu.instrumentation` i `gpu.neighbors` (dispatche,
+przebudowy indeksu, redukcje sprzężenia) są liczone z liczby iteracji, nie wpisane na sztywno. `--gpu-check
+iteration-sweep` sprawdza konfigurację domyślną zamiast 8/12. Miary I07 bez progów pogarszają się (energia kinetyczna
+spoczywającego zbiornika ok. 2,4×, skupienia ok. 2,5×; [raport Z08](reports/Z08_SOLVER_ITERATIONS.md), sekcja
+„Decyzja”).
+
 ## Z08: ile iteracji solvera trzeba (`--gpu-check iteration-sweep`)
 
 Nowy pomiar `StrefaQA --gpu-check iteration-sweep` (`src/gpu/iteration_sweep.cpp`, CTest `gpu.iteration_sweep` w planie

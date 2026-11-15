@@ -58,6 +58,15 @@ int main() {
         check(parsed && parsed->fluid_check && parsed->gpu_execution.fluid.substeps == 4
                       && parsed->gpu_execution.fluid.pbf_iterations == 4,
               "CLI preset/schedule");
+        check(gpu::FluidOptions{}.pbf_iterations == 5 && gpu::FluidOptions{}.contact_iterations == 11,
+              "Default solver iterations are not 5/11 (Z09)");
+        const auto old_default = parse({"game", "--gpu-fluid-iterations", "8/12"});
+        check(old_default && old_default->gpu_execution.fluid == gpu::FluidOptions::legacy_iterations(),
+              "--gpu-fluid-iterations 8/12 does not restore the pre-Z09 default");
+        const auto reset = parse({"game", "--gpu-fluid-iterations", "8/12", "--gpu-fluid-substeps", "2"});
+        check(reset && reset->gpu_execution.fluid == gpu::FluidOptions{}, "Substeps 2 is not the default schedule");
+        for (const char* bad : {"12/8", "8", "8/", "/12", "8/12x", "0/4", "8/25"})
+            check(!parse({"game", "--gpu-fluid-iterations", bad}), "Invalid solver iterations accepted");
         check(!parse({"game", "--gpu-render-check"}), "Render check without profile accepted");
         check(!parse({"game", "--gpu-render-check", "--gpu-render-benchmark", "--profile", "invalid"}),
               "Combined render diagnostics accepted");
@@ -99,6 +108,8 @@ int main() {
         }
         check(!app::SessionRecording::load(file, execution, profile), "v1 accepted with new physics");
         execution.fluid = {};
+        check(!app::SessionRecording::load(file, execution, profile), "v1 accepted with the 5/11 default");
+        execution.fluid = gpu::FluidOptions::legacy_iterations();
         check(bool(app::SessionRecording::load(file, execution, profile)), "v1 legacy compatibility");
         {
             std::ofstream out{file};

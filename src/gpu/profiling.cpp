@@ -177,16 +177,30 @@ void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality 
             if (variant.options.collect) {
                 const bool diagnostic_due = i == 0 && variant.options.periodic_diagnostics;
                 const auto mode = world.execution_options().neighbors;
-                const unsigned builds = mode == NeighborMode::reused ? 2U : (42U + (diagnostic_due ? 1U : 0U));
+                const auto& fluid = world.execution_options().fluid;
+                // Per substep: an index rebuild per contact iteration, one more per PBF iteration (grains and
+                // liquids share it) and a final one; 2 x (12 + 8 + 1) = 42 before Z09, 2 x (11 + 5 + 1) = 34 now.
+                const unsigned iteration_builds =
+                        fluid.substeps * (fluid.contact_iterations + fluid.pbf_iterations + 1U);
+                const unsigned builds =
+                        mode == NeighborMode::reused ? 2U : (iteration_builds + (diagnostic_due ? 1U : 0U));
+                // Per substep two dispatches per PBF iteration (density, correction) and one per contact iteration,
+                // plus 20 that do not depend on the iteration counts (at 2 substeps): 76 at 2 x 8/12, 62 at 2 x 5/11.
+                const unsigned solver_dispatches =
+                        20U + fluid.substeps * (2U * fluid.pbf_iterations + fluid.contact_iterations);
                 const unsigned bin_passes = mode == NeighborMode::linked ? 2U : 5U;
                 const auto coupling = world.execution_options().coupling;
-                const unsigned reductions = coupling == CouplingMode::combined ? 26U : 42U;
+                // A body reduction per contact iteration and a final one; outside `combined` also one per PBF
+                // iteration: 26/42 at 2 x 8/12, 24/34 at 2 x 5/11.
+                const unsigned reductions = fluid.substeps
+                                          * (fluid.contact_iterations + 1U
+                                             + (coupling == CouplingMode::combined ? 0U : fluid.pbf_iterations));
                 // One dispatch per reduction in every coupling mode: the compact modes reduce in one group (Z05).
                 const unsigned body_work = variant.options.body_coupling ? 2U + reductions : 0U;
                 require(p.calls.presentation_dispatches == presentation,
                         "Incorrect I11 presentation dispatch accounting");
                 require(p.calls.dispatches - p.calls.presentation_dispatches
-                                == 76U + body_work + builds * bin_passes + (diagnostic_due ? 2U : 0U),
+                                == solver_dispatches + body_work + builds * bin_passes + (diagnostic_due ? 2U : 0U),
                         "Incorrect measured physical dispatch count");
                 require(p.calls.bins == builds, "Incorrect measured index rebuild count");
                 require(p.calls.body_reductions == (variant.options.body_coupling ? reductions : 0U),
