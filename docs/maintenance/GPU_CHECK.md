@@ -217,9 +217,9 @@ sumy float zależnej od wyścigu wątków. Sceny z termiką i cząstkami nadal s
 `oil`, `quench`, `phases` w pierwszych 60): lista aktywnych i wolnych slotów jest dopisywana atomowo
 (`granular.comp`), narodziny biorą slot z atomowego licznika, a dowiązania cząstek do komórek termiki powstają przez
 `atomicExchange` (`thermal.comp`); to dalsze kroki #95. Test `gpu.thermal_bits` (120 ticków) wymaga powtórzenia
-`fire`, `idle` i `control` oraz tego, że w `idle` kolejny tick nie zmienia ani jednego słowa. Drugi przebieg każdej sceny to przebieg audytu bramki gazu (`ThermalOptions::gate_audit`: etap
-liczy się zawsze), więc powtórzenie `fire` i `idle` dowodzi też, że przebieg z bramką jest bitowo równy przebiegowi bez
-pomijania. Wiersze `gate <scena>` w `thermal-bits-info.txt` podają liczbę pominiętych etapów gazu i naruszeń audytu,
+`fire`, `idle` i `control` oraz tego, że w `idle` kolejny tick nie zmienia ani jednego słowa. Drugi przebieg każdej
+sceny to przebieg audytu bramki gazu (`ThermalOptions::gate_audit`: etap liczy się zawsze), więc powtórzenie `fire`
+i `idle` dowodzi też, że przebieg z bramką jest bitowo równy przebiegowi bez pomijania. Wiersze `gate <scena>` w `thermal-bits-info.txt` podają liczbę pominiętych etapów gazu i naruszeń audytu,
 które muszą wynosić 0, a pusty świat musi mieć pominięte etapy.
 
 ## 4d. Bramka etapu gazu termiki (ABBA w jednym procesie)

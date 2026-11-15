@@ -1,7 +1,8 @@
 #include "particle_storage.glsl"
 #if SORTED_NEIGHBORS
-// Header, cell counts, exclusive local prefixes, scatter cursors, block sums
-// and block offsets. The cell grid is never a fixed-capacity particle list.
+// Header, cell counts, exclusive local prefixes, scatter cursors, block sums,
+// block offsets, the phase tile mask and the unordered scatter of the current
+// index build. The cell grid is never a fixed-capacity particle list.
 layout(std430,binding=2) coherent buffer Cells {uint cells[];};
 #if HOT_READS == 2
 struct HotParticle {vec4 geometry;vec4 motion;};
