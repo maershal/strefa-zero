@@ -1,5 +1,6 @@
 #include "app/simulation_world.hpp"
 #include "gpu/render_device.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL_opengl.h>
 
@@ -65,7 +66,8 @@ std::expected<void, std::string> validate_thermal_session(const std::filesystem:
             short_click.thermal_brush = {};
             short_click.elapsed = gpu::step_seconds;
             session.advance(short_click);
-            require(session->metrics().steps == 122 && session->read_thermal().totals.external_enthalpy == dose + 10,
+            require(session->metrics().steps == 122
+                            && gpu::test::read_thermal(*session).totals.external_enthalpy == dose + 10,
                     "short_heat_click_survives_zero_tick_frame");
             session.suspend();
             session.begin_recording();

@@ -1,5 +1,6 @@
 #include "gpu/segment_migrations.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -193,7 +194,7 @@ std::expected<void, std::string> benchmark_thermal(ParticleWorld& world, const s
                             gl.remove(3, row.q.data());
                         }
                         // Totals only, through a staging copy: the world lives through every segment.
-                        const auto stat = world.read_thermal(ThermalRead::totals).totals;
+                        const auto stat = test::read_thermal(world, ThermalRead::totals).totals;
                         pools << seed << ',' << sequence << ',' << scene_names[scene] << ',' << stage_names[stage]
                               << ',' << block << ',' << order << ',' << stage_names[mode] << ',' << stat.mass << ','
                               << stat.enthalpy << ',' << stat.chemical << ',' << stat.oxygen << ',' << stat.fuel << ','

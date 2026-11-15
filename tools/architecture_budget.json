@@ -1,8 +1,8 @@
 {
-  "world_cpp_lines": 2055,
-  "world_tu_lines": 3990,
-  "particle_world_public_decls": 88,
-  "particle_world_test_hooks": 30,
+  "world_cpp_lines": 2054,
+  "world_tu_lines": 3989,
+  "particle_world_public_decls": 67,
+  "particle_world_test_hooks": 9,
   "application_cpp_lines": 1196,
   "application_run_lines": 443,
   "launch_options_bools": 55,

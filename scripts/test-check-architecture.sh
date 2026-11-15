@@ -55,7 +55,7 @@ expect 'world_cpp_lines' world-grows sed -i '$a // one more line' src/gpu/world.
 expect 'size_literals_cpp' size-literal sed -i '$a constexpr int extra_width = 320;' src/sim/air.cpp
 expect 'size_literals_glsl' glsl-literal sed -i '$a const int extraHeight = 192;' assets/shaders/particle_common.glsl
 expect 'particle_world_test_hooks' test-hook \
-    sed -i 's/    void apply_fluid_velocities_for_test();/&\n    void reset_for_test();/' src/gpu/world.hpp
+    sed -i 's/    void invalidate_gl_state();/&\n    void reset_for_test();/' src/gpu/world.hpp
 # An unknown target is reported, not a traceback.
 expect 'Nieznany target CMake: strefa_extra' unknown-target sed -i '$a add_library(strefa_extra STATIC src/sim/air.cpp)' \
     CMakeLists.txt

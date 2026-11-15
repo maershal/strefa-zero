@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -44,7 +45,7 @@ void audit(ParticleWorld& world, unsigned& audits) {
     if (effective_neighbor_reads(world.execution_options().neighbor_reads, world.execution_options().neighbors)
         != NeighborReads::sorted)
         return;
-    const auto result = world.audit_hot_view();
+    const auto result = test::audit_hot_view(world);
     require(result.indexed, "Expected an existing cache generation; audit must not build it");
     require(result.mismatches == 0, "Current hot bank differs bitwise from authoritative geometry/motion");
     ++audits;
@@ -120,17 +121,17 @@ std::expected<void, std::string> validate_hot_reads(const std::filesystem::path&
                 }
                 reference->load(state, walls);
                 candidate->load(state, walls);
-                static_cast<void>(candidate->read_neighbors());
+                static_cast<void>(test::read_neighbors(*candidate));
                 audit(*candidate, audits);
                 if (fixture == 2) {
                     std::vector<std::array<float, 4>> delta(256);
                     delta[255] = {-96.2F, 0, 0, 0};
-                    reference->displace_for_test(delta);
-                    candidate->displace_for_test(delta);
+                    test::displace_for_test(*reference, delta);
+                    test::displace_for_test(*candidate, delta);
                     audit(*candidate, audits);
                 }
-                reference->project_liquids_for_test(1);
-                candidate->project_liquids_for_test(1);
+                test::project_liquids_for_test(*reference, 1);
+                test::project_liquids_for_test(*candidate, 1);
                 audit(*candidate, audits);
                 double error = compare(reference->readback(), candidate->readback());
                 for (unsigned tick = 0; tick < 4; ++tick) {
@@ -145,11 +146,11 @@ std::expected<void, std::string> validate_hot_reads(const std::filesystem::path&
             }
             auto walls = floor_at();
             candidate->load(std::array{particle(30, 80), particle(120, 90, 5)}, walls);
-            static_cast<void>(candidate->read_neighbors());
+            static_cast<void>(test::read_neighbors(*candidate));
             audit(*candidate, audits);
             candidate->paint({180, 100, 184, 100, 3, Material::water});
             if (options.neighbor_reads == NeighborReads::sorted)
-                require(!candidate->audit_hot_view().indexed, "Membership edit retained a valid old reverse map");
+                require(!test::audit_hot_view(*candidate).indexed, "Membership edit retained a valid old reverse map");
             candidate->step();
             audit(*candidate, audits);
             candidate->paint({180, 100, 184, 100, 7, Material::erase});
@@ -172,8 +173,8 @@ std::expected<void, std::string> validate_hot_reads(const std::filesystem::path&
             if (options.coupling != CouplingMode::reference) {
                 const std::array<std::array<float, 4>, 3> reactions{
                         {{.125F, 0, 0, 0}, {0, -.0625F, 1, 0}, {0, 0, 0, 0}}};
-                candidate->inject_body_for_test(reactions);
-                const auto body = candidate->read_body();
+                test::inject_body_for_test(*candidate, reactions);
+                const auto body = test::read_body(*candidate);
                 require(body.stats[0] >= 2 && body.queue[0] == 0 && body.queue[2] == 0,
                         "Hot fields overlap compact body metadata");
                 audit(*candidate, audits);

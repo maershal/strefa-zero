@@ -54,7 +54,7 @@ void validate_vfx_replay(const std::filesystem::path& output, const ExecutionOpt
         for (unsigned quality = 0; quality < 3; ++quality) {
             auto& world = *replicas[quality];
             world.load(before, walls);
-            world.restore_coupling_checkpoint(checkpoint, engine_tick);
+            test::restore_coupling_checkpoint(world, checkpoint, engine_tick);
             require(world.step(controls), "VFX replica backpressure");
             const auto actual = world.readback();
             const auto observed = world.read_mission();

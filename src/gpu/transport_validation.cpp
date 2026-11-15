@@ -1,5 +1,6 @@
 #include "gpu/upload_ring.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -174,8 +175,8 @@ std::expected<void, std::string> validate_transport(const std::filesystem::path&
             world->paint({220, 40, 220, 40, 3, Material::erase});
             require(alive(world->readback()) == fixture.size(), "Staged erase retained old carriers");
             const std::array<std::array<float, 4>, 1> displacement{{{.125F, -.0625F, 0, 0}}};
-            world->displace_for_test(displacement);
-            static_cast<void>(world->audit_neighbors());
+            test::displace_for_test(*world, displacement);
+            static_cast<void>(test::audit_neighbors(*world));
             std::vector<Grain> full(capacity);
             for (unsigned id = 0; id < capacity; ++id)
                 full[id] = grain(2.5F + static_cast<float>(id % 300), 2.5F + static_cast<float>(id / 300), 1);

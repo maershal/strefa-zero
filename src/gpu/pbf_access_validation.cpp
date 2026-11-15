@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -35,13 +36,13 @@ std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::pa
             execution.soa = soa;
             execution.pbf_restrict = true;
             auto world = create(execution);
-            require(world->pbf_restrict_programs() == std::array{false, true, false, false, true},
+            require(test::pbf_restrict_programs(*world) == std::array{false, true, false, false, true},
                     "Restrict did not select exactly correction and XSPH");
             auto base_execution = execution;
             base_execution.pbf_restrict = false;
             auto base = create(base_execution);
-            const auto sources = world->pbf_program_sources_for_test(),
-                       base_sources = base->pbf_program_sources_for_test();
+            const auto sources = test::pbf_program_sources_for_test(*world),
+                       base_sources = test::pbf_program_sources_for_test(*base);
             for (unsigned op = 0; op < sources.size(); ++op) {
                 auto normalized = sources[op];
                 for (const auto& [from, to] : {std::pair{"readonly restrict buffer Input", "readonly buffer Input"},
@@ -79,11 +80,11 @@ std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::pa
                     for (unsigned source : {0U, 1U})
                         for (unsigned binding = 0; binding < 8; ++binding)
                             if (binding != source) {
-                                world->probe_pbf_alias_for_test(op, source, binding);
+                                test::probe_pbf_alias_for_test(*world, op, source, binding);
                                 ++rejected;
                             }
                     for (unsigned binding : {0U, 1U}) {
-                        world->probe_pbf_alias_for_test(op, 8, binding);
+                        test::probe_pbf_alias_for_test(*world, op, 8, binding);
                         ++rejected;
                     }
                 }
@@ -94,7 +95,7 @@ std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::pa
                 require(before[id].position == after[id].position && before[id].motion == after[id].motion
                                 && before[id].contact == after[id].contact && before[id].residual == after[id].residual,
                         "Rejected PBF fault changed authoritative particle data");
-            world->project_liquids_for_test(1);
+            test::project_liquids_for_test(*world, 1);
             faults(); // One Jacobi swap exercises the other physical bank.
             world->step();
             unsigned alive = 0;
@@ -112,20 +113,20 @@ std::expected<void, std::string> validate_pbf_restrict(const std::filesystem::pa
             world->step();
             world->paint({200, 60, 204, 60, 7, Material::erase});
             world->step();
-            require(world->pbf_restrict_programs() == std::array{false, true, false, false, true},
+            require(test::pbf_restrict_programs(*world) == std::array{false, true, false, false, true},
                     "Editing changed program scope");
             report << "layout=" << (soa ? "soa" : "aos")
                    << " scope=liquids_1,liquids_4 actual_GL_sources=qualifiers_only faults=64 rejected_before_GL; state_unchanged; valid_step,blast,spawn,erase=passed"
                    << std::endl;
         }
         auto disabled = create(ExecutionOptions{});
-        require(disabled->pbf_restrict_programs() == std::array{false, false, false, false, false},
+        require(test::pbf_restrict_programs(*disabled) == std::array{false, false, false, false, false},
                 "Default shaders gained qualifiers");
         auto fallback = ExecutionOptions::reference();
         fallback.pbf_restrict = true;
         auto reference = create(fallback);
         require(!reference->execution_options().effective_pbf_restrict()
-                        && reference->pbf_restrict_programs() == std::array{false, false, false, false, false},
+                        && test::pbf_restrict_programs(*reference) == std::array{false, false, false, false, false},
                 "Ubershader request did not fall back to unqualified storage");
         reference->reset_mission();
         reference->step();

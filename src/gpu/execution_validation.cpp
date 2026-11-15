@@ -1,5 +1,6 @@
 #include "gpu/dispatch_layout.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -101,12 +102,12 @@ void pbf_dispatch_checks(const std::filesystem::path& shaders, std::ostream& che
                 p.motion = {0, 0, 2.65F, 5};
             }
             world.load(initial, walls);
-            const auto commands = world.read_dispatch_commands();
+            const auto commands = test::read_dispatch_commands(world);
             require(commands[detail::active_command] == (count + 255) / 256, "PBF size changed the granular launch");
             require(commands[detail::pbf_command] == (count + size - 1) / size && commands[detail::pbf_command + 1] == 1
                             && commands[detail::pbf_command + 2] == 1,
                     "PBF indirect launch misses empty/tail lanes");
-            const auto terms = world.read_fluid_terms();
+            const auto terms = test::read_fluid_terms(world);
             for (unsigned i = 0; i < count; ++i) {
                 // Independent double Poly6 sum over the known regular fixture.
                 double rho = 0;
@@ -163,7 +164,7 @@ std::expected<void, std::string> validate_execution(const std::filesystem::path&
                 scene(*world, count);
                 drain(*world);
                 clear(*world);
-                const auto commands = world->read_dispatch_commands();
+                const auto commands = test::read_dispatch_commands(*world);
                 require(commands[detail::active_command] == (count + local - 1) / local
                                 && commands[detail::draw_command + 1] == count,
                         "Active dispatch/draw arguments disagree with actual loaded count");
@@ -172,7 +173,7 @@ std::expected<void, std::string> validate_execution(const std::filesystem::path&
                 drain(*world);
                 require(world->take_timings().size() == 6 && world->take_group_profiles().size() == 6,
                         "FIFO lost GPU query samples");
-                const auto idle = world->read_dispatch_commands();
+                const auto idle = test::read_dispatch_commands(*world);
                 for (auto command : {detail::rebuild_command, detail::sync_command, detail::terrain_command,
                                      detail::blast_command, detail::blast_terrain_command, detail::debris_command})
                     require(idle[command] == 0 && idle[command + 1] == 1 && idle[command + 2] == 1,

@@ -2,6 +2,14 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Z09: rozbiór `ParticleWorld`, krok 1 — haki testowe poza klasą
+
+21 z 30 haków testowych `ParticleWorld` (odczyty indeksu, ciał, cieczy, śladu diagnostycznego, termiki, próby PBF,
+`restore_coupling_checkpoint`) to teraz funkcje wolne `strefa::gpu::test::*` w nowym nagłówku
+`gpu/world_test_access.hpp`, z dostępem do stanu przez `detail::WorldAccess` (przyjaciel klasy). Deklaracje publiczne
+klasy 88 → 67, haki 30 → 9; ciała funkcji bez zmian i na razie w `world.cpp`. Zachowanie, wywołania GL i liczniki bez
+zmian. Plan dalszych kroków: [PLAN_ROZBIOR_PARTICLE_WORLD.md](plans/PLAN_ROZBIOR_PARTICLE_WORLD.md).
+
 ## Z09: domyślne iteracje solvera 5/11
 
 Domyślna konfiguracja cieczy i ziaren to teraz 2 podkroki × 5 iteracji PBF / 11 kontaktu (było 8/12): najtańsza

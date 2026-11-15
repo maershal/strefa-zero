@@ -5,6 +5,7 @@
 // index with atomics, so their order, and with it the float summation order, changes from run to run.
 #include "gpu/render_device.hpp"
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
@@ -79,7 +80,7 @@ struct State {
 };
 State capture(ParticleWorld& world) {
     glFinish();
-    auto thermal = world.read_thermal(ThermalRead::all);
+    auto thermal = test::read_thermal(world, ThermalRead::all);
     State s{std::move(thermal.cells), std::move(thermal.particles), world.readback(), world.read_terrain(),
             thermal.totals};
     world.invalidate_gl_state();

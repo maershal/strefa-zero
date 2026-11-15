@@ -1,4 +1,5 @@
 #include "gpu/validation.hpp"
+#include "gpu/world_test_access.hpp"
 #include "sim/fixed_clock.hpp"
 
 #include <SDL3/SDL_opengl.h>
@@ -34,7 +35,7 @@ void conserved(const std::vector<Grain>& before, const std::vector<Grain>& after
 }
 double compression(ParticleWorld& world) {
     double result = 0;
-    for (const auto& term : world.read_fluid_terms()) result = std::max(result, static_cast<double>(term[1]) - 1);
+    for (const auto& term : test::read_fluid_terms(world)) result = std::max(result, static_cast<double>(term[1]) - 1);
     return result;
 }
 double mean_height(const std::vector<Grain>& particles, int material) {
@@ -61,7 +62,7 @@ std::expected<void, std::string> validate_liquids(ParticleWorld& world, const st
         for (int y = 0; y < 15; ++y)
             for (int x = 0; x < 15; ++x) initial.push_back(particle(100 + x * .85F, 60 + y * .85F));
         world.load(initial, walls);
-        const auto terms = world.read_fluid_terms();
+        const auto terms = test::read_fluid_terms(world);
         double error = 0;
         for (std::size_t i = 0; i < initial.size(); ++i) {
             double rho = 0;
@@ -75,7 +76,7 @@ std::expected<void, std::string> validate_liquids(ParticleWorld& world, const st
         require(error < .00001, "GPU density differs from independent CPU sum");
         report << "density_cpu_max_error=" << error << '\n';
         const double before = compression(world);
-        world.project_liquids_for_test(80);
+        test::project_liquids_for_test(world, 80);
         const double after = compression(world);
         report << "projection_compression_before=" << before << "\nprojection_compression_after=" << after << std::endl;
         require(before > .2 && after < .025, "Density projection did not converge");
@@ -84,21 +85,21 @@ std::expected<void, std::string> validate_liquids(ParticleWorld& world, const st
         for (int y = 0; y < height; ++y) walls[y * width + 156] = 1;
         initial = {particle(155.65F, 60), particle(157.35F, 60)};
         world.load(initial, walls);
-        auto blocked = world.read_fluid_terms();
+        auto blocked = test::read_fluid_terms(world);
         initial.resize(1);
         world.load(initial, walls);
-        auto isolated = world.read_fluid_terms();
+        auto isolated = test::read_fluid_terms(world);
         require(std::abs(blocked[0][1] - isolated[0][1]) < .000001F, "Density interaction crossed a thin wall");
         // An edited wall must invalidate the visibility cache immediately.
         initial = {particle(155.65F, 60.8F), particle(157.35F, 60.8F)};
         world.load(initial, walls);
         world.paint({156.5F, 60, 156.5F, 60, 1, Material::erase});
-        const auto edited_terms = world.read_fluid_terms();
+        const auto edited_terms = test::read_fluid_terms(world);
         conserved(initial, world.readback());
         walls[59 * width + 156] = 0;
         walls[60 * width + 156] = 0;
         world.load(initial, walls);
-        const auto loaded_terms = world.read_fluid_terms();
+        const auto loaded_terms = test::read_fluid_terms(world);
         require(std::abs(edited_terms[0][1] - loaded_terms[0][1]) < .000001F,
                 "Wall edit left a stale visibility cache");
         walls[59 * width + 156] = 1;

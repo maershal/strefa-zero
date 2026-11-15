@@ -135,7 +135,7 @@ Architecture: `docs/ARCHITECTURE.md`. Stage history: `docs/CHANGELOG.md`.
 - `scripts/test-check-architecture.sh` (job `format`) injects violations into a copy of the tree and checks the reported
   reason. Acceptance in #42: an artificial violation commit failed the `architecture` job and was then reverted.
   It edits the live tree with `sed`: the `#include "sim/material.hpp"` in `gpu/thermal.hpp`, the line
-  `void apply_fluid_velocities_for_test();` in `gpu/world.hpp`, the `target_link_libraries(strefa_sim ...` line and
+  `void invalidate_gl_state();` in `gpu/world.hpp`, the `target_link_libraries(strefa_sim ...` line and
   the `include ui gpu` count. A PR that pays off exactly that debt or moves those lines fixes the self-test in the same PR.
 
 ## Measurement data
