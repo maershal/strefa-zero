@@ -247,7 +247,7 @@ słowo. Ta liczba musi wynosić 0.
 ## 4e. Ile iteracji solvera trzeba (Z08)
 
 `StrefaQA --gpu-check iteration-sweep` sprawdza, które liczby iteracji PBF i kontaktu ziaren (przy 2 podkrokach)
-przechodzą dzisiejsze bramki jakości. Dla każdej pary z siatki 8/12, 7/11, 6/10, 6/8, 5/8, 4/6 (`FluidOptions::valid()`
+przechodzą dzisiejsze bramki jakości. Dla każdej pary z siatki 8/12, 7/11, 6/10, 5/11, 6/8, 5/8, 4/6 (`FluidOptions::valid()`
 wymaga kontaktów ≥ PBF) uruchamia bez zmian walidacje `--gpu-fluid-check` (I07), `--gpu-liquid-test`,
 `--gpu-test` (ziarna), `--gpu-flow-test`, `--gpu-coupling-check` i `--mission-test` na świecie z tą konfiguracją
 cieczy, a potem mierzy koszt ticka: misję po skryptowej trasie i przerwanie tamy, 120 ticków rozgrzewki i 240
@@ -262,9 +262,10 @@ Wyniki: `iteration-sweep-gates.csv` (PASS/FAIL per konfiguracja i bramka z pierw
 `iteration-sweep-fluid.csv` (miary I07 per scena: kompresja i energia kinetyczna w ticku 1200, amplituda powierzchni
 i udział skupionych cząstek w oknie 600–1200), `iteration-sweep-timing.csv` (mediana, p95 i średnia GPU ms/tick,
 dispatche, bariery) i katalogi `p<PBF>-c<kontakt>/<bramka>/` z plikami raportów każdej walidacji. Niezaliczona bramka
-konfiguracji innej niż 8/12 jest wynikiem, nie błędem; proces kończy się błędem tylko wtedy, gdy nie przechodzi
-konfiguracja domyślna 8/12. `STREFA_ITERATION_SWEEP_PLAN=gates` liczy tylko bramki, `timing` tylko koszt, `quick`
-(CTest `gpu.iteration_sweep`) 8/12 i 4/6, bramki cieczy i ziaren oraz 24 ticki pomiaru; jego liczby niczego nie
+konfiguracji innej niż domyślna (od Z09 5/11) jest wynikiem, nie błędem; proces kończy się błędem tylko wtedy, gdy nie
+przechodzi konfiguracja domyślna. Δ kosztu w `analyze-iteration-sweep.py` liczy się wobec 8/12 (odniesienie Z08).
+`STREFA_ITERATION_SWEEP_PLAN=gates` liczy tylko bramki, `timing` tylko koszt, `quick` (CTest `gpu.iteration_sweep`)
+konfiguracja domyślna i 4/6, bramki cieczy i ziaren oraz 24 ticki pomiaru; jego liczby niczego nie
 rozstrzygają. Telemetrię zbiera się jak w sekcji 4b (`GpuTelemetry.psm1`).
 
 ## 5. Co odesłać

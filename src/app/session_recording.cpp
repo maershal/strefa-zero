@@ -88,9 +88,11 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
     if (line == "STREFA_SESSION 2" || thermal) {
         if (!std::getline(in, line)
             || line != (thermal ? "I10.0 I07.1 " : "I07.1 ") + gpu::fluid_configuration(execution.fluid))
-            return std::unexpected{"Nagranie wymaga tej samej wersji i konfiguracji fizyki cieczy."};
+            return std::unexpected{"Nagranie wymaga tej samej wersji i konfiguracji fizyki cieczy (starsze nagrania: "
+                                   "--gpu-fluid-iterations 8/12)."};
     } else if (line == "STREFA_SESSION 1") {
-        if (execution.fluid != gpu::FluidOptions{}) return std::unexpected{"Nagranie v1 wymaga profilu cieczy legacy."};
+        if (execution.fluid != gpu::FluidOptions::legacy_iterations())
+            return std::unexpected{"Nagranie v1 wymaga profilu cieczy legacy z --gpu-fluid-iterations 8/12."};
     } else
         return std::unexpected{"Nieznany format scenariusza."};
     if (!std::getline(in, line) || line != configuration(execution, profile))

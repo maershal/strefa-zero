@@ -244,14 +244,26 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
             auto& f = result.gpu_execution.fluid;
             if (v == "2") {
                 f.substeps = 2;
-                f.pbf_iterations = 8;
-                f.contact_iterations = 12;
+                f.pbf_iterations = gpu::FluidOptions{}.pbf_iterations;
+                f.contact_iterations = gpu::FluidOptions{}.contact_iterations;
             } else if (v == "4") {
                 f.substeps = 4;
                 f.pbf_iterations = 4;
                 f.contact_iterations = 6;
             } else
                 return std::unexpected{"Podkroki cieczy: 2 lub 4."};
+        } else if (argument == "--gpu-fluid-iterations" && i + 1 < argc) {
+            // <pbf>/<contact>, e.g. 8/12 (the pre-Z09 default) to replay older recordings; checked by valid().
+            const std::string_view v{argv[++i]};
+            const auto slash = v.find('/');
+            auto& f = result.gpu_execution.fluid;
+            const auto number = [](std::string_view text, unsigned& out) {
+                const auto parsed = std::from_chars(text.data(), text.data() + text.size(), out);
+                return parsed.ec == std::errc{} && parsed.ptr == text.data() + text.size();
+            };
+            if (slash == std::string_view::npos || !number(v.substr(0, slash), f.pbf_iterations)
+                || !number(v.substr(slash + 1), f.contact_iterations))
+                return std::unexpected{"Iteracje cieczy: <PBF>/<kontakt>, np. 8/12."};
         } else if ((argument == "--gpu-fluid-s-corr" || argument == "--gpu-fluid-tension-scale"
                     || argument == "--gpu-fluid-curvature-scale" || argument == "--gpu-fluid-adhesion"
                     || argument == "--gpu-fluid-vorticity")

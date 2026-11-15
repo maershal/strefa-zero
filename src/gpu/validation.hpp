@@ -51,7 +51,8 @@ std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::p
                                                         const ExecutionOptions& layout);
 // Z08, --gpu-check iteration-sweep: the existing quality gates (fluid quality, liquids, grains, flow, coupling,
 // mission) and the GPU cost per tick for a grid of PBF/contact iteration counts at two substeps
-// (STREFA_ITERATION_SWEEP_PLAN = full | gates | timing | quick). Fails only when the default 8/12 fails a gate.
+// (STREFA_ITERATION_SWEEP_PLAN = full | gates | timing | quick). Fails only when the shipped default (`FluidOptions{}`)
+// fails a gate.
 std::expected<void, std::string> sweep_solver_iterations(const std::filesystem::path& shaders,
                                                          const std::filesystem::path& output,
                                                          const ExecutionOptions& layout);
