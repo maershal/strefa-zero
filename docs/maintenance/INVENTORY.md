@@ -37,7 +37,7 @@ Struktura `LaunchOptions` jest w `app/application.hpp:15-49`, a parser w `app/la
 | `--gpu-fluid-boundary unit\|volume` | pokrętło | unit | world:116,578; gpu/fluid_quality.cpp:122 |
 | `--gpu-fluid-surface legacy\|akinci2d` | pokrętło | legacy | world:117; gpu/fluid_quality.cpp:248 |
 | `--gpu-fluid-substeps 2\|4` | pokrętło | 2 | world:119, 918-923 |
-| `--gpu-fluid-iterations <PBF>/<kontakt>` | pokrętło | 5/11 | gpu/fluid_options.hpp:18; app/session_recording.cpp (starsze nagrania: 8/12) |
+| `--gpu-fluid-iterations <PBF>/<kontakt>` | pokrętło | 5/11 | gpu/fluid_options.hpp (`FluidOptions`, `legacy_iterations()`); app/session_recording.cpp (starsze nagrania: 8/12) |
 | `--gpu-fluid-s-corr <f>` | pokrętło | 0.0001 | world:120 |
 | `--gpu-fluid-tension-scale <f>` | pokrętło | 1 | world:121 |
 | `--gpu-fluid-curvature-scale <f>` | pokrętło | 1 | world:122 |

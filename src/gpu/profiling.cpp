@@ -185,7 +185,9 @@ void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality 
                 const unsigned builds =
                         mode == NeighborMode::reused ? 2U : (iteration_builds + (diagnostic_due ? 1U : 0U));
                 // Per substep two dispatches per PBF iteration (density, correction) and one per contact iteration,
-                // plus 20 that do not depend on the iteration counts (at 2 substeps): 76 at 2 x 8/12, 62 at 2 x 5/11.
+                // plus 20 that do not depend on the iteration counts. The 20 were counted at 2 substeps only (part of
+                // them is per substep), so other schedules are rejected rather than guessed.
+                require(fluid.substeps == 2, "Instrumentation counts are defined for 2 substeps only");
                 const unsigned solver_dispatches =
                         20U + fluid.substeps * (2U * fluid.pbf_iterations + fluid.contact_iterations);
                 const unsigned bin_passes = mode == NeighborMode::linked ? 2U : 5U;
@@ -195,6 +197,12 @@ void check_variants(ParticleWorld& world, std::ostream& report, LightingQuality 
                 const unsigned reductions = fluid.substeps
                                           * (fluid.contact_iterations + 1U
                                              + (coupling == CouplingMode::combined ? 0U : fluid.pbf_iterations));
+                // Pinned for the shipped default so a change of the default iterations shows up in this file
+                // (raising these counts needs the owner's approval): 62 dispatches, 34 rebuilds, 24/34 reductions.
+                if (fluid == FluidOptions{})
+                    require(solver_dispatches == 62U && iteration_builds == 34U
+                                    && reductions == (coupling == CouplingMode::combined ? 24U : 34U),
+                            "Default solver iterations changed: update the pinned instrumentation counts");
                 // One dispatch per reduction in every coupling mode: the compact modes reduce in one group (Z05).
                 const unsigned body_work = variant.options.body_coupling ? 2U + reductions : 0U;
                 require(p.calls.presentation_dispatches == presentation,
