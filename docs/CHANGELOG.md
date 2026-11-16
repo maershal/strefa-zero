@@ -9,7 +9,7 @@ metal → stopiony metal, kamień → lawa, z temperaturą i ciepłem utajonym) 
 materiału cząstek GPU (`particle_materials`). `scripts/gen_materials.py` generuje z nich tabelę `enthalpy_offsets`
 (wyrażenie offset(from) + (c_from − c_to)·T + ciepło utajone, liczone przez kompilator), tabele `transitions`
 i `particle_materials` oraz nowy plik `assets/shaders/materials.glsl` z makrami `MATERIAL_*` i `*_TRANSITION_*`. Są to makra, a nie zmienne
-`const`, żeby shader kompilował się z tych samych tokenów co z literałami.
+`const`, żeby shader kompilował się tak, jakby literały były wpisane wprost.
 `sim::enthalpy_offset()` i `gpu::thermal_material()` czytają tabele zamiast ręcznych literałów, a
 `thermal_common.glsl` używa nazw zamiast numerów materiałów i literałów 273.15/334/2256/1811/1400. Wartości są te
 same co do bitu: `physics.thermal_contract` porównuje offsety z dawnymi wyrażeniami przez `static_assert`,
