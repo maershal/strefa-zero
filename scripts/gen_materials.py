@@ -219,6 +219,11 @@ def render_glsl(registry: dict) -> str:
         for key in ("temperature", "latent"):
             number(name, key, t[key])
             out.append(f"#define {name}_TRANSITION_{key.upper()} {float(t[key])!r}")
+    # GPU particle material (Grain motion.w) -> material ID; `empty` and unknown kinds give MATERIAL_EMPTY.
+    cases = "".join(
+        f"(k)=={kind}?MATERIAL_{name.upper()}:" for kind, name in enumerate(registry["particles"]) if name != "empty"
+    )
+    out.append(f"#define PARTICLE_MATERIAL(k) ({cases}MATERIAL_EMPTY)")
     return "\n".join(out) + "\n"
 
 
