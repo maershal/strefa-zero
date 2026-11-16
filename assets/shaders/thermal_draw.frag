@@ -15,8 +15,11 @@ void main(){ivec2 c=clamp(ivec2(gl_FragCoord.xy/renderExtent.xy*vec2(TW,TH)),ive
  else if(viewMode==4){rgb=vec3(.03,clamp(a.gas0.y/.005,0,1),.1);alpha=.9;}
  else if(viewMode==5){rgb=vec3(clamp((a.gas1.x+a.matter.z)*8.,0,1),.15,.4);alpha=.9;}
  else{
-  if(a.matter.x>0){int m=int(a.matter.w);if(m==5){rgb=vec3(.43,.24,.11);alpha=.85;}else if(m==19){rgb=vec3(.35);alpha=.6;}else if(waterFamily(m)){rgb=vec3(.65,.85,.95);alpha=.4;}else if(m==10){rgb=vec3(1,.22,.02);alpha=.8;}}
-  if(a.extra.z>0){int m=int(a.extra.w);if((m==17&&a.extra.z<=273.2)||(m==10&&a.extra.z>=1400.)||(m==18&&a.extra.z>=1811.)){rgb=m==17?vec3(.65,.85,.95):heatColor(a.extra.z);alpha=max(alpha,.5);}}
+  if(a.matter.x>0){int m=int(a.matter.w);if(m==MATERIAL_WOOD){rgb=vec3(.43,.24,.11);alpha=.85;}else if(m==MATERIAL_ASH){rgb=vec3(.35);alpha=.6;}else if(waterFamily(m)){rgb=vec3(.65,.85,.95);alpha=.4;}else if(m==MATERIAL_LAVA){rgb=vec3(1,.22,.02);alpha=.8;}}
+  if(a.extra.z>0){int m=int(a.extra.w);
+   bool shown=(m==MATERIAL_ICE&&a.extra.z<=273.2)||(m==MATERIAL_LAVA&&a.extra.z>=LAVA_TRANSITION_TEMPERATURE)
+    ||(m==MATERIAL_MOLTEN_METAL&&a.extra.z>=MOLTEN_METAL_TRANSITION_TEMPERATURE);
+   if(shown){rgb=m==MATERIAL_ICE?vec3(.65,.85,.95):heatColor(a.extra.z);alpha=max(alpha,.5);}}
   if(walls[i]==0u){float opacity=1.-exp(-(2000.*a.gas0.w+80.*a.gas0.z+80.*a.gas1.y));vec3 gasRgb=a.gas0.z>a.gas0.w?vec3(.7,.82,.86):vec3(.23,.25,.27);float reactionGlow=a.extra.x*8.;for(int distance=1;distance<=2;++distance){ivec2 below=c+ivec2(0,distance);if(!validCell(below)||walls[indexOf(below)]!=0u)break;reactionGlow+=cells[indexOf(below)].extra.x*(distance==1?3.2:1.28);}float hotGas=clamp((gasTemperature(a)-700.)/650.,0,1)*clamp(a.gas1.y/max(gasMass(a),1e-9)*6.,0,1);float fire=max(clamp(reactionGlow,0,1),hotGas*.25);gasRgb=mix(gasRgb,vec3(1,.32,.035),fire);float gasAlpha=max(opacity,fire*.8);rgb=mix(rgb,gasRgb,gasAlpha);alpha=max(alpha,gasAlpha);}
  }
  color=vec4(linearOutput!=0?toLinear(rgb)*(viewMode==0?max(1.,clamp(a.extra.x*16.,0.,6.)):1.):rgb,alpha);

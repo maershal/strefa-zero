@@ -43,21 +43,30 @@ struct PhaseState {
 constexpr sim::Material thermal_material(unsigned physical) {
     return physical < sim::particle_materials.size() ? sim::particle_materials[physical] : sim::Material::empty;
 }
+// The registry transition into `to`; compile-time only, so a missing transition does not compile.
+consteval sim::PhaseTransition thermal_transition(sim::Material to) {
+    return *std::ranges::find(sim::transitions, to, &sim::PhaseTransition::to);
+}
 inline PhaseState thermal_phase(sim::Material m, double h) {
     using M = sim::Material;
     if (m == M::ice || m == M::water || m == M::steam) {
-        const double melt = sim::specific_enthalpy(M::ice, 273.15), liquid = melt + 334;
-        const double boil = sim::specific_enthalpy(M::water, 373.15), steam = boil + 2256;
-        if (h < melt) return {h / 2.1, 0, 0, M::ice};
-        if (h < liquid) return {273.15, (h - melt) / 334, 0, M::water};
-        if (h < boil) return {(h - sim::enthalpy_offset(M::water)) / 4.18, 1, 0, M::water};
-        if (h < steam) return {373.15, 1, (h - boil) / 2256, M::water};
-        return {(h - sim::enthalpy_offset(M::steam)) / 2, 1, 1, M::steam};
+        static constexpr auto melting = thermal_transition(M::water), boiling = thermal_transition(M::steam);
+        const auto capacity = [](M material) { return sim::properties(material).heat_capacity; };
+        const double melt = sim::specific_enthalpy(M::ice, melting.temperature), liquid = melt + melting.latent;
+        const double boil = sim::specific_enthalpy(M::water, boiling.temperature), steam = boil + boiling.latent;
+        if (h < melt) return {h / capacity(M::ice), 0, 0, M::ice};
+        if (h < liquid) return {melting.temperature, (h - melt) / melting.latent, 0, M::water};
+        if (h < boil) return {(h - sim::enthalpy_offset(M::water)) / capacity(M::water), 1, 0, M::water};
+        if (h < steam) return {boiling.temperature, 1, (h - boil) / boiling.latent, M::water};
+        return {(h - sim::enthalpy_offset(M::steam)) / capacity(M::steam), 1, 1, M::steam};
     }
     if (m == M::stone || m == M::lava || m == M::metal || m == M::molten_metal) {
+        static constexpr auto metal_melting = thermal_transition(M::molten_metal),
+                              stone_melting = thermal_transition(M::lava);
         const bool metal = m == M::metal || m == M::molten_metal;
         const auto solid = metal ? M::metal : M::stone, liquid = metal ? M::molten_metal : M::lava;
-        const double t = metal ? 1811 : 1400, latent = metal ? 270 : 400, hs = sim::specific_enthalpy(solid, t);
+        const double t = (metal ? metal_melting : stone_melting).temperature;
+        const double latent = (metal ? metal_melting : stone_melting).latent, hs = sim::specific_enthalpy(solid, t);
         if (h < hs) return {h / sim::properties(solid).heat_capacity, 0, 0, solid};
         if (h < hs + latent) return {t, (h - hs) / latent, 0, liquid};
         return {(h - sim::enthalpy_offset(liquid)) / sim::properties(liquid).heat_capacity, 1, 0, liquid};

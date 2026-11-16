@@ -2,6 +2,17 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## B3: pozostałe shadery termiki i `thermal_phase()` na nazwach z rejestru
+
+`thermal.comp`, `thermal_reduce.comp`, `thermal_draw.frag` i `lighting_thermal.comp` używają makr `MATERIAL_*` i `*_TRANSITION_*`
+z `materials.glsl` zamiast numerów materiałów i literałów 373.15/2256/1400/1811. Mapowanie rodzaju cząstki GPU na
+materiał (`physicalMaterial` w `thermal.comp`) jest nowym generowanym makrem `PARTICLE_MATERIAL(k)`, z tej samej listy
+`particle_materials` co `gpu::thermal_material()`. `gpu::thermal_phase()` czyta temperatury i ciepła utajone
+z `sim::transitions`, a pojemności cieplne z `sim::properties()`. `thermal_events.comp` nie zawierał numerów
+materiałów. Wartości są te same: skróty `thermal-bits` (GTX 1650) są identyczne przed zmianą i po niej. Bez zmiany
+zachowania, opcji domyślnych i liczby przebiegów GPU. Zostają (#110): literały przemian w
+`src/gpu/thermal_validation.inl` i numery rodzajów cząstek GPU w shaderach.
+
 ## B2: przemiany fazowe i stałe GLSL z rejestru materiałów
 
 Rejestr `src/sim/materials.toml` opisuje teraz także przemiany fazowe (`[[transition]]`: lód → woda → para,
