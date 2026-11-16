@@ -9,3 +9,4 @@ tests/golden/*.txt linguist-generated=true
 
 # Written by scripts/gen_materials.py from src/sim/materials.toml.
 src/sim/material_tables.hpp linguist-generated=true
+assets/shaders/materials.glsl linguist-generated=true

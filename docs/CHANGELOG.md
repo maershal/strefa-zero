@@ -2,6 +2,22 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## B2: przemiany fazowe i stałe GLSL z rejestru materiałów
+
+Rejestr `src/sim/materials.toml` opisuje teraz także przemiany fazowe (`[[transition]]`: lód → woda → para,
+metal → stopiony metal, kamień → lawa, z temperaturą i ciepłem utajonym) oraz materiał modelu CPU dla każdego
+materiału cząstek GPU (`particle_materials`). `scripts/gen_materials.py` generuje z nich tabelę `enthalpy_offsets`
+(wyrażenie offset(from) + (c_from − c_to)·T + ciepło utajone, liczone przez kompilator), tabele `transitions`
+i `particle_materials` oraz nowy plik `assets/shaders/materials.glsl` z makrami `MATERIAL_*` i `*_TRANSITION_*`. Są to makra, a nie zmienne
+`const`, żeby shader kompilował się z tych samych tokenów co z literałami.
+`sim::enthalpy_offset()` i `gpu::thermal_material()` czytają tabele zamiast ręcznych literałów, a
+`thermal_common.glsl` używa nazw zamiast numerów materiałów i literałów 273.15/334/2256/1811/1400. Wartości są te
+same co do bitu: `physics.thermal_contract` porównuje offsety z dawnymi wyrażeniami przez `static_assert`,
+`sim.golden_master` się nie zmienia, a skróty `--gpu-check thermal-bits` (sceny `fire`, `control`, `idle`, 600
+ticków, GTX 1650) są identyczne przed zmianą i po niej. `material_defines()` bez zmian. Zostaje w
+[#110](https://github.com/maershal/strefa-zero/issues/110): numery materiałów w pozostałych shaderach termiki
+i literały przemian w `gpu::thermal_phase()`.
+
 ## B1: rejestr materiałów w TOML
 
 Identyfikatory materiałów modelu CPU (`sim::Material`) oraz tabele `materials` i `physical` nie są już pisane ręcznie:

@@ -78,6 +78,51 @@ inline constexpr std::array<PhysicalProperties, materials.size()> physical{{
     {7, 0.82, 5, 2000, 0, 0, 0, 0, 0}, // molten_metal
     {0.25, 1, 0.08, 293.15, 0, 0, 0, 0, 0.08}, // ash
 }};
+// Phase change from `from` into `to` at `temperature` (K); latent heat in kJ per unit mass.
+struct PhaseTransition {
+    Material from, to;
+    double temperature, latent;
+};
+inline constexpr std::array<PhaseTransition, 4> transitions{{
+    {Material::ice, Material::water, 273.15, 334},
+    {Material::water, Material::steam, 373.15, 2256},
+    {Material::metal, Material::molten_metal, 1811, 270},
+    {Material::stone, Material::lava, 1400, 400},
+}};
+// Enthalpy offset of each material: offset(from) + (c_from - c_to) * temperature + latent of the
+// transition into it, 0 without one.
+inline constexpr std::array<double, materials.size()> enthalpy_offsets{{
+    0, // empty
+    0, // stone
+    0, // sand
+    (2.1 - 4.18) * 273.15 + 334, // water
+    0, // oil
+    0, // wood
+    0, // fire
+    0, // smoke
+    (2.1 - 4.18) * 273.15 + 334 + (4.18 - 2) * 373.15 + 2256, // steam
+    (2.1 - 4.18) * 273.15 + 334, // acid
+    (0.84 - 1.1) * 1400 + 400, // lava
+    0, // gas
+    0, // coal
+    0, // gunpowder
+    0, // thermite
+    0, // nitroglycerin
+    0, // metal
+    0, // ice
+    (0.45 - 0.82) * 1811 + 270, // molten_metal
+    0, // ash
+}};
+// CPU-model material of each GPU particle material, in the order of gpu::Material.
+inline constexpr std::array<Material, 7> particle_materials{{
+    Material::empty,
+    Material::sand,
+    Material::ash,
+    Material::metal,
+    Material::stone,
+    Material::water,
+    Material::oil,
+}};
 
 } // namespace strefa::sim
 // clang-format on

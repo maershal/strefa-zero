@@ -41,9 +41,7 @@ struct PhaseState {
     sim::Material material{};
 };
 constexpr sim::Material thermal_material(unsigned physical) {
-    constexpr std::array values{sim::Material::empty, sim::Material::sand,  sim::Material::ash, sim::Material::metal,
-                                sim::Material::stone, sim::Material::water, sim::Material::oil};
-    return physical < values.size() ? values[physical] : sim::Material::empty;
+    return physical < sim::particle_materials.size() ? sim::particle_materials[physical] : sim::Material::empty;
 }
 inline PhaseState thermal_phase(sim::Material m, double h) {
     using M = sim::Material;

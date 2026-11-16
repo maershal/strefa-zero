@@ -1,20 +1,27 @@
-// Property tables are generated from sim/material.hpp by ThermalSystem.
+// Property tables are generated from sim/material.hpp by ThermalSystem; material IDs and phase transitions
+// come from the registry (materials.glsl).
+#include "materials.glsl"
 struct ThermalParticle {vec4 matter;vec4 request;vec4 transfer;vec4 history;};
 struct ThermalCell {vec4 matter;vec4 gas0;vec4 gas1;vec4 flow;vec4 demand;vec4 budget;vec4 extra;vec4 factors;};
 const int TW=320,TH=192,TC=61440,TN=32768;
 const float AMBIENT=293.15;
 float enthalpy(int m,float t){return thermalProperties[m].y*t+thermalProperties[m].w;}
-bool waterFamily(int m){return m==3||m==8||m==17;}
+bool waterFamily(int m){return m==MATERIAL_WATER||m==MATERIAL_STEAM||m==MATERIAL_ICE;}
 vec3 phase(int m,float h){
     if(waterFamily(m)){
-        float a=enthalpy(17,273.15),b=a+334.,c=enthalpy(3,373.15);
-        if(h<a)return vec3(h/thermalProperties[17].y,0,0);
-        if(h<b)return vec3(273.15,(h-a)/334.,0);
-        if(h<c)return vec3((h-thermalProperties[3].w)/thermalProperties[3].y,1,0);
-        if(h<c+2256.)return vec3(373.15,1,(h-c)/2256.);
-        return vec3((h-thermalProperties[8].w)/thermalProperties[8].y,1,1);
+        float a=enthalpy(MATERIAL_ICE,WATER_TRANSITION_TEMPERATURE),b=a+WATER_TRANSITION_LATENT;
+        float c=enthalpy(MATERIAL_WATER,STEAM_TRANSITION_TEMPERATURE);
+        if(h<a)return vec3(h/thermalProperties[MATERIAL_ICE].y,0,0);
+        if(h<b)return vec3(WATER_TRANSITION_TEMPERATURE,(h-a)/WATER_TRANSITION_LATENT,0);
+        if(h<c)return vec3((h-thermalProperties[MATERIAL_WATER].w)/thermalProperties[MATERIAL_WATER].y,1,0);
+        if(h<c+STEAM_TRANSITION_LATENT)return vec3(STEAM_TRANSITION_TEMPERATURE,1,(h-c)/STEAM_TRANSITION_LATENT);
+        return vec3((h-thermalProperties[MATERIAL_STEAM].w)/thermalProperties[MATERIAL_STEAM].y,1,1);
     }
-    if(m==1||m==10||m==16||m==18){bool metal=m==16||m==18;int a=metal?16:1,b=metal?18:10;float t=metal?1811.:1400.,latent=metal?270.:400.,hs=enthalpy(a,t);
+    if(m==MATERIAL_STONE||m==MATERIAL_LAVA||m==MATERIAL_METAL||m==MATERIAL_MOLTEN_METAL){
+        bool metal=m==MATERIAL_METAL||m==MATERIAL_MOLTEN_METAL;
+        int a=metal?MATERIAL_METAL:MATERIAL_STONE,b=metal?MATERIAL_MOLTEN_METAL:MATERIAL_LAVA;
+        float t=metal?MOLTEN_METAL_TRANSITION_TEMPERATURE:LAVA_TRANSITION_TEMPERATURE;
+        float latent=metal?MOLTEN_METAL_TRANSITION_LATENT:LAVA_TRANSITION_LATENT,hs=enthalpy(a,t);
         if(h<hs)return vec3(h/thermalProperties[a].y,0,0);
         if(h<hs+latent)return vec3(t,(h-hs)/latent,0);
         return vec3((h-thermalProperties[b].w)/thermalProperties[b].y,1,0);
@@ -23,11 +30,15 @@ vec3 phase(int m,float h){
 }
 float matterTemperature(vec4 m){return m.x>1e-12?max(1.,phase(int(m.w),m.y/m.x).x):AMBIENT;}
 float gasCapacity(ThermalCell c){return dot(c.gas0,vec4(1,1,2,1))+dot(c.gas1.xy,vec2(1.5,1));}
-float gasOffset(ThermalCell c){return c.gas0.z*thermalProperties[8].w;}
+float gasOffset(ThermalCell c){return c.gas0.z*thermalProperties[MATERIAL_STEAM].w;}
 float gasTemperature(ThermalCell c){return gasCapacity(c)>1e-12?max(1.,(c.gas1.z-gasOffset(c))/gasCapacity(c)):AMBIENT;}
 float gasMass(ThermalCell c){return dot(c.gas0,vec4(1))+c.gas1.x+c.gas1.y;}
 float chemical(vec4 m){int k=int(m.w);return m.z*(1.-combustionProperties[k].w)*combustionProperties[k].z;}
-float minimumH(vec4 m){return m.x*enthalpy(waterFamily(int(m.w))?17:(int(m.w)==10?1:(int(m.w)==18?16:int(m.w))),1.);}
+// Enthalpy at 1 K of the coldest phase of the material: ice, stone for lava, metal for molten metal.
+float minimumH(vec4 m){
+    return m.x*enthalpy(waterFamily(int(m.w))?MATERIAL_ICE
+        :(int(m.w)==MATERIAL_LAVA?MATERIAL_STONE:(int(m.w)==MATERIAL_MOLTEN_METAL?MATERIAL_METAL:int(m.w))),1.);
+}
 bool validCell(ivec2 c){return all(greaterThanEqual(c,ivec2(0)))&&all(lessThan(c,ivec2(TW,TH)));}
 int indexOf(ivec2 c){return c.y*TW+c.x;}
 ivec2 coordinate(int i){return ivec2(i%TW,i/TW);}
