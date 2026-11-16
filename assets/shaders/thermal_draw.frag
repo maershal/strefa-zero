@@ -15,7 +15,8 @@ void main(){ivec2 c=clamp(ivec2(gl_FragCoord.xy/renderExtent.xy*vec2(TW,TH)),ive
  else if(viewMode==4){rgb=vec3(.03,clamp(a.gas0.y/.005,0,1),.1);alpha=.9;}
  else if(viewMode==5){rgb=vec3(clamp((a.gas1.x+a.matter.z)*8.,0,1),.15,.4);alpha=.9;}
  else{
-  if(a.matter.x>0){int m=int(a.matter.w);if(m==MATERIAL_WOOD){rgb=vec3(.43,.24,.11);alpha=.85;}else if(m==MATERIAL_ASH){rgb=vec3(.35);alpha=.6;}else if(waterFamily(m)){rgb=vec3(.65,.85,.95);alpha=.4;}else if(m==MATERIAL_LAVA){rgb=vec3(1,.22,.02);alpha=.8;}}
+  if(a.matter.x>0){int m=int(a.matter.w);if(m==MATERIAL_WOOD){rgb=mix(vec3(.43,.24,.11),vec3(.07,.06,.06),charMass(a.matter)/a.matter.x);alpha=.85;}else if(m==WOOD_PYROLYSIS_CHAR){rgb=vec3(.07,.06,.06);alpha=.9;}
+   else if(m==MATERIAL_ASH){rgb=vec3(.35);alpha=.6;}else if(waterFamily(m)){rgb=vec3(.65,.85,.95);alpha=.4;}else if(m==MATERIAL_LAVA){rgb=vec3(1,.22,.02);alpha=.8;}}
   if(a.extra.z>0){int m=int(a.extra.w);
    bool shown=(m==MATERIAL_ICE&&a.extra.z<=273.2)||(m==MATERIAL_LAVA&&a.extra.z>=LAVA_TRANSITION_TEMPERATURE)
     ||(m==MATERIAL_MOLTEN_METAL&&a.extra.z>=MOLTEN_METAL_TRANSITION_TEMPERATURE);

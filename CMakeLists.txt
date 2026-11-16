@@ -163,7 +163,7 @@ if(STREFA_BUILD_APP)
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/kiln_validation.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
     target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu strefa_conformance PRIVATE SDL3::SDL3 OpenGL::GL)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
@@ -502,6 +502,11 @@ if(BUILD_TESTING)
             --profile ${CMAKE_CURRENT_BINARY_DIR}/thermal-bits-profile)
         set_tests_properties(gpu.thermal_bits PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 300
             SKIP_RETURN_CODE 77 ENVIRONMENT "STREFA_THERMAL_BITS_TICKS=120")
+        # Fire v2 (#112): charcoal kiln, sealed against vented.
+        add_test(NAME gpu.thermal_kiln COMMAND strefa_qa --gpu-check thermal-kiln
+            --profile ${CMAKE_CURRENT_BINARY_DIR}/thermal-kiln-profile)
+        set_tests_properties(gpu.thermal_kiln PROPERTIES LABELS "integration;graphics;gpu" TIMEOUT 300
+            SKIP_RETURN_CODE 77)
         # Gas-stage gate ABBA; CTest runs the quick plan (same code paths, any renderer), the measurement the full plan
         # through scripts/profiling/profile-thermal-gate.ps1.
         add_test(NAME gpu.thermal_gate COMMAND strefa_qa --gpu-check thermal-gate

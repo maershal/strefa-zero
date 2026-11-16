@@ -30,6 +30,8 @@ PHYSICAL = ("density", "heat_capacity", "conductance", "spawn_temperature", "ign
 KEYS = {"id", "name", "description", "phase", "color", *PHYSICAL}
 OPTIONAL_KEYS = {"enthalpy_offset_of"}
 TRANSITION_KEYS = {"from", "to", "temperature", "latent"}
+PYROLYSIS_NUMBERS = ("temperature", "span", "rate", "max_rate", "volatile_fraction")
+PYROLYSIS_KEYS = {"from", "to", "gas", *PYROLYSIS_NUMBERS}
 # Material IDs are stored in recordings and index the thermal shader tables, so an ID never moves: the registry
 # must start with exactly this list. A new material is appended to the registry and to this list in the same PR.
 PINNED_IDS = ("empty", "stone", "sand", "water", "oil", "wood", "fire", "smoke", "steam", "acid", "lava", "gas",
@@ -57,7 +59,7 @@ def number(material: str, key: str, value: object) -> str:
 def load(registry: Path) -> dict:
     with registry.open("rb") as stream:
         data = tomllib.load(stream)
-    if unknown := sorted(data.keys() - {"material", "transition", "particle_materials"}):
+    if unknown := sorted(data.keys() - {"material", "transition", "pyrolysis", "particle_materials"}):
         fail(f"unknown top-level key {', '.join(unknown)}")
     materials = data.get("material", [])
     if not materials:
@@ -123,7 +125,40 @@ def load(registry: Path) -> dict:
     particles = data.get("particle_materials", [])
     if not isinstance(particles, list) or not particles or not all(known(name) for name in particles):
         fail("particle_materials must be a non-empty list of material ids")
-    return {"materials": materials, "transitions": transitions, "particles": particles}
+    # Pyrolysis (GPU thermal model): `from` turns into `to` and releases `gas`. The heat it releases is what the
+    # chemical energy of `from` exceeds that of its products by; it must not be negative, or the gas cell that
+    # receives it could be driven below its minimum enthalpy.
+    pyrolyses = data.get("pyrolysis", [])
+    if not isinstance(pyrolyses, list):
+        fail("pyrolysis must be an array of tables ([[pyrolysis]])")
+    by_id = {entry["id"]: entry for entry in materials}
+    sources = set()
+    for position, entry in enumerate(pyrolyses):
+        label = f"pyrolysis #{position}"
+        if not isinstance(entry, dict) or entry.keys() != PYROLYSIS_KEYS:
+            fail(f"{label}: expected exactly the keys {', '.join(sorted(PYROLYSIS_KEYS))}")
+        names = [entry[key] for key in ("from", "to", "gas")]
+        if not all(known(name) for name in names) or len(set(names)) != 3:
+            fail(f"{label}: from, to and gas must be three different material ids")
+        if entry["from"] in sources:
+            fail(f"{label}: {entry['from']} already has a pyrolysis")
+        sources.add(entry["from"])
+        for key in PYROLYSIS_NUMBERS:
+            number(label, key, entry[key])
+            if entry[key] <= 0:
+                fail(f"{label}.{key}: must be positive")
+        fraction = entry["volatile_fraction"]
+        if fraction >= 1:
+            fail(f"{label}.volatile_fraction: must be below 1")
+        if by_id[entry["gas"]]["phase"] != "gas" or by_id[entry["gas"]]["residue"] != 0:
+            fail(f"{label}: gas must be a material of phase gas without residue")
+
+        def energy(name: str) -> float:
+            return (1 - by_id[name]["residue"]) * by_id[name]["heat_release"]
+
+        if energy(entry["from"]) < fraction * energy(entry["gas"]) + (1 - fraction) * energy(entry["to"]):
+            fail(f"{label}: the products carry more chemical energy than {entry['from']}")
+    return {"materials": materials, "transitions": transitions, "particles": particles, "pyrolyses": pyrolyses}
 
 
 def offset_expressions(registry: dict) -> dict[str, str]:
@@ -224,6 +259,13 @@ def render_glsl(registry: dict) -> str:
         f"(k)=={kind}?MATERIAL_{name.upper()}:" for kind, name in enumerate(registry["particles"]) if name != "empty"
     )
     out.append(f"#define PARTICLE_MATERIAL(k) ({cases}MATERIAL_EMPTY)")
+    # Pyrolysis of <FROM>: solid product, released gas, onset temperature (K), rate (1/s) reached `span` K above the
+    # onset and growing linearly with temperature up to max_rate, mass fraction released as gas.
+    for p in registry["pyrolyses"]:
+        name = p["from"].upper()
+        out.append(f"#define {name}_PYROLYSIS_CHAR MATERIAL_{p['to'].upper()}")
+        out.append(f"#define {name}_PYROLYSIS_GAS MATERIAL_{p['gas'].upper()}")
+        out += [f"#define {name}_PYROLYSIS_{key.upper()} {float(p[key])!r}" for key in PYROLYSIS_NUMBERS]
     return "\n".join(out) + "\n"
 
 
