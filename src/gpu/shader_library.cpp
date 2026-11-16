@@ -20,7 +20,7 @@ std::string read_text(const std::filesystem::path& path) {
          {"lighting_common.glsl", "lighting_visibility.glsl", "presentation_birth.glsl", "thermal_common.glsl",
           "vfx_common.glsl", "scene_common.glsl", "render_terrain.glsl", "liquid_sampling.glsl", "particle_common.glsl",
           "mission_state.glsl", "particle_storage.glsl", "body_terrain.glsl", "world_protocol.glsl",
-          "soldier_pose.glsl"}) {
+          "soldier_pose.glsl", "materials.glsl"}) {
         const std::string directive = "#include \"" + name + "\"";
         if (const auto at = text.find(directive); at != std::string::npos)
             text.replace(at, directive.size(), read_text(path.parent_path() / name));

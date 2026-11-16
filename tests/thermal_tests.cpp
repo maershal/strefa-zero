@@ -36,5 +36,16 @@ int main() {
     check(32768ULL * 1024 * 10000 > static_cast<std::uint64_t>(std::numeric_limits<std::int32_t>::max()),
           "unbounded hot-particle accumulation cannot use int32");
     check(gpu::thermal_material(5) == M::water && gpu::thermal_material(6) == M::oil, "stable legacy material mapping");
+    // The registry must reproduce the hand-written tables it replaced, bit for bit (review v2 B1-B2).
+    static_assert(gpu::thermal_material(0) == M::empty && gpu::thermal_material(1) == M::sand
+                  && gpu::thermal_material(2) == M::ash && gpu::thermal_material(3) == M::metal
+                  && gpu::thermal_material(4) == M::stone && gpu::thermal_material(7) == M::empty);
+    static_assert(sim::enthalpy_offset(M::water) == 334 + (2.1 - 4.18) * 273.15);
+    static_assert(sim::enthalpy_offset(M::acid) == 334 + (2.1 - 4.18) * 273.15);
+    static_assert(sim::enthalpy_offset(M::steam) == 334 + (2.1 - 4.18) * 273.15 + (4.18 - 2) * 373.15 + 2256);
+    static_assert(sim::enthalpy_offset(M::molten_metal) == 270 + (.45 - .82) * 1811);
+    static_assert(sim::enthalpy_offset(M::lava) == 400 + (.84 - 1.1) * 1400);
+    static_assert(sim::enthalpy_offset(M::ice) == 0 && sim::enthalpy_offset(M::stone) == 0
+                  && sim::enthalpy_offset(M::metal) == 0 && sim::enthalpy_offset(M::oil) == 0);
     return failures ? 1 : 0;
 }

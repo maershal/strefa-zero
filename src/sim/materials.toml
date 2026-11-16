@@ -1,9 +1,17 @@
 # Material registry of the CPU model (sim::Material). The order of the [[material]] tables is the material ID:
 # append new materials at the end (IDs are stored in recordings and index the thermal shader tables) and add
 # the id to PINNED_IDS in scripts/gen_materials.py.
-# After a change: python3 scripts/gen_materials.py (writes src/sim/material_tables.hpp).
+# After a change: python3 scripts/gen_materials.py (writes src/sim/material_tables.hpp and
+# assets/shaders/materials.glsl).
 # Units: normalized mass/volume, enthalpy in kJ per unit mass, temperatures in K; conductance is accelerated
 # for game-scale time. `name` and `description` are UI strings and stay in Polish.
+#
+# particle_materials: CPU-model material of each GPU particle material, in the order of gpu::Material
+# (erase, sand, ash, metal, wall, water, oil).
+# [[transition]] (after the materials): phase change from `from` into `to` at `temperature` with latent heat
+# `latent`. It defines the enthalpy offset of `to`: offset(from) + (c_from - c_to) * temperature + latent.
+# A material with `enthalpy_offset_of` uses the offset of the named material instead.
+particle_materials = ["empty", "sand", "ash", "metal", "stone", "water", "oil"]
 
 [[material]]
 id = "empty"
@@ -151,6 +159,7 @@ strength = 0
 
 [[material]]
 id = "acid"
+enthalpy_offset_of = "water"
 name = "Kwas"
 description = "Rozpuszcza kamień, piasek, drewno i węgiel."
 phase = "liquid"
@@ -324,3 +333,27 @@ burn_rate = 0
 heat_release = 0
 residue = 0
 strength = 0.08
+
+[[transition]]
+from = "ice"
+to = "water"
+temperature = 273.15
+latent = 334
+
+[[transition]]
+from = "water"
+to = "steam"
+temperature = 373.15
+latent = 2256
+
+[[transition]]
+from = "metal"
+to = "molten_metal"
+temperature = 1811
+latent = 270
+
+[[transition]]
+from = "stone"
+to = "lava"
+temperature = 1400
+latent = 400
