@@ -4,7 +4,7 @@ Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raport
 
 ## B3: pozostałe shadery termiki i `thermal_phase()` na nazwach z rejestru
 
-`thermal.comp`, `thermal_draw.frag` i `lighting_thermal.comp` używają makr `MATERIAL_*` i `*_TRANSITION_*`
+`thermal.comp`, `thermal_reduce.comp`, `thermal_draw.frag` i `lighting_thermal.comp` używają makr `MATERIAL_*` i `*_TRANSITION_*`
 z `materials.glsl` zamiast numerów materiałów i literałów 373.15/2256/1400/1811. Mapowanie rodzaju cząstki GPU na
 materiał (`physicalMaterial` w `thermal.comp`) jest nowym generowanym makrem `PARTICLE_MATERIAL(k)`, z tej samej listy
 `particle_materials` co `gpu::thermal_material()`. `gpu::thermal_phase()` czyta temperatury i ciepła utajone

@@ -43,8 +43,8 @@ struct PhaseState {
 constexpr sim::Material thermal_material(unsigned physical) {
     return physical < sim::particle_materials.size() ? sim::particle_materials[physical] : sim::Material::empty;
 }
-// The registry transition into `to`. Evaluated at compile time below, where a missing transition does not compile.
-constexpr sim::PhaseTransition thermal_transition(sim::Material to) {
+// The registry transition into `to`; compile-time only, so a missing transition does not compile.
+consteval sim::PhaseTransition thermal_transition(sim::Material to) {
     return *std::ranges::find(sim::transitions, to, &sim::PhaseTransition::to);
 }
 inline PhaseState thermal_phase(sim::Material m, double h) {
