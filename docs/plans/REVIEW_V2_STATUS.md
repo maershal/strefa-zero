@@ -57,7 +57,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Golden master: pozostałe 9 scen laboratorium CPU; clang z libc++ | otwarte | #28, #30 |
 | Ratchet architektury: reguły warstw, budżety, symbole QA (A faza A1–A2) | zrobione | #42 |
 | Spłata naruszeń z `tools/architecture_allowlist.txt` (A §1 A4) | otwarte | #40 |
-| QA poza `StrefaZero`: benchmark scen, `ScenarioRunner` (A faza A4, N1) | krok 1/3: obserwator klatki (`FrameObserver` przez `LaunchConfig`), sterownik i rejestrator benchmarku scen oraz profil klatek w `strefa_diagnostics`, symbole QA 35 → 21; `ScenarioRunner`, `write_profile_samples` i parser scen benchmarku otwarte | #39, #52 |
+| QA poza `StrefaZero`: benchmark scen, `ScenarioRunner` (A faza A4, N1) | krok 1/3: obserwator klatki (`FrameObserver` przez `LaunchConfig`), sterownik i rejestrator benchmarku scen oraz profil klatek w `strefa_diagnostics`, symbole QA 35 → 21; `ScenarioRunner`, `write_profile_samples` i parser scen benchmarku otwarte | #126, #39, #52 |
 | Ruleset `main` (R §12 p. 1, R1) | utworzony, `enforcement: disabled` | #31 |
 | Recenzja pod tożsamością bota; `large-pr-approved` nie od autora | otwarte | #32, #33 |
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
