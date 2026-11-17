@@ -132,6 +132,9 @@ def load(registry: Path) -> dict:
     if not isinstance(pyrolyses, list):
         fail("pyrolysis must be an array of tables ([[pyrolysis]])")
     by_id = {entry["id"]: entry for entry in materials}
+    # The thermal shaders implement the pyrolysis of wood only (thermal_common.glsl, thermal.comp).
+    if len(pyrolyses) != 1 or not isinstance(pyrolyses[0], dict) or pyrolyses[0].get("from") != "wood":
+        fail("pyrolysis: the thermal shaders support exactly one [[pyrolysis]], from = \"wood\"")
     sources = set()
     for position, entry in enumerate(pyrolyses):
         label = f"pyrolysis #{position}"
@@ -152,6 +155,12 @@ def load(registry: Path) -> dict:
             fail(f"{label}.volatile_fraction: must be below 1")
         if by_id[entry["gas"]]["phase"] != "gas" or by_id[entry["gas"]]["residue"] != 0:
             fail(f"{label}: gas must be a material of phase gas without residue")
+        if by_id[entry["from"]]["burn_rate"] <= 0:
+            fail(f"{label}: {entry['from']} must be combustible (burn_rate > 0)")
+        # The shaders take the enthalpy of both solids as c * T: neither may have an enthalpy offset.
+        for name in (entry["from"], entry["to"]):
+            if name in aliases or any(t["to"] == name for t in transitions):
+                fail(f"{label}: {name} must not have an enthalpy offset (transition into it or enthalpy_offset_of)")
 
         def energy(name: str) -> float:
             return (1 - by_id[name]["residue"]) * by_id[name]["heat_release"]

@@ -31,9 +31,10 @@ constexpr int heated_left = wood_left + 1, heated_right = wood_right - 1;
 constexpr unsigned heating_ticks = 480, total_ticks = 2400, checkpoint = 240;
 constexpr float heater_rate = 300; // kJ/s per selected cell
 // Pass conditions.
-constexpr double balance_tolerance = 1e-3; // relative mass and energy error, as in --gpu-thermal-check
-constexpr double oxygen_left = .02;        // sealed: share of the chamber's initial oxygen at the end
-constexpr double flame_out = 1e-6;         // sealed: burn heat of the last tick relative to the peak checkpoint
+constexpr double balance_tolerance = 1e-3;   // relative mass and energy error, as in --gpu-thermal-check
+constexpr double oxygen_left = .02;          // sealed: share of the chamber's initial oxygen at the end
+constexpr double flame_out = 1e-6;           // sealed: burn heat of the last tick relative to the peak checkpoint
+constexpr double vented_fuel_gas_left = .01; // vented: fuel gas at the end relative to the sealed run
 
 struct Chamber {
     double oxygen{}, fuel_gas{}, smoke{}, burn{}; // sums over the chamber interior; burn = heat of the last tick
@@ -178,7 +179,10 @@ std::expected<void, std::string> validate_thermal_kiln(const std::filesystem::pa
         require(sealed.end.chars >= heated, "sealed_heated_wood_became_char");
         require(sealed.end.ash == 0 && sealed.end.walls == block && sealed.end.wood + sealed.end.chars == block,
                 "sealed_char_remains_as_terrain");
-        require(vented.end.burn > 0 && vented.end.burn > sealed.end.burn, "vented_flame_still_burns");
+        // burn heat counts every reaction of the tick, so the char glowing at the end passes it as well; the gas flame
+        // itself is the next condition: the vented chamber burns its pyrolysis gas instead of accumulating it.
+        require(vented.end.burn > 0 && vented.end.burn > sealed.end.burn, "vented_combustion_continues");
+        require(vented.end.fuel_gas < vented_fuel_gas_left * sealed.end.fuel_gas, "vented_pyrolysis_gas_burned");
         require(vented.end.oxygen > sealed.end.oxygen, "vented_chamber_keeps_oxygen");
         if (!failure.empty())
             throw std::runtime_error{std::format("thermal-kiln: {} (szczegóły w thermal-kiln.txt).", failure)};

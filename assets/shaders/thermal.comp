@@ -41,20 +41,23 @@ int receiver(int i){if(!solidCell(i))return i;ivec2 c=coordinate(i);for(int k=0;
 float fuelRequest(vec4 m){int k=int(m.w);if(k!=MATERIAL_OIL&&k!=WOOD_PYROLYSIS_CHAR)return 0.;vec4 b=combustionProperties[k];return b.y>0&&matterTemperature(m)>=b.x?min(m.z,m.z*b.y*timeStep):0.;}
 // Two-stage wood combustion (#112, registry [[pyrolysis]]). Stage 1: hot wood releases fuel gas without oxygen; the
 // gas burns in the gas cell like any fuel gas. Stage 2: what is left is char, which fuelRequest burns to ash.
-// Wood mass converted this tick. Below 2% of the record's mass the rest converts at once, so the record becomes char
-// in finite time.
+// Wood mass converted this tick. Below PYROLYSIS_FINISH of the record's mass the rest converts at once, so the record
+// becomes char in finite time (a numerical cut-off of the exponential tail, not a material property).
+const float PYROLYSIS_FINISH=.02;
 float pyrolysisRequest(vec4 m){
     if(int(m.w)!=MATERIAL_WOOD||m.z<=0.)return 0.;
     float t=matterTemperature(m);if(t<=WOOD_PYROLYSIS_TEMPERATURE)return 0.;
     float rate=min(WOOD_PYROLYSIS_MAX_RATE,WOOD_PYROLYSIS_RATE*(t-WOOD_PYROLYSIS_TEMPERATURE)/WOOD_PYROLYSIS_SPAN);
-    return m.z<=.02*m.x?m.z:min(m.z,m.z*rate*timeStep);
+    return m.z<=PYROLYSIS_FINISH*m.x?m.z:min(m.z,m.z*rate*timeStep);
 }
 // Heat released per unit of converted wood: its chemical energy minus that of the gas and the char it becomes.
 float pyrolysisHeat(){
     return fuelEnergy(MATERIAL_WOOD)-WOOD_PYROLYSIS_VOLATILE_FRACTION*fuelEnergy(WOOD_PYROLYSIS_GAS)-(1.-WOOD_PYROLYSIS_VOLATILE_FRACTION)*fuelEnergy(WOOD_PYROLYSIS_CHAR);
 }
 // Converts `converted` wood of the record: the gas leaves with the enthalpy that keeps the record's temperature
-// (its heat capacity drops), returned to the caller; fully converted wood becomes char.
+// (its heat capacity drops), returned to the caller; fully converted wood becomes char. The gas cell receives that
+// enthalpy plus pyrolysisHeat(), so the gas is born well above the record's temperature (about 1.33 T + 571 K with
+// the current registry values, above the ignition of fuel gas): pyrolysis gas ignites wherever oxygen reaches it.
 float pyrolyse(inout vec4 m,float converted){
     float leaving=matterTemperature(m)*converted
         *(thermalProperties[MATERIAL_WOOD].y-(1.-WOOD_PYROLYSIS_VOLATILE_FRACTION)*thermalProperties[WOOD_PYROLYSIS_CHAR].y);
@@ -105,7 +108,7 @@ void main(){int id=int(gl_GlobalInvocationID.x);
  for(int n=-1;n<4;++n){ivec2 q=n<0?cell:cell+directions[n];if(!validCell(q)||solidCell(indexOf(q)))continue;for(int p=heads[indexOf(q)];p>=0;p=links[p]){vec4 m=tp[p].matter;if(m.x>0&&waterFamily(int(m.w))){vec3 ph=phase(int(m.w),m.y/m.x);float kernel=max(0.,1.-length(readParticle(uint(p)).position.xy-center)/1.35);waterCoverage+=m.x*2.65*ph.y*(1.-ph.z)*kernel;}}}
  c.factors.z=budgetScale(cellOxygenRequest(id),max(0,c.gas0.y)*(1.-clamp(waterCoverage,0,1)));grid[id].factors.z=c.factors.z;return;}
  if(operation==17){if(id>=TN)return;Grain p=readParticle(uint(id));ThermalParticle a=tp[id];a.transfer=vec4(0);a.request=vec4(0);if(a.matter.x>0){int i=sourceCell(p),m=int(a.matter.w);vec4 b=combustionProperties[m];float burn=fuelRequest(a.matter)*grid[i].factors.z,outMass=burn*(1.-b.w),oxygen=outMass*2.;float specific=a.matter.y/a.matter.x,heat=outMass*b.z;a.transfer=vec4(outMass+oxygen,outMass*specific+oxygen*gasTemperature(grid[i])+heat,oxygen,outMass*.1);a.matter.x-=outMass;a.matter.y-=outMass*specific;a.matter.z-=burn;if(a.matter.z<1e-7&&b.y>0){a.matter.z=0;a.matter.w=MATERIAL_ASH;p.motion.w=2.;}
-   float converted=pyrolysisRequest(a.matter);if(converted>0){float leaving=pyrolyse(a.matter,converted);
+   float converted=solidCell(i)?0.:pyrolysisRequest(a.matter);if(converted>0){float leaving=pyrolyse(a.matter,converted);
    a.request.zw=vec2(converted*WOOD_PYROLYSIS_VOLATILE_FRACTION,leaving+converted*pyrolysisHeat());}
    if(waterFamily(m)&&a.matter.x>0){float liquid=enthalpy(MATERIAL_WATER,STEAM_TRANSITION_TEMPERATURE),evaporated=clamp((a.matter.y-a.matter.x*liquid)/STEAM_TRANSITION_LATENT,0,a.matter.x);
    float e=evaporated>=a.matter.x?a.matter.y:evaporated*enthalpy(MATERIAL_STEAM,STEAM_TRANSITION_TEMPERATURE);a.request.xy=vec2(evaporated,e);a.matter.xy-=vec2(evaporated,e);

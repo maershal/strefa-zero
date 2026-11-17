@@ -40,15 +40,25 @@ Zasady:
 - **Temperatura.** Pojemność cieplna rekordu jest sumą obu części, a gaz zabiera tyle entalpii, żeby przemiana sama
   nie zmieniała temperatury drewna. Bez tego węgiel (c = 1,0) dziedziczyłby entalpię drewna (c = 1,7) i skakał
   o 70% w górę.
+- **Temperatura gazu.** Gaz zabiera entalpię 1,4·T na jednostkę przetworzonego drewna, a ma pojemność cieplną tylko
+  1,05 (0,7 × 1,5); dostaje też całe ciepło pirolizy (600 kJ). Rodzi się więc w około 1,33·T + 571 K, przy progu
+  500 K w około 1240 K, czyli zawsze powyżej zapłonu gazu palnego (600 K): gaz z pirolizy zapala się sam wszędzie,
+  gdzie dociera tlen. Na tym opiera się „płomień nad drewnem”. Rozdzielenie ciepła pirolizy między drewno i gaz
+  zmieniłoby to zachowanie i jest decyzją na później.
+- **Licznik paliwa.** `ThermalTotals::fuel` (i widok „Paliwo” nakładki termiki) liczy w rekordzie drewna obie
+  części: surowe drewno i węgiel drzewny, więc piroliza go nie zwiększa. Podpowiedź próbki w laboratorium GPU
+  („paliwo”) nadal pokazuje tylko surowe drewno rekordu, bo warstwa UI nie zna numerów materiałów.
 - **Spalanie.** Stałe jak dotąd w modelu GPU (decyzja z #111): 1 paliwo + 2 O₂, 10% dymu. Węgiel pali się istniejącą
   ścieżką `fuelRequest` ze stałymi materiału `coal` (zapłon 650 K, 0,03 1/s, 24 000 kJ, 10% popiołu).
-- **Cząstki.** Gruz z drewnianej ściany przenosi rekord drewna i pirolizuje tak samo jak teren.
+- **Cząstki.** Gruz z drewnianej ściany przenosi rekord drewna i pirolizuje tak samo jak teren, także z tym samym
+  warunkiem: nie w komórce ściany.
 
 ## Sprawdzenie: mielerz (`--gpu-check thermal-kiln`)
 
 `src/gpu/kiln_validation.cpp`, CTest `gpu.thermal_kiln`. Blok drewna 12 × 2 komórki w kamiennej komorze 18 × 10 jest
 grzany pędzlem 300 kJ/s przez 480 ticków, potem 1920 ticków bez wejścia. Dwa przebiegi: komora zamknięta i z otwartym
-stropem. Warunki zaliczenia (progi zapisane przed pierwszym uruchomieniem):
+stropem. Warunki zaliczenia (progi zapisane przed pierwszym uruchomieniem, poza ostatnim wierszem, dodanym po
+recenzji PR):
 
 | Warunek | Próg |
 | --- | --- |
@@ -56,7 +66,8 @@ stropem. Warunki zaliczenia (progi zapisane przed pierwszym uruchomieniem):
 | zamknięta: tlen w komorze na końcu | < 2% początkowego |
 | zamknięta: ciepło spalania w ostatnim ticku | ≤ 10⁻⁶ szczytu |
 | zamknięta: zostaje niespalony gaz palny; ogrzewane komórki są węglem; brak popiołu, ściana stoi | tak |
-| otwarta: płomień pali się na końcu, w komorze jest więcej tlenu niż w zamkniętej | tak |
+| otwarta: spalanie trwa na końcu (ciepło wszystkich reakcji ticku, na końcu głównie węgiel), w komorze jest więcej tlenu niż w zamkniętej | tak |
+| otwarta: gaz palny na końcu (gaz z pirolizy spłonął zamiast się gromadzić) | < 1% ilości z komory zamkniętej |
 
 Wynik na GTX 1650 (sterownik 610.47), tick 2400:
 

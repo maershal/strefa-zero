@@ -9,7 +9,8 @@ spala istniejąca reakcja gazu palnego, więc płomień siedzi nad drewnem i ga�
 `coal`) utlenia się powoli do popiołu. Parametry są w rejestrze (`[[pyrolysis]]` w `src/sim/materials.toml`,
 makra `WOOD_PYROLYSIS_*` w `materials.glsl`). Liczba przebiegów GPU na tick się nie zmienia. Nowe sprawdzenie
 `StrefaQA --gpu-check thermal-kiln` (CTest `gpu.thermal_kiln`): w zamkniętej komorze płomień gaśnie i zostaje węgiel,
-w otwartej pali się dalej, a bilanse masy i energii trzymają się z błędem ≤ 3·10⁻⁷. Naprawiony błąd bilansu energii
+w otwartej gaz z pirolizy spala się na bieżąco, a bilanse masy i energii trzymają się z błędem ≤ 3·10⁻⁷.
+Licznik paliwa termiki liczy węgiel drzewny w rekordzie drewna. Naprawiony błąd bilansu energii
 w spalaniu gazu palnego (od I10, bez testu): reakcja odejmowała entalpię zużytego tlenu, której nie dodawała.
 Termika pozostaje domyślnie wyłączona. Model nie ma odpowiednika w modelu CPU (#111). Raport:
 [FIRE_V2_WOOD](reports/FIRE_V2_WOOD.md).

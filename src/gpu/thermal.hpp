@@ -77,8 +77,9 @@ inline PhaseState thermal_phase(sim::Material m, double h) {
 // cannot represent 32768 arbitrary hot metal particles; GPU uses a cell gather.
 inline constexpr std::uint64_t heat_atomic_worst_case = 32768ULL * 2 * 32767;
 struct alignas(16) ThermalParticle {
-    std::array<float, 4> matter{};   // mass,H,remaining original fuel mass,sim::Material
-    std::array<float, 4> request{};  // gas Q,terrain Q,terrain node,burn request
+    std::array<float, 4> matter{}; // mass,H,remaining original fuel mass,sim::Material
+    // gas Q,terrain Q,terrain node,burn request; after op 17: evaporated mass,its H,pyrolysis gas mass,its H
+    std::array<float, 4> request{};
     std::array<float, 4> transfer{}; // gas mass,H,oxygen consumed,smoke fraction
     bool operator==(const ThermalParticle&) const = default;
     std::array<float, 4> history{}; // original physical kind,original mass,temperature,liquid fraction
