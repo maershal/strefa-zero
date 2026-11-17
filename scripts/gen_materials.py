@@ -132,9 +132,11 @@ def load(registry: Path) -> dict:
     if not isinstance(pyrolyses, list):
         fail("pyrolysis must be an array of tables ([[pyrolysis]])")
     by_id = {entry["id"]: entry for entry in materials}
-    # The thermal shaders implement the pyrolysis of wood only (thermal_common.glsl, thermal.comp).
-    if len(pyrolyses) != 1 or not isinstance(pyrolyses[0], dict) or pyrolyses[0].get("from") != "wood":
-        fail("pyrolysis: the thermal shaders support exactly one [[pyrolysis]], from = \"wood\"")
+    # The thermal shaders implement the pyrolysis of wood only (thermal_common.glsl, thermal.comp), and they add the
+    # released gas to the fuel-gas species of the gas cell (gas1.x), which burns with the constants of `gas`.
+    if (len(pyrolyses) != 1 or not isinstance(pyrolyses[0], dict) or pyrolyses[0].get("from") != "wood"
+            or pyrolyses[0].get("gas") != "gas"):
+        fail("pyrolysis: the thermal shaders support exactly one [[pyrolysis]], from = \"wood\", gas = \"gas\"")
     sources = set()
     for position, entry in enumerate(pyrolyses):
         label = f"pyrolysis #{position}"
