@@ -1,5 +1,4 @@
 #pragma once
-#include "app/frame_profile.hpp"
 #include "app/simulation_world.hpp"
 #include "build_info.hpp"
 #include "sim/recording.hpp"
@@ -8,12 +7,10 @@
 
 #include <algorithm>
 #include <cctype>
-#include <chrono>
 #include <cmath>
 #include <cstring>
 #include <format>
 #include <fstream>
-#include <iomanip>
 #include <vector>
 
 namespace strefa::app {
@@ -38,23 +35,7 @@ public:
           gpu_smoke{gpu},
           mission_smoke{mission},
           mission_deadline_ns{mission_smoke_deadline_ns * gpu_timeout_scale(SDL_getenv("STREFA_GPU_TIMEOUT_SCALE"))} {
-        profile_frames = profile;
-        if (profile) {
-            frame_profiles.reserve(1024);
-            mission_frames.reserve(1024);
-            profile_anchor_ns = SDL_GetTicksNS();
-            profile_anchor_utc_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(
-                                            std::chrono::system_clock::now().time_since_epoch())
-                                            .count();
-            profile_anchor_after_ns = SDL_GetTicksNS();
-        }
-    }
-    void append(const FrameProfile& row) {
-        if (frame_profiles.size() < frame_profile_capacity) {
-            frame_profiles.push_back(row);
-            frame_profiles.back().finish(SDL_GetTicksNS());
-        } else
-            ++frame_profiles_dropped;
+        if (profile) mission_frames.reserve(1024);
     }
     template<class App> void before_frame(App& app, float frame_ms) {
         if (session_smoke) session_step(app);
@@ -82,57 +63,6 @@ public:
             if (!app.window_seconds_ && frames == 140) app.perform(ui::Action::back);
             if (!app.window_seconds_ && frames == 155) app.perform(ui::Action::open_gpu);
         }
-    }
-    template<class App> std::expected<void, std::string> write_frames(App& app) {
-        if (profile_frames) {
-            std::ofstream timing_out{app.store_.path().parent_path() / "frame-timings.csv"};
-            std::ofstream info_out{app.store_.path().parent_path() / "frame-timings-info.txt"};
-            if (!timing_out || !info_out) return std::unexpected{"Nie można zapisać pełnego profilu klatek."};
-            timing_out << std::setprecision(12);
-            write_frame_profile_header(timing_out);
-            for (const auto& row : frame_profiles) write_frame_profile(timing_out, row);
-            info_out << "render_width=960\nrender_height=576\nrender_quality="
-                     << gpu::render_quality_name(app.simulation_ ? app.simulation_->render_options().quality
-                                                                 : gpu::RenderQuality::basic)
-                     << '\n';
-            info_out
-                    << "schema=1\nrows_capacity=" << frame_profile_capacity
-                    << "\nrows_dropped=" << frame_profiles_dropped << "\nanchor_sdl_ns=" << profile_anchor_ns
-                    << "\nanchor_utc_unix_ns=" << profile_anchor_utc_ns
-                    << "\nanchor_sdl_after_ns=" << profile_anchor_after_ns
-                    << "\nanchor_pair_order=sdl_before_utc_then_sdl_after\nanchor_precision=bracketed_cpu_samples\n"
-                    << "mission_smoke=" << mission_smoke << "\nmission_smoke_min_ticks=" << mission_smoke_min_ticks
-                    << "\nrendered_frames=" << frames << "\nloop_iterations=" << iterations
-                    << "\nmission_submitted_ticks=" << (app.simulation_ ? app.simulation_->metrics().steps : 0) << '\n'
-                    << "durations=current_loop_iteration_after_present_and_limiter\n"
-                    << "previous_interval_ms=preceding_frame_start_to_current_frame_start\n"
-                    << "phase_partition=input+metadata+scenario+ui_prepare+upload+poll+ui_build+update+world_render+gui_render+capture+validation+present+actions+sleep+other\n"
-                    << "rendered_0=minimized_loop_no_swap_or_simulation\n"
-                    << "input_ms=SDL_event_poll_and_gui_event_dispatch\n"
-                    << "ui_build_ms=UI_widgets_and_game_input_collection\n"
-                    << "world_render_ms=CPU_submission_in_update_not_GPU_execution\n"
-                    << "capture_ms=synchronous_test_capture_excluded_from_runtime_comparisons\n"
-                    << "capture_performed=explicit_capture_marker_not_a_duration_threshold\n"
-                    << "validation_ms=per_frame_glGetError_not_full_snapshot_validation\n"
-                    << "full_snapshot_validation=after_loop_not_in_frame_timings_csv\n"
-                    << "presentation_snapshot=after_event_poll_before_UI_actions\n"
-                    << "frame_limit_snapshot=before_UI_actions_may_change_limiter_for_same_iteration\n"
-                    << "mission_tick=last_submitted_tick_not_GPU_completion\n"
-                    << "mission_pending_seconds=clock_accumulator_including_fractional_tick\n"
-                    << "timer_mode=" << gpu::timer_mode_name(gpu::effective_timer_mode(app.gpu_profiling_))
-                    << "\ngpu_timers_enabled=" << app.gpu_profiling_.gpu_timers
-                    << "\nphase_gating=" << app.execution_.phase_gating << "\nphase_gating_effective="
-                    << (app.execution_.phase_gating && app.execution_.neighbors != gpu::NeighborMode::linked)
-                    << "\nneighbor_reads_requested=" << gpu::neighbor_reads_name(app.execution_.neighbor_reads)
-                    << "\nneighbor_reads_effective="
-                    << gpu::neighbor_reads_name(
-                               gpu::effective_neighbor_reads(app.execution_.neighbor_reads, app.execution_.neighbors))
-                    << "\nstorage_requested=" << gpu::device_storage_name(app.execution_.storage)
-                    << "\nreadback_period=" << app.gpu_profiling_.readback_period
-                    << "\nskip_zero_projection=" << app.execution_.skip_zero_projection << '\n';
-            if (!timing_out || !info_out) return std::unexpected{"Niepełny zapis profilu klatek."};
-        }
-        return {};
     }
     template<class App> std::expected<void, std::string> finish(App& app) {
         if (session_smoke) {
@@ -666,13 +596,6 @@ public:
     unsigned frames{};
     std::vector<double> ui_frame_times;
     std::vector<std::array<double, 12>> mission_frames;
-    bool profile_frames{};
-    std::vector<FrameProfile> frame_profiles;
-    std::uint64_t profile_anchor_ns{};
-    std::uint64_t profile_anchor_utc_ns{};
-    std::uint64_t profile_anchor_after_ns{};
-    std::uint64_t iterations{}, frame_profiles_dropped{};
-    static constexpr std::size_t frame_profile_capacity = 250000;
     std::uint64_t gpu_paused_step{};
     bool gpu_pause_ok = true;
     std::uint64_t last_heartbeat_ns{};

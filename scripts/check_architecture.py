@@ -46,6 +46,7 @@ TARGET_MODULE = {
     "strefa_physics": "tools",
     "strefa_diagnostics": "qa",
     "strefa_conformance": "qa",
+    "strefa_benchmark_report": "qa",
     "strefa_qa": "qa",
     # experiments/ (off by default, never installed): links no project library.
     "strefa_pbf_cpu_bench": "experiments",

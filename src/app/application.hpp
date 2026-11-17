@@ -15,6 +15,10 @@
 #include <string_view>
 #include <vector>
 
+namespace strefa::platform {
+class Window;
+} // namespace strefa::platform
+
 namespace strefa::app {
 
 // The parser allows at most one start mode and at most one test, so each maps to a single value.
@@ -104,6 +108,19 @@ struct LaunchOptions {
 // Returns nullopt for interactive and window scenarios, which continue into the application loop.
 using DiagnosticRunner = std::function<std::optional<std::expected<int, std::string>>(
         const LaunchOptions&, const std::filesystem::path& assets, const std::filesystem::path& profile)>;
+struct LaunchConfig;
+// Runs one Application with the given configuration in the window and GL context of app::run.
+using ApplicationRunner = std::function<std::expected<int, std::string>(const LaunchConfig&)>;
+// StrefaQA window scenarios around the application (scene benchmark, frame profiles): it may run the application
+// any number of times with its own FrameObservers. nullopt runs the application once, as StrefaZero does.
+using WindowScenarioRunner = std::function<std::optional<std::expected<int, std::string>>(
+        const LaunchOptions&, const LaunchConfig& base, const platform::Window&, const std::filesystem::path& profile,
+        const ApplicationRunner&)>;
+// QA code injected by StrefaQA; StrefaZero passes none.
+struct QaHooks {
+    DiagnosticRunner diagnostics; // after the GL context exists, before the interface
+    WindowScenarioRunner window;  // instead of the single application run
+};
 
 [[nodiscard]] std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv,
                                                                       OptionScope scope = OptionScope::all);
@@ -111,9 +128,8 @@ using DiagnosticRunner = std::function<std::optional<std::expected<int, std::str
 // Value of STREFA_GPU_TIMEOUT_SCALE (set by CMake on every `graphics` test): a positive integer that stretches
 // in-app test deadlines like the CTest TIMEOUT. Unset, empty or invalid text means 1.
 [[nodiscard]] unsigned gpu_timeout_scale(const char* text);
-[[nodiscard]] std::expected<int, std::string> run(const LaunchOptions& options,
-                                                  const DiagnosticRunner& diagnostics = {});
+[[nodiscard]] std::expected<int, std::string> run(const LaunchOptions& options, const QaHooks& qa = {});
 // Shared main() of StrefaZero and StrefaQA: parses options, reports errors and runs the application.
-int run_main(int argc, char** argv, OptionScope scope, const DiagnosticRunner& diagnostics = {});
+int run_main(int argc, char** argv, OptionScope scope, const QaHooks& qa = {});
 
 } // namespace strefa::app

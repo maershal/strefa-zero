@@ -1,17 +1,24 @@
+#include "app/benchmark_report.hpp"
+#include "app/frame_observer.hpp"
 #include "app/launch_config.hpp"
+#include "app/scene_benchmark.hpp"
 #include "app/simulation_world.hpp"
+#include "app/window_scenarios.hpp"
 #include "build_info.hpp"
 #include "gpu/world.hpp"
 #include "platform/window.hpp"
+#include "sim/laboratory.hpp"
 
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <format>
 #include <fstream>
 #include <iostream>
+#include <utility>
 
 namespace strefa::app {
 namespace {
@@ -23,19 +30,123 @@ std::int64_t utc_unix_ns() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::system_clock::now().time_since_epoch())
             .count();
 }
-} // namespace
-
-WindowState benchmark_window_state(const platform::Window& window) {
+// SDL flags of the window plus, on Windows, IsIconic and DWM cloaking.
+WindowState window_state(const platform::Window& window) {
     const auto flags = SDL_GetWindowFlags(window.native());
     const auto shell = window.shell_state();
     return {(flags & SDL_WINDOW_HIDDEN) == 0, (flags & SDL_WINDOW_INPUT_FOCUS) != 0,
             (flags & SDL_WINDOW_MINIMIZED) != 0 || shell.iconic, (flags & SDL_WINDOW_OCCLUDED) != 0, shell.cloaked};
 }
 
+// One --scene-benchmark scene: settings in, collected frames and GPU samples out.
+struct BenchmarkRun {
+    BenchmarkScene scene;
+    double warmup_seconds{}, measure_seconds{};
+    BenchmarkRecord record;
+    std::uint64_t measure_started_ns{};
+    std::array<std::uint64_t, 3> drops_at_start{}; // Metrics::*_timings_dropped when the window opened
+    bool measuring{}, completed{};
+    bool quit{}; // SDL_EVENT_QUIT or a window close: the whole benchmark stops after this scene
+};
+
+// Warm-up frames only advance the baselines; the measurement window records one row per frame and ends the loop.
+// GPU samples are drained every frame, so the 10 000-entry queues of ParticleWorld never fill and every sample has
+// a frame time. One recorder per scene (per Application run).
+class BenchmarkRecorder final : public FrameObserver {
+public:
+    explicit BenchmarkRecorder(BenchmarkRun& run) : run_{run} {}
+    void quit_requested() override { run_.quit = true; }
+    void after_update(FrameView& view) override {
+        auto& run = run_;
+        auto& simulation = view.simulation;
+        const auto frame_start = view.frame_start;
+        // A mode failure returns to the menu; the scene fails instead of measuring the menu.
+        if (view.screen == ui::Screen::main_menu) {
+            run.record.error = view.message.empty() ? std::string{"tryb zamknięty przed końcem pomiaru"} : view.message;
+            view.stop = true;
+            return;
+        }
+        if (!started_ns_) started_ns_ = frame_start;
+        const double elapsed = static_cast<double>(frame_start - started_ns_) / 1e9;
+        BenchmarkFrame row{.sdl_ns = frame_start, .frame_ms = view.frame_ms, .window = window_state(view.window)};
+        // Warm-up and the frame that opens the window keep no row; a window away from screen still invalidates.
+        if (!run.measuring) run.record.warmup_away_frames += row.window.presented() ? 0 : 1;
+        // The scripted mission route ends at scripted_mission_ticks; restart it so a long window
+        // keeps measuring the route instead of an idle scene.
+        const bool restart = run.scene.kind == BenchmarkScene::Kind::mission && simulation
+                          && simulation->metrics().steps >= gpu::scripted_mission_ticks;
+        row.route_reset = route_reset_marker_.next_frame(restart);
+        if (row.route_reset && run.measuring) ++run.record.route_resets;
+        if (restart) simulation.reset(simulation.scene());
+        double dropped = 0;
+        if (const auto* lab = view.laboratory) {
+            const auto tick = lab->report.tick;
+            row.ticks = static_cast<unsigned>(tick - std::min(tick, std::exchange(lab_tick_, tick)));
+            row.cpu_step_ms = lab->step_ms;
+            dropped = lab->overload_seconds; // worker overrun, cumulative per scene
+        } else if (simulation) {
+            row.ticks = view.ticks;
+            row.pending_seconds = simulation.clock().pending_seconds();
+            dropped = simulation.clock().dropped_seconds();
+        }
+        // A route restart resets the clock's counter; the difference never goes negative.
+        row.dropped_seconds = std::max(0.0, dropped - std::exchange(dropped_, dropped));
+        const bool last = elapsed >= run.warmup_seconds + run.measure_seconds;
+        if (simulation) {
+            if (last) {
+                glFinish(); // completes the queries of ticks submitted inside the window
+                simulation->poll(false);
+            }
+            const auto& metrics = simulation->metrics();
+            const std::array drops{metrics.timings_dropped, metrics.presentation_timings_dropped,
+                                   metrics.render_timings_dropped};
+            auto physics = simulation->take_timings();
+            auto presentation = simulation->take_presentation_timings();
+            auto render = simulation->take_render_timings();
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) {
+                run.drops_at_start = drops; // samples completed during warm-up are discarded above
+                return;
+            }
+            const auto append = [](std::vector<double>& all, const std::vector<double>& frame, unsigned& count,
+                                   double& sum) {
+                count = static_cast<unsigned>(frame.size());
+                for (const double ms : frame) sum += ms;
+                all.insert(all.end(), frame.begin(), frame.end());
+            };
+            auto& record = run.record;
+            append(record.physics_gpu_ms, physics, row.physics_samples, row.physics_gpu_ms);
+            append(record.presentation_gpu_ms, presentation, row.presentation_samples, row.presentation_gpu_ms);
+            append(record.render_gpu_ms, render, row.render_samples, row.render_gpu_ms);
+            record.physics_truncated = drops[0] != run.drops_at_start[0];
+            record.presentation_truncated = drops[1] != run.drops_at_start[1];
+            record.render_truncated = drops[2] != run.drops_at_start[2];
+        } else {
+            if (elapsed < run.warmup_seconds) return;
+            if (!std::exchange(run.measuring, true)) return;
+        }
+        // The first measured frame only opens the window (GPU queues drained, baselines set).
+        if (!run.measure_started_ns) run.measure_started_ns = frame_start;
+        row.elapsed_seconds = static_cast<double>(frame_start - run.measure_started_ns) / 1e9;
+        row.utc_unix_ns = utc_unix_ns();
+        run.record.frames.push_back(row);
+        if (!last) return;
+        run.completed = true;
+        view.stop = true;
+    }
+
+private:
+    BenchmarkRun& run_;
+    std::uint64_t started_ns_{}, lab_tick_{};
+    double dropped_{};
+    RouteResetMarker route_reset_marker_;
+};
+} // namespace
+
 std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options, const LaunchConfig& base,
                                                     const platform::Window& window,
                                                     const std::filesystem::path& profile,
-                                                    const BenchmarkSceneRunner& run_scene) {
+                                                    const ApplicationRunner& run_scene) {
     const double seconds = options.benchmark_seconds;
     const double warmup = std::clamp(seconds / 6, 1.0, 10.0);
     std::ofstream frames_csv{profile / "scene-benchmark-frames.csv"};
@@ -110,7 +221,8 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
             run.warmup_seconds = warmup;
             run.measure_seconds = seconds;
             auto config = base;
-            config.benchmark = &run;
+            BenchmarkRecorder recorder{run};
+            config.observers.push_back(&recorder);
             config.thermal_scene = 0;
             config.gpu_scene.reset();
             config.lab_scene.reset();

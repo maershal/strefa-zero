@@ -103,6 +103,10 @@ target_link_libraries(strefa_gameplay PUBLIC strefa_options)
 # CLI options and session recordings; SDL/GL-free so CPU tests can link it.
 add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/scene_benchmark.cpp src/app/session_recording.cpp)
 target_link_libraries(strefa_launch PUBLIC strefa_core strefa_gameplay)
+# Statistics and CSV rows of StrefaQA --scene-benchmark: QA code, SDL-free so the CPU tests (also core-only) link it.
+add_library(strefa_benchmark_report STATIC src/app/benchmark_report.cpp)
+target_link_libraries(strefa_benchmark_report PUBLIC strefa_options)
+target_include_directories(strefa_benchmark_report PUBLIC src)
 
 # Input buffer and HUD actor state: no CPU model, only the project options (-ffp-contract=off / /fp:precise and,
 # with STREFA_WARNINGS_AS_ERRORS, -Werror / /WX) that strefa_sim used to bring in transitively.
@@ -157,14 +161,14 @@ if(STREFA_BUILD_APP)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_input PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-    add_library(strefa_app STATIC src/app/application.cpp src/app/gpu_startup.cpp src/app/entry.cpp src/app/simulation_world.cpp
-        src/app/scene_benchmark_run.cpp)
+    add_library(strefa_app STATIC src/app/application.cpp src/app/gpu_startup.cpp src/app/entry.cpp src/app/simulation_world.cpp)
     target_link_libraries(strefa_app PUBLIC
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp)
-    target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu strefa_conformance PRIVATE SDL3::SDL3 OpenGL::GL)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp src/app/window_scenarios.cpp src/app/scene_benchmark_run.cpp)
+    target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu strefa_conformance strefa_benchmark_report PRIVATE SDL3::SDL3 OpenGL::GL)
+    target_include_directories(strefa_diagnostics PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
     add_executable(strefa_zero WIN32 src/main.cpp)
     target_link_libraries(strefa_zero PRIVATE strefa_app)
@@ -232,7 +236,7 @@ if(BUILD_TESTING)
     target_link_libraries(strefa_launch_options_tests PRIVATE strefa_launch)
     strefa_add_cpu_test(app.launch_options strefa_launch_options_tests unit)
     add_executable(strefa_scene_benchmark_tests tests/scene_benchmark_tests.cpp)
-    target_link_libraries(strefa_scene_benchmark_tests PRIVATE strefa_launch)
+    target_link_libraries(strefa_scene_benchmark_tests PRIVATE strefa_launch strefa_benchmark_report)
     strefa_add_cpu_test(app.scene_benchmark strefa_scene_benchmark_tests unit)
     add_executable(strefa_vfx_tests tests/vfx_tests.cpp)
     target_link_libraries(strefa_vfx_tests PRIVATE strefa_sim strefa_launch)

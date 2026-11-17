@@ -57,7 +57,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Golden master: pozostałe 9 scen laboratorium CPU; clang z libc++ | otwarte | #28, #30 |
 | Ratchet architektury: reguły warstw, budżety, symbole QA (A faza A1–A2) | zrobione | #42 |
 | Spłata naruszeń z `tools/architecture_allowlist.txt` (A §1 A4) | otwarte | #40 |
-| QA poza `StrefaZero`: benchmark scen, `ScenarioRunner` (A faza A4, N1) | otwarte | #39 |
+| QA poza `StrefaZero`: benchmark scen, `ScenarioRunner` (A faza A4, N1) | krok 1/3: obserwator klatki (`FrameObserver` przez `LaunchConfig`), sterownik i rejestrator benchmarku scen oraz profil klatek w `strefa_diagnostics`, symbole QA 35 → 21; `ScenarioRunner`, `write_profile_samples` i parser scen benchmarku otwarte | #126, #39, #52 |
 | Ruleset `main` (R §12 p. 1, R1) | utworzony, `enforcement: disabled` | #31 |
 | Recenzja pod tożsamością bota; `large-pr-approved` nie od autora | otwarte | #32, #33 |
 | Benchmark scen nie unieważnia pomiaru przy zminimalizowanym oknie na Windows (R §2.2 #13, §5.3) | zrobione: klatki zminimalizowane liczą się i unieważniają scenę, `IsIconic`/`DWMWA_CLOAKED`, QUIT przerywa benchmark | #44, #47 |
@@ -72,7 +72,7 @@ w źródłach, tu jest tylko to, co trzeba wiedzieć przed każdą zmianą.
 | Wszystko z F1–F7 (laboratorium, termika v2, UI) i fazy A3, A5–A7, reszta B, D, E | nie rozpoczęte | — |
 
 Budżety ratchetu różnią się od propozycji A §5 (inne definicje liczników): obowiązują wartości
-z `tools/architecture_budget.json`, np. `strefa_zero_qa_symbols` = 35, `size_literals_glsl` = 75,
+z `tools/architecture_budget.json`, np. `strefa_zero_qa_symbols` = 21, `size_literals_glsl` = 75,
 `launch_options_bools` = 55.
 
 ## Przyjęte kierunki (stosuj, chyba że właściciel zdecyduje inaczej)
