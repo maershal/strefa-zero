@@ -1,3 +1,4 @@
+#include "app/benchmark_report.hpp"
 #include "app/scene_benchmark.hpp"
 
 #include <algorithm>

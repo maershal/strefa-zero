@@ -1,5 +1,6 @@
 #include "app/application.hpp"
 #include "app/diagnostic_scenarios.hpp"
+#include "app/window_scenarios.hpp"
 #include "tools/renderdoc_capture.hpp"
 
 #include <SDL3/SDL_main.h>
@@ -18,11 +19,14 @@ int main(int argc, char** argv) {
 #endif
     strefa::tools::attach_renderdoc();
     // The runner is called once the window and its GL context exist, so SDL events work from here on.
-    const strefa::app::DiagnosticRunner diagnostics = [](const strefa::app::LaunchOptions& options,
-                                                         const std::filesystem::path& assets,
-                                                         const std::filesystem::path& profile) {
-        strefa::tools::watch_renderdoc_hotkey(profile);
-        return strefa::app::run_diagnostic_scenario(options, assets, profile);
-    };
-    return strefa::app::run_main(argc, argv, strefa::app::OptionScope::all, diagnostics);
+    // Window scenarios (scene benchmark, frame profiles) observe the application's frame loop instead.
+    const strefa::app::QaHooks qa{.diagnostics =
+                                          [](const strefa::app::LaunchOptions& options,
+                                             const std::filesystem::path& assets,
+                                             const std::filesystem::path& profile) {
+                                              strefa::tools::watch_renderdoc_hotkey(profile);
+                                              return strefa::app::run_diagnostic_scenario(options, assets, profile);
+                                          },
+                                  .window = strefa::app::run_window_scenario};
+    return strefa::app::run_main(argc, argv, strefa::app::OptionScope::all, qa);
 }

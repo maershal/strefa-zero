@@ -8,7 +8,7 @@
 
 namespace strefa::app {
 
-int run_main(int argc, char** argv, OptionScope scope, const DiagnosticRunner& diagnostics) {
+int run_main(int argc, char** argv, OptionScope scope, const QaHooks& qa) {
     const auto options = parse_options(argc, argv, scope);
     if (!options) {
         // StrefaQA runs unattended from scripts; a modal box would block them until the timeout.
@@ -38,7 +38,7 @@ int run_main(int argc, char** argv, OptionScope scope, const DiagnosticRunner& d
             SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Strefa Zero — błąd", error.c_str(), nullptr);
     };
     try {
-        const auto result = run(*options, diagnostics);
+        const auto result = run(*options, qa);
         if (!result) {
             report_error(result.error());
             return 1;
