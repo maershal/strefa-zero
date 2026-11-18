@@ -81,6 +81,11 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
         if (!result) return std::unexpected{result.error()};
         return 0;
     }
+    if (options.gpu_check == "thermal-kiln") {
+        const auto result = gpu::validate_thermal_kiln(assets / "shaders", profile, options.gpu_execution);
+        if (!result) return std::unexpected{result.error()};
+        return 0;
+    }
     if (options.gpu_check == "iteration-sweep") {
         const auto result = gpu::sweep_solver_iterations(assets / "shaders", profile, options.gpu_execution);
         if (!result) return std::unexpected{result.error()};

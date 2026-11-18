@@ -49,6 +49,11 @@ std::expected<void, std::string> validate_thermal_bits(const std::filesystem::pa
 std::expected<void, std::string> benchmark_thermal_gate(const std::filesystem::path& shaders,
                                                         const std::filesystem::path& output,
                                                         const ExecutionOptions& layout);
+// --gpu-check thermal-kiln: two-stage wood combustion (#112) in a sealed and in a vented chamber: the flame goes out
+// without oxygen, char remains, the vented flame keeps burning, mass and energy balances hold.
+std::expected<void, std::string> validate_thermal_kiln(const std::filesystem::path& shaders,
+                                                       const std::filesystem::path& output,
+                                                       const ExecutionOptions& layout);
 // Z08, --gpu-check iteration-sweep: the existing quality gates (fluid quality, liquids, grains, flow, coupling,
 // mission) and the GPU cost per tick for a grid of PBF/contact iteration counts at two substeps
 // (STREFA_ITERATION_SWEEP_PLAN = full | gates | timing | quick). Fails only when the shipped default (`FluidOptions{}`)

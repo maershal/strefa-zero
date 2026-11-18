@@ -334,6 +334,19 @@ heat_release = 0
 residue = 0
 strength = 0.08
 
+# Pyrolysis, GPU thermal model only (fire v2, #112): above `temperature` (K) and without oxygen, `from` releases
+# `gas` and leaves `to`. The rate (1/s) is `rate` at `temperature` + `span` and grows linearly with temperature
+# up to `max_rate`; `volatile_fraction` of the converted mass leaves as gas. The CPU model does not use it.
+[[pyrolysis]]
+from = "wood"
+to = "coal"
+gas = "gas"
+temperature = 500
+span = 100
+rate = 0.065
+max_rate = 0.5
+volatile_fraction = 0.7
+
 [[transition]]
 from = "ice"
 to = "water"

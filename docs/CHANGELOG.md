@@ -2,6 +2,19 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## Ogień v2: dwustopniowe spalanie drewna w termice GPU (#112)
+
+Rozgrzane drewno w termice GPU najpierw pirolizuje (bez tlenu oddaje gaz palny i zostawia węgiel drzewny), a gaz
+spala istniejąca reakcja gazu palnego, więc płomień siedzi nad drewnem i gaśnie bez tlenu. Węgiel drzewny (materiał
+`coal`) utlenia się powoli do popiołu. Parametry są w rejestrze (`[[pyrolysis]]` w `src/sim/materials.toml`,
+makra `WOOD_PYROLYSIS_*` w `materials.glsl`). Liczba przebiegów GPU na tick się nie zmienia. Nowe sprawdzenie
+`StrefaQA --gpu-check thermal-kiln` (CTest `gpu.thermal_kiln`): w zamkniętej komorze płomień gaśnie i zostaje węgiel,
+w otwartej gaz z pirolizy spala się na bieżąco, a bilanse masy i energii trzymają się z błędem ≤ 3·10⁻⁷.
+Licznik paliwa termiki liczy węgiel drzewny w rekordzie drewna. Naprawiony błąd bilansu energii
+w spalaniu gazu palnego (od I10, bez testu): reakcja odejmowała entalpię zużytego tlenu, której nie dodawała.
+Termika pozostaje domyślnie wyłączona. Model nie ma odpowiednika w modelu CPU (#111). Raport:
+[FIRE_V2_WOOD](reports/FIRE_V2_WOOD.md).
+
 ## QA poza binarką gracza, krok 1: benchmark scen i profil klatek (#39, #52)
 
 Pętla klatki `Application` ma punkt rozszerzenia dla kodu QA: obserwatory klatki (`FrameObserver`,
