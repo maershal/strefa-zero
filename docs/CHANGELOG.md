@@ -2,6 +2,21 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## QA poza binarką gracza, krok 2: skrypty testów okna, próbki profilu i lista scen benchmarku (#39)
+
+`ScenarioRunner` (przyjaciel `Application`) zniknął. Skrypty testów okna dostają aplikację przez jawny
+`ScenarioContext` (`src/app/scenario_context.hpp`: pola, które skrypt może czytać lub zmieniać) zamiast dostępu do
+jej prywatnych pól. W `strefa_app` zostały tylko dwa testy `StrefaZero` (`--smoke-test`, `--mission-smoke-test`)
+i zapis `progress.txt` (`WindowTest`, `src/app/window_test.cpp`); testy laboratorium CPU i GPU, wspólnej sesji,
+`mission_quick` i błędów trybów są obserwatorami klatki w `strefa_diagnostics` (`qa_window_scripts.cpp`), z nowymi
+haczykami `before_frame`, `check` i `progress_stage`. `gpu::write_profile_samples` jest w `strefa_diagnostics`
+i wywołuje go rejestrator profilu klatek. Parser opcji przechowuje listę `--scene-benchmark` jako tekst; listę scen
+sprawdza `StrefaQA` zaraz po parsowaniu (`QaHooks::options`, ten sam komunikat i kod wyjścia co błąd parsera),
+a `BenchmarkScene` i parser listy są w `strefa_benchmark_report`. Pliki i kolumny raportów bez zmian. Krótki
+przebieg testu okna GPU (mniej niż 30 klatek) kończy się teraz błędem z komunikatem zamiast awarii (#124). Symbole QA
+w `StrefaZero` 21 → 0, `application.cpp` 1126 → 1111 linii, `Application::run()` 443 → 415, krawędzie
+`launch -> gpu` 3 → 2 i `launch -> sim` 2 → 1.
+
 ## QA poza binarką gracza, krok 1: benchmark scen i profil klatek (#39, #52)
 
 Pętla klatki `Application` ma punkt rozszerzenia dla kodu QA: obserwatory klatki (`FrameObserver`,

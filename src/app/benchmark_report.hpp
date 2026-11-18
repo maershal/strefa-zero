@@ -1,15 +1,30 @@
 #pragma once
-// Statistics and CSV rows of StrefaQA --scene-benchmark (strefa_benchmark_report, SDL-free, never linked into
-// StrefaZero). Scene ids and the list parser stay in app/scene_benchmark.hpp.
+// Scene list, statistics and CSV rows of StrefaQA --scene-benchmark (strefa_benchmark_report, SDL-free, never
+// linked into StrefaZero). The option parser keeps the list as text; StrefaQA parses it (check_qa_options).
 #include <array>
 #include <cstddef>
 #include <cstdint>
+#include <expected>
 #include <string>
 #include <string_view>
 #include <utility>
 #include <vector>
 
 namespace strefa::app {
+
+// One scene measured by --scene-benchmark.
+struct BenchmarkScene {
+    enum class Kind { gpu, mission, thermal, lab };
+    Kind kind{Kind::gpu};
+    unsigned index{}; // gpu::Scene, thermal scene number (1-4) or sim::Scene; 0 for the mission
+    // gpu:<id>, mission, thermal:<id> or lab:<id>
+    [[nodiscard]] std::string id() const;
+    bool operator==(const BenchmarkScene&) const = default;
+};
+// GPU laboratory scenes, the mission, thermal scenes and CPU laboratory scenes, in that order.
+[[nodiscard]] std::vector<BenchmarkScene> all_benchmark_scenes();
+// "all" or a comma-separated list of ids; duplicates are rejected.
+[[nodiscard]] std::expected<std::vector<BenchmarkScene>, std::string> parse_benchmark_scenes(std::string_view list);
 
 // Nearest-rank percentiles with the semantics of gpu/profiling.cpp: sorted[min(n-1, q*n)].
 struct Distribution {
