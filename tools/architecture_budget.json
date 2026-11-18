@@ -3,7 +3,7 @@
   "world_tu_lines": 3506,
   "particle_world_public_decls": 67,
   "particle_world_test_hooks": 9,
-  "application_cpp_lines": 1196,
+  "application_cpp_lines": 1126,
   "application_run_lines": 443,
   "launch_options_bools": 55,
   "inl_includes": 7,
@@ -13,6 +13,6 @@
   "raw_ssbo_arrays": 27,
   "unsigned_ref_banks": 5,
   "glsl_lines_over_200": 59,
-  "strefa_zero_qa_symbols": 35,
+  "strefa_zero_qa_symbols": 21,
   "strefa_zero_tracy_symbols": 0
 }

@@ -15,6 +15,18 @@ w spalaniu gazu palnego (od I10, bez testu): reakcja odejmowała entalpię zuży
 Termika pozostaje domyślnie wyłączona. Model nie ma odpowiednika w modelu CPU (#111). Raport:
 [FIRE_V2_WOOD](reports/FIRE_V2_WOOD.md).
 
+## QA poza binarką gracza, krok 1: benchmark scen i profil klatek (#39, #52)
+
+Pętla klatki `Application` ma punkt rozszerzenia dla kodu QA: obserwatory klatki (`FrameObserver`,
+`src/app/frame_observer.hpp`) przekazywane przez `LaunchConfig::observers`, z haczykami po aktualizacji symulacji,
+na końcu klatki (wiersz profilu) i po pętli. Widzą aplikację tylko przez `FrameView`. Rejestrator i sterownik
+benchmarku scen (`scene_benchmark_run.cpp`) oraz zapis `frame-timings.csv` (wcześniej w `ScenarioRunner`) są teraz
+w `strefa_diagnostics`; `StrefaQA` podaje je do `app::run` jako `QaHooks::window`. Statystyki i wiersze CSV benchmarku
+są w nowej bibliotece `strefa_benchmark_report` (bez SDL, test `app.scene_benchmark`); w `strefa_launch` zostaje
+tylko parser listy scen. Pliki i kolumny raportów bez zmian. Symbole QA w `StrefaZero` (`strefa_zero_qa_symbols`)
+35 → 21, `application.cpp` 1196 → 1126 linii. Zostają `ScenarioRunner`, `write_profile_samples` i parser scen
+benchmarku w opcjach gracza.
+
 ## B3: pozostałe shadery termiki i `thermal_phase()` na nazwach z rejestru
 
 `thermal.comp`, `thermal_reduce.comp`, `thermal_draw.frag` i `lighting_thermal.comp` używają makr `MATERIAL_*` i `*_TRANSITION_*`
