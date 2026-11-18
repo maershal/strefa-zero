@@ -23,6 +23,8 @@ std::expected<void, std::string> profile_gpu(ParticleWorld&, const std::filesyst
                                              bool check_only = false);
 std::expected<void, std::string> profile_stabilization(ParticleWorld&, const std::filesystem::path& output,
                                                        const ProfileOptions&);
+// window-steps.csv, window-gpu-groups.csv and window-counters.txt: the per-tick GPU samples collected so far.
+void write_profile_samples(ParticleWorld&, const std::filesystem::path& output);
 std::expected<void, std::string> validate_transport(const std::filesystem::path& output);
 std::expected<void, std::string> validate_hot_reads(const std::filesystem::path& output,
                                                     const ExecutionOptions& layout = {});

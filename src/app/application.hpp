@@ -1,5 +1,4 @@
 #pragma once
-#include "app/scene_benchmark.hpp"
 #include "gpu/diagnostics.hpp"
 #include "gpu/profiling.hpp"
 #include "gpu/render_options.hpp"
@@ -61,7 +60,7 @@ struct LaunchOptions {
     unsigned thermal_scene{};
     std::optional<unsigned> gpu_scene, lab_scene; // --scene gpu:<id> / lab:<id> (gpu::Scene / sim::Scene index)
     bool scene_set{};
-    std::vector<BenchmarkScene> benchmark_scenes; // --scene-benchmark, one window run per scene
+    std::string benchmark_scenes; // --scene-benchmark list as given; StrefaQA parses it (parse_benchmark_scenes)
     unsigned benchmark_seconds{60};
     unsigned benchmark_repeat{1};      // --repeat: passes over the scene list in one process
     unsigned benchmark_loop_minutes{}; // --loop-minutes: start passes until this much time has passed
@@ -116,8 +115,12 @@ using ApplicationRunner = std::function<std::expected<int, std::string>(const La
 using WindowScenarioRunner = std::function<std::optional<std::expected<int, std::string>>(
         const LaunchOptions&, const LaunchConfig& base, const platform::Window&, const std::filesystem::path& profile,
         const ApplicationRunner&)>;
+// Checks of StrefaQA-only option values after parsing (e.g. the --scene-benchmark list); an error is reported like a
+// parser error.
+using OptionCheck = std::function<std::expected<void, std::string>(const LaunchOptions&)>;
 // QA code injected by StrefaQA; StrefaZero passes none.
 struct QaHooks {
+    OptionCheck options;          // after parse_options, before SDL starts
     DiagnosticRunner diagnostics; // after the GL context exists, before the interface
     WindowScenarioRunner window;  // instead of the single application run
 };

@@ -1,7 +1,6 @@
 #include "app/benchmark_report.hpp"
 #include "app/frame_observer.hpp"
 #include "app/launch_config.hpp"
-#include "app/scene_benchmark.hpp"
 #include "app/simulation_world.hpp"
 #include "app/window_scenarios.hpp"
 #include "build_info.hpp"
@@ -147,6 +146,9 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
                                                     const platform::Window& window,
                                                     const std::filesystem::path& profile,
                                                     const ApplicationRunner& run_scene) {
+    // check_qa_options already rejected an invalid list before the window opened.
+    const auto scenes = parse_benchmark_scenes(options.benchmark_scenes);
+    if (!scenes) return std::unexpected{scenes.error()};
     const double seconds = options.benchmark_seconds;
     const double warmup = std::clamp(seconds / 6, 1.0, 10.0);
     std::ofstream frames_csv{profile / "scene-benchmark-frames.csv"};
@@ -188,7 +190,7 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
                                       : "frame_limit")
          << "\ngpu_timer_mode=" << gpu::timer_mode_name(gpu::effective_timer_mode(base.profiling))
          << "\nwarmup_seconds=" << warmup << "\nmeasure_seconds=" << seconds << "\nrepeat=" << options.benchmark_repeat
-         << "\nloop_minutes=" << options.benchmark_loop_minutes << "\nscenes=" << options.benchmark_scenes.size()
+         << "\nloop_minutes=" << options.benchmark_loop_minutes << "\nscenes=" << scenes->size()
          << "\nanchor_sdl_ns=" << anchor_sdl << "\nanchor_utc_unix_ns=" << anchor_utc
          << "\nanchor_sdl_after_ns=" << anchor_sdl_after
          << "\nutc_unix_ns=system_clock_after_frame_update_same_epoch_as_GpuTelemetry_csv"
@@ -215,7 +217,7 @@ std::expected<int, std::string> run_scene_benchmark(const LaunchOptions& options
         } else if (pass > options.benchmark_repeat)
             break;
         if (looping) std::cout << std::format("Przebieg {}\n", pass) << std::flush;
-        for (const auto& scene : options.benchmark_scenes) {
+        for (const auto& scene : *scenes) {
             BenchmarkRun run;
             run.scene = scene;
             run.warmup_seconds = warmup;

@@ -101,11 +101,12 @@ target_include_directories(strefa_gameplay PUBLIC src)
 target_link_libraries(strefa_gameplay PUBLIC strefa_options)
 
 # CLI options and session recordings; SDL/GL-free so CPU tests can link it.
-add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/scene_benchmark.cpp src/app/session_recording.cpp)
+add_library(strefa_launch STATIC src/app/launch_options.cpp src/app/scene_ids.cpp src/app/session_recording.cpp)
 target_link_libraries(strefa_launch PUBLIC strefa_core strefa_gameplay)
-# Statistics and CSV rows of StrefaQA --scene-benchmark: QA code, SDL-free so the CPU tests (also core-only) link it.
+# Scene list, statistics and CSV rows of StrefaQA --scene-benchmark: QA code, SDL-free so the CPU tests (also
+# core-only) link it.
 add_library(strefa_benchmark_report STATIC src/app/benchmark_report.cpp)
-target_link_libraries(strefa_benchmark_report PUBLIC strefa_options)
+target_link_libraries(strefa_benchmark_report PUBLIC strefa_launch)
 target_include_directories(strefa_benchmark_report PUBLIC src)
 
 # Input buffer and HUD actor state: no CPU model, only the project options (-ffp-contract=off / /fp:precise and,
@@ -150,7 +151,7 @@ if(STREFA_BUILD_APP)
     if(WIN32)
         target_link_libraries(strefa_platform PRIVATE dwmapi) # Window::shell_state (DWMWA_CLOAKED)
     endif()
-    add_library(strefa_gpu STATIC src/gpu/lighting_system.cpp src/gpu/thermal_system.cpp src/gpu/vfx_pool.cpp src/gpu/fluid_quality.cpp src/gpu/event_ring.cpp src/gpu/explosion_system.cpp src/gpu/shader_library.cpp src/gpu/compute_kernels.cpp src/gpu/scene_renderer.cpp src/gpu/world.cpp src/gpu/mission_route.cpp src/gpu/profile_samples.cpp src/gpu/upload_ring.cpp src/gpu/readback_ring.cpp)
+    add_library(strefa_gpu STATIC src/gpu/lighting_system.cpp src/gpu/thermal_system.cpp src/gpu/vfx_pool.cpp src/gpu/fluid_quality.cpp src/gpu/event_ring.cpp src/gpu/explosion_system.cpp src/gpu/shader_library.cpp src/gpu/compute_kernels.cpp src/gpu/scene_renderer.cpp src/gpu/world.cpp src/gpu/mission_route.cpp src/gpu/upload_ring.cpp src/gpu/readback_ring.cpp)
     target_link_libraries(strefa_gpu PUBLIC strefa_core strefa_gameplay PRIVATE SDL3::SDL3 OpenGL::GL)
     foreach(shader presentation_prepare_birth.comp lighting_materials.comp lighting_probe.comp lighting_apply.frag lighting_bloom.frag lighting_common.glsl lighting_events.comp lighting_field.comp lighting_jfa.comp lighting_post.frag lighting_shadow.comp lighting_thermal.comp lighting_visibility.glsl presentation_birth.glsl presentation_field.vert presentation_field.frag presentation_moisture.comp thermal_events.comp thermal.comp thermal_common.glsl materials.glsl thermal_reduce.comp thermal_condense.comp thermal_gate.comp thermal_draw.frag vfx_field_command.comp vfx_field.vert vfx_common.glsl vfx_init.comp vfx_prepare.comp vfx_update.comp vfx_events.comp vfx_water.comp vfx_finish.comp vfx_draw.vert vfx_draw.frag vfx_canvas.frag liquid_sampling.glsl render_probe.comp scene_common.glsl render_terrain.glsl scene_background.frag scene_terrain.frag liquid_filter.frag liquid_thickness.comp reference_liquid_splat.vert reference_liquid_splat.frag reference_liquid_surface.frag world_protocol.glsl soldier_pose.glsl mission.comp mission_state.glsl mission.vert mission.frag coupling.comp body_terrain.glsl neighbors.comp particle_storage.glsl granular.comp granular.vert granular.frag particle_common.glsl liquids.comp liquid_splat.vert liquid_splat.frag liquid_surface.vert liquid_surface.frag)
         configure_file(assets/shaders/${shader} assets/shaders/${shader} COPYONLY)
@@ -161,12 +162,13 @@ if(STREFA_BUILD_APP)
     target_link_libraries(strefa_ui PUBLIC strefa_core strefa_sim strefa_input PRIVATE strefa_imgui strefa_platform)
     target_include_directories(strefa_ui PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 
-    add_library(strefa_app STATIC src/app/application.cpp src/app/gpu_startup.cpp src/app/entry.cpp src/app/simulation_world.cpp)
+    add_library(strefa_app STATIC src/app/application.cpp src/app/gpu_startup.cpp src/app/entry.cpp src/app/simulation_world.cpp
+        src/app/window_test.cpp)
     target_link_libraries(strefa_app PUBLIC
         strefa_launch strefa_platform strefa_storage strefa_ui strefa_imgui strefa_gpu OpenGL::GL)
     target_include_directories(strefa_app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
     # Validations, benchmarks and profiles: linked only into StrefaQA.
-    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp src/app/window_scenarios.cpp src/app/scene_benchmark_run.cpp)
+    add_library(strefa_diagnostics STATIC src/gpu/validation.cpp src/gpu/brush_validation.cpp src/gpu/explosion_validation.cpp src/gpu/lab_blast_validation.cpp src/gpu/liquid_validation.cpp src/gpu/flow_validation.cpp src/gpu/mission_validation.cpp src/gpu/profiling.cpp src/gpu/thermal_benchmark.cpp src/gpu/stabilization_profile.cpp src/gpu/cost_profile.cpp src/gpu/work_validation.cpp src/gpu/hot_validation.cpp src/gpu/transport_validation.cpp src/gpu/readback_validation.cpp src/gpu/execution_validation.cpp src/gpu/neighbor_validation.cpp src/gpu/coupling_validation.cpp src/gpu/coupling_replay.cpp src/gpu/coupling_bitwise.cpp src/gpu/thermal_bits.cpp src/gpu/thermal_gate_benchmark.cpp src/gpu/iteration_sweep.cpp src/gpu/pbf_access_validation.cpp src/gpu/cost_model.cpp src/gpu/synthetic_passes.cpp src/gpu/profile_samples.cpp src/app/diagnostic_scenarios.cpp src/app/thermal_validation.cpp src/app/shader_cache_validation.cpp src/app/window_scenarios.cpp src/app/qa_window_scripts.cpp src/app/scene_benchmark_run.cpp)
     target_link_libraries(strefa_diagnostics PUBLIC strefa_app strefa_gpu strefa_conformance strefa_benchmark_report PRIVATE SDL3::SDL3 OpenGL::GL)
     target_include_directories(strefa_diagnostics PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
 

@@ -5,8 +5,9 @@
 #include "app/frame_profile.hpp"
 #include "app/gpu_startup.hpp"
 #include "app/launch_config.hpp"
-#include "app/scenario_runner.hpp"
+#include "app/scenario_context.hpp"
 #include "app/simulation_world.hpp"
+#include "app/window_test.hpp"
 #include "build_info.hpp"
 #include "core/profiling.hpp"
 #include "gpu/render_device.hpp"
@@ -73,8 +74,6 @@ struct ApplicationAssets {
 };
 
 class Application {
-    friend class strefa::app::ScenarioRunner;
-
 public:
     Application(platform::Window& window, ui::Session& gui, const platform::SettingsStore& store,
                 core::Settings settings, const ApplicationAssets& assets, std::string message,
@@ -97,7 +96,8 @@ public:
           gl_debug_{config.gl_debug},
           shader_cache_{config.shader_cache},
           start_{config.start},
-          smoke_{config.smoke} {
+          smoke_{config.smoke},
+          test_{config.smoke, config.profiling.collect} {
         thermal_options_ = config.thermal;
         if (config.thermal_scene)
             initial_scene_ = SceneConfiguration{false, gpu::Scene::empty, config.thermal_scene};
@@ -117,12 +117,10 @@ public:
 
     std::expected<int, std::string> run() {
         const bool smoke_test = smoke_ == SmokeScenario::menu;
-        const bool lab_smoke = smoke_ == SmokeScenario::cpu_laboratory;
         const bool gpu_smoke = smoke_ == SmokeScenario::gpu_laboratory;
         const bool mission_smoke = smoke_ == SmokeScenario::mission;
         const bool session_smoke = smoke_ == SmokeScenario::session;
         const bool mission_quick = smoke_ == SmokeScenario::mission_quick;
-        const bool fault_smoke = smoke_ == SmokeScenario::mode_faults;
         const bool window_test = smoke_ != SmokeScenario::none;
         const bool bench = smoke_ == SmokeScenario::scene_benchmark;
         const bool start_in_laboratory = start_ == StartMode::cpu_laboratory;
@@ -133,12 +131,7 @@ public:
             world_->load_demo();
             lab_snapshot_ = sim::present_world(*world_, sim::RenderMode::materials);
         }
-        if (lab_smoke) lab_controls_.scene = sim::Scene::dam_break;
         if (start_in_laboratory && !smoke_test) perform(ui::Action::open_laboratory);
-        if (lab_smoke) {
-            lab_controls_.scene = sim::Scene::dam_break;
-            perform(ui::Action::open_laboratory);
-        }
         // Interactive starts fall back to the menu with the reason (e.g. OpenGL 3.3).
         if (start_gpu || gpu_smoke) {
             if (!perform(ui::Action::open_gpu) && gpu_smoke) return std::unexpected{message_};
@@ -152,19 +145,8 @@ public:
         }
         // A benchmark scene that cannot open (e.g. no OpenGL 4.3) fails instead of measuring the menu.
         if (bench && state_.screen == ui::Screen::main_menu) return std::unexpected{message_};
-        // The scripted mission route is indexed by tick, so the run ends after its ticks at any FPS.
-        constexpr std::uint64_t mission_smoke_min_ticks = ScenarioRunner::mission_smoke_min_ticks;
-        ScenarioRunner scenario{smoke_test, lab_smoke, gpu_smoke, mission_smoke, gpu_profiling_.collect, session_smoke};
-        scenario.mission_quick = mission_quick;
-        scenario.fault_smoke = fault_smoke;
-        if (fault_smoke) {
-            std::error_code ignored; // the test counts its own entries
-            std::filesystem::remove(store_.path().parent_path() / "errors.log", ignored);
-        }
-        auto& visited_screens = scenario.visited_screens;
-        auto& visited_themes = scenario.visited_themes;
-        auto& frames = scenario.frames;
-        auto& mission_frames = scenario.mission_frames;
+        auto context = scenario_context();
+        auto& frames = test_.frames;
         const bool profile_frames = gpu_profiling_.collect;
         std::uint64_t iterations = 0;
         if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
@@ -237,14 +219,11 @@ public:
                     continue;
                 }
 
-                scenario.before_frame(*this, frame_ms);
+                before_frame(context, frame_start, frame_ms);
                 mark(frame_profile.scenario_ms);
                 if (profile_frames) frame_profile.screen = static_cast<int>(state_.screen);
                 gui_.set_scale(window_.display_scale(), state_.applied.ui_scale);
                 gui_.new_frame();
-                if (static_cast<std::size_t>(state_.screen) < visited_screens.size())
-                    visited_screens[static_cast<std::size_t>(state_.screen)] = true;
-                visited_themes[static_cast<std::size_t>(state_.applied.map_theme)] = true;
                 const ui::FrameInfo info{gui_.scale(),
                                          frame_ms,
                                          renderer_,
@@ -354,11 +333,9 @@ public:
                 vfx_options_.quality = static_cast<gpu::VfxQuality>(gpu_controls_.vfx_quality);
                 if (render_device_) render_device_->vfx.set_options(vfx_options_);
                 mark(frame_profile.ui_build_ms);
-                if (session_smoke) {
-                    if (scenario.injected_stroke) gpu_input.stroke = std::exchange(scenario.injected_stroke, {});
-                    gpu_input.step = std::exchange(scenario.injected_step, false);
-                }
-                if (scenario.injected_brush) gpu_input.thermal_brush = *std::exchange(scenario.injected_brush, {});
+                if (inject_.stroke) gpu_input.stroke = std::exchange(inject_.stroke, {});
+                gpu_input.step = std::exchange(inject_.step, false) || gpu_input.step;
+                if (inject_.thermal_brush) gpu_input.thermal_brush = *std::exchange(inject_.thermal_brush, {});
                 if (fault_screen_ == state_.screen) {
                     fault_screen_.reset();
                     throw std::runtime_error{"Wstrzyknięty błąd testowy trybu."};
@@ -409,7 +386,8 @@ public:
                 if ((state_.screen == ui::Screen::gpu_mission || state_.screen == ui::Screen::gpu_laboratory)
                     && simulation_)
                     update_clock_stats(sim_seconds, static_cast<double>(frame_start) / 1e9);
-                if (mission_smoke && simulation_) scenario.mission_clock_frame(*this, sim_seconds, frame_start);
+                if (mission_smoke && simulation_)
+                    test_.mission_clock_frame(context, sim_seconds, frame_start, mission_ticks_this_frame_);
                 after_update(frame_start, frame_ms);
                 mark(frame_profile.update_ms);
                 if (profile_frames) {
@@ -423,11 +401,12 @@ public:
                 }
                 const bool duration_done =
                         window_seconds_ && static_cast<double>(frame_start - window_started) / 1e9 >= window_seconds_;
+                // The scripted mission route is indexed by tick, so the run ends after its ticks at any FPS.
                 const bool mission_final_frame = mission_smoke && (!window_seconds_ || duration_done)
-                                              && simulation_->metrics().steps >= mission_smoke_min_ticks;
+                                              && simulation_->metrics().steps >= WindowTest::mission_smoke_min_ticks;
                 // Stay inside the CTest TIMEOUT and leave a progress report instead of being killed.
-                if (mission_smoke && !mission_final_frame && SDL_GetTicksNS() >= scenario.mission_deadline_ns)
-                    return std::unexpected{scenario.mission_deadline(*this)};
+                if (mission_smoke && !mission_final_frame && SDL_GetTicksNS() >= test_.mission_deadline_ns)
+                    return std::unexpected{test_.mission_deadline(context, observers_)};
                 if (gpu_input.save_recording) {
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
                     const auto folder =
@@ -453,15 +432,12 @@ public:
                     }
                     mark(frame_profile.capture_ms);
                 }
-                const bool capture_frame =
-                        (gpu_smoke && (window_seconds_ ? duration_done : frames == 230)) || mission_final_frame;
                 frame_profile.capture_performed =
-                        capture_frame || gpu_input.save_recording || gpu_input.replay_recording;
+                        mission_final_frame || gpu_input.save_recording || gpu_input.replay_recording;
                 mark(frame_profile.metadata_ms);
-                if (capture_frame) {
+                if (mission_final_frame) {
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::capture);
-                    if (gpu_smoke) simulation_->save_image(store_.path().parent_path() / "gpu-preview.bmp");
-                    if (mission_smoke) simulation_->save_image(store_.path().parent_path() / "mission-preview.bmp");
+                    simulation_->save_image(store_.path().parent_path() / "mission-preview.bmp");
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
                     mark(frame_profile.capture_ms);
                 }
@@ -488,8 +464,7 @@ public:
                     if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::runtime);
                     mark(frame_profile.capture_ms);
                 }
-                if ((smoke_test || gpu_smoke || mission_smoke || session_smoke || mission_quick || fault_smoke || bench)
-                    && glGetError() != GL_NO_ERROR)
+                if (window_test && smoke_ != SmokeScenario::cpu_laboratory && glGetError() != GL_NO_ERROR)
                     return std::unexpected{"Test renderowania wykrył błąd OpenGL."};
                 mark(frame_profile.validation_ms);
                 window_.present();
@@ -497,12 +472,7 @@ public:
                 frame_profile.rendered = true;
                 if (action != ui::Action::none) perform(action);
                 ++frames;
-                if (smoke_test && frames >= ScenarioRunner::menu_smoke_frames) running_ = false;
-                if (mission_quick && frames >= ScenarioRunner::mission_quick_frames) running_ = false;
-                if (fault_smoke && frames >= ScenarioRunner::fault_smoke_frames) running_ = false;
-                if (lab_smoke && frames >= 300) running_ = false;
-                if (gpu_smoke && (window_seconds_ ? duration_done : frames >= 240)) running_ = false;
-                if (mission_final_frame || (session_smoke && frames >= 130)) running_ = false;
+                if ((smoke_test && frames >= WindowTest::menu_smoke_frames) || mission_final_frame) running_ = false;
 
                 mark(frame_profile.actions_ms);
                 if (!window_.vsync_enabled() && !unpaced_) {
@@ -511,9 +481,9 @@ public:
                     if (elapsed < budget) SDL_DelayPrecise(budget - elapsed);
                 }
                 mark(frame_profile.sleep_ms);
-                if (mission_frame) mission_frames.push_back(*mission_frame);
+                if (mission_frame) test_.mission_frames.push_back(*mission_frame);
                 if (profile_frames) observers_.frame_end(frame_profile);
-                if (window_test) scenario.heartbeat(*this, SDL_GetTicksNS());
+                if (window_test) test_.heartbeat(context, SDL_GetTicksNS(), observers_);
             } catch (const std::exception& error) {
                 if (!recovers_mode_errors()) return std::unexpected{error.what()};
                 fail_mode(state_.screen, error.what());
@@ -521,10 +491,10 @@ public:
             }
         }
         flush_settings();
-        if (window_test) scenario.write_heartbeat(*this, "walidacja");
-        if (auto done = observers_.finish(frame_view(SDL_GetTicksNS(), 0, frames, iterations)); !done)
-            return std::unexpected{done.error()};
+        if (window_test) test_.write_heartbeat(context, "walidacja", observers_);
         if (gl_debug_) gl_debug_->set_phase(platform::DebugPhase::validation);
+        if (auto done = observers_.finish(frame_view(SDL_GetTicksNS(), 0, iterations)); !done)
+            return std::unexpected{done.error()};
         if (lab_worker_) {
             lab_worker_->stop();
             if (!lab_worker_->snapshot()->error.empty()) return std::unexpected{lab_worker_->snapshot()->error};
@@ -533,11 +503,13 @@ public:
             recording_->finish();
             recording_.reset();
         }
-        if (auto checked = scenario.finish(*this); !checked) {
-            if (window_test) scenario.write_heartbeat(*this, "niezaliczony");
+        auto checked = test_.finish(context);
+        if (checked) checked = observers_.check(context, frame_view(SDL_GetTicksNS(), 0, iterations));
+        if (!checked) {
+            if (window_test) test_.write_heartbeat(context, "niezaliczony", observers_);
             return std::unexpected{checked.error()};
         }
-        if (window_test) scenario.write_heartbeat(*this, "zakończony");
+        if (window_test) test_.write_heartbeat(context, "zakończony", observers_);
         write_gpu_startup();
         {
             std::ofstream vfx{store_.path().parent_path() / "vfx-state.txt"};
@@ -569,7 +541,7 @@ private:
         clock_.reset();
         simulation_.suspend();
     }
-    FrameView frame_view(std::uint64_t start, double ms, std::uint64_t frames = 0, std::uint64_t iterations = 0) {
+    FrameView frame_view(std::uint64_t start, double ms, std::uint64_t iterations = 0) {
         const bool lab = state_.screen == ui::Screen::laboratory && lab_snapshot_;
         return {start,
                 ms,
@@ -579,8 +551,20 @@ private:
                 simulation_,
                 lab ? lab_snapshot_.get() : nullptr,
                 mission_ticks_this_frame_ + gpu_ticks_this_frame_,
-                frames,
+                test_.frames,
                 iterations};
+    }
+    ScenarioContext scenario_context() {
+        auto perform_action = [this](ui::Action action) { return perform(action); };
+        return ScenarioContext(perform_action, state_, message_, gpu_controls_, lab_controls_, simulation_, lab_worker_,
+                               world_, cpu_single_step_, fault_screen_, inject_, mode_failures_, uploads_, images_,
+                               parts_, weapons_, store_.path().parent_path(), renderer_, gl_version_, gpu_available_,
+                               window_seconds_, physics_, gpu_profiling_, execution_);
+    }
+    void before_frame(ScenarioContext& context, std::uint64_t frame_start, float frame_ms) {
+        test_.before_frame(context, frame_ms);
+        auto view = frame_view(frame_start, frame_ms);
+        observers_.before_frame(context, view);
     }
     void after_update(std::uint64_t frame_start, double frame_ms) {
         auto view = frame_view(frame_start, frame_ms);
@@ -724,7 +708,7 @@ private:
             world_->paint(stroke.from, stroke.to, stroke.radius, stroke.material, stroke.erase);
         }
         const int steps = clock_.advance(elapsed, lab_controls_.paused, lab_controls_.speed,
-                                         input.single_step || std::exchange(smoke_single_step_, false));
+                                         input.single_step || std::exchange(cpu_single_step_, false));
         for (int i = 0; i < steps; ++i) {
             const auto start = SDL_GetPerformanceCounter();
             world_->step();
@@ -970,8 +954,7 @@ private:
     std::vector<sim::Color> pixels_ = std::vector<sim::Color>(sim::World::cell_count);
     double step_ms_{};
     unsigned uploads_{};
-    bool smoke_single_step_{}, smoke_lab_ok_{true};
-    std::uint64_t smoke_paused_tick_{};
+    bool cpu_single_step_{}; // menu smoke test: one step of the synchronous CPU laboratory
     sim::PhysicsConfig physics_;
     std::shared_ptr<gpu::RenderDevice> render_device_;
     gpu::VfxOptions vfx_options_;
@@ -1000,7 +983,9 @@ private:
     SmokeScenario smoke_{SmokeScenario::none};
     std::optional<SceneConfiguration> initial_scene_; // --scene / benchmark / --gpu-thermal-scene, first GPU open
     unsigned window_seconds_{};
-    FrameObservers observers_; // StrefaQA: scene benchmark, frame profiles
+    WindowTest test_;          // menu and mission smoke tests, progress.txt
+    GpuInjection inject_;      // scripted GPU laboratory input
+    FrameObservers observers_; // StrefaQA: scene benchmark, frame profiles, window scripts
 };
 
 } // namespace
