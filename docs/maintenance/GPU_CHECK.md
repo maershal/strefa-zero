@@ -245,6 +245,14 @@ Dowód bitowy bramki daje `thermal-bits` (sekcja 4c): skróty `fire` i `idle` id
 (`ThermalOptions::gate_audit`) w każdej scenie liczy etapy, które bramka by pominęła, choć zmieniłyby choć jedno
 słowo. Ta liczba musi wynosić 0.
 
+## 4d′. Mielerz: dwustopniowe spalanie drewna
+
+`StrefaQA --gpu-check thermal-kiln --profile <katalog>` (CTest `gpu.thermal_kiln`, około 20 s na GTX 1650) grzeje blok
+drewna w kamiennej komorze, raz zamkniętej i raz z otwartym stropem, i sprawdza zachowanie modelu ognia v2 oraz
+bilanse masy i energii. Wynik: `thermal-kiln.txt` (warunki `PASS`/`FAIL`, błędy bilansów) i `thermal-kiln.csv`
+(tlen, gaz palny, ciepło spalania i liczba komórek drewna, węgla i popiołu co 240 ticków). Warunki i progi opisuje
+[FIRE_V2_WOOD](../reports/FIRE_V2_WOOD.md). To sprawdzenie funkcjonalne, nie pomiar wydajności.
+
 ## 4e. Ile iteracji solvera trzeba (Z08)
 
 `StrefaQA --gpu-check iteration-sweep` sprawdza, które liczby iteracji PBF i kontaktu ziaren (przy 2 podkrokach)

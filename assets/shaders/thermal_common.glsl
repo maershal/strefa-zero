@@ -28,14 +28,30 @@ vec3 phase(int m,float h){
     }
     return vec3((h-thermalProperties[m].w)/thermalProperties[m].y,0,0);
 }
-float matterTemperature(vec4 m){return m.x>1e-12?max(1.,phase(int(m.w),m.y/m.x).x):AMBIENT;}
+// Two-stage wood combustion (registry [[pyrolysis]], thermal.comp): a wood record is part raw wood (m.z) and part
+// char (m.x-m.z) until all of it has pyrolysed and the record becomes char.
+float charMass(vec4 m){return int(m.w)==MATERIAL_WOOD?max(0.,m.x-m.z):0.;}
+// Heat capacity of a matter record (kJ/K).
+float matterCapacity(vec4 m){
+    return (m.x-charMass(m))*thermalProperties[int(m.w)].y+charMass(m)*thermalProperties[WOOD_PYROLYSIS_CHAR].y;
+}
+float matterTemperature(vec4 m){
+    if(m.x<=1e-12)return AMBIENT;
+    return max(1.,int(m.w)==MATERIAL_WOOD?m.y/matterCapacity(m):phase(int(m.w),m.y/m.x).x);
+}
 float gasCapacity(ThermalCell c){return dot(c.gas0,vec4(1,1,2,1))+dot(c.gas1.xy,vec2(1.5,1));}
 float gasOffset(ThermalCell c){return c.gas0.z*thermalProperties[MATERIAL_STEAM].w;}
 float gasTemperature(ThermalCell c){return gasCapacity(c)>1e-12?max(1.,(c.gas1.z-gasOffset(c))/gasCapacity(c)):AMBIENT;}
 float gasMass(ThermalCell c){return dot(c.gas0,vec4(1))+c.gas1.x+c.gas1.y;}
-float chemical(vec4 m){int k=int(m.w);return m.z*(1.-combustionProperties[k].w)*combustionProperties[k].z;}
+// Chemical energy that burning releases per unit mass of fuel k.
+float fuelEnergy(int k){return (1.-combustionProperties[k].w)*combustionProperties[k].z;}
+float chemical(vec4 m){
+    int k=int(m.w);
+    return m.z*(1.-combustionProperties[k].w)*combustionProperties[k].z+charMass(m)*fuelEnergy(WOOD_PYROLYSIS_CHAR);
+}
 // Enthalpy at 1 K of the coldest phase of the material: ice, stone for lava, metal for molten metal.
 float minimumH(vec4 m){
+    if(int(m.w)==MATERIAL_WOOD)return matterCapacity(m);
     return m.x*enthalpy(waterFamily(int(m.w))?MATERIAL_ICE
         :(int(m.w)==MATERIAL_LAVA?MATERIAL_STONE:(int(m.w)==MATERIAL_MOLTEN_METAL?MATERIAL_METAL:int(m.w))),1.);
 }
