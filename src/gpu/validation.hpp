@@ -16,6 +16,8 @@ std::expected<void, std::string> validate_flow(ParticleWorld&, const std::filesy
 std::expected<void, std::string> validate_brush_history(ParticleWorld&, const std::filesystem::path& output);
 // N06: batched laboratory explosions (and the mission with ExecutionOptions::batched_blasts).
 std::expected<void, std::string> validate_lab_blast(ParticleWorld&, const std::filesystem::path& output);
+// GAME-3, --gpu-check weapons: shotgun recoil and close-range chipping, C4 sticking and remote detonation.
+std::expected<void, std::string> validate_weapons(ParticleWorld&, const std::filesystem::path& output);
 // Part of the brush check: mission debris after the same kind of history must match the destroyed cells one to one.
 // Throws on failure; writes per-round counts and digests of the explosion tick (passes, mission state, debris).
 void validate_debris_history(ParticleWorld&, std::ostream& report);

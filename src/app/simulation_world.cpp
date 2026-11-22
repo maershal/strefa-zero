@@ -116,7 +116,9 @@ SimulationSubmission SimulationWorld::advance(const SimulationFrame& frame) {
     for (int i = 0; i < steps; ++i) {
         const auto c = input_.peek();
         const unsigned buttons = (c.jump ? gpu::jump : 0U) | (c.jet ? gpu::jet : 0U) | (c.fire ? gpu::fire : 0U)
-                               | (c.reload ? gpu::reload : 0U) | (c.grenade ? gpu::grenade : 0U);
+                               | (c.reload ? gpu::reload : 0U) | (c.grenade ? gpu::grenade : 0U)
+                               | (c.detonate ? gpu::detonate : 0U)
+                               | (c.weapon ? gpu::select_rifle << (c.weapon - 1) : 0U);
         // Both views execute the mission if that is the active scene. Laboratory
         // tools supply neutral actor input, preserving goals, score and events.
         const auto input = frame.scripted ? gpu::scripted_mission_input(static_cast<unsigned>(world_->metrics().steps))

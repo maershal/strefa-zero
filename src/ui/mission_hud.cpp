@@ -10,6 +10,26 @@ namespace {
 ImTextureRef texture(const Image& image) {
     return ImTextureRef{static_cast<ImTextureID>(image.handle)};
 }
+// Slots 1-3 with their stock; the active one is highlighted, placed C4 charges are shown as armed.
+void weapon_bar(const MissionHudView& view) {
+    const auto& stock = view.weapons();
+    const auto slot = [&](game::Weapon weapon, const char* label, unsigned left, unsigned capacity) {
+        const bool active = stock.weapon == weapon;
+        ImGui::SameLine();
+        ImGui::PushStyleColor(ImGuiCol_Text,
+                              active ? ImVec4{.95F, .86F, .45F, 1} : ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+        ImGui::Text("%s%s %u/%u%s", active ? "> " : "", label, left, capacity, active ? " <" : "");
+        ImGui::PopStyleColor();
+    };
+    ImGui::TextUnformatted("|");
+    slot(game::Weapon::rifle, "[1] Karabin", static_cast<unsigned>(view.ammunition()), game::rifle_magazine);
+    slot(game::Weapon::shotgun, "[2] Strzelba", stock.shells, game::shotgun_tube);
+    slot(game::Weapon::c4, "[3] C4", stock.charges, game::c4_stock);
+    if (stock.placed) {
+        ImGui::SameLine();
+        ImGui::TextColored({1, .4F, .3F, 1}, "UZBROJONE C4: %u [E]", stock.placed);
+    }
+}
 } // namespace
 
 Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Fonts& fonts) {
@@ -29,8 +49,9 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
     ImGui::SameLine();
     hud.input.reset = ImGui::Button(hud.scene_mission ? "Od nowa [F5]" : "Nowa misja [F5]");
     ImGui::SameLine();
-    ImGui::Text("Tarcze %d/3  |  %d/30  |  Granaty %d", hud.game.score(), hud.game.ammunition(),
-                hud.game.grenade_stock());
+    ImGui::Text("Tarcze %d/3  |  Granaty %d", hud.game.score(), hud.game.grenade_stock());
+    ImGui::SameLine();
+    weapon_bar(hud.game);
     if (viewport->WorkSize.x / frame.scale >= 700) ImGui::SameLine();
     const float fuel = hud.game.player().fuel / hud.game.fuel_capacity();
     ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4{.72F, .82F, .40F, 1});
@@ -83,6 +104,11 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
         input.reload = ImGui::IsKeyPressed(ImGuiKey_R, false);
         hud.input.reset = hud.input.reset || ImGui::IsKeyPressed(ImGuiKey_F5, false);
         input.grenade = ImGui::IsKeyPressed(ImGuiKey_G, false);
+        input.detonate = ImGui::IsKeyPressed(ImGuiKey_E, false) || ImGui::IsKeyPressed(ImGuiKey_F, false);
+        input.weapon = ImGui::IsKeyPressed(ImGuiKey_1, false) ? 1U
+                     : ImGui::IsKeyPressed(ImGuiKey_2, false) ? 2U
+                     : ImGui::IsKeyPressed(ImGuiKey_3, false) ? 3U
+                                                              : 0U;
         const auto mouse = ImGui::GetIO().MousePos;
         // Retain the direction outside the canvas; clamp the target to world bounds.
         // Active/hovered controls in this window continue to own mouse input.
@@ -93,6 +119,10 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
                          std::clamp((mouse.y - start.y) / zoom + hud.camera[1], 0.F, static_cast<float>(gpu::height))};
             input.fire = ImGui::IsMouseDown(ImGuiMouseButton_Left);
             input.jet = ImGui::IsMouseDown(ImGuiMouseButton_Right);
+            if (const float wheel = ImGui::GetIO().MouseWheel; wheel != 0 && input.weapon == 0) {
+                const auto current = static_cast<unsigned>(hud.game.weapons().weapon);
+                input.weapon = (current + (wheel < 0 ? 1U : 2U)) % 3U + 1U; // wheel down = next slot
+            }
 
             draw->AddCircle(mouse, 3 * zoom, IM_COL32(226, 237, 170, 240), 16, std::max(1.F, zoom * .5F));
             draw->AddLine({mouse.x - 5 * zoom, mouse.y}, {mouse.x + 5 * zoom, mouse.y}, IM_COL32(226, 237, 170, 160));
@@ -103,7 +133,8 @@ Action draw_mission_hud(MissionHudFrame& hud, const FrameInfo& frame, const Font
     draw->PopClipRect();
     draw->AddRect(start, end, IM_COL32(141, 158, 117, 160));
     ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
-    ImGui::TextWrapped("A/D: ruch   Spacja: skok   PPM: plecak   LPM: strzał   R: przeładuj   G: granat");
+    ImGui::TextWrapped("A/D: ruch   Spacja: skok   PPM: plecak   LPM: strzał / C4   R: przeładuj   G: granat   "
+                       "1/2/3, kółko: broń   E/F: detonacja C4");
     ImGui::PopStyleColor();
     ImGui::PopItemFlag();
     ImGui::End();

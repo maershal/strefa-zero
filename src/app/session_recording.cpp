@@ -161,7 +161,7 @@ std::expected<std::vector<SessionCommand>, std::string> SessionRecording::load(c
             gpu::MissionInput input;
             if (!(row >> input.move >> input.aim_x >> input.aim_y >> input.buttons) || !std::isfinite(input.move)
                 || !std::isfinite(input.aim_x) || !std::isfinite(input.aim_y) || std::abs(input.move) > 1
-                || input.buttons > 31)
+                || input.buttons > gpu::mission_buttons_mask)
                 return std::unexpected{"Nieprawidłowy krok w nagraniu."};
             commands.emplace_back(input);
         } else

@@ -162,7 +162,7 @@ oraz udostępnia paczkę jako artefakt.
 Środowisko testowe, poprawki zgodności i jawne ograniczenia:
 [LINUX_WSL_QA.md](https://github.com/maershal/strefa-zero/blob/main/docs/reports/LINUX_WSL_QA.md).
 
-Sterowanie: A/D — ruch, Spacja — skok, PPM — plecak, LPM — strzał,
-R — przeładowanie, G — granat, F5 — reset, Esc — menu. Utrata fokusu pauzuje grę.
+Sterowanie: A/D — ruch, Spacja — skok, PPM — plecak, LPM — strzał lub rzut C4,
+1/2/3 lub kółko — broń, E/F — detonacja C4, R — przeładowanie, G — granat, F5 — reset, Esc — menu. Utrata fokusu pauzuje grę.
 Ustawienia trafiają przez SDL do katalogu danych użytkownika (domyślnie
 `~/.local/share/StrefaZero/Prototype`); `--profile /katalog` wybiera inny profil.
