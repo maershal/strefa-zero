@@ -1,4 +1,5 @@
 #include "app/application.hpp"
+#include "app/scene_ids.hpp"
 #include "core/charconv.hpp"
 #include "gpu/world.hpp"
 #include "sim/world.hpp"
@@ -139,9 +140,9 @@ std::expected<LaunchOptions, std::string> parse_options(int argc, char** argv, O
                 return std::unexpected{
                         "Scena startowa: gpu:<id> (laboratorium GPU) albo lab:<id> (model referencyjny CPU)."};
         } else if (argument == "--scene-benchmark" && i + 1 < argc) {
-            auto scenes = parse_benchmark_scenes(argv[++i]);
-            if (!scenes) return std::unexpected{scenes.error()};
-            result.benchmark_scenes = std::move(*scenes);
+            // Kept as text: the scene list is StrefaQA's (check_qa_options); StrefaZero rejects the option.
+            result.benchmark_scenes = argv[++i];
+            if (result.benchmark_scenes.empty()) return std::unexpected{"Lista scen benchmarku jest pusta."};
         } else if (argument == "--seconds" && i + 1 < argc) {
             const std::string_view value{argv[++i]};
             const auto parsed = std::from_chars(value.data(), value.data() + value.size(), result.benchmark_seconds);

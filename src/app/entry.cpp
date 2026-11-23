@@ -9,7 +9,9 @@
 namespace strefa::app {
 
 int run_main(int argc, char** argv, OptionScope scope, const QaHooks& qa) {
-    const auto options = parse_options(argc, argv, scope);
+    auto options = parse_options(argc, argv, scope);
+    if (options && qa.options)
+        if (auto checked = qa.options(*options); !checked) options = std::unexpected{checked.error()};
     if (!options) {
         // StrefaQA runs unattended from scripts; a modal box would block them until the timeout.
         if (scope == OptionScope::all)

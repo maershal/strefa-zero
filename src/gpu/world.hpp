@@ -175,5 +175,4 @@ inline constexpr unsigned scripted_mission_ticks = 1340; // the route is idle fr
 std::expected<void, std::string> validate_fluid_quality(const std::filesystem::path& shaders,
                                                         const std::filesystem::path& output, const ExecutionOptions&,
                                                         bool benchmark);
-void write_profile_samples(ParticleWorld&, const std::filesystem::path& output);
 } // namespace strefa::gpu
