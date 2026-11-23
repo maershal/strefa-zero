@@ -136,15 +136,15 @@ int main() {
         // StrefaQA scene benchmark: one test with its own window pacing.
         check(!parse({"--scene-benchmark", "all"}), "--scene-benchmark must require --profile");
         const auto bench = parse({"--scene-benchmark", "all", "--profile", "fixture"});
-        check(bench && bench->test_count() == 1 && bench->benchmark_scenes.size() == 32
-                      && bench->benchmark_seconds == 60 && bench->benchmark_vsync && !bench->is_window_smoke()
-                      && bench->forces_test_pacing() && bench->requires_gl43()
-                      && bench->smoke_scenario() == SmokeScenario::scene_benchmark
+        check(bench && bench->test_count() == 1 && bench->benchmark_scenes == "all" && bench->benchmark_seconds == 60
+                      && bench->benchmark_vsync && !bench->is_window_smoke() && bench->forces_test_pacing()
+                      && bench->requires_gl43() && bench->smoke_scenario() == SmokeScenario::scene_benchmark
                       && bench->start_mode() == StartMode::menu,
               "--scene-benchmark defaults");
         const auto tuned = parse(
                 {"--scene-benchmark", "mission,lab:demo", "--seconds", "5", "--vsync", "off", "--profile", "fixture"});
-        check(tuned && tuned->benchmark_scenes.size() == 2 && tuned->benchmark_seconds == 5 && !tuned->benchmark_vsync,
+        check(tuned && tuned->benchmark_scenes == "mission,lab:demo" && tuned->benchmark_seconds == 5
+                      && !tuned->benchmark_vsync,
               "--seconds and --vsync");
         const auto repeated = parse({"--scene-benchmark", "mission", "--repeat", "3", "--profile", "fixture"});
         const auto looped = parse({"--scene-benchmark", "mission", "--loop-minutes", "15", "--profile", "fixture"});
@@ -165,7 +165,7 @@ int main() {
                 {"--scene-benchmark", "all", "--repeat", "0", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--loop-minutes", "241", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--repeat", "2", "--loop-minutes", "5", "--profile", "fixture"},
-                {"--scene-benchmark", "gpu:nope", "--profile", "fixture"},
+                {"--scene-benchmark", "", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--seconds", "0", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--seconds", "601", "--profile", "fixture"},
                 {"--scene-benchmark", "all", "--vsync", "maybe", "--profile", "fixture"},

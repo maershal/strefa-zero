@@ -20,7 +20,8 @@ int main(int argc, char** argv) {
     strefa::tools::attach_renderdoc();
     // The runner is called once the window and its GL context exist, so SDL events work from here on.
     // Window scenarios (scene benchmark, frame profiles) observe the application's frame loop instead.
-    const strefa::app::QaHooks qa{.diagnostics =
+    const strefa::app::QaHooks qa{.options = strefa::app::check_qa_options,
+                                  .diagnostics =
                                           [](const strefa::app::LaunchOptions& options,
                                              const std::filesystem::path& assets,
                                              const std::filesystem::path& profile) {

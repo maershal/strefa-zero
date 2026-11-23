@@ -1,9 +1,12 @@
 #include "app/window_scenarios.hpp"
 
+#include "app/benchmark_report.hpp"
 #include "app/frame_observer.hpp"
 #include "app/launch_config.hpp"
-#include "app/scenario_runner.hpp"
 #include "app/simulation_world.hpp"
+#include "app/window_test.hpp"
+#include "gpu/validation.hpp"
+#include "sim/world.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -17,12 +20,14 @@ namespace strefa::app {
 namespace {
 
 // frame-timings.csv: one row per loop iteration (FrameProfile), plus the clock anchors and the effective GPU options.
+// The GPU laboratory and mission window tests also get the per-tick GPU samples (window-steps.csv and friends).
 class FrameProfileRecorder final : public FrameObserver {
 public:
     FrameProfileRecorder(const LaunchConfig& config, std::filesystem::path profile)
         : profiling_{config.profiling},
           execution_{config.execution},
           mission_smoke_{config.smoke == SmokeScenario::mission},
+          gpu_samples_{mission_smoke_ || config.smoke == SmokeScenario::gpu_laboratory},
           profile_{std::move(profile)} {
         rows_.reserve(1024);
         anchor_ns_ = SDL_GetTicksNS();
@@ -39,7 +44,11 @@ public:
             ++dropped_;
     }
     std::expected<void, std::string> finish(const FrameView& view) override {
-        const auto& simulation = view.simulation;
+        auto& simulation = view.simulation;
+        if (gpu_samples_ && simulation) {
+            simulation->poll();
+            gpu::write_profile_samples(*simulation, profile_);
+        }
         std::ofstream timing_out{profile_ / "frame-timings.csv"};
         std::ofstream info_out{profile_ / "frame-timings-info.txt"};
         if (!timing_out || !info_out) return std::unexpected{"Nie można zapisać pełnego profilu klatek."};
@@ -56,7 +65,7 @@ public:
                 << "\nanchor_sdl_after_ns=" << anchor_after_ns_
                 << "\nanchor_pair_order=sdl_before_utc_then_sdl_after\nanchor_precision=bracketed_cpu_samples\n"
                 << "mission_smoke=" << mission_smoke_
-                << "\nmission_smoke_min_ticks=" << ScenarioRunner::mission_smoke_min_ticks
+                << "\nmission_smoke_min_ticks=" << WindowTest::mission_smoke_min_ticks
                 << "\nrendered_frames=" << view.frames << "\nloop_iterations=" << view.iterations
                 << "\nmission_submitted_ticks=" << (simulation ? simulation->metrics().steps : 0) << '\n'
                 << "durations=current_loop_iteration_after_present_and_limiter\n"
@@ -93,7 +102,7 @@ private:
     static constexpr std::size_t capacity = 250000;
     gpu::ProfileOptions profiling_;
     gpu::ExecutionOptions execution_;
-    bool mission_smoke_{};
+    bool mission_smoke_{}, gpu_samples_{};
     std::filesystem::path profile_;
     std::vector<FrameProfile> rows_;
     std::uint64_t dropped_{}, anchor_ns_{}, anchor_after_ns_{};
@@ -112,12 +121,25 @@ ApplicationRunner with_frame_profile(ApplicationRunner run, std::filesystem::pat
     };
 }
 
+std::expected<void, std::string> check_qa_options(const LaunchOptions& options) {
+    if (options.benchmark_scenes.empty()) return {};
+    return parse_benchmark_scenes(options.benchmark_scenes).transform([](const auto&) {});
+}
+
 std::optional<std::expected<int, std::string>>
 run_window_scenario(const LaunchOptions& options, const LaunchConfig& base, const platform::Window& window,
                     const std::filesystem::path& profile, const ApplicationRunner& run_application) {
     const auto run = with_frame_profile(run_application, profile);
     if (!options.benchmark_scenes.empty()) return run_scene_benchmark(options, base, window, profile, run);
-    if (base.profiling.collect) return run(base);
+    auto config = base;
+    // The CPU laboratory smoke test starts in dam_break like a player with --scene lab:dam-break.
+    if (config.smoke == SmokeScenario::cpu_laboratory) {
+        config.start = StartMode::cpu_laboratory;
+        config.lab_scene = static_cast<unsigned>(sim::Scene::dam_break);
+    }
+    const auto script = make_window_script(config, profile);
+    if (script) config.observers.push_back(script.get());
+    if (script || config.profiling.collect) return run(config);
     return std::nullopt;
 }
 
