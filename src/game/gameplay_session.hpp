@@ -12,7 +12,7 @@ struct GameplayInput {
 };
 struct GameplayState {
     unsigned ammunition{rifle_magazine}, grenades{grenade_stock}, score{}, shots{}, explosions{}, destroyed_cells{};
-    unsigned shells{shotgun_tube}, charges{c4_stock}, placed{}; // placed: C4 charges accepted, not yet detonated
+    unsigned shells{shotgun_tube}, charges{c4_stock}, placed{}; // placed: C4 throws accepted, not yet fired
     Weapon weapon{Weapon::rifle};
     std::array<unsigned, 3> hp{3, 3, 3};
     bool finished{};
@@ -22,7 +22,8 @@ struct GameplayState {
 class CommandRing {
 public:
     bool reserve(const WorldCommand&);
-    bool acknowledge(unsigned id, bool accepted, GameplayState&);
+    // value: the event's value field (number of C4 charges set to fire by an accepted detonation).
+    bool acknowledge(unsigned id, bool accepted, GameplayState&, unsigned value = 0);
     void reset() {
         entries_ = {};
         pending_ = 0;

@@ -10,7 +10,10 @@ wystrzeliwuje 5 śrucin w stałym wachlarzu (bez losowości) z puli pocisków; p
 uszkadzają przegrody za 2 zamiast 1. Odrzut 110 px/s przeciwnie do celowania pozwala na „shotgun jump”. C4
 (`c4_place`, 2 sztuki) leci z prędkością 60 px/s, przykleja się do pierwszej ściany w puli granatów (stan w `info.x`,
 bez nowych buforów) i wybucha tylko po `c4_detonate` (E lub F) przez tę samą ścieżkę wybuchu misji co granat
-(promień 28, impuls 110) ze zdarzeniem `EventKind::explosion`. Kontrakty bez zmian: `WorldCommand`/`WorldEvent`
+(promień 28, impuls 110) ze zdarzeniem `EventKind::explosion`. Detonacja odpala tylko ładunki przyklejone (albo
+spadające po zniszczeniu podparcia); ładunek jeszcze w locie czeka na następną detonację, więc E w chwili rzutu nie
+odpala C4 w ręku żołnierza. Każda śrucina trafiająca tarczę zadaje 1 punkt, więc pełny strzał z bliska niszczy
+tarczę (3 HP) naraz. Kontrakty bez zmian: `WorldCommand`/`WorldEvent`
 64 B, `CommandBatch` 256 B, `MissionSnapshot` 272 B; zapas strzelby i C4 jest spakowany w `inventory[1]`
 (`game::Stock`). Wybór broni i detonacja to nowe bity przycisków (32–256); nagrania v1–v3 mają tylko bity 1–16
 i odtwarzają się bez zmian, a wczytywanie przyjmuje teraz wartości do 511. Liczba przebiegów GPU na tick się

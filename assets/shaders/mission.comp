@@ -98,7 +98,7 @@ bool fireShotgun(uint id,float speed){
     return fired;
 }
 // A charge flies under gravity, sticks to the first solid cell and falls again when that cell is destroyed.
-// It detonates only on command, one blast per tick like grenades.
+// It detonates only on command once placed (stuck or loose), one blast per tick like grenades.
 bool anchored(vec2 p){
     for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x)if(solid(ivec2(floor(p))+ivec2(x,y)))return true;
     return false;
@@ -111,7 +111,7 @@ void updateCharge(int i){
         game.events.x++;game.events.y=game.events.x;game.counts.x++;
         emitEvent(4u,command,uint(i),1u,game.blast);grenades[i].info.x=0;return;
     }
-    if(grenades[i].info.x>=C4_STUCK){if(anchored(a))return;grenades[i].info.x=C4_FLYING;grenades[i].motion.zw=vec2(0);}
+    if(grenades[i].info.x>=C4_STUCK){if(anchored(a))return;grenades[i].info.x=C4_LOOSE;grenades[i].motion.zw=vec2(0);}
     grenades[i].motion.w+=180*tickDt;
     vec2 b=a+grenades[i].motion.zw*tickDt,hit;
     if(trace(a,b,hit)!=-1){grenades[i].motion=vec4(mix(a,hit,.9),0,0);grenades[i].info.x=C4_STUCK;}
@@ -178,9 +178,10 @@ void beginTick(){
                 grenades[i].info=vec4(C4_FLYING,0,0,uintBitsToFloat(id));accepted=true;break;
             }ack(id,accepted);
         }else if(kind==6u){
-            bool armed=false;
-            for(int i=0;i<8;++i)if(grenades[i].info.x>=C4_FLYING){grenades[i].info.x=C4_FIRE;armed=true;}
-            ack(id,armed);
+            // The accepted event carries the number of charges set to fire; charges still in flight stay placed.
+            uint armed=0u;
+            for(int i=0;i<8;++i)if(grenades[i].info.x>=C4_LOOSE&&grenades[i].info.x<C4_FIRE){grenades[i].info.x=C4_FIRE;++armed;}
+            emitEvent(armed>0u?1u:2u,id,0u,armed,vec4(0));
         }else if(kind==3u){
             if(game.events.w!=0u)ack(game.events.w,false);
             game.events.w=id;game.body.w=uintBitsToFloat(cmd.detail.y);

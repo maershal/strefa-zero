@@ -48,12 +48,21 @@ void start(ParticleWorld& world, const std::vector<std::uint32_t>& walls, float 
     world.configure_mission(mission(spawn_x));
     run(world, 60);
 }
-// Destructible block (strength 3 after load()) 3 cells thick, close in front of the player.
-std::vector<std::uint32_t> block() {
+// Destructible block (strength 3 after load()) 3 cells thick in front of the player (x = 24).
+std::vector<std::uint32_t> block(int left = 60) {
     auto walls = arena();
     for (int y = 150; y < floor_y; ++y)
-        for (int x = 60; x < 63; ++x) walls[y * width + x] = 2;
+        for (int x = left; x < left + 3; ++x) walls[y * width + x] = 2;
     return walls;
+}
+// Cells broken by one shotgun shot at a block starting at x = left.
+unsigned shotgun_destroyed(ParticleWorld& world, int left) {
+    start(world, block(left), 24);
+    auto g = world.read_mission();
+    const auto before = g.counts[1];
+    world.step({0, static_cast<float>(left + 1), g.actor[1] - 12, select_shotgun | fire});
+    g = run(world, 30, {0, static_cast<float>(left + 1), g.actor[1] - 12, 0});
+    return g.counts[1] - before;
 }
 double nearest_solid(const std::vector<std::uint32_t>& walls, float px, float py) {
     double best = 1e9;
@@ -97,13 +106,11 @@ std::expected<void, std::string> validate_weapons(ParticleWorld& world, const st
         g = run(world, 30, {0, 61, aim_y, 0});
         report << "rifle_destroyed=" << g.counts[1] << '\n';
         require(g.counts[1] == 0, "A single rifle round broke a strength-3 cell");
-        start(world, block(), 24);
-        g = world.read_mission();
-        const auto before = g.counts[1];
-        world.step({0, 61, aim_y, select_shotgun | fire});
-        g = run(world, 30, {0, 61, aim_y, 0});
-        report << "shotgun_destroyed=" << g.counts[1] - before << '\n';
-        require(g.counts[1] - before >= 3, "Shotgun pellets did not break the block at close range");
+        // Pellets hit twice as hard during their first 0.1 s (42 px): the same block breaks less beyond that range.
+        const auto close_range = shotgun_destroyed(world, 60), long_range = shotgun_destroyed(world, 110);
+        report << "shotgun_destroyed=" << close_range << "\nshotgun_destroyed_far=" << long_range << '\n';
+        require(close_range >= 3, "Shotgun pellets did not break the block at close range");
+        require(close_range > long_range, "Shotgun pellets were not stronger at close range");
 
         // C4: thrown at a wall, sticks with no fuse, explodes on command with the stronger C4 shape.
         auto wall = arena();
@@ -117,7 +124,8 @@ std::expected<void, std::string> validate_weapons(ParticleWorld& world, const st
         require(stock.placed == 1 && stock.charges == game::c4_stock - 1, "C4 placement not acknowledged");
         require(g.counts[0] == explosions, "C4 exploded without a detonation command");
         const auto terrain = world.read_terrain();
-        world.step({0, 70, 150, detonate});
+        // The second charge is thrown on the detonation tick: only the stuck charge fires, never the one in hand.
+        world.step({0, 70, g.actor[1] - 40, fire | detonate});
         g = run(world, 2);
         const double gap = nearest_solid(terrain, g.flash[0], g.flash[1]);
         report << "c4_blast=" << g.flash[0] << ',' << g.flash[1] << ',' << g.flash[2] << "\nc4_gap=" << gap << '\n';
@@ -125,6 +133,18 @@ std::expected<void, std::string> validate_weapons(ParticleWorld& world, const st
         require(world.gameplay().state().explosions == delivered + 1, "Explosion event not delivered to the session");
         require(g.flash[2] == 28 && gap < 1.5 && g.flash[0] > 60 && g.flash[1] < floor_y - 2,
                 "C4 did not stick to the wall");
+        g = run(world, 360);
+        require(g.counts[0] == explosions + 1, "Detonation also fired the charge in flight");
+        require(game::Stock::unpack(g.inventory[1]).placed == 1, "Charge in flight was not kept placed");
+
+        // The wall under the stuck charge disappears: it falls to the floor and still fires on command.
+        world.paint({70, 100, 70, 183, 2, Material::erase});
+        g = run(world, 120);
+        world.step({0, 70, 150, detonate});
+        g = run(world, 2);
+        report << "c4_fallen_blast=" << g.flash[0] << ',' << g.flash[1] << '\n';
+        require(g.counts[0] == explosions + 2 && g.flash[1] > 180 && std::abs(g.flash[0] - 70) < 4,
+                "Charge did not fall after losing its anchor");
         require(game::Stock::unpack(g.inventory[1]).placed == 0, "Detonation did not disarm");
         report << "weapons=passed\n";
         return {};

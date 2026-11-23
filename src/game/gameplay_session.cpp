@@ -15,7 +15,7 @@ bool CommandRing::reserve(const WorldCommand& c) {
         }
     return false;
 }
-bool CommandRing::acknowledge(unsigned id, bool accepted, GameplayState& state) {
+bool CommandRing::acknowledge(unsigned id, bool accepted, GameplayState& state, unsigned value) {
     for (auto& c : entries_)
         if (c.id == id && id) {
             const auto kind = static_cast<CommandKind>(c.kind);
@@ -28,8 +28,8 @@ bool CommandRing::acknowledge(unsigned id, bool accepted, GameplayState& state) 
                 ++state.shots;
             else if (kind == CommandKind::c4_place)
                 ++state.placed;
-            else if (kind == CommandKind::c4_detonate)
-                state.placed = 0;
+            else if (kind == CommandKind::c4_detonate) // charges still in flight stay placed
+                state.placed -= std::min(state.placed, value);
             c = {};
             --pending_;
             return true;
@@ -141,7 +141,7 @@ void GameplaySession::consume(const EventBatch& batch) {
         switch (static_cast<EventKind>(e.kind)) {
         case EventKind::accepted:
         case EventKind::rejected:
-            commands_.acknowledge(e.command, e.kind == static_cast<unsigned>(EventKind::accepted), state_);
+            commands_.acknowledge(e.command, e.kind == static_cast<unsigned>(EventKind::accepted), state_, e.value);
             break;
         case EventKind::hit:
             if (e.subject < state_.hp.size()) {

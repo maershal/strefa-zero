@@ -7,7 +7,8 @@
 namespace strefa::game {
 // std430; identity is (generation,tick,id). IDs are exact integers, never floats.
 // Counters stop before UINT32_MAX; starting a new generation is explicit.
-// c4_place throws a charge into the grenade pool; c4_detonate fires every charge already placed.
+// c4_place throws a charge into the grenade pool; c4_detonate fires every charge already stuck to terrain (or falling
+// after losing its anchor) and reports their number in the accepted event's value. A charge still in flight is skipped.
 enum class CommandKind : std::uint32_t { rifle = 1, grenade = 2, jump = 3, shotgun = 4, c4_place = 5, c4_detonate = 6 };
 enum class EventKind : std::uint32_t {
     accepted = 1,
@@ -58,6 +59,7 @@ struct Stock {
         return {v & 0xffU, v >> 8U & 0xffU, v >> 16U & 0xffU, v >> 24U & 0xfU, static_cast<Weapon>(v >> 28U & 3U)};
     }
 };
+inline constexpr std::uint32_t initial_stock = Stock{grenade_stock, shotgun_tube, c4_stock}.pack();
 static_assert(Stock::unpack(Stock{3, 6, 2, 1, Weapon::c4}.pack()).placed == 1);
 static_assert(sizeof(WorldCommand) == 64 && alignof(WorldCommand) == 16);
 static_assert(sizeof(WorldEvent) == 64 && alignof(WorldEvent) == 16);

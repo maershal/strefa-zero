@@ -928,7 +928,7 @@ void ParticleWorld::configure_mission(const MissionConfig& config) {
     g.previous = {config.spawn_x, config.spawn_y, config.spawn_x, config.spawn_y};
     g.aim = {1, 0, 1.5F, 0};
     g.status = {1, s.epoch, 0, 0};
-    g.inventory = {30, 3, 0, 0};
+    g.inventory = {game::rifle_magazine, game::initial_stock, 0, 0};
     g.control = {0, config.spawn_x + 40, config.spawn_y - 14, 0};
     g.exit = config.exit;
     g.targets = config.targets;

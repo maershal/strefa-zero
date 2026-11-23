@@ -10,13 +10,18 @@ using namespace strefa;
 void check(bool v, const char* message) {
     if (!v) throw std::runtime_error{message};
 }
-game::EventBatch packet(const game::CommandBatch& c, bool accept = true) {
+constexpr auto shotgun_kind = static_cast<unsigned>(game::CommandKind::shotgun);
+constexpr auto place_kind = static_cast<unsigned>(game::CommandKind::c4_place);
+constexpr auto detonate_kind = static_cast<unsigned>(game::CommandKind::c4_detonate);
+// An accepted detonation reports how many charges the world set to fire (default: every charge it could hold).
+game::EventBatch packet(const game::CommandBatch& c, bool accept = true, unsigned fired = game::c4_stock) {
     game::EventBatch b;
     b.header = {0, c.header[1], c.header[0], 0};
     for (unsigned i = 0; i < c.header[2]; ++i) {
         const auto& cmd = c.commands[i];
         auto& e = b.events[b.header[0]++];
-        e = {cmd.generation, cmd.tick, i + 1, accept ? 1U : 2U, cmd.id, 0, 0, 0, {}, {}};
+        const unsigned value = accept && cmd.kind == detonate_kind ? fired : 0U;
+        e = {cmd.generation, cmd.tick, i + 1, accept ? 1U : 2U, cmd.id, 0, value, 0, {}, {}};
     }
     return b;
 }
@@ -27,9 +32,6 @@ void add(game::EventBatch& b, game::EventKind kind, unsigned subject, unsigned v
 unsigned kind(const game::CommandBatch& c, unsigned i) {
     return i < c.header[2] ? c.commands[i].kind : 0U;
 }
-constexpr auto shotgun_kind = static_cast<unsigned>(game::CommandKind::shotgun);
-constexpr auto place_kind = static_cast<unsigned>(game::CommandKind::c4_place);
-constexpr auto detonate_kind = static_cast<unsigned>(game::CommandKind::c4_detonate);
 // GAME-3: shotgun and C4 reserve, refund and commit like the rifle and grenades; the stock travels packed.
 void weapons() {
     game::GameplaySession s;
@@ -75,6 +77,16 @@ void weapons() {
     s.consume(packet(c, false));
     check(s.state().placed == 1 && s.state().charges == 1, "Rejected detonation keeps the charge armed, no refund");
     for (int i = 0; i < 30; ++i) s.consume(packet(s.prepare({}))); // grenade cooldown after the placement
+    c = s.prepare({0, 0, 0, 4});
+    check(kind(c, 0) == place_kind, "Second placement");
+    s.consume(packet(c));
+    check(s.state().placed == 2 && s.state().charges == 0, "Both charges placed");
+    // The second charge is still in flight: the world fires only the stuck one and the other stays placed.
+    c = s.prepare({0, 0, 0, 256});
+    check(kind(c, 0) == detonate_kind, "Detonation with a charge in flight");
+    s.consume(packet(c, true, 1));
+    check(s.state().placed == 1, "Charge in flight stays placed after a detonation");
+    for (int i = 0; i < 30; ++i) s.consume(packet(s.prepare({})));
     // Rifle shot, grenade and jump fill the batch; the detonation is carried to the next tick, never dropped.
     c = s.prepare({0, 0, 0, 32U | 4U | 16U | 1U | 256U});
     check(c.header[2] == game::commands_per_tick && kind(c, 0) == 1 && kind(c, 1) == 2 && kind(c, 2) == 3,
