@@ -2,6 +2,23 @@
 
 Od najnowszych. Szczegóły, pomiary i ograniczenia każdego etapu są w [raportach](reports/); surowe dane w repozytorium [strefa-zero-measurements](https://github.com/maershal/strefa-zero-measurements).
 
+## GAME-3, część 1: strzelba i ładunek C4 w Misji GPU
+
+Gracz ma trzy bronie: karabin (1), strzelbę (2) i ładunek C4 (3), przełączane klawiszami lub kółkiem; pasek broni
+w HUD pokazuje zapasy i uzbrojone ładunki. Strzelba (`CommandKind::shotgun`, 6 naboi, 0,5 s, przeładowanie R)
+wystrzeliwuje 5 śrucin w stałym wachlarzu (bez losowości) z puli pocisków; przez pierwsze 0,1 s lotu śruciny
+uszkadzają przegrody za 2 zamiast 1. Odrzut 110 px/s przeciwnie do celowania pozwala na „shotgun jump”. C4
+(`c4_place`, 2 sztuki) leci z prędkością 60 px/s, przykleja się do pierwszej ściany w puli granatów (stan w `info.x`,
+bez nowych buforów) i wybucha tylko po `c4_detonate` (E lub F) przez tę samą ścieżkę wybuchu misji co granat
+(promień 28, impuls 110) ze zdarzeniem `EventKind::explosion`. Detonacja odpala tylko ładunki przyklejone (albo
+spadające po zniszczeniu podparcia); ładunek jeszcze w locie czeka na następną detonację, więc E w chwili rzutu nie
+odpala C4 w ręku żołnierza. Każda śrucina trafiająca tarczę zadaje 1 punkt, więc pełny strzał z bliska niszczy
+tarczę (3 HP) naraz. Kontrakty bez zmian: `WorldCommand`/`WorldEvent`
+64 B, `CommandBatch` 256 B, `MissionSnapshot` 272 B; zapas strzelby i C4 jest spakowany w `inventory[1]`
+(`game::Stock`). Wybór broni i detonacja to nowe bity przycisków (32–256); nagrania v1–v3 mają tylko bity 1–16
+i odtwarzają się bez zmian, a wczytywanie przyjmuje teraz wartości do 511. Liczba przebiegów GPU na tick się
+nie zmienia. Nowe sprawdzenie `StrefaQA --gpu-check weapons` (CTest `gpu.weapons`).
+
 ## QA poza binarką gracza, krok 2: skrypty testów okna, próbki profilu i lista scen benchmarku (#39)
 
 `ScenarioRunner` (przyjaciel `Application`) zniknął. Skrypty testów okna dostają aplikację przez jawny

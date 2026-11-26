@@ -7,6 +7,12 @@ struct MissionState {
 };
 uniform int disableBodyCoupling;
 struct Projectile { vec4 motion; vec4 info; };
+// Grenade-pool slots hold C4 charges when info.x is at least C4_FLYING (no fuse); the state follows from the value:
+// thrown and still flying, loose (falling after its anchor broke), stuck, set to fire. Only loose and stuck charges
+// are placed, so a detonation never fires a charge still in the thrower's hand or in flight.
+// Shotgun pellets live in the bullet pool with PELLET_LIFE seconds: a rifle bullet (1.2 s at 600 px/s) leaves the
+// world through the solid border long before its life falls that low.
+const float PELLET_LIFE=.25,C4_FLYING=200.,C4_LOOSE=250.,C4_STUCK=300.,C4_FIRE=400.;
 #ifdef MISSION_READ_ONLY
 layout(std430,binding=6) readonly buffer Counters {
 #else

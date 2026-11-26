@@ -11,7 +11,8 @@ struct Vec2 {
 struct TickInput {
     float move{};
     Vec2 aim{160, 96};
-    bool jump{}, jet{}, fire{}, reload{}, grenade{};
+    bool jump{}, jet{}, fire{}, reload{}, grenade{}, detonate{};
+    unsigned weapon{}; // 0 keeps the weapon, 1-3 selects rifle, shotgun or C4 (one-shot)
 };
 // One-shot actions survive render frames with no simulation tick, then are consumed
 // once. Held controls are replaced every frame, including focus-loss neutral input.

@@ -12,7 +12,7 @@ Wybierz **01 Misja GPU**. Bezpośredni start: `StrefaZero.exe --mission`.
 
 Zniszcz trzy czerwone tarcze i dotrzyj do zielonego wyjścia po prawej. Pomarańczowe przegrody można przestrzelić lub wysadzić. Nad zbiornikiem przeleć plecakiem, otwórz zaporę, a następnie zniszcz dno silosu piasku. Szara konstrukcja pozostaje stała. Postać stoi na usypach, rozpycha ziarna, unosi się w wodzie i opada w lżejszym oleju. Jest niewrażliwa na obrażenia.
 
-A/D lub strzałki — ruch; Spacja — skok; PPM — plecak; LPM — karabin; R — przeładuj; G — granat; F5 — reset; Esc — menu. Celowanie oraz plecak działają również z kursorem poza planszą w aktywnym oknie; kontrolki interfejsu zachowują przechwycenie wejścia. Utrata fokusu zatrzymuje symulację.
+A/D lub strzałki — ruch; Spacja — skok; PPM — plecak; LPM — strzał aktywną bronią (karabin, strzelba) lub rzut ładunku C4; 1/2/3 lub kółko — wybór broni; E lub F — detonacja C4; R — przeładuj; G — granat; F5 — reset; Esc — menu. Celowanie oraz plecak działają również z kursorem poza planszą w aktywnym oknie; kontrolki interfejsu zachowują przechwycenie wejścia. Utrata fokusu zatrzymuje symulację.
 
 Wymagane OpenGL 4.3; na starszym sterowniku działa tylko model referencyjny (CPU). Misja ma 3096 cząstek początkowych, a gruz powstaje z niszczonych przegród. Pełna pula 32768 cząstek jest limitem pojemności, nie gwarancją utrzymania 120 kroków/s na każdym GPU. Pomiary i ograniczenia: `REPORT.md`.
 
@@ -62,7 +62,7 @@ Opcjonalny cache shaderów: `StrefaQA.exe --mission --shader-cache on`. Domyśln
 
 ## Sterowanie i reguły I06
 
-Amunicja, granaty, przeładowanie i wynik mają wspólny stan dla gry i narzędzi. Krótkie naciśnięcia zachowują się także między krokami symulacji. Skok ma tolerancję około 83 ms po utracie podparcia i bufor 100 ms przed lądowaniem; pauza lub utrata fokusu kasują oczekujący skok. Granaty mają wspólny odstęp 250 ms.
+Amunicja, granaty, przeładowanie i wynik mają wspólny stan dla gry i narzędzi. Krótkie naciśnięcia zachowują się także między krokami symulacji. Skok ma tolerancję około 83 ms po utracie podparcia i bufor 100 ms przed lądowaniem; pauza lub utrata fokusu kasują oczekujący skok. Granaty i ładunki C4 mają wspólny odstęp 250 ms. Strzelba (6 naboi, 0,5 s między strzałami) wystrzeliwuje wachlarz 5 śrucin, które z bliska kruszą przegrody dwa razy mocniej niż karabin; odrzut odpycha żołnierza, a strzał w podłogę podrzuca go do góry. Ładunek C4 (2 sztuki) leci wolno, przykleja się do pierwszej ściany i wybucha mocniej od granatu dopiero po detonacji; zniszczenie ściany pod nim sprawia, że spada. Detonacja odpala tylko ładunki, które już się przykleiły (lub spadają po utracie podparcia); ładunek w locie czeka na następne naciśnięcie E. Każda śrucina trafiająca tarczę odbiera jej 1 punkt, więc strzał z bliska może zniszczyć tarczę od razu.
 
 Zniszczona tarcza pozostaje wrakiem, który zatrzymuje pociski. Zachowano efektywne tempo broni poprzedniej wersji: 13 ticków karabinu oraz 181 ticków przeładowania. Bieżące wyniki i ograniczenia wydajności opisuje raport I06. Diagnostyka kontraktu: `StrefaQA.exe --gameplay-check --profile wyniki-i06`.
 

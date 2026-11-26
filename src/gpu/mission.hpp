@@ -7,7 +7,19 @@
 #include <cstdint>
 
 namespace strefa::gpu {
-enum MissionButton : unsigned { jump = 1, jet = 2, fire = 4, reload = 8, grenade = 16 };
+// One-shot weapon selection and detonation sit above the five original bits (recordings v1-v3 use only those).
+enum MissionButton : unsigned {
+    jump = 1,
+    jet = 2,
+    fire = 4,
+    reload = 8,
+    grenade = 16,
+    select_rifle = 32,
+    select_shotgun = 64,
+    select_c4 = 128,
+    detonate = 256
+};
+inline constexpr unsigned mission_buttons_mask = 511;
 struct MissionInput {
     float move{}, aim_x{100}, aim_y{170};
     unsigned buttons{};

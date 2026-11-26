@@ -40,7 +40,8 @@ void main(){
             if(part==5||part==7)c=vec2(c.y,1-c.x);
             uv=(vec2(part%4*32,part/4*48)+crop.xy+c*crop.zw)/vec2(128,288);}
     }else if(instance<146){Projectile p=bullets[instance-18];center=mix(p.info.yz,p.motion.xy,alpha);size=vec2(2,.55);down=vec2(-normalize(p.motion.zw).y,normalize(p.motion.zw).x);tint=vec4(1,.85,.4,p.info.x>0?1:0);}
-    else if(instance<154){Projectile p=grenades[instance-146];center=mix(p.info.yz,p.motion.xy,alpha);size=vec2(1.7);tint=vec4(.6,.7,.2,p.info.x>0?1:0);}
+    else if(instance<154){Projectile p=grenades[instance-146];center=mix(p.info.yz,p.motion.xy,alpha);size=vec2(1.7);tint=vec4(.6,.7,.2,p.info.x>0?1:0);
+        if(p.info.x>=C4_FLYING){size=vec2(2.6,1.7);tint=vec4(.85,.25,.18,1);}}
     else if(instance<157){vec4 target=game.targets[instance-154];center=target.xy;size=vec2(7,12);tint=vec4(.8,.35,.22,target.z>0?1:.2);}
     else if(instance==157){center=(game.exitZone.xy+game.exitZone.zw)*.5;size=game.exitZone.zw-game.exitZone.xy;tint=vec4(.45,.9,.35,game.inventory.z==3u?.6:.15);}
     else if(instance==158){center=game.flash.xy;size=vec2(game.flash.z*2*(1-game.flash.w/.3));tint=vec4(1,.7,.2,game.flash.w*1.5);atlas=3;uv=corner*2-1;}

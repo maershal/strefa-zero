@@ -35,7 +35,8 @@ Wyniki kompilacji trafiają do `build/` (ignorowane przez Git).
 | Model referencyjny (CPU) | `--laboratory` | 19 materiałów, 14 scen regresyjnych, temperatura, ciśnienie, tlen, reakcje. Wyrocznia testów, bez nowych funkcji ([ADR 0001](docs/adr/0001-rola-modelu-cpu.md)). |
 
 **Sterowanie (Misja GPU):** A/D lub strzałki — ruch, Spacja — skok, PPM — plecak,
-LPM — karabin, R — przeładuj, G — granat, F5 — reset, Esc — menu.
+LPM — strzał (karabin, strzelba) lub rzut C4, 1/2/3 lub kółko — broń, E/F — detonacja C4, R — przeładuj,
+G — granat, F5 — reset, Esc — menu.
 **Laboratoria:** LPM rysuje, PPM usuwa, kółko zmienia pędzel, Spacja — pauza, F — jeden krok. W Laboratorium GPU
 narzędzie „Detonator” wywołuje LPM wybuch o ustawionym promieniu i energii.
 

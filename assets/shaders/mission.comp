@@ -56,15 +56,18 @@ vec2 debrisVelocity(vec2 p){vec2 v=vec2(0);
         if(r<b.z){float force=b.w*(1-r/b.z);v+=normalize(d+vec2(0,-.001))*force+vec2(0,-.35*force);}}
     return v*inverseMass(4);
 }
-uint rifleImpact(int id){
+// Close-range pellets (first 0.1 s, about 40 px) chip twice as hard as a rifle bullet.
+uint shotDamage(float life){return life<=PELLET_LIFE&&life>PELLET_LIFE-.1?2u:1u;}
+uint chipImpact(int id,uint damage){
     if(id<0||wall[id]<2u)return 0u;uint before=game.counts.y;
     ivec2 center=ivec2(id%W,id/W);
     // A three-cell chip is wide enough to release carriers instead of
     // generating a one-cell plug made from the conserved debris itself.
     for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x){ivec2 c=center+ivec2(x,y);
-        if(c.x>=0&&c.x<W&&c.y>=0&&c.y<H)damageCell(c.y*W+c.x,1u);}
+        if(c.x>=0&&c.x<W&&c.y>=0&&c.y<H)damageCell(c.y*W+c.x,damage);}
     uint broken=game.counts.y-before;transportState.w+=broken;return broken;
 }
+uint rifleImpact(int id){return chipImpact(id,1u);}
 bool targetHit(vec2 a,vec2 b,int target){
     vec2 d=b-a;float t=clamp(dot(game.targets[target].xy-a,d)/max(dot(d,d),1e-6),0,1);
     return distance(a+d*t,game.targets[target].xy)<4;
@@ -80,6 +83,40 @@ void emitEvent(uint kind,uint command,uint subject,uint value,vec4 payload){
     eventBatch.header.x=n+1u;
 }
 void ack(uint command,bool accepted){emitEvent(accepted?1u:2u,command,0u,0u,vec4(0));}
+// Five pellets in a fixed fan around the aim (no random spread), then recoil: aiming down lifts the player.
+bool fireShotgun(uint id,float speed){
+    vec2 hit,muzzle=muzzlePosition();int cell=trace(shoulder(),muzzle,hit);
+    if(cell!=-1){uint broken=chipImpact(cell,2u);emitEvent(7u,id,uint(max(cell,0)),broken,vec4(hit,0,0));}
+    bool fired=cell!=-1;
+    for(int k=0;k<5&&cell==-1;++k){
+        float a=.07*float(k-2);vec2 dir=mat2(cos(a),sin(a),-sin(a),cos(a))*game.aim.xy;
+        for(int i=0;i<128;++i)if(bullets[i].info.x<=0){
+            bullets[i].motion=vec4(muzzle,dir*speed);bullets[i].info=vec4(PELLET_LIFE,muzzle,uintBitsToFloat(id));
+            fired=true;break;}
+    }
+    if(fired){game.actor.zw-=game.aim.xy*110;game.aim.w=1;}
+    return fired;
+}
+// A charge flies under gravity, sticks to the first solid cell and falls again when that cell is destroyed.
+// It detonates only on command once placed (stuck or loose), one blast per tick like grenades.
+bool anchored(vec2 p){
+    for(int y=-1;y<=1;++y)for(int x=-1;x<=1;++x)if(solid(ivec2(floor(p))+ivec2(x,y)))return true;
+    return false;
+}
+void updateCharge(int i){
+    vec2 a=grenades[i].motion.xy;grenades[i].info.yz=a;uint command=floatBitsToUint(grenades[i].info.w);
+    if(grenades[i].info.x>=C4_FIRE){
+        if(game.blast.z>0)return;
+        transportState.z=command;game.blast=vec4(a,28,110);game.flash=vec4(game.blast.xyz,.3);
+        game.events.x++;game.events.y=game.events.x;game.counts.x++;
+        emitEvent(4u,command,uint(i),1u,game.blast);grenades[i].info.x=0;return;
+    }
+    if(grenades[i].info.x>=C4_STUCK){if(anchored(a))return;grenades[i].info.x=C4_LOOSE;grenades[i].motion.zw=vec2(0);}
+    grenades[i].motion.w+=180*tickDt;
+    vec2 b=a+grenades[i].motion.zw*tickDt,hit;
+    if(trace(a,b,hit)!=-1){grenades[i].motion=vec4(mix(a,hit,.9),0,0);grenades[i].info.x=C4_STUCK;}
+    else grenades[i].motion.xy=b;
+}
 void tryJump(){
     uint command=game.events.w;if(command==0u)return;
     uint expiry=floatBitsToUint(game.body.w);
@@ -130,6 +167,21 @@ void beginTick(){
                 grenades[i].motion=vec4(shoulder(),game.aim.xy*cmd.payload.z+game.actor.zw*.25);
                 grenades[i].info=vec4(2,0,0,uintBitsToFloat(id));accepted=true;break;
             }ack(id,accepted);
+        }else if(kind==4u){
+            bool accepted=fireShotgun(id,cmd.payload.z);ack(id,accepted);
+            if(accepted){uint e=eventBatch.header.x-1u;eventBatch.events[e].detail.w=1u;
+                eventBatch.events[e].payload=vec4(muzzlePosition(),0,0);eventBatch.events[e].extra=vec4(game.aim.xy*cmd.payload.z,0,0);}
+        }else if(kind==5u){
+            bool accepted=false;
+            for(int i=0;i<8;++i)if(grenades[i].info.x<=0){
+                grenades[i].motion=vec4(shoulder(),game.aim.xy*cmd.payload.z+game.actor.zw*.25);
+                grenades[i].info=vec4(C4_FLYING,0,0,uintBitsToFloat(id));accepted=true;break;
+            }ack(id,accepted);
+        }else if(kind==6u){
+            // The accepted event carries the number of charges set to fire; charges still in flight stay placed.
+            uint armed=0u;
+            for(int i=0;i<8;++i)if(grenades[i].info.x>=C4_LOOSE&&grenades[i].info.x<C4_FIRE){grenades[i].info.x=C4_FIRE;++armed;}
+            emitEvent(armed>0u?1u:2u,id,0u,armed,vec4(0));
         }else if(kind==3u){
             if(game.events.w!=0u)ack(game.events.w,false);
             game.events.w=id;game.body.w=uintBitsToFloat(cmd.detail.y);
@@ -141,9 +193,11 @@ void beginTick(){
         bool target=false;for(int j=0;j<3;++j)if(targetHit(a,hit,j)){
             emitEvent(3u,floatBitsToUint(bullets[i].info.w),uint(j),1u,vec4(game.targets[j].xy,0,0));target=true;break;}
         bullets[i].info.yz=a;bullets[i].motion.xy=hit;bullets[i].info.x-=tickDt;
-        if(target||cell!=-1){bullets[i].info.x=0;if(!target){uint broken=rifleImpact(cell);emitEvent(7u,floatBitsToUint(bullets[i].info.w),uint(max(cell,0)),broken,vec4(hit,0,0));}}
+        uint damage=shotDamage(bullets[i].info.x);
+        if(target||cell!=-1){bullets[i].info.x=0;if(!target){uint broken=chipImpact(cell,damage);emitEvent(7u,floatBitsToUint(bullets[i].info.w),uint(max(cell,0)),broken,vec4(hit,0,0));}}
     }
     for(int i=0;i<8;++i)if(grenades[i].info.x>0){
+        if(grenades[i].info.x>=C4_FLYING){updateCharge(i);continue;}
         vec2 a=grenades[i].motion.xy;grenades[i].info.yz=a;grenades[i].motion.w+=180*tickDt;
         vec2 b=a+grenades[i].motion.zw*tickDt,hit;int cell=trace(a,b,hit);
         if(cell!=-1){vec2 hx;bool blockedX=trace(a,vec2(b.x,a.y),hx)!=-1;

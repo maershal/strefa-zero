@@ -148,6 +148,7 @@ std::optional<std::expected<int, std::string>> run_diagnostic_scenario(const Lau
                              : options.gpu_flow_test            ? gpu::validate_flow(**world, profile)
                              : options.gpu_brush_test           ? gpu::validate_brush_history(**world, profile)
                              : options.gpu_check == "lab-blast" ? gpu::validate_lab_blast(**world, profile)
+                             : options.gpu_check == "weapons"   ? gpu::validate_weapons(**world, profile)
                              : options.gpu_liquid_test          ? gpu::validate_liquids(**world, profile)
                                                                 : gpu::validate_granular(**world, profile);
         if (!validated) return std::unexpected{validated.error()};
